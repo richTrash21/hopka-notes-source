@@ -1,0 +1,49 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TextureAtlas imagePath="NOTE_assets-hopka_notes.png">
+	<!-- Created with Adobe Animate version 20.5.1.31044 -->
+	<!-- http://www.adobe.com/products/animate.html -->
+	<SubTexture name="arrowDOWN0000" x="747" y="5" width="149" height="156"/>
+	<SubTexture name="arrowLEFT0000" x="901" y="5" width="157" height="149"/>
+	<SubTexture name="arrowRIGHT0000" x="1063" y="5" width="157" height="149"/>
+	<SubTexture name="arrowUP0000" x="1225" y="5" width="149" height="156"/>
+	<SubTexture name="blue0000" x="115" y="5" width="149" height="156"/>
+	<SubTexture name="blue hold end0000" x="5" y="5" width="50" height="64"/>
+	<SubTexture name="blue hold piece0000" x="60" y="5" width="50" height="44"/>
+	<SubTexture name="down confirm0000" x="1379" y="5" width="226" height="234"/>
+	<SubTexture name="down confirm0001" x="1610" y="5" width="226" height="234"/>
+	<SubTexture name="down confirm0002" x="5" y="244" width="226" height="234"/>
+	<SubTexture name="down confirm0003" x="5" y="244" width="226" height="234"/>
+	<SubTexture name="down press0000" x="236" y="244" width="142" height="149" frameX="-4" frameY="-3" frameWidth="149" frameHeight="156"/>
+	<SubTexture name="down press0001" x="236" y="244" width="142" height="149" frameX="-4" frameY="-3" frameWidth="149" frameHeight="156"/>
+	<SubTexture name="down press0002" x="383" y="244" width="149" height="156"/>
+	<SubTexture name="green0000" x="269" y="5" width="149" height="156"/>
+	<SubTexture name="green hold end0000" x="5" y="5" width="50" height="64"/>
+	<SubTexture name="green hold piece0000" x="60" y="5" width="50" height="44"/>
+	<SubTexture name="left confirm0000" x="537" y="244" width="234" height="226"/>
+	<SubTexture name="left confirm0001" x="776" y="244" width="234" height="226"/>
+	<SubTexture name="left confirm0002" x="1015" y="244" width="234" height="226"/>
+	<SubTexture name="left confirm0003" x="1015" y="244" width="234" height="226"/>
+	<SubTexture name="left press0000" x="1254" y="244" width="149" height="141" frameX="-4" frameY="-4" frameWidth="157" frameHeight="149"/>
+	<SubTexture name="left press0001" x="1254" y="244" width="149" height="141" frameX="-4" frameY="-4" frameWidth="157" frameHeight="149"/>
+	<SubTexture name="left press0002" x="1408" y="244" width="157" height="149"/>
+	<SubTexture name="pruple end hold0000" x="5" y="5" width="50" height="64"/>
+	<SubTexture name="purple0000" x="423" y="5" width="157" height="149"/>
+	<SubTexture name="purple hold piece0000" x="60" y="5" width="50" height="44"/>
+	<SubTexture name="red0000" x="585" y="5" width="157" height="149"/>
+	<SubTexture name="red hold end0000" x="5" y="5" width="50" height="64"/>
+	<SubTexture name="red hold piece0000" x="60" y="5" width="50" height="44"/>
+	<SubTexture name="right confirm0000" x="1570" y="244" width="234" height="226"/>
+	<SubTexture name="right confirm0001" x="1809" y="244" width="234" height="226"/>
+	<SubTexture name="right confirm0002" x="5" y="483" width="234" height="226"/>
+	<SubTexture name="right confirm0003" x="5" y="483" width="234" height="226"/>
+	<SubTexture name="right press0000" x="244" y="483" width="149" height="141" frameX="-4" frameY="-4" frameWidth="157" frameHeight="149"/>
+	<SubTexture name="right press0001" x="244" y="483" width="149" height="141" frameX="-4" frameY="-4" frameWidth="157" frameHeight="149"/>
+	<SubTexture name="right press0002" x="398" y="483" width="157" height="149"/>
+	<SubTexture name="up confirm0000" x="560" y="483" width="226" height="234"/>
+	<SubTexture name="up confirm0001" x="791" y="483" width="226" height="234"/>
+	<SubTexture name="up confirm0002" x="1022" y="483" width="226" height="234"/>
+	<SubTexture name="up confirm0003" x="1022" y="483" width="226" height="234"/>
+	<SubTexture name="up press0000" x="1253" y="483" width="142" height="149" frameX="-4" frameY="-3" frameWidth="149" frameHeight="156"/>
+	<SubTexture name="up press0001" x="1253" y="483" width="142" height="149" frameX="-4" frameY="-3" frameWidth="149" frameHeight="156"/>
+	<SubTexture name="up press0002" x="1400" y="483" width="149" height="156"/>
+</TextureAtlas>
