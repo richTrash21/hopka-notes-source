@@ -15,7 +15,7 @@ class GameOverSubstate extends MusicBeatSubstate
 	public var boyfriend:Character;
 	var camFollow:FlxObject;
 	var updateCamera:Bool = false;
-	var playingDeathSound:Bool = false;
+	var canSkip:Bool = true; //yeas im evil ehehhehehehehhehehhehe
 
 	var stageSuffix:String = "";
 
@@ -83,10 +83,7 @@ class GameOverSubstate extends MusicBeatSubstate
 
 		PlayState.instance.callOnScripts('onUpdate', [elapsed]);
 
-		if (controls.ACCEPT)
-		{
-			endBullshit();
-		}
+		if (controls.ACCEPT && canSkip) endBullshit();
 
 		if (controls.BACK)
 		{
@@ -120,25 +117,10 @@ class GameOverSubstate extends MusicBeatSubstate
 					isFollowingAlready = true;
 				}
 
-				if (boyfriend.animation.curAnim.finished && !playingDeathSound)
+				if (boyfriend.animation.curAnim.finished)
 				{
 					startedDeath = true;
-					if (PlayState.SONG.stage == 'tank')
-					{
-						playingDeathSound = true;
-						coolStartDeath(0.2);
-						
-						var exclude:Array<Int> = [];
-						//if(!ClientPrefs.cursing) exclude = [1, 3, 8, 13, 17, 21];
-
-						FlxG.sound.play(Paths.sound('jeffGameover/jeffGameover-' + FlxG.random.int(1, 25, exclude)), 1, false, null, true, function() {
-							if(!isEnding)
-							{
-								FlxG.sound.music.fadeIn(0.2, 1, 4);
-							}
-						});
-					}
-					else coolStartDeath();
+					coolStartDeath();
 				}
 			}
 		}

@@ -36,6 +36,7 @@ class Main extends Sprite
 	};
 
 	public static var fpsVar:FPS;
+	public static var fpsShadow:FPS;
 
 	// You can pretty much ignore everything from here on - your code should go in your states.
 
@@ -89,11 +90,15 @@ class Main extends Sprite
 
 		#if !mobile
 		fpsVar = new FPS(10, 3, 0xFFFFFF);
+		fpsShadow = new FPS(11, 4, 0x000000);
+		fpsShadow.shadow = true;
+		addChild(fpsShadow);
 		addChild(fpsVar);
 		Lib.current.stage.align = "tl";
 		Lib.current.stage.scaleMode = StageScaleMode.NO_SCALE;
 		if(fpsVar != null) {
 			fpsVar.visible = ClientPrefs.data.showFPS;
+			fpsShadow.visible = ClientPrefs.data.showFPS;
 		}
 		#end
 

@@ -126,7 +126,7 @@ class VisualsUISubState extends BaseOptionsMenu
 			"What song do you prefer for the Pause Screen?",
 			'pauseMusic',
 			'string',
-			['None', 'Breakfast', 'Tea Time']);
+			['None', 'Noodles', 'Breakfast', 'Tea Time']);
 		addOption(option);
 		option.onChange = onChangePauseMusic;
 		
@@ -213,8 +213,10 @@ class VisualsUISubState extends BaseOptionsMenu
 	#if !mobile
 	function onChangeFPSCounter()
 	{
-		if(Main.fpsVar != null)
+		if(Main.fpsVar != null) {
 			Main.fpsVar.visible = ClientPrefs.data.showFPS;
+			Main.fpsShadow.visible = ClientPrefs.data.showFPS;
+		}
 	}
 	#end
 }

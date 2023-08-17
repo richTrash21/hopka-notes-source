@@ -30,6 +30,7 @@ class FPS extends TextField
 		The current frame rate, expressed using frames-per-second
 	**/
 	public var currentFPS(default, null):Int;
+	public var shadow:Bool = false;
 
 	@:noCompletion private var cacheCount:Int;
 	@:noCompletion private var currentTime:Float;
@@ -89,10 +90,10 @@ class FPS extends TextField
 			text += "\nMemory: " + memoryMegas + " MB";
 			#end
 
-			textColor = 0xFFFFFFFF;
+			if(!shadow) textColor = 0xFFFFFFFF;
 			if (memoryMegas > 3000 || currentFPS <= ClientPrefs.data.framerate / 2)
 			{
-				textColor = 0xFFFF0000;
+				if(!shadow) textColor = 0xFFFF0000;
 			}
 
 			#if (gl_stats && !disable_cffi && (!html5 || !canvas))
