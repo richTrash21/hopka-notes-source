@@ -1,16 +1,11 @@
 package;
 
-import flixel.graphics.FlxGraphic;
-
 import flixel.FlxGame;
-import flixel.FlxState;
-import openfl.Assets;
 import openfl.Lib;
 import openfl.display.FPS;
 import openfl.display.Sprite;
 import openfl.events.Event;
 import openfl.display.StageScaleMode;
-import lime.app.Application;
 import states.TitleState;
 
 //crash handler stuff
@@ -96,10 +91,15 @@ class Main extends Sprite
 		addChild(fpsVar);
 		Lib.current.stage.align = "tl";
 		Lib.current.stage.scaleMode = StageScaleMode.NO_SCALE;
-		if(fpsVar != null) {
+		if(fpsVar != null){
 			fpsVar.visible = ClientPrefs.data.showFPS;
 			fpsShadow.visible = ClientPrefs.data.showFPS;
 		}
+		#end
+
+		#if debug
+		FlxG.game.soundTray.volumeUpSound = 'assets/sounds/metal';
+		FlxG.game.soundTray.volumeDownSound = 'assets/sounds/lego';
 		#end
 
 		#if html5
@@ -117,16 +117,16 @@ class Main extends Sprite
 
 		// shader coords fix
 		FlxG.signals.gameResized.add(function (w, h) {
-		     if (FlxG.cameras != null) {
-			   for (cam in FlxG.cameras.list) {
+			if (FlxG.cameras != null) {
+			for (cam in FlxG.cameras.list) {
 				@:privateAccess
 				if (cam != null && cam._filters != null)
 					resetSpriteCache(cam.flashSprite);
-			   }
-		     }
+			}
+			}
 
-		     if (FlxG.game != null)
-			 resetSpriteCache(FlxG.game);
+			if (FlxG.game != null)
+			resetSpriteCache(FlxG.game);
 		});
 	}
 

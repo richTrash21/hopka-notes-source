@@ -1774,6 +1774,12 @@ class PlayState extends MusicBeatState
 				setSongTime(Conductor.songPosition + 10000);
 				clearNotesBefore(Conductor.songPosition);
 			}
+			if (FlxG.keys.pressed.SHIFT && FlxG.keys.justPressed.B) {
+				cpuControlled = !cpuControlled;
+				botplayTxt.visible = cpuControlled;
+				botplayTxt.alpha = 1;
+				botplaySine = 0;
+			}
 		}
 		#end
 

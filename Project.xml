@@ -2,7 +2,7 @@
 <project>
 	<!-- _________________________ Application Settings _________________________ -->
 
-	<app title="Friday Night Funkin': HopKa Notes" file="HopKaNotes" packageName="com.hopkaopka.hopkanotes" package="com.hopkaopka.hopkanotes" main="Main" version="0.2.8" company="HopKaTGC" />
+	<app title="FNF': HopKa Notes" file="HopKaNotes" packageName="com.hopkaopka.hopkanotes" package="com.hopkaopka.hopkanotes" main="Main" version="0.2.8" company="HopKaTGC" />
 
 	<!--Switch Export with Unique ApplicationID and Icon-->
 	<set name="APP_ID" value="0x0100f6c013bbc000" />
