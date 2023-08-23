@@ -410,7 +410,7 @@ class FlxGame extends Sprite
 
 		// dont ask
 		FlxG.sound.volume = _focusVolume;
-		trace('volume: ' + FlxG.sound.volume);
+		//trace('volume: ' + FlxG.sound.volume);
 
 		if (!FlxG.autoPause)
 			return;
@@ -450,7 +450,7 @@ class FlxGame extends Sprite
 		// dont ask
 		_focusVolume = FlxG.sound.volume;
 		FlxG.sound.volume /= 2.5;
-		trace('volume: ' + FlxG.sound.volume);
+		//trace('volume: ' + FlxG.sound.volume);
 
 		if (!FlxG.autoPause)
 			return;

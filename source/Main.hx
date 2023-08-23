@@ -100,6 +100,9 @@ class Main extends Sprite
 		#if debug
 		FlxG.game.soundTray.volumeUpSound = 'assets/sounds/metal';
 		FlxG.game.soundTray.volumeDownSound = 'assets/sounds/lego';
+		#else
+		FlxG.game.soundTray.volumeUpSound = 'assets/sounds/up_volume';
+		FlxG.game.soundTray.volumeDownSound = 'assets/sounds/down_volume';
 		#end
 
 		#if html5
