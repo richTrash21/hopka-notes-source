@@ -32,7 +32,7 @@ class PauseSubState extends MusicBeatSubstate
 
 	public static var songName:String = '';
 
-	public function new(x:Float, y:Float)
+	public function new()
 	{
 		super();
 		if(Difficulty.list.length < 2) menuItemsOG.remove('Change Difficulty'); //No need to change difficulty if there is only one!
