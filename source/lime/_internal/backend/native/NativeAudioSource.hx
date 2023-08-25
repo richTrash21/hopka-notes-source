@@ -7,7 +7,6 @@ import lime.media.openal.AL;
 import lime.media.openal.ALBuffer;
 import lime.media.openal.ALSource;
 import lime.media.vorbis.VorbisFile;
-import lime.media.AudioManager;
 import lime.media.AudioSource;
 import lime.utils.UInt8Array;
 

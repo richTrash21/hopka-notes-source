@@ -4,16 +4,9 @@ import backend.WeekData;
 import backend.Highscore;
 import backend.Song;
 
-import openfl.Lib;
-import openfl.utils.Assets;
-import openfl.display.BitmapData;
 import flixel.FlxBasic;
 import flixel.FlxObject;
 import flixel.addons.transition.FlxTransitionableState;
-
-#if (!flash && sys)
-import flixel.addons.display.FlxRuntimeShader;
-#end
 
 #if sys
 import sys.FileSystem;
@@ -25,7 +18,6 @@ import cutscenes.DialogueBoxPsych;
 import objects.StrumNote;
 import objects.Note;
 import objects.NoteSplash;
-import objects.Character;
 
 import states.MainMenuState;
 import states.StoryMenuState;
@@ -39,7 +31,6 @@ import psychlua.LuaUtils.LuaTweenOptions;
 #if (SScript >= "3.0.0")
 import psychlua.HScript;
 #end
-import psychlua.DebugLuaText;
 import psychlua.ModchartSprite;
 
 class FunkinLua {
@@ -860,12 +851,8 @@ class FunkinLua {
 			}
 		});
 		Lua_helper.add_callback(lua, "cameraSetTarget", function(target:String) {
-			var isDad:Bool = false;
-			if(target == 'dad') {
-				isDad = true;
-			}
-			game.moveCamera(isDad);
-			return isDad;
+			game.moveCamera(target);
+			return (target == 'dad') ? true : false;
 		});
 		Lua_helper.add_callback(lua, "cameraShake", function(camera:String, intensity:Float, duration:Float) {
 			LuaUtils.cameraFromString(camera).shake(intensity, duration);

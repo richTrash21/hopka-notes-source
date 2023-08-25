@@ -4,14 +4,12 @@ import flixel.addons.display.FlxBackdrop;
 import flixel.addons.display.FlxGridOverlay;
 import flixel.addons.display.shapes.FlxShapeCircle;
 import flixel.input.keyboard.FlxKey;
-import flixel.input.gamepad.FlxGamepadInputID;
 import flixel.math.FlxPoint;
 import lime.system.Clipboard;
 import flixel.util.FlxGradient;
 import objects.StrumNote;
 import objects.Note;
 
-import shaders.RGBPalette;
 import shaders.RGBPalette.RGBShaderReference;
 
 class NotesSubState extends MusicBeatSubstate

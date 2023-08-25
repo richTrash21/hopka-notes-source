@@ -1,11 +1,12 @@
 package backend;
 
 import tjson.TJSON as Json;
-import lime.utils.Assets;
 
 #if sys
 import sys.io.File;
 import sys.FileSystem;
+#else
+import lime.utils.Assets;
 #end
 
 import backend.Section;

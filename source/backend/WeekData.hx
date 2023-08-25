@@ -3,9 +3,10 @@ package backend;
 #if MODS_ALLOWED
 import sys.io.File;
 import sys.FileSystem;
-#end
+#else
 import lime.utils.Assets;
 import openfl.utils.Assets as OpenFlAssets;
+#end
 import tjson.TJSON as Json;
 
 typedef WeekFile =

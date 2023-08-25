@@ -1,11 +1,7 @@
 package psychlua;
 
-import backend.WeekData;
-import objects.Character;
-
 import openfl.display.BlendMode;
 import animateatlas.AtlasFrameMaker;
-import Type.ValueType;
 
 import substates.GameOverSubstate;
 
@@ -114,13 +110,6 @@ class LuaUtils
 	
 	public static function isMap(variable:Dynamic)
 	{
-		/*switch(Type.typeof(variable)){
-			case ValueType.TClass(haxe.ds.StringMap) | ValueType.TClass(haxe.ds.ObjectMap) | ValueType.TClass(haxe.ds.IntMap) | ValueType.TClass(haxe.ds.EnumValueMap):
-				return true;
-			default:
-				return false;
-		}*/
-
 		//trace(variable);
 		if(variable.exists != null && variable.keyValueIterator != null) return true;
 		return false;

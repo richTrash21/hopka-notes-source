@@ -1,6 +1,7 @@
 package states.stages;
 
 import states.stages.objects.*;
+import backend.BaseStage;
 
 class Template extends BaseStage
 {
@@ -25,7 +26,7 @@ class Template extends BaseStage
 	}
 
 	
-	override function countdownTick(count:BaseStage.Countdown, num:Int)
+	override function countdownTick(count:Countdown, num:Int)
 	{
 		switch(count)
 		{

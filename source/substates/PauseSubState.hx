@@ -1,6 +1,5 @@
 package substates;
 
-import backend.WeekData;
 import backend.Highscore;
 import backend.Song;
 

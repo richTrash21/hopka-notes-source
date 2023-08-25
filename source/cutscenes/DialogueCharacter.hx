@@ -5,8 +5,9 @@ import tjson.TJSON as Json;
 #if sys
 import sys.FileSystem;
 import sys.io.File;
-#end
+#else
 import lime.utils.Assets;
+#end
 
 typedef DialogueAnimArray = {
 	var anim:String;

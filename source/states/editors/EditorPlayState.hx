@@ -1,7 +1,6 @@
 package states.editors;
 
-import backend.Song;
-import backend.Section;
+import backend.Section.SwagSection;
 import backend.Rating;
 
 import objects.Note;
@@ -9,8 +8,6 @@ import objects.NoteSplash;
 import objects.StrumNote;
 
 import flixel.util.FlxSort;
-import flixel.util.FlxStringUtil;
-import flixel.animation.FlxAnimationController;
 import flixel.input.keyboard.FlxKey;
 import openfl.events.KeyboardEvent;
 

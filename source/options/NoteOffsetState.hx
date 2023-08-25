@@ -2,7 +2,6 @@ package options;
 
 import flixel.math.FlxPoint;
 
-import backend.StageData;
 import objects.Character;
 import objects.HealthBar;
 import flixel.addons.display.shapes.FlxShapeCircle;

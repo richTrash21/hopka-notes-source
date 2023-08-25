@@ -4,18 +4,10 @@ import backend.WeekData;
 import backend.Highscore;
 import backend.Song;
 
-import lime.utils.Assets;
-import openfl.utils.Assets as OpenFlAssets;
-
 import objects.HealthIcon;
-import states.editors.ChartingState;
 
 import substates.GameplayChangersSubstate;
 import substates.ResetScoreSubState;
-
-#if MODS_ALLOWED
-import sys.FileSystem;
-#end
 
 class FreeplayState extends MusicBeatState
 {

@@ -1,29 +1,27 @@
 package states;
 
-import backend.WeekData;
 import backend.Highscore;
 
 import flixel.input.keyboard.FlxKey;
 import flixel.addons.transition.FlxTransitionableState;
-import flixel.graphics.frames.FlxAtlasFrames;
 import flixel.graphics.frames.FlxFrame;
 import flixel.group.FlxGroup;
 import flixel.input.gamepad.FlxGamepad;
 import tjson.TJSON as Json;
 
-import openfl.Assets;
-import openfl.display.Bitmap;
-import openfl.display.BitmapData;
-
 import shaders.ColorSwap;
 
 import states.StoryMenuState;
+#if CHECK_FOR_UPDATES
 import states.OutdatedState;
+#end
 import states.MainMenuState;
 
 #if MODS_ALLOWED
 import sys.FileSystem;
 import sys.io.File;
+#else
+import openfl.Assets;
 #end
 
 typedef TitleData =

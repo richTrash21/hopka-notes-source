@@ -1,7 +1,7 @@
 package psychlua;
 
 import Type.ValueType;
-import haxe.Constraints;
+import haxe.Constraints.Function;
 
 import substates.GameOverSubstate;
 

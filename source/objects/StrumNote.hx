@@ -1,6 +1,5 @@
 package objects;
 
-import shaders.RGBPalette;
 import shaders.RGBPalette.RGBShaderReference;
 
 class StrumNote extends FlxSprite

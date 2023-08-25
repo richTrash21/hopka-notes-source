@@ -3,8 +3,6 @@ package states.editors;
 import backend.WeekData;
 
 import openfl.utils.Assets;
-import flixel.addons.ui.FlxInputText;
-import flixel.addons.ui.FlxUI9SliceSprite;
 import flixel.addons.ui.FlxUI;
 import flixel.addons.ui.FlxUICheckBox;
 import flixel.addons.ui.FlxUIInputText;
