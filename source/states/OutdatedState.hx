@@ -1,5 +1,6 @@
 package states;
 
+#if CHECK_FOR_UPDATES
 class OutdatedState extends MusicBeatState
 {
 	public static var leftState:Bool = false;
@@ -49,3 +50,4 @@ class OutdatedState extends MusicBeatState
 		super.update(elapsed);
 	}
 }
+#end

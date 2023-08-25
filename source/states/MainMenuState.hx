@@ -1,7 +1,6 @@
 package states;
 
 import backend.WeekData;
-import backend.Achievements;
 
 import flixel.FlxObject;
 import flixel.addons.transition.FlxTransitionableState;
@@ -10,9 +9,13 @@ import flixel.effects.FlxFlicker;
 import flixel.input.keyboard.FlxKey;
 import lime.app.Application;
 
-import objects.AchievementPopup;
 import states.editors.MasterEditorMenu;
 import options.OptionsState;
+
+#if ACHIEVEMENTS_ALLOWED
+import objects.AchievementPopup;
+import backend.Achievements;
+#end
 
 class MainMenuState extends MusicBeatState
 {
@@ -22,7 +25,9 @@ class MainMenuState extends MusicBeatState
 
 	var menuItems:FlxTypedGroup<FlxSprite>;
 	private var camGame:FlxCamera;
+	#if ACHIEVEMENTS_ALLOWED
 	private var camAchievement:FlxCamera;
+	#end
 	
 	var optionShit:Array<String> = [
 		'story_mode',
@@ -49,11 +54,13 @@ class MainMenuState extends MusicBeatState
 		#end
 
 		camGame = new FlxCamera();
+		#if ACHIEVEMENTS_ALLOWED
 		camAchievement = new FlxCamera();
 		camAchievement.bgColor.alpha = 0;
+		#end
 
 		FlxG.cameras.reset(camGame);
-		FlxG.cameras.add(camAchievement, false);
+		#if ACHIEVEMENTS_ALLOWED FlxG.cameras.add(camAchievement, false); #end
 		FlxG.cameras.setDefaultDrawTarget(camGame, true);
 
 		transIn = FlxTransitionableState.defaultTransIn;

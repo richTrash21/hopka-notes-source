@@ -1,5 +1,6 @@
 package backend;
 
+#if ACHIEVEMENTS_ALLOWED
 class Achievements {
 	public static var achievementsStuff:Array<Dynamic> = [ //Name, Description, Achievement save tag, Hidden achievement
 		["Freaky on a Friday Night",	"Play on a Friday... Night.",						'friday_night_play',	 true],
@@ -55,3 +56,4 @@ class Achievements {
 		}
 	}
 }
+#end

@@ -1,5 +1,6 @@
 package objects;
 
+#if ACHIEVEMENTS_ALLOWED
 import backend.Achievements;
 
 class AchievementPopup extends FlxSpriteGroup {
@@ -61,3 +62,4 @@ class AchievementPopup extends FlxSpriteGroup {
 		super.destroy();
 	}
 }
+#end

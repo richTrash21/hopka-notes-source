@@ -10,7 +10,9 @@ package states;
 // "function eventEarlyTrigger" - Used for making your event start a few MILLISECONDS earlier
 // "function triggerEvent" - Called when the song hits your event's timestamp, this is probably what you were looking for
 
+#if ACHIEVEMENTS_ALLOWED
 import backend.Achievements;
+#end
 import backend.Highscore;
 import backend.StageData;
 import backend.WeekData;
@@ -241,10 +243,12 @@ class PlayState extends MusicBeatState
 	var detailsPausedText:String = "";
 	#end
 
+	#if ACHIEVEMENTS_ALLOWED
 	//Achievement shit
 	var keysPressed:Array<Int> = [];
 	var boyfriendIdleTime:Float = 0.0;
 	var boyfriendIdled:Bool = false;
+	#end
 
 	// Lua shit
 	public static var instance:PlayState;
@@ -667,8 +671,7 @@ class PlayState extends MusicBeatState
 		if(generatedMusic)
 		{
 			if(vocals != null) vocals.pitch = value;
-			inst.pitch = value;
-			//FlxG.sound.music.pitch = value;
+			FlxG.sound.music.pitch = value;
 
 			var ratio:Float = playbackRate / value; //funny word huh
 			if(ratio != 1)
@@ -1147,18 +1150,12 @@ class PlayState extends MusicBeatState
 	{
 		if(time < 0) time = 0;
 
-		//FlxG.sound.music.pause();
-		inst.pause();
+		FlxG.sound.music.pause();
 		vocals.pause();
 
-		/*
 		FlxG.sound.music.time = time;
 		FlxG.sound.music.pitch = playbackRate;
 		FlxG.sound.music.play();
-		*/
-		inst.time = time;
-		inst.pitch = playbackRate;
-		inst.play();
 
 		if (Conductor.songPosition <= vocals.length)
 		{
@@ -1183,15 +1180,10 @@ class PlayState extends MusicBeatState
 	{
 		startingSong = false;
 
-		/*
 		@:privateAccess
 		FlxG.sound.playMusic(inst._sound, 1, false);
 		FlxG.sound.music.pitch = playbackRate;
 		FlxG.sound.music.onComplete = finishSong.bind();
-		*/
-		inst.play();
-		inst.pitch = playbackRate;
-		inst.onComplete = finishSong.bind();
 		vocals.play();
 
 		if(startOnTime > 0) setSongTime(startOnTime - 500);
@@ -1199,13 +1191,12 @@ class PlayState extends MusicBeatState
 
 		if(paused) {
 			//trace('Oopsie doopsie! Paused sound');
-			//FlxG.sound.music.pause();
-			inst.pause();
+			FlxG.sound.music.pause();
 			vocals.pause();
 		}
 
 		// Song duration in a float, useful for the time left feature
-		songLength = /*FlxG.sound.music.length*/ inst.length;
+		songLength = FlxG.sound.music.length;
 		FlxTween.tween(timeBar, {alpha: 1}, 0.5, {ease: FlxEase.circOut});
 		FlxTween.tween(timeTxt, {alpha: 1}, 0.5, {ease: FlxEase.circOut});
 
@@ -1488,11 +1479,9 @@ class PlayState extends MusicBeatState
 		stagesFunc(function(stage:BaseStage) stage.openSubState(SubState));
 		if (paused)
 		{
-			//if (FlxG.sound.music != null)
-			if (inst != null)
+			if (FlxG.sound.music != null)
 			{
-				//FlxG.sound.music.pause();
-				inst.pause();
+				FlxG.sound.music.pause();
 				vocals.pause();
 			}
 
@@ -1519,7 +1508,7 @@ class PlayState extends MusicBeatState
 		stagesFunc(function(stage:BaseStage) stage.closeSubState());
 		if (paused)
 		{
-			if (/*FlxG.sound.music*/ inst != null && !startingSong)
+			if (FlxG.sound.music != null && !startingSong)
 				resyncVocals();
 
 			if (startTimer != null && !startTimer.finished) startTimer.active = true;
@@ -1576,14 +1565,9 @@ class PlayState extends MusicBeatState
 
 		vocals.pause();
 
-		/*
 		FlxG.sound.music.play();
 		FlxG.sound.music.pitch = playbackRate;
 		Conductor.songPosition = FlxG.sound.music.time;
-		*/
-		inst.play();
-		inst.pitch = playbackRate;
-		Conductor.songPosition = inst.time;
 		if (Conductor.songPosition <= vocals.length)
 		{
 			vocals.time = Conductor.songPosition;
@@ -1604,6 +1588,16 @@ class PlayState extends MusicBeatState
 		FlxG.camera.followLerp = 0;
 		if(!inCutscene && !paused) {
 			FlxG.camera.followLerp = FlxMath.bound(elapsed * 2.4 * cameraSpeed * playbackRate / (FlxG.updateFramerate / 60), 0, 1);
+			#if ACHIEVEMENTS_ALLOWED
+			if(!startingSong && !endingSong && boyfriend.animation.curAnim != null && boyfriend.animation.curAnim.name.startsWith('idle')) {
+				boyfriendIdleTime += elapsed;
+				if(boyfriendIdleTime >= 0.15) { // Kind of a mercy thing for making the achievement easier to get as it's apparently frustrating to some playerss
+					boyfriendIdled = true;
+				}
+			} else {
+				boyfriendIdleTime = 0;
+			}
+			#end
 		}
 
 		super.update(elapsed);
@@ -1713,7 +1707,7 @@ class PlayState extends MusicBeatState
 			{
 				if(!cpuControlled) {
 					keysCheck();
-				} else if(boyfriend.animation.curAnim != null && boyfriend.holdTimer > Conductor.stepCrochet * (0.0011 / /*FlxG.sound.music*/ inst.pitch) * boyfriend.singDuration && boyfriend.animation.curAnim.name.startsWith('sing') && !boyfriend.animation.curAnim.name.endsWith('miss')) {
+				} else if(boyfriend.animation.curAnim != null && boyfriend.holdTimer > Conductor.stepCrochet * (0.0011 / FlxG.sound.music.pitch) * boyfriend.singDuration && boyfriend.animation.curAnim.name.startsWith('sing') && !boyfriend.animation.curAnim.name.endsWith('miss')) {
 					boyfriend.dance();
 					//boyfriend.animation.curAnim.finish();
 				}
@@ -1773,8 +1767,7 @@ class PlayState extends MusicBeatState
 		if(!endingSong && !startingSong) {
 			if (FlxG.keys.justPressed.ONE) {
 				KillNotes();
-				//FlxG.sound.music.onComplete();
-				inst.onComplete();
+				FlxG.sound.music.onComplete();
 			}
 			if(FlxG.keys.justPressed.TWO) { //Go 10 seconds into the future :O
 				setSongTime(Conductor.songPosition + 10000);
@@ -1802,11 +1795,9 @@ class PlayState extends MusicBeatState
 		persistentDraw = true;
 		paused = true;
 
-		//if(FlxG.sound.music != null)
-		if(inst != null)
+		if(FlxG.sound.music != null)
 		{
-			//FlxG.sound.music.pause();
-			inst.pause();
+			FlxG.sound.music.pause();
 			vocals.pause();
 		}
 		if(!cpuControlled)
@@ -1864,8 +1855,7 @@ class PlayState extends MusicBeatState
 				paused = true;
 
 				vocals.stop();
-				inst.stop();
-				//FlxG.sound.music.stop();
+				FlxG.sound.music.stop();
 
 				persistentUpdate = false;
 				persistentDraw = false;
@@ -2209,9 +2199,7 @@ class PlayState extends MusicBeatState
 	public function finishSong(?ignoreNoteOffset:Bool = false):Void
 	{
 		updateTime = false;
-		//FlxG.sound.music.volume = 0;
-		inst.volume = 0;
-		inst.pause();
+		FlxG.sound.music.volume = 0;
 		vocals.volume = 0;
 		vocals.pause();
 		if(ClientPrefs.data.noteOffset <= 0 || ignoreNoteOffset) {
@@ -2327,8 +2315,7 @@ class PlayState extends MusicBeatState
 					prevCamFollow = camFollow;
 
 					PlayState.SONG = Song.loadFromJson(PlayState.storyPlaylist[0] + difficulty, PlayState.storyPlaylist[0]);
-					//FlxG.sound.music.stop();
-					inst.stop();
+					FlxG.sound.music.stop();
 
 					cancelMusicFadeTween();
 					LoadingState.loadAndSwitchState(new PlayState());
@@ -2599,7 +2586,7 @@ class PlayState extends MusicBeatState
 			{
 				//more accurate hit time for the ratings?
 				var lastTime:Float = Conductor.songPosition;
-				if(Conductor.songPosition >= 0) Conductor.songPosition = /*FlxG.sound.music*/ inst.time;
+				if(Conductor.songPosition >= 0) Conductor.songPosition = FlxG.sound.music.time;
 
 				var canMiss:Bool = !ClientPrefs.data.ghostTapping;
 
@@ -2648,7 +2635,9 @@ class PlayState extends MusicBeatState
 
 				// Shubs, this is for the "Just the Two of Us" achievement lol
 				//									- Shadow Mario
+				#if ACHIEVEMENTS_ALLOWED
 				if(!keysPressed.contains(key)) keysPressed.push(key);
+				#end
 
 				//more accurate hit time for the ratings? part 2 (Now that the calculations are done, go back to the time it was before for not causing a note stutter)
 				Conductor.songPosition = lastTime;
@@ -2755,7 +2744,7 @@ class PlayState extends MusicBeatState
 				}
 				#end
 			}
-			else if (boyfriend.animation.curAnim != null && boyfriend.holdTimer > Conductor.stepCrochet * (0.0011 / /*FlxG.sound.music*/ inst.pitch) * boyfriend.singDuration && boyfriend.animation.curAnim.name.startsWith('sing') && !boyfriend.animation.curAnim.name.endsWith('miss'))
+			else if (boyfriend.animation.curAnim != null && boyfriend.holdTimer > Conductor.stepCrochet * (0.0011 / FlxG.sound.music.pitch) * boyfriend.singDuration && boyfriend.animation.curAnim.name.startsWith('sing') && !boyfriend.animation.curAnim.name.endsWith('miss'))
 			{
 				boyfriend.dance();
 				//boyfriend.animation.curAnim.finish();
@@ -3015,7 +3004,7 @@ class PlayState extends MusicBeatState
 		FlxG.stage.removeEventListener(KeyboardEvent.KEY_DOWN, onKeyPress);
 		FlxG.stage.removeEventListener(KeyboardEvent.KEY_UP, onKeyRelease);
 		FlxAnimationController.globalSpeed = 1;
-		//FlxG.sound.music.pitch = 1;
+		FlxG.sound.music.pitch = 1;
 		Note.globalRgbShaders = [];
 		backend.NoteTypesConfig.clearNoteTypesData();
 		instance = null;
@@ -3030,9 +3019,9 @@ class PlayState extends MusicBeatState
 	var lastStepHit:Int = -1;
 	override function stepHit()
 	{
-		if(/*FlxG.sound.music*/ inst.time >= -ClientPrefs.data.noteOffset)
+		if(FlxG.sound.music.time >= -ClientPrefs.data.noteOffset)
 		{
-			if (Math.abs(/*FlxG.sound.music*/ inst.time - (Conductor.songPosition - Conductor.offset)) > (20 * playbackRate)
+			if (Math.abs(FlxG.sound.music.time - (Conductor.songPosition - Conductor.offset)) > (20 * playbackRate)
 				|| (SONG.needsVoices && Math.abs(vocals.time - (Conductor.songPosition - Conductor.offset)) > (20 * playbackRate)))
 			{
 				resyncVocals();
