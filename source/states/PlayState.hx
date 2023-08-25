@@ -1164,8 +1164,9 @@ class PlayState extends MusicBeatState
 		{
 			vocals.time = time;
 			vocals.pitch = playbackRate;
-		}
+		
 		vocals.play();
+}
 		Conductor.songPosition = time;
 	}
 
@@ -1587,9 +1588,9 @@ class PlayState extends MusicBeatState
 		{
 			vocals.time = Conductor.songPosition;
 			vocals.pitch = playbackRate;
-		}
 		vocals.play();
 	}
+}
 
 	public var paused:Bool = false;
 	public var canReset:Bool = true;
