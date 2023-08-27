@@ -2152,24 +2152,18 @@ class PlayState extends MusicBeatState
 	{
 		switch(char)
 		{
-			case 'dad':
+			case 'dad' | 'opponent':
 				camFollow.setPosition(
 					dad.getMidpoint().x + 150 + dad.cameraPosition[0] + opponentCameraOffset[0],
 					dad.getMidpoint().y - 100 + dad.cameraPosition[1] + opponentCameraOffset[1]);
-				//camFollow.x += dad.cameraPosition[0] + opponentCameraOffset[0];
-				//camFollow.y += dad.cameraPosition[1] + opponentCameraOffset[1];
-			case 'gf':
+			case 'gf' | 'girlfriend':
 				camFollow.setPosition(
 					gf.getMidpoint().x + gf.cameraPosition[0] + girlfriendCameraOffset[0],
 					gf.getMidpoint().y + gf.cameraPosition[1] + girlfriendCameraOffset[1]);
-				//camFollow.x += gf.cameraPosition[0] + girlfriendCameraOffset[0];
-				//camFollow.y += gf.cameraPosition[1] + girlfriendCameraOffset[1];
 			default:
 				camFollow.setPosition(
 					boyfriend.getMidpoint().x - 100 - boyfriend.cameraPosition[0] - boyfriendCameraOffset[0],
 					boyfriend.getMidpoint().y - 100 + boyfriend.cameraPosition[1] + boyfriendCameraOffset[1]);
-				//camFollow.x -= boyfriend.cameraPosition[0] - boyfriendCameraOffset[0];
-				//camFollow.y += boyfriend.cameraPosition[1] + boyfriendCameraOffset[1];
 		}
 		callOnScripts('onMoveCamera', [char]);
 	}
