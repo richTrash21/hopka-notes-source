@@ -1540,7 +1540,8 @@ class PlayState extends MusicBeatState
 		#if desktop
 		if (health > 0 && !paused) DiscordClient.changePresence(detailsPausedText, SONG.song + " (" + storyDifficultyText + ")", iconP2.getCharacter());
 		#end
-
+		if(!ClientPrefs.data.autoPause && startedCountdown && canPause && !paused)
+			if(callOnScripts('onPause', null, true) != FunkinLua.Function_Stop) openPauseMenu(); // idk
 		super.onFocusLost();
 	}
 
@@ -1607,12 +1608,7 @@ class PlayState extends MusicBeatState
 		}
 
 		if (controls.PAUSE && startedCountdown && canPause)
-		{
-			var ret:Dynamic = callOnScripts('onPause', null, true);
-			if(ret != FunkinLua.Function_Stop) {
-				openPauseMenu();
-			}
-		}
+			if(callOnScripts('onPause', null, true) != FunkinLua.Function_Stop) openPauseMenu();
 
 		if (controls.justPressed('debug_1') && !endingSong && !inCutscene)
 			openChartEditor();
@@ -1806,7 +1802,6 @@ class PlayState extends MusicBeatState
 				}
 		}
 		openSubState(new PauseSubState());
-		//}
 
 		#if desktop
 		DiscordClient.changePresence(detailsPausedText, SONG.song + " (" + storyDifficultyText + ")", iconP2.getCharacter());
