@@ -56,10 +56,13 @@ import sys.io.File;
 #end
 
 #if VIDEOS_ALLOWED 
+import objects.FlxVideo as VideoHandler;
+/*
 #if (hxCodec >= "3.0.0") import hxcodec.flixel.FlxVideo as VideoHandler;
 #elseif (hxCodec >= "2.6.1") import hxcodec.VideoHandler;
 #elseif (hxCodec == "2.6.0") import VideoHandler;
 #else import vlc.MP4Handler as VideoHandler; #end
+*/
 #end
 
 import objects.Note;

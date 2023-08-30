@@ -1,4 +1,4 @@
-package hxcodec.flixel;
+package objects;
 
 import flixel.FlxG;
 import hxcodec.openfl.Video;
@@ -16,7 +16,7 @@ class FlxVideo extends Video
 
 		onOpening.add(function()
 		{
-			#if FLX_SOUND_SYSTEM
+			#if FLX_SOUND_SYSTEM //idk it seems to mess up the sound lmao
 			volume = Std.int((FlxG.sound.muted ? 0 : 1) * 100 /*(FlxG.sound.volume * 100)*/);
 			#end
 		});
