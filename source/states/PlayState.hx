@@ -17,7 +17,7 @@ import backend.Highscore;
 import backend.StageData;
 import backend.WeekData;
 import backend.Song;
-import backend.Section;
+import backend.Section.SwagSection;
 import backend.Rating;
 
 import flixel.FlxBasic;
@@ -30,12 +30,12 @@ import flixel.util.FlxStringUtil;
 import flixel.util.FlxSave;
 import flixel.input.keyboard.FlxKey;
 import flixel.animation.FlxAnimationController;
+#if !MODS_ALLOWED
 import lime.utils.Assets;
 import openfl.utils.Assets as OpenFlAssets;
+#end
 import openfl.events.KeyboardEvent;
-import tjson.TJSON as Json;
 
-import cutscenes.CutsceneHandler;
 import cutscenes.DialogueBoxPsych;
 
 import states.StoryMenuState;
@@ -48,7 +48,6 @@ import substates.GameOverSubstate;
 
 #if !flash 
 import flixel.addons.display.FlxRuntimeShader;
-import openfl.filters.ShaderFilter;
 #end
 
 #if sys
@@ -58,14 +57,14 @@ import sys.io.File;
 
 #if VIDEOS_ALLOWED 
 #if (hxCodec >= "3.0.0") import hxcodec.flixel.FlxVideo as VideoHandler;
-#elseif (hxCodec >= "2.6.1") import hxcodec.VideoHandler as VideoHandler;
+#elseif (hxCodec >= "2.6.1") import hxcodec.VideoHandler;
 #elseif (hxCodec == "2.6.0") import VideoHandler;
 #else import vlc.MP4Handler as VideoHandler; #end
 #end
 
-import objects.Note.EventNote;
+import objects.Note;
 import objects.*;
-import states.stages.objects.*;
+//import states.stages.objects.*;
 
 #if LUA_ALLOWED
 import psychlua.*;
@@ -228,6 +227,7 @@ class PlayState extends MusicBeatState
 	public static var daPixelZoom:Float = 6;
 	private var singAnimations:Array<String> = ['singLEFT', 'singDOWN', 'singUP', 'singRIGHT'];
 
+	public var playingVideo:Bool = false;
 	public var inCutscene:Bool = false;
 	public var skipCountdown:Bool = false;
 	var songLength:Float = 0;
@@ -823,55 +823,58 @@ class PlayState extends MusicBeatState
 		char.y += char.positionArray[1];
 	}
 
+	var video:VideoHandler;
 	public function startVideo(name:String)
 	{
 		#if VIDEOS_ALLOWED
-		inCutscene = true;
+			inCutscene = true;
 
-		var filepath:String = Paths.video(name);
-		#if sys
-		if(!FileSystem.exists(filepath))
-		#else
-		if(!OpenFlAssets.exists(filepath))
-		#end
-		{
-			FlxG.log.warn('Couldnt find video file: ' + name);
-			startAndEnd();
-			return;
-		}
-
-		var video:VideoHandler = new VideoHandler();
-			#if (hxCodec >= "3.0.0")
-			// Recent versions
-			video.play(filepath);
-			video.onEndReached.add(function()
-			{
-				video.dispose();
-				startAndEnd();
-				return;
-			}, true);
+			var filepath:String = Paths.video(name);
+			#if sys
+			if(!FileSystem.exists(filepath))
 			#else
-			// Older versions
-			video.playVideo(filepath);
-			video.finishCallback = function()
+			if(!OpenFlAssets.exists(filepath))
+			#end
 			{
+				FlxG.log.warn('Couldnt find video file: ' + name);
 				startAndEnd();
 				return;
 			}
+
+			playingVideo = true;
+			video = new VideoHandler();
+			#if (hxCodec >= "3.0.0")
+				// Recent versions
+				video.play(filepath);
+				video.onEndReached.add(endVideo, true);
+			#else
+				// Older versions
+				video.playVideo(filepath);
+				video.finishCallback = endVideo;
 			#end
 		#else
-		FlxG.log.warn('Platform not supported!');
-		startAndEnd();
-		return;
+			FlxG.log.warn('Platform not supported!');
+			startAndEnd();
+			return;
+		#end
+	}
+
+	function endVideo():Void
+	{
+		#if VIDEOS_ALLOWED
+			playingVideo = false;
+			#if (hxCodec >= "3.0.0")
+				video.dispose();
+			#end
+			startAndEnd();
+			return;
 		#end
 	}
 
 	function startAndEnd()
 	{
-		if(endingSong)
-			endSong();
-		else
-			startCountdown();
+		if(endingSong)	endSong();
+		else			startCountdown();
 	}
 
 	var dialogueCount:Int = 0;
@@ -1610,6 +1613,12 @@ class PlayState extends MusicBeatState
 		if (controls.PAUSE && startedCountdown && canPause)
 			if(callOnScripts('onPause', null, true) != FunkinLua.Function_Stop) openPauseMenu();
 
+		//idk how it will behave on an older versions sooooo...
+		#if (hxCodec >= "3.0.0")
+		if (playingVideo && (controls.PAUSE || controls.ACCEPT))
+			endVideo();
+		#end
+
 		if (controls.justPressed('debug_1') && !endingSong && !inCutscene)
 			openChartEditor();
 
@@ -2201,6 +2210,7 @@ class PlayState extends MusicBeatState
 		endingSong = true;
 		camZooming = false;
 		inCutscene = false;
+		playingVideo = false;
 		updateTime = false;
 
 		deathCounter = 0;
