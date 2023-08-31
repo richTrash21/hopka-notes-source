@@ -29,9 +29,10 @@ class HealthIcon extends FlxSprite
 			if(!Paths.fileExists('images/' + name + '.png', IMAGE)) name = 'icons/icon-face'; //Prevents crash from missing icon
 			
 			var graphic = Paths.image(name, allowGPU);
-			loadGraphic(graphic, true, Math.floor(graphic.width / 2), Math.floor(graphic.height));
-			iconOffsets[0] = (width - 150) / 2;
-			iconOffsets[1] = (height - 150) / 2;
+			loadGraphic(graphic, true, Math.floor(graphic.width * 0.5), graphic.height);
+			iconOffsets = [(width - 150) * 0.5, (height - 150) * 0.5];
+			//iconOffsets[0] = (width - 150) * 0.5;
+			//iconOffsets[1] = (height - 150) * 0.5;
 			updateHitbox();
 
 			animation.add(char, [0, 1], 0, false, isPlayer);
@@ -50,6 +51,7 @@ class HealthIcon extends FlxSprite
 		super.updateHitbox();
 		offset.x = iconOffsets[0];
 		offset.y = iconOffsets[1];
+		//origin.x = isPlayer ? -10 : frameWidth + 10;
 	}
 
 	public function getCharacter():String {

@@ -459,7 +459,7 @@ class PlayState extends MusicBeatState
 
 		Conductor.songPosition = -5000 / Conductor.songPosition;
 		var showTime:Bool = (ClientPrefs.data.timeBarType != 'Disabled');
-		timeTxt = new FlxText(STRUM_X + (FlxG.width / 2) - 248, 19, 400, "", 32);
+		timeTxt = new FlxText(STRUM_X + (FlxG.width * 0.5) - 248, 19, 400, "", 32);
 		timeTxt.setFormat(Paths.font("vcr.ttf"), 32, FlxColor.WHITE, CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
 		timeTxt.scrollFactor.set();
 		timeTxt.alpha = 0;
@@ -1229,12 +1229,12 @@ class PlayState extends MusicBeatState
 		Conductor.bpm = SONG.bpm;
 		curSong = SONG.song;
 
+		vocals = new FlxSound();
 		if (SONG.needsVoices) {
-			vocals = new FlxSound();
 			vocals.loadEmbedded(Paths.voices(SONG.song));
 			vocals.pitch = playbackRate;
-			FlxG.sound.list.add(vocals);
 		}
+		FlxG.sound.list.add(vocals);
 
 		inst = new FlxSound().loadEmbedded(Paths.inst(SONG.song));
 		FlxG.sound.list.add(inst);
@@ -1307,7 +1307,7 @@ class PlayState extends MusicBeatState
 						sustainNote.parent = swagNote;
 						unspawnNotes.push(sustainNote);
 						
-						sustainNote.correctionOffset = swagNote.height / 2;
+						sustainNote.correctionOffset = swagNote.height * 0.5;
 						if(!PlayState.isPixelStage)
 						{
 							if(oldNote.isSustainNote)
@@ -1326,13 +1326,13 @@ class PlayState extends MusicBeatState
 							oldNote.updateHitbox();
 						}
 
-						if (sustainNote.mustPress) sustainNote.x += FlxG.width / 2; // general offset
+						if (sustainNote.mustPress) sustainNote.x += FlxG.width * 0.5; // general offset
 						else if(ClientPrefs.data.middleScroll)
 						{
 							sustainNote.x += 310;
 							if(daNoteData > 1) //Up and Right
 							{
-								sustainNote.x += FlxG.width / 2 + 25;
+								sustainNote.x += FlxG.width * 0.5 + 25;
 							}
 						}
 					}
@@ -1340,14 +1340,14 @@ class PlayState extends MusicBeatState
 
 				if (swagNote.mustPress)
 				{
-					swagNote.x += FlxG.width / 2; // general offset
+					swagNote.x += FlxG.width * 0.5; // general offset
 				}
 				else if(ClientPrefs.data.middleScroll)
 				{
 					swagNote.x += 310;
 					if(daNoteData > 1) //Up and Right
 					{
-						swagNote.x += FlxG.width / 2 + 25;
+						swagNote.x += FlxG.width * 0.5 + 25;
 					}
 				}
 
@@ -1464,7 +1464,7 @@ class PlayState extends MusicBeatState
 				{
 					babyArrow.x += 310;
 					if(i > 1) { //Up and Right
-						babyArrow.x += FlxG.width / 2 + 25;
+						babyArrow.x += FlxG.width * 0.5 + 25;
 					}
 				}
 				opponentStrums.add(babyArrow);
@@ -1563,7 +1563,7 @@ class PlayState extends MusicBeatState
 
 	function resyncVocals():Void
 	{
-		if(finishTimer != null) return;
+		if(finishTimer != null || vocals == null) return;
 
 		vocals.pause();
 
@@ -1587,7 +1587,7 @@ class PlayState extends MusicBeatState
 	{
 		callOnScripts('onUpdate', [elapsed]);
 
-		FlxG.camera.followLerp = 0;
+		//FlxG.camera.followLerp = 0;
 		if(!inCutscene && !paused) {
 			FlxG.camera.followLerp = FlxMath.bound(elapsed * 2.4 * cameraSpeed * playbackRate / (FlxG.updateFramerate / 60), 0, 1);
 			#if ACHIEVEMENTS_ALLOWED
@@ -1633,8 +1633,10 @@ class PlayState extends MusicBeatState
 		iconP2.updateHitbox();
 
 		if (health > 2) health = 2;
-		iconP1.x = healthBar.barCenter + (150 * iconP1.scale.x - 150) / 2 - 26;
-		iconP2.x = healthBar.barCenter - (150 * iconP2.scale.x) / 2 - 26 * 2;
+		iconP1.x = healthBar.barCenter + (150 * iconP1.scale.x - 150) * 0.5 - 26;
+		iconP2.x = healthBar.barCenter - (150 * iconP2.scale.x) * 0.5 - 52;
+		//iconP1.x = healthBar.barCenter - 26;
+		//iconP2.x = healthBar.barCenter - iconP2.frameWidth + 26;
 		iconP1.animation.curAnim.curFrame = (healthBar.percent < 20) ? 1 : 0;
 		iconP2.animation.curAnim.curFrame = (healthBar.percent > 80) ? 1 : 0;
 
@@ -1785,8 +1787,12 @@ class PlayState extends MusicBeatState
 		}
 		#end
 
-		setOnScripts('cameraX', camFollow.x);
-		setOnScripts('cameraY', camFollow.y);
+		// okay, what the fuck??????
+		// why does camFollow represent camera position????
+
+		// UPD: much better. need to make this a pull request to official psych lmao
+		setOnScripts('cameraX', /*camFollow.x*/ FlxG.camera.scroll.x + FlxG.width * 0.5);
+		setOnScripts('cameraY', /*camFollow.y*/ FlxG.camera.scroll.y + FlxG.height * 0.5);
 		setOnScripts('botPlay', cpuControlled);
 		callOnScripts('onUpdatePost', [elapsed]);
 	}
@@ -2173,8 +2179,12 @@ class PlayState extends MusicBeatState
 	public function finishSong(?ignoreNoteOffset:Bool = false):Void
 	{
 		updateTime = false;
+		FlxG.sound.music.volume = 0;
 		FlxG.sound.music.pause();
-		if (vocals != null) vocals.pause();
+		if(vocals != null) {
+			vocals.pause();
+			vocals.volume = 0;
+		}
 		if(ClientPrefs.data.noteOffset <= 0 || ignoreNoteOffset) {
 			endCallback();
 		} else {
@@ -2191,19 +2201,13 @@ class PlayState extends MusicBeatState
 		//Should kill you if you tried to cheat
 		if(!startingSong) {
 			notes.forEach(function(daNote:Note) {
-				if(daNote.strumTime < songLength - Conductor.safeZoneOffset) {
+				if(daNote.strumTime < songLength - Conductor.safeZoneOffset)
 					health -= 0.05 * healthLoss;
-				}
 			});
-			for (daNote in unspawnNotes) {
-				if(daNote.strumTime < songLength - Conductor.safeZoneOffset) {
+			for (daNote in unspawnNotes)
+				if(daNote.strumTime < songLength - Conductor.safeZoneOffset)
 					health -= 0.05 * healthLoss;
-				}
-			}
-
-			if(doDeathCheck()) {
-				return false;
-			}
+			if(doDeathCheck()) return false;
 		}
 
 		timeBar.visible = false;
