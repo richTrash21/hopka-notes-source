@@ -253,7 +253,7 @@ class PlayState extends MusicBeatState
 	#end
 
 	// Lua shit
-	public static var instance:PlayState;
+	public static var instance(default, null):PlayState; // по приколу :) - Redar13
 	public var luaArray:Array<FunkinLua> = [];
 	#if LUA_ALLOWED
 	private var luaDebugGroup:FlxTypedGroup<DebugLuaText>;
