@@ -156,14 +156,8 @@ class PauseSubState extends MusicBeatSubstate
 		var downP = controls.UI_DOWN_P;
 		var accepted = controls.ACCEPT;
 
-		if (upP)
-		{
-			changeSelection(-1);
-		}
-		if (downP)
-		{
-			changeSelection(1);
-		}
+		if(upP) changeSelection(-1);
+		if(downP) changeSelection(1);
 
 		var daSelected:String = menuItems[curSelected];
 		switch (daSelected)
@@ -293,11 +287,8 @@ class PauseSubState extends MusicBeatSubstate
 					PlayState.seenCutscene = false;
 
 					Mods.loadTopMod();
-					if(PlayState.isStoryMode) {
-						MusicBeatState.switchState(new StoryMenuState());
-					} else {
-						MusicBeatState.switchState(new FreeplayState());
-					}
+					if(PlayState.isStoryMode) MusicBeatState.switchState(new StoryMenuState());
+					else MusicBeatState.switchState(new FreeplayState());
 					PlayState.cancelMusicFadeTween();
 					FlxG.sound.playMusic(Paths.music('freakyMenu'));
 					PlayState.changedDifficulty = false;

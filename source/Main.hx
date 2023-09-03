@@ -1,11 +1,15 @@
 package;
 
-import flixel.FlxGame;
 import openfl.Lib;
 import openfl.display.FPS;
 import openfl.display.Sprite;
 import openfl.events.Event;
 import openfl.display.StageScaleMode;
+
+import flixel.FlxGame;
+
+import lime.app.Application;
+
 import states.TitleState;
 
 //crash handler stuff
@@ -32,6 +36,7 @@ class Main extends Sprite
 
 	public static var fpsVar:FPS;
 	public static var fpsShadow:FPS;
+	private static var _focusVolume:Float = 1; // ignore
 
 	// You can pretty much ignore everything from here on - your code should go in your states.
 
@@ -44,22 +49,29 @@ class Main extends Sprite
 	{
 		super();
 
-		if (stage != null)
-		{
-			init();
-		}
-		else
-		{
-			addEventListener(Event.ADDED_TO_STAGE, init);
-		}
+		if (stage != null) init();
+		else addEventListener(Event.ADDED_TO_STAGE, init);
+		Application.current.window.onFocusIn.add(volumeOnFocus);
+		Application.current.window.onFocusOut.add(volumeOnFocusLost);
+	}
+
+	private function volumeOnFocus() {
+		// dont ask
+		FlxG.sound.volume = _focusVolume;
+		//trace('volume: ' + FlxG.sound.volume);
+	}
+
+	private static function volumeOnFocusLost() {
+		// dont ask
+		_focusVolume = FlxG.sound.volume;
+		FlxG.sound.volume *= 0.4;
+		//trace('volume: ' + FlxG.sound.volume);
 	}
 
 	private function init(?E:Event):Void
 	{
 		if (hasEventListener(Event.ADDED_TO_STAGE))
-		{
 			removeEventListener(Event.ADDED_TO_STAGE, init);
-		}
 
 		setupGame();
 	}

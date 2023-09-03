@@ -638,20 +638,6 @@ class FunkinLua {
 			}
 			return released;
 		});
-		Lua_helper.add_callback(lua, "noteTweenAngle", function(tag:String, note:Int, value:Dynamic, duration:Float, ease:String) {
-			LuaUtils.cancelTween(tag);
-			if(note < 0) note = 0;
-			var testicle:StrumNote = game.strumLineNotes.members[note % game.strumLineNotes.length];
-
-			if(testicle != null) {
-				game.modchartTweens.set(tag, FlxTween.tween(testicle, {angle: value}, duration, {ease: LuaUtils.getTweenEaseByString(ease),
-					onComplete: function(twn:FlxTween) {
-						game.callOnLuas('onTweenCompleted', [tag]);
-						game.modchartTweens.remove(tag);
-					}
-				}));
-			}
-		});
 		Lua_helper.add_callback(lua, "noteTweenAlpha", function(tag:String, note:Int, value:Dynamic, duration:Float, ease:String) {
 			LuaUtils.cancelTween(tag);
 			if(note < 0) note = 0;

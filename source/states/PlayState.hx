@@ -387,9 +387,7 @@ class PlayState extends MusicBeatState
 			case 'stage': new states.stages.StageWeek1(); //Week 1
 		}
 
-		if(isPixelStage) {
-			introSoundsSuffix = '-pixel';
-		}
+		if(isPixelStage) introSoundsSuffix = '-pixel';
 
 		add(gfGroup);
 		add(dadGroup);
@@ -444,16 +442,14 @@ class PlayState extends MusicBeatState
 		startCharacterScripts(boyfriend.curCharacter);
 
 		var camPos:FlxPoint = FlxPoint.get(girlfriendCameraOffset[0], girlfriendCameraOffset[1]);
-		if(gf != null)
-		{
+		if(gf != null) {
 			camPos.x += gf.getGraphicMidpoint().x + gf.cameraPosition[0];
 			camPos.y += gf.getGraphicMidpoint().y + gf.cameraPosition[1];
 		}
 
 		if(dad.curCharacter.startsWith('gf')) {
 			dad.setPosition(GF_X, GF_Y);
-			if(gf != null)
-				gf.visible = false;
+			if(gf != null) gf.visible = false;
 		}
 		stagesFunc(function(stage:BaseStage) stage.createPost());
 
@@ -499,8 +495,7 @@ class PlayState extends MusicBeatState
 		camFollow.setPosition(camPos.x, camPos.y);
 		camPos.put();
 				
-		if (prevCamFollow != null)
-		{
+		if (prevCamFollow != null) {
 			camFollow = prevCamFollow;
 			prevCamFollow = null;
 		}
@@ -547,9 +542,8 @@ class PlayState extends MusicBeatState
 		botplayTxt.borderSize = 1.25;
 		botplayTxt.visible = cpuControlled;
 		add(botplayTxt);
-		if(ClientPrefs.data.downScroll) {
-			botplayTxt.y = timeBar.y - 78;
-		}
+		if(ClientPrefs.data.downScroll) botplayTxt.y = timeBar.y - 78;
+		
 		strumLineNotes.cameras = [camHUD];
 		grpNoteSplashes.cameras = [camHUD];
 		notes.cameras = [camHUD];
