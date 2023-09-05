@@ -31,11 +31,10 @@ class HealthBar extends FlxSpriteGroup
 		barWidth = Std.int(bg.width - 6);
 		barHeight = Std.int(bg.height - 6);
 
-		leftBar = new FlxSprite().makeGraphic(Std.int(bg.width), Std.int(bg.height), FlxColor.WHITE);
-		//leftBar.color = FlxColor.WHITE;
+		leftBar = new FlxSprite().makeGraphic(Std.int(bg.width), Std.int(bg.height));
 		leftBar.antialiasing = antialiasing = ClientPrefs.data.antialiasing;
 
-		rightBar = new FlxSprite().makeGraphic(Std.int(bg.width), Std.int(bg.height), FlxColor.WHITE);
+		rightBar = new FlxSprite().makeGraphic(Std.int(bg.width), Std.int(bg.height));
 		rightBar.color = FlxColor.BLACK;
 		rightBar.antialiasing = ClientPrefs.data.antialiasing;
 
@@ -50,7 +49,7 @@ class HealthBar extends FlxSpriteGroup
 		percent = (value != null ? value : 0);
 		super.update(elapsed);
 	}
-	
+
 	public function setBounds(min:Float, max:Float)
 	{
 		bounds.min = min;

@@ -259,6 +259,8 @@ class PlayState extends MusicBeatState
 	private var luaDebugGroup:FlxTypedGroup<DebugLuaText>;
 	#end
 	public var introSoundsSuffix:String = '';
+	public var uiPrefix:String = '';
+	public var uiSuffix:String = '';
 
 	// Less laggy controls
 	private var keysArray:Array<String>;
@@ -315,6 +317,13 @@ class PlayState extends MusicBeatState
 
 		FlxG.cameras.setDefaultDrawTarget(camGame, true);
 		CustomFadeTransition.nextCamera = camOther;
+
+		// will give pixel stages more pixelated look (???????????????????)
+		if(isPixelStage)
+		{
+			FlxG.camera.pixelPerfectRender = true;
+			camHUD.pixelPerfectRender = true;
+		}
 
 		persistentUpdate = true;
 		persistentDraw = true;
@@ -387,7 +396,11 @@ class PlayState extends MusicBeatState
 			case 'stage': new states.stages.StageWeek1(); //Week 1
 		}
 
-		if(isPixelStage) introSoundsSuffix = '-pixel';
+		if(isPixelStage) {
+			introSoundsSuffix = '-pixel';
+			uiSuffix = '-pixel';
+			uiPrefix = '${stageUI}UI/';
+		}
 
 		add(gfGroup);
 		add(dadGroup);
@@ -465,6 +478,7 @@ class PlayState extends MusicBeatState
 		if(ClientPrefs.data.timeBarType == 'Song Name') timeTxt.text = SONG.song;
 
 		timeBar = new HealthBar(0, timeTxt.y + (timeTxt.height / 4), 'timeBar', function() return songPercent, 0, 1);
+		if(isPixelStage) timeBar.antialiasing = false;
 		timeBar.scrollFactor.set();
 		timeBar.screenCenter(X);
 		timeBar.alpha = 0;
@@ -509,6 +523,7 @@ class PlayState extends MusicBeatState
 		moveCameraSection();
 
 		healthBar = new HealthBar(0, FlxG.height * (!ClientPrefs.data.downScroll ? 0.89 : 0.11), 'healthBar', function() return health, 0, 2);
+		if(isPixelStage) healthBar.antialiasing = false;
 		healthBar.screenCenter(X);
 		healthBar.leftToRight = false;
 		healthBar.scrollFactor.set();
@@ -1045,10 +1060,9 @@ class PlayState extends MusicBeatState
 		var spr:FlxSprite = new FlxSprite().loadGraphic(Paths.image(image));
 		spr.cameras = [camHUD];
 		spr.scrollFactor.set();
-		spr.updateHitbox();
 
-		if (PlayState.isPixelStage)
-			spr.setGraphicSize(Std.int(spr.width * daPixelZoom));
+		if (isPixelStage) spr.setGraphicSize(Std.int(spr.width * daPixelZoom));
+		spr.updateHitbox();
 
 		spr.screenCenter();
 		spr.antialiasing = antialias;
@@ -2204,6 +2218,8 @@ class PlayState extends MusicBeatState
 			if(doDeathCheck()) return false;
 		}
 
+		FlxG.camera.pixelPerfectRender = false;
+		camHUD.pixelPerfectRender = false;
 		timeBar.visible = false;
 		timeTxt.visible = false;
 		canPause = false;
@@ -2217,8 +2233,7 @@ class PlayState extends MusicBeatState
 		seenCutscene = false;
 
 		#if ACHIEVEMENTS_ALLOWED
-		if(achievementObj != null)
-			return false;
+		if(achievementObj != null) return false;
 		else
 		{
 			var noMissWeek:String = WeekData.getWeekFileName() + '_nomiss';
@@ -2260,12 +2275,10 @@ class PlayState extends MusicBeatState
 					#if desktop DiscordClient.resetClientID(); #end
 
 					cancelMusicFadeTween();
-					if(FlxTransitionableState.skipNextTransIn) {
+					if(FlxTransitionableState.skipNextTransIn)
 						CustomFadeTransition.nextCamera = null;
-					}
 					MusicBeatState.switchState(new StoryMenuState());
 
-					// if ()
 					if(!ClientPrefs.getGameplaySetting('practice') && !ClientPrefs.getGameplaySetting('botplay')) {
 						StoryMenuState.weekCompleted.set(WeekData.weeksList[storyWeek], true);
 						Highscore.saveWeekScore(WeekData.getWeekFileName(), campaignScore, storyDifficulty);
@@ -2359,18 +2372,16 @@ class PlayState extends MusicBeatState
 
 	private function cachePopUpScore()
 	{
-		var uiPrefix:String = '';
+		/*var uiPrefix:String = '';
 		var uiSuffix:String = '';
 		if (stageUI != "normal")
 		{
 			uiPrefix = '${stageUI}UI/';
 			if (PlayState.isPixelStage) uiSuffix = '-pixel';
-		}
+		}*/
 
-		for (rating in ratingsData)
-			Paths.image(uiPrefix + rating.image + uiSuffix);
-		for (i in 0...10)
-			Paths.image(uiPrefix + 'num' + i + uiSuffix);
+		for (rat in ratingsData)  Paths.image(uiPrefix + rat.image + uiSuffix);
+		for (i in 0...10)		  Paths.image(uiPrefix + 'num' + i + uiSuffix);
 	}
 
 	private function popUpScore(note:Note = null):Void
@@ -2403,14 +2414,14 @@ class PlayState extends MusicBeatState
 			}
 		}
 
-		var uiPrefix:String = "";
-		var uiSuffix:String = '';
+		//var uiPrefix:String = "";
+		//var uiSuffix:String = '';
 		var antialias:Bool = ClientPrefs.data.antialiasing;
 
 		if (stageUI != "normal")
 		{
-			uiPrefix = '${stageUI}UI/';
-			if (PlayState.isPixelStage) uiSuffix = '-pixel';
+			//uiPrefix = '${stageUI}UI/';
+			//if (PlayState.isPixelStage) uiSuffix = '-pixel';
 			antialias = !isPixelStage;
 		}
 
@@ -2498,8 +2509,7 @@ class PlayState extends MusicBeatState
 			numScore.x = placement + (43 * daLoop) - 90 + ClientPrefs.data.comboOffset[2];
 			numScore.y += 80 - ClientPrefs.data.comboOffset[3];
 			
-			if (!ClientPrefs.data.comboStacking)
-				lastScore.push(numScore);
+			if (!ClientPrefs.data.comboStacking) lastScore.push(numScore);
 
 			if (!PlayState.isPixelStage) numScore.setGraphicSize(Std.int(numScore.width * 0.5));
 			else numScore.setGraphicSize(Std.int(numScore.width * daPixelZoom));
@@ -2962,10 +2972,11 @@ class PlayState extends MusicBeatState
 				script.destroy();
 			}
 
-		while (hscriptArray.length > 0)
-			hscriptArray.pop();
+		while (hscriptArray.length > 0) hscriptArray.pop();
 		#end
 
+		FlxG.camera.pixelPerfectRender = false;
+		camHUD.pixelPerfectRender = false;
 		FlxG.stage.removeEventListener(KeyboardEvent.KEY_DOWN, onKeyPress);
 		FlxG.stage.removeEventListener(KeyboardEvent.KEY_UP, onKeyRelease);
 		FlxAnimationController.globalSpeed = 1;
