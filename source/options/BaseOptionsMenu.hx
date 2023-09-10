@@ -1,5 +1,8 @@
 package options;
 
+import flixel.addons.display.FlxGridOverlay;
+import flixel.addons.display.FlxBackdrop;
+
 import objects.CheckboxThingie;
 import objects.AttachedText;
 import options.Option;
@@ -36,6 +39,12 @@ class BaseOptionsMenu extends MusicBeatSubstate
 		bg.screenCenter();
 		bg.antialiasing = ClientPrefs.data.antialiasing;
 		add(bg);
+
+		var grid:FlxBackdrop = new FlxBackdrop(FlxGridOverlay.createGrid(80, 80, 160, 160, true, 0x33FFFFFF, 0x0));
+		grid.velocity.set(40, 40);
+		grid.alpha = 0;
+		FlxTween.tween(grid, {alpha: 1}, 0.5, {ease: FlxEase.quadOut});
+		add(grid);
 
 		// avoids lagspikes while scrolling through menus!
 		grpOptions = new FlxTypedGroup<Alphabet>();
@@ -105,14 +114,8 @@ class BaseOptionsMenu extends MusicBeatSubstate
 	var holdValue:Float = 0;
 	override function update(elapsed:Float)
 	{
-		if (controls.UI_UP_P)
-		{
-			changeSelection(-1);
-		}
-		if (controls.UI_DOWN_P)
-		{
-			changeSelection(1);
-		}
+		if (controls.UI_UP_P)  changeSelection(-1);
+		if (controls.UI_DOWN_P) changeSelection(1);
 
 		if (controls.BACK) {
 			close();

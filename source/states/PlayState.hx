@@ -316,14 +316,7 @@ class PlayState extends MusicBeatState
 		grpNoteSplashes = new FlxTypedGroup<NoteSplash>();
 
 		FlxG.cameras.setDefaultDrawTarget(camGame, true);
-		CustomFadeTransition.nextCamera = camOther;
-
-		// will give pixel stages more pixelated look (???????????????????)
-		if(isPixelStage)
-		{
-			FlxG.camera.pixelPerfectRender = true;
-			camHUD.pixelPerfectRender = true;
-		}
+		CustomFadeTransition.nextCamera = camOther;	
 
 		persistentUpdate = true;
 		persistentDraw = true;
@@ -454,10 +447,10 @@ class PlayState extends MusicBeatState
 		boyfriendGroup.add(boyfriend);
 		startCharacterScripts(boyfriend.curCharacter);
 
-		var camPos:FlxPoint = FlxPoint.get(girlfriendCameraOffset[0], girlfriendCameraOffset[1]);
+		var camPos:Array<Float> = [girlfriendCameraOffset[0], girlfriendCameraOffset[1]];
 		if(gf != null) {
-			camPos.x += gf.getGraphicMidpoint().x + gf.cameraPosition[0];
-			camPos.y += gf.getGraphicMidpoint().y + gf.cameraPosition[1];
+			camPos[0] += gf.getGraphicMidpoint().x + gf.cameraPosition[0];
+			camPos[1] += gf.getGraphicMidpoint().y + gf.cameraPosition[1];
 		}
 
 		if(dad.curCharacter.startsWith('gf')) {
@@ -506,8 +499,8 @@ class PlayState extends MusicBeatState
 		generateSong(SONG.song);
 
 		camFollow = new FlxObject(0, 0, 1, 1);
-		camFollow.setPosition(camPos.x, camPos.y);
-		camPos.put();
+		camFollow.setPosition(camPos[0], camPos[1]);
+		//camPos.put();
 				
 		if (prevCamFollow != null) {
 			camFollow = prevCamFollow;
@@ -518,6 +511,10 @@ class PlayState extends MusicBeatState
 		FlxG.camera.follow(camFollow, LOCKON, 0);
 		FlxG.camera.zoom = defaultCamZoom;
 		FlxG.camera.snapToTarget();
+		// will give pixel stages more pixelated look (???????????????????)
+		// dont ask why its down here idfk
+		FlxG.camera.pixelPerfectRender = isPixelStage;
+		camHUD.pixelPerfectRender = isPixelStage;
 
 		FlxG.worldBounds.set(0, 0, FlxG.width, FlxG.height);
 		moveCameraSection();
@@ -1049,7 +1046,7 @@ class PlayState extends MusicBeatState
 				callOnLuas('onCountdownTick', [swagCounter]);
 				callOnHScript('onCountdownTick', [tick, swagCounter]);
 
-				swagCounter += 1;
+				swagCounter++;
 			}, 5);
 		}
 		return true;
@@ -2202,7 +2199,6 @@ class PlayState extends MusicBeatState
 		}
 	}
 
-
 	public var transitioning = false;
 	public function endSong()
 	{
@@ -2313,9 +2309,8 @@ class PlayState extends MusicBeatState
 				#if desktop DiscordClient.resetClientID(); #end
 
 				cancelMusicFadeTween();
-				if(FlxTransitionableState.skipNextTransIn) {
+				if(FlxTransitionableState.skipNextTransIn)
 					CustomFadeTransition.nextCamera = null;
-				}
 				MusicBeatState.switchState(new FreeplayState());
 				FlxG.sound.playMusic(Paths.music('freakyMenu'));
 				changedDifficulty = false;
@@ -2372,13 +2367,11 @@ class PlayState extends MusicBeatState
 
 	private function cachePopUpScore()
 	{
-		/*var uiPrefix:String = '';
-		var uiSuffix:String = '';
 		if (stageUI != "normal")
 		{
 			uiPrefix = '${stageUI}UI/';
 			if (PlayState.isPixelStage) uiSuffix = '-pixel';
-		}*/
+		}
 
 		for (rat in ratingsData)  Paths.image(uiPrefix + rat.image + uiSuffix);
 		for (i in 0...10)		  Paths.image(uiPrefix + 'num' + i + uiSuffix);
@@ -2414,14 +2407,12 @@ class PlayState extends MusicBeatState
 			}
 		}
 
-		//var uiPrefix:String = "";
-		//var uiSuffix:String = '';
 		var antialias:Bool = ClientPrefs.data.antialiasing;
 
 		if (stageUI != "normal")
 		{
-			//uiPrefix = '${stageUI}UI/';
-			//if (PlayState.isPixelStage) uiSuffix = '-pixel';
+			uiPrefix = '${stageUI}UI/';
+			if (PlayState.isPixelStage) uiSuffix = '-pixel';
 			antialias = !isPixelStage;
 		}
 

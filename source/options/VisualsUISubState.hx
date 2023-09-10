@@ -9,6 +9,8 @@ class VisualsUISubState extends BaseOptionsMenu
 	var notes:FlxTypedGroup<StrumNote>;
 	var notesTween:Array<FlxTween> = [];
 	var noteY:Float = 90;
+
+	var changedMusic:Bool = false;
 	public function new()
 	{
 		title = 'Visuals and UI';
@@ -40,7 +42,12 @@ class VisualsUISubState extends BaseOptionsMenu
 				'string',
 				noteSkins);
 			addOption(option);
-			option.onChange = onChangeNoteSkin;
+			option.onChange = function()
+				notes.forEachAlive(function(note:StrumNote) {
+					changeNoteSkin(note);
+					note.centerOffsets();
+					note.centerOrigin();
+				});
 			noteOptionID = optionsArray.length - 1;
 		}
 		
@@ -118,7 +125,11 @@ class VisualsUISubState extends BaseOptionsMenu
 			'showFPS',
 			'bool');
 		addOption(option);
-		option.onChange = onChangeFPSCounter;
+		option.onChange = function()
+			if(Main.fpsVar != null) {
+				Main.fpsVar.visible = ClientPrefs.data.showFPS;
+				Main.fpsShadow.visible = ClientPrefs.data.showFPS;
+			};
 		#end
 		
 		var option:Option = new Option('Pause Screen Song:',
@@ -127,7 +138,14 @@ class VisualsUISubState extends BaseOptionsMenu
 			'string',
 			['None', 'Noodles', 'Breakfast', 'Tea Time']);
 		addOption(option);
-		option.onChange = onChangePauseMusic;
+		option.onChange = function() {
+			if(ClientPrefs.data.pauseMusic == 'None')
+				FlxG.sound.music.volume = 0;
+			else
+				FlxG.sound.playMusic(Paths.music(Paths.formatToSongPath(ClientPrefs.data.pauseMusic)));
+	
+			changedMusic = true;
+		};
 		
 		#if CHECK_FOR_UPDATES
 		var option:Option = new Option('Check for Updates',
@@ -172,26 +190,6 @@ class VisualsUISubState extends BaseOptionsMenu
 		}
 	}
 
-	var changedMusic:Bool = false;
-	function onChangePauseMusic()
-	{
-		if(ClientPrefs.data.pauseMusic == 'None')
-			FlxG.sound.music.volume = 0;
-		else
-			FlxG.sound.playMusic(Paths.music(Paths.formatToSongPath(ClientPrefs.data.pauseMusic)));
-
-		changedMusic = true;
-	}
-
-	function onChangeNoteSkin()
-	{
-		notes.forEachAlive(function(note:StrumNote) {
-			changeNoteSkin(note);
-			note.centerOffsets();
-			note.centerOrigin();
-		});
-	}
-
 	function changeNoteSkin(note:StrumNote)
 	{
 		var skin:String = Note.defaultNoteSkin;
@@ -208,14 +206,4 @@ class VisualsUISubState extends BaseOptionsMenu
 		if(changedMusic && !OptionsState.onPlayState) FlxG.sound.playMusic(Paths.music('freakyMenu'), 1, true);
 		super.destroy();
 	}
-
-	#if !mobile
-	function onChangeFPSCounter()
-	{
-		if(Main.fpsVar != null) {
-			Main.fpsVar.visible = ClientPrefs.data.showFPS;
-			Main.fpsShadow.visible = ClientPrefs.data.showFPS;
-		}
-	}
-	#end
 }

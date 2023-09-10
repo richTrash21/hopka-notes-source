@@ -37,7 +37,7 @@ class GameplaySettingsSubState extends BaseOptionsMenu
 			'autoPause',
 			'bool');
 		addOption(option);
-		option.onChange = onChangeAutoPause;
+		option.onChange = function() FlxG.autoPause = ClientPrefs.data.autoPause;
 
 		var option:Option = new Option('Disable Reset Button',
 			"If checked, pressing Reset won't do anything.",
@@ -55,7 +55,7 @@ class GameplaySettingsSubState extends BaseOptionsMenu
 		option.maxValue = 1;
 		option.changeValue = 0.1;
 		option.decimals = 1;
-		option.onChange = onChangeHitsoundVolume;
+		option.onChange = function() FlxG.sound.play(Paths.sound('hitsound'), ClientPrefs.data.hitsoundVolume);
 
 		var option:Option = new Option('Rating Offset',
 			'Changes how late/early you have to hit for a "Sick!"\nHigher values mean you have to hit later.',
@@ -108,15 +108,5 @@ class GameplaySettingsSubState extends BaseOptionsMenu
 		addOption(option);
 
 		super();
-	}
-
-	function onChangeHitsoundVolume()
-	{
-		FlxG.sound.play(Paths.sound('hitsound'), ClientPrefs.data.hitsoundVolume);
-	}
-
-	function onChangeAutoPause()
-	{
-		FlxG.autoPause = ClientPrefs.data.autoPause;
 	}
 }

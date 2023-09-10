@@ -239,6 +239,11 @@ class Character extends FlxSprite
 	public function playAnim(AnimName:String, Force:Bool = false, Reversed:Bool = false, Frame:Int = 0):Void
 	{
 		specialAnim = false;
+		@:privateAccess // if there is no animation named AnimName then just skips the whole shit
+		if(AnimName == null || animation._animations.get(AnimName) == null) {
+			FlxG.log.warn("No animation called \"" + AnimName + "\"");
+			return;
+		}
 		animation.play(AnimName, Force, Reversed, Frame);
 
 		var daOffset = animOffsets.get(AnimName);

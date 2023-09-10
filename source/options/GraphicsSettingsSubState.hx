@@ -29,7 +29,13 @@ class GraphicsSettingsSubState extends BaseOptionsMenu
 			'If unchecked, disables anti-aliasing, increases performance\nat the cost of sharper visuals.',
 			'antialiasing',
 			'bool');
-		option.onChange = onChangeAntiAliasing; //Changing onChange is only needed if you want to make a special interaction after it changes the value
+		option.onChange = function() { //Changing onChange is only needed if you want to make a special interaction after it changes the value
+			for (sprite in members) {
+				var sprite:FlxSprite = cast sprite;
+				if(sprite != null && (sprite is FlxSprite) && !(sprite is FlxText))
+					sprite.antialiasing = ClientPrefs.data.antialiasing;
+			}
+		}; 
 		addOption(option);
 		antialiasingOption = optionsArray.length-1;
 
@@ -55,36 +61,22 @@ class GraphicsSettingsSubState extends BaseOptionsMenu
 		option.minValue = 60;
 		option.maxValue = 240;
 		option.displayFormat = '%v FPS';
-		option.onChange = onChangeFramerate;
+		option.onChange = function() {
+			if(ClientPrefs.data.framerate > FlxG.drawFramerate)
+			{
+				FlxG.updateFramerate = ClientPrefs.data.framerate;
+				FlxG.drawFramerate = ClientPrefs.data.framerate;
+			}
+			else
+			{
+				FlxG.drawFramerate = ClientPrefs.data.framerate;
+				FlxG.updateFramerate = ClientPrefs.data.framerate;
+			}
+		};
 		#end
 
 		super();
-		insert(1, boyfriend);
-	}
-
-	function onChangeAntiAliasing()
-	{
-		for (sprite in members)
-		{
-			var sprite:FlxSprite = cast sprite;
-			if(sprite != null && (sprite is FlxSprite) && !(sprite is FlxText)) {
-				sprite.antialiasing = ClientPrefs.data.antialiasing;
-			}
-		}
-	}
-
-	function onChangeFramerate()
-	{
-		if(ClientPrefs.data.framerate > FlxG.drawFramerate)
-		{
-			FlxG.updateFramerate = ClientPrefs.data.framerate;
-			FlxG.drawFramerate = ClientPrefs.data.framerate;
-		}
-		else
-		{
-			FlxG.drawFramerate = ClientPrefs.data.framerate;
-			FlxG.updateFramerate = ClientPrefs.data.framerate;
-		}
+		insert(2, boyfriend);
 	}
 
 	override function changeSelection(change:Int = 0)
