@@ -374,6 +374,13 @@ class ChartingState extends MusicBeatState
 
 		updateGrid();
 		super.create();
+		lime.app.Application.current.window.onDropFile.add(LoadFromFile);// by Redar13
+	}
+	function LoadFromFile(file:String){
+		var modFolder = file.split("\\");
+		// trace(Mods.currentModDirectory = modFolder[modFolder.length - 1 - 3]);
+		Mods.currentModDirectory = modFolder[modFolder.length - 1 - 3];
+		loadJson(file, true);
 	}
 
 	var check_mute_inst:FlxUICheckBox = null;
@@ -3062,23 +3069,30 @@ class ChartingState extends MusicBeatState
 
 	var missingText:FlxText;
 	var missingTextTimer:FlxTimer;
-	function loadJson(song:String):Void
-	{
+	function loadJson(song:String, ?altLoad:Bool = false):Void{
 		//shitty null fix, i fucking hate it when this happens
 		//make it look sexier if possible
 		try {
-			if (Difficulty.getString() != Difficulty.getDefault()) {
-				if(Difficulty.getString() == null){
-					PlayState.SONG = Song.loadFromJson(song.toLowerCase(), song.toLowerCase());
-				}else{
-					PlayState.SONG = Song.loadFromJson(song.toLowerCase() + "-" + Difficulty.getString(), song.toLowerCase());
+			if(altLoad){
+				var rawJson = #if sys
+					File.getContent(song).trim();
+					#else
+					lime.utils.Assets.getText(song).trim();
+					#end
+				while (!rawJson.endsWith("}")) rawJson = rawJson.substr(0, rawJson.length - 1);
+				PlayState.SONG = Song.parseJSONshit(rawJson);
+			}else{
+				if (Difficulty.getString() != Difficulty.getDefault()) {
+					if(Difficulty.getString() == null){
+						PlayState.SONG = Song.loadFromJson(song.toLowerCase(), song.toLowerCase());
+					}else{
+						PlayState.SONG = Song.loadFromJson(song.toLowerCase() + "-" + Difficulty.getString(), song.toLowerCase());
+					}
 				}
+				else PlayState.SONG = Song.loadFromJson(song.toLowerCase(), song.toLowerCase());
 			}
-			else PlayState.SONG = Song.loadFromJson(song.toLowerCase(), song.toLowerCase());
 			MusicBeatState.resetState();
-		}
-		catch(e)
-		{
+		}catch(e){
 			trace('ERROR! $e');
 
 			var errorStr:String = e.toString();
