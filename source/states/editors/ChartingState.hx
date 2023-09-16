@@ -2154,6 +2154,7 @@ class ChartingState extends MusicBeatState
 	{
 		Note.globalRgbShaders = [];
 		backend.NoteTypesConfig.clearNoteTypesData();
+		lime.app.Application.current.window.onDropFile.remove(LoadFromFile);
 		super.destroy();
 	}
 
