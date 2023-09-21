@@ -24,7 +24,6 @@ import flixel.FlxBasic;
 import flixel.FlxObject;
 import flixel.FlxSubState;
 import flixel.addons.transition.FlxTransitionableState;
-import flixel.math.FlxPoint;
 import flixel.util.FlxSort;
 import flixel.util.FlxStringUtil;
 import flixel.util.FlxSave;
@@ -337,7 +336,7 @@ class PlayState extends MusicBeatState
 		detailsPausedText = "Paused - " + detailsText;
 		#end
 
-		GameOverSubstate.resetVariables();
+		GameOverSubstate.resetVariables(SONG);
 		songName = Paths.formatToSongPath(SONG.song);
 		if(SONG.stage == null || SONG.stage.length < 1)
 			SONG.stage = StageData.vanillaSongStage(songName);
@@ -498,10 +497,8 @@ class PlayState extends MusicBeatState
 
 		generateSong(SONG.song);
 
-		camFollow = new FlxObject(0, 0, 1, 1);
-		camFollow.setPosition(camPos[0], camPos[1]);
-		//camPos.put();
-				
+		camFollow = new FlxObject(camPos[0], camPos[1], 1, 1);
+
 		if (prevCamFollow != null) {
 			camFollow = prevCamFollow;
 			prevCamFollow = null;
@@ -572,19 +569,13 @@ class PlayState extends MusicBeatState
 		startingSong = true;
 		
 		#if LUA_ALLOWED
-		for (notetype in noteTypes)
-			startLuasNamed('custom_notetypes/' + notetype + '.lua');
-
-		for (event in eventsPushed)
-			startLuasNamed('custom_events/' + event + '.lua');
+		for (notetype in noteTypes) startLuasNamed('custom_notetypes/' + notetype + '.lua');
+		for (event in eventsPushed) startLuasNamed('custom_events/' + event + '.lua');
 		#end
 
 		#if HSCRIPT_ALLOWED
-		for (notetype in noteTypes)
-			startHScriptsNamed('custom_notetypes/' + notetype + '.hx');
-
-		for (event in eventsPushed)
-			startHScriptsNamed('custom_events/' + event + '.hx');
+		for (notetype in noteTypes) startHScriptsNamed('custom_notetypes/' + notetype + '.hx');
+		for (event in eventsPushed) startHScriptsNamed('custom_events/' + event + '.hx');
 		#end
 		noteTypes = null;
 		eventsPushed = null;
@@ -601,10 +592,8 @@ class PlayState extends MusicBeatState
 		for (folder in foldersToCheck)
 			for (file in FileSystem.readDirectory(folder))
 			{
-				if(file.toLowerCase().endsWith('.lua'))
-					new FunkinLua(folder + file);
-				if(file.toLowerCase().endsWith('.hx'))
-					initHScript(folder + file);
+				if(file.toLowerCase().endsWith('.lua')) new FunkinLua(folder + file);
+				if(file.toLowerCase().endsWith('.hx'))  initHScript(folder + file);
 			}
 		#end
 
@@ -617,11 +606,10 @@ class PlayState extends MusicBeatState
 		precacheList.set('missnote2', 'sound');
 		precacheList.set('missnote3', 'sound');
 
-		if (PauseSubState.songName != null) {
+		if (PauseSubState.songName != null)
 			precacheList.set(PauseSubState.songName, 'music');
-		} else if(ClientPrefs.data.pauseMusic != 'None') {
+		else if(ClientPrefs.data.pauseMusic != 'None')
 			precacheList.set(Paths.formatToSongPath(ClientPrefs.data.pauseMusic), 'music');
-		}
 
 		precacheList.set('alphabet', 'image');
 		resetRPC();
@@ -634,18 +622,12 @@ class PlayState extends MusicBeatState
 		cachePopUpScore();
 		
 		for (key => type in precacheList)
-		{
-			//trace('Key $key is type $type');
 			switch(type)
 			{
-				case 'image':
-					Paths.image(key);
-				case 'sound':
-					Paths.sound(key);
-				case 'music':
-					Paths.music(key);
+				case 'image': Paths.image(key);
+				case 'sound': Paths.sound(key);
+				case 'music': Paths.music(key);
 			}
-		}
 
 		super.create();
 		Paths.clearUnusedMemory();
@@ -975,7 +957,7 @@ class PlayState extends MusicBeatState
 			startedCountdown = true;
 			Conductor.songPosition = -Conductor.crochet * 5;
 			setOnScripts('startedCountdown', true);
-			callOnScripts('onCountdownStarted', null);
+			callOnScripts('onCountdownStarted');
 
 			var swagCounter:Int = 0;
 			if (startOnTime > 0) {
@@ -1075,18 +1057,9 @@ class PlayState extends MusicBeatState
 		return spr;
 	}
 
-	public function addBehindGF(obj:FlxBasic)
-	{
-		insert(members.indexOf(gfGroup), obj);
-	}
-	public function addBehindBF(obj:FlxBasic)
-	{
-		insert(members.indexOf(boyfriendGroup), obj);
-	}
-	public function addBehindDad(obj:FlxBasic)
-	{
-		insert(members.indexOf(dadGroup), obj);
-	}
+	public function addBehindGF(obj:FlxBasic)	insert(members.indexOf(gfGroup), obj);
+	public function addBehindBF(obj:FlxBasic)	insert(members.indexOf(boyfriendGroup), obj);
+	public function addBehindDad(obj:FlxBasic)	insert(members.indexOf(dadGroup), obj);
 
 	public function clearNotesBefore(time:Float)
 	{
@@ -1131,22 +1104,15 @@ class PlayState extends MusicBeatState
 			var percent:Float = CoolUtil.floorDecimal(ratingPercent * 100, 2);
 			str += ' ($percent%) - $ratingFC';
 		}
-
-		scoreTxt.text = 'Score: ' + songScore
-		+ ' | Misses: ' + songMisses
-		+ ' | Rating: ' + str;
+		scoreTxt.text = 'Score: ' + songScore + ' | Misses: ' + songMisses + ' | Rating: ' + str;
 
 		if(ClientPrefs.data.scoreZoom && !miss && !cpuControlled)
 		{
-			if(scoreTxtTween != null) {
-				scoreTxtTween.cancel();
-			}
+			if(scoreTxtTween != null) scoreTxtTween.cancel();
 			scoreTxt.scale.x = 1.075;
 			scoreTxt.scale.y = 1.075;
 			scoreTxtTween = FlxTween.tween(scoreTxt.scale, {x: 1, y: 1}, 0.2, {
-				onComplete: function(twn:FlxTween) {
-					scoreTxtTween = null;
-				}
+				onComplete: function(twn:FlxTween) { scoreTxtTween = null; }
 			});
 		}
 		callOnScripts('onUpdateScore', [miss]);
@@ -1260,8 +1226,7 @@ class PlayState extends MusicBeatState
 		#end
 			var eventsData:Array<Dynamic> = Song.loadFromJson('events', songName).events;
 			for (event in eventsData) //Event Notes
-				for (i in 0...event[1].length)
-					makeEvent(event, i);
+				for (i in 0...event[1].length) makeEvent(event, i);
 		}
 
 		for (section in noteData)
@@ -1334,11 +1299,11 @@ class PlayState extends MusicBeatState
 						if (sustainNote.mustPress) sustainNote.x += FlxG.width * 0.5; // general offset
 						else if(ClientPrefs.data.middleScroll)
 						{
-							sustainNote.x += 310;
-							if(daNoteData > 1) //Up and Right
+							sustainNote.x += daNoteData > 1 ? FlxG.width * 0.5 + 335 : 310;
+							/*if(daNoteData > 1) //Up and Right
 							{
 								sustainNote.x += FlxG.width * 0.5 + 25;
-							}
+							}*/
 						}
 					}
 				}
@@ -1349,11 +1314,11 @@ class PlayState extends MusicBeatState
 				}
 				else if(ClientPrefs.data.middleScroll)
 				{
-					swagNote.x += 310;
-					if(daNoteData > 1) //Up and Right
+					swagNote.x += daNoteData > 1 ? FlxG.width * 0.5 + 335 : 310;
+					/*if(daNoteData > 1) //Up and Right
 					{
 						swagNote.x += FlxG.width * 0.5 + 25;
-					}
+					}*/
 				}
 
 				if(!noteTypes.contains(swagNote.noteType)) {
@@ -1372,9 +1337,7 @@ class PlayState extends MusicBeatState
 	// called only once per different event (Used for precaching)
 	function eventPushed(event:EventNote) {
 		eventPushedUnique(event);
-		if(eventsPushed.contains(event.event)) {
-			return;
-		}
+		if(eventsPushed.contains(event.event)) return;
 
 		stagesFunc(function(stage:BaseStage) stage.eventPushed(event));
 		eventsPushed.push(event.event);
@@ -1433,6 +1396,7 @@ class PlayState extends MusicBeatState
 		eventNotes.push(subEvent);
 		eventPushed(subEvent);
 		callOnScripts('onEventPushed', [subEvent.event, subEvent.value1 != null ? subEvent.value1 : '', subEvent.value2 != null ? subEvent.value2 : '', subEvent.strumTime]);
+		trace('pushed event: ' + subEvent.event + ' | ' + subEvent.value1 != null ? subEvent.value1 : 'null' + ' | ' + subEvent.value2 != null ? subEvent.value2 : 'null' + ' | ' + subEvent.strumTime);
 	}
 
 	public var skipArrowStartTween:Bool = false; //for lua
@@ -1467,10 +1431,10 @@ class PlayState extends MusicBeatState
 			{
 				if(ClientPrefs.data.middleScroll)
 				{
-					babyArrow.x += 310;
-					if(i > 1) { //Up and Right
+					babyArrow.x += i > 1 ? FlxG.width * 0.5 + 335 : 310;
+					/*if(i > 1) { //Up and Right
 						babyArrow.x += FlxG.width * 0.5 + 25;
-					}
+					}*/
 				}
 				opponentStrums.add(babyArrow);
 			}
@@ -1796,8 +1760,8 @@ class PlayState extends MusicBeatState
 		// why does camFollow represent camera position????
 
 		// UPD: much better. need to make this a pull request to official psych lmao
-		setOnScripts('cameraX', /*camFollow.x*/ FlxG.camera.scroll.x + FlxG.width * 0.5);
-		setOnScripts('cameraY', /*camFollow.y*/ FlxG.camera.scroll.y + FlxG.height * 0.5);
+		setOnScripts('cameraX', /*camFollow.x*/ FlxG.camera.scroll.x + (FlxG.camera.width * 0.5));
+		setOnScripts('cameraY', /*camFollow.y*/ FlxG.camera.scroll.y + (FlxG.camera.height * 0.5));
 		setOnScripts('botPlay', cpuControlled);
 		callOnScripts('onUpdatePost', [elapsed]);
 	}
@@ -1878,8 +1842,6 @@ class PlayState extends MusicBeatState
 				#end
 				openSubState(new GameOverSubstate(boyfriend.getScreenPosition().x - boyfriend.positionArray[0], boyfriend.getScreenPosition().y - boyfriend.positionArray[1]));
 
-				// MusicBeatState.switchState(new GameOverState(boyfriend.getScreenPosition().x, boyfriend.getScreenPosition().y));
-
 				#if desktop
 				// Game Over doesn't get his own variable because it's only used here
 				DiscordClient.changePresence("Game Over - " + detailsText, SONG.song + " (" + storyDifficultyText + ")", iconP2.getCharacter());
@@ -1894,19 +1856,10 @@ class PlayState extends MusicBeatState
 	public function checkEventNote() {
 		while(eventNotes.length > 0) {
 			var leStrumTime:Float = eventNotes[0].strumTime;
-			if(Conductor.songPosition < leStrumTime) {
+			if(Conductor.songPosition < leStrumTime)
 				return;
-			}
 
-			var value1:String = '';
-			if(eventNotes[0].value1 != null)
-				value1 = eventNotes[0].value1;
-
-			var value2:String = '';
-			if(eventNotes[0].value2 != null)
-				value2 = eventNotes[0].value2;
-
-			triggerEvent(eventNotes[0].event, value1, value2, leStrumTime);
+			triggerEvent(eventNotes[0].event, eventNotes[0].value1 != null ? eventNotes[0].value1 : '', eventNotes[0].value2 != null ? eventNotes[0].value2 : '', leStrumTime);
 			eventNotes.shift();
 		}
 	}
@@ -2175,7 +2128,7 @@ class PlayState extends MusicBeatState
 					gf.getMidpoint().y + gf.cameraPosition[1] + girlfriendCameraOffset[1]);
 			default:
 				camFollow.setPosition(
-					boyfriend.getMidpoint().x - 100 - boyfriend.cameraPosition[0] - boyfriendCameraOffset[0],
+					boyfriend.getMidpoint().x - 100 - boyfriend.cameraPosition[0] + boyfriendCameraOffset[0],
 					boyfriend.getMidpoint().y - 100 + boyfriend.cameraPosition[1] + boyfriendCameraOffset[1]);
 		}
 		callOnScripts('onMoveCamera', [char]);
@@ -2996,10 +2949,7 @@ class PlayState extends MusicBeatState
 		}
 
 		super.stepHit();
-
-		if(curStep == lastStepHit) {
-			return;
-		}
+		if(curStep == lastStepHit) return;
 
 		lastStepHit = curStep;
 		setOnScripts('curStep', curStep);
@@ -3043,7 +2993,7 @@ class PlayState extends MusicBeatState
 		if (SONG.notes[curSection] != null)
 		{
 			if (generatedMusic && !endingSong && !isCameraOnForcedPos)
-				moveCameraSection();
+				moveCameraSection(curSection);
 
 			if (camZooming && FlxG.camera.zoom < 1.35 && ClientPrefs.data.camZooms)
 			{
@@ -3157,7 +3107,6 @@ class PlayState extends MusicBeatState
 	#end
 
 	public function callOnScripts(funcToCall:String, args:Array<Dynamic> = null, ignoreStops = false, exclusions:Array<String> = null, excludeValues:Array<Dynamic> = null):Dynamic {
-		var returnVal:Dynamic = psychlua.FunkinLua.Function_Continue;
 		if(args == null) args = [];
 		if(exclusions == null) exclusions = [];
 		if(excludeValues == null) excludeValues = [psychlua.FunkinLua.Function_Continue];

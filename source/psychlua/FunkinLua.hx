@@ -185,11 +185,7 @@ class FunkinLua {
 
 		set('buildTarget', getBuildTarget());
 
-		for (name => func in customFunctions)
-		{
-			if(func != null)
-				Lua_helper.add_callback(lua, name, func);
-		}
+		for (name => func in customFunctions) if(func != null) Lua_helper.add_callback(lua, name, func);
 
 		//
 		Lua_helper.add_callback(lua, "getRunningScripts", function(){
@@ -731,15 +727,9 @@ class FunkinLua {
 			}
 			game.addCharacterToList(name, charType);
 		});
-		Lua_helper.add_callback(lua, "precacheImage", function(name:String, ?allowGPU:Bool = true) {
-			Paths.image(name, allowGPU);
-		});
-		Lua_helper.add_callback(lua, "precacheSound", function(name:String) {
-			Paths.sound(name);
-		});
-		Lua_helper.add_callback(lua, "precacheMusic", function(name:String) {
-			Paths.music(name);
-		});
+		Lua_helper.add_callback(lua, "precacheImage", function(name:String, ?allowGPU:Bool = true) { Paths.image(name, allowGPU); });
+		Lua_helper.add_callback(lua, "precacheSound", function(name:String) { Paths.sound(name); });
+		Lua_helper.add_callback(lua, "precacheMusic", function(name:String) { Paths.music(name); });
 
 		// others
 		Lua_helper.add_callback(lua, "triggerEvent", function(name:String, arg1:Dynamic, arg2:Dynamic) {
@@ -777,10 +767,7 @@ class FunkinLua {
 			if(FlxTransitionableState.skipNextTransIn)
 				CustomFadeTransition.nextCamera = null;
 
-			if(PlayState.isStoryMode)
-				MusicBeatState.switchState(new StoryMenuState());
-			else
-				MusicBeatState.switchState(new FreeplayState());
+			MusicBeatState.switchState(PlayState.isStoryMode ? new StoryMenuState() : new FreeplayState());
 			
 			#if desktop DiscordClient.resetClientID(); #end
 
@@ -792,9 +779,7 @@ class FunkinLua {
 			Mods.loadTopMod();
 			return true;
 		});
-		Lua_helper.add_callback(lua, "getSongPosition", function() {
-			return Conductor.songPosition;
-		});
+		Lua_helper.add_callback(lua, "getSongPosition", function() return Conductor.songPosition);
 
 		Lua_helper.add_callback(lua, "getCharacterX", function(type:String) {
 			switch(type.toLowerCase()) {
@@ -850,15 +835,11 @@ class FunkinLua {
 		Lua_helper.add_callback(lua, "cameraFade", function(camera:String, color:String, duration:Float,forced:Bool) {
 			LuaUtils.cameraFromString(camera).fade(CoolUtil.colorFromString(color), duration, false,null,forced);
 		});
-		Lua_helper.add_callback(lua, "setRatingPercent", function(value:Float) {
-			game.ratingPercent = value;
-		});
-		Lua_helper.add_callback(lua, "setRatingName", function(value:String) {
-			game.ratingName = value;
-		});
-		Lua_helper.add_callback(lua, "setRatingFC", function(value:String) {
-			game.ratingFC = value;
-		});
+
+		Lua_helper.add_callback(lua, "setRatingPercent", function(value:Float)	game.ratingPercent = value);
+		Lua_helper.add_callback(lua, "setRatingName",	 function(value:String)	game.ratingName = value);
+		Lua_helper.add_callback(lua, "setRatingFC",		 function(value:String)	game.ratingFC = value);
+
 		Lua_helper.add_callback(lua, "getMouseX", function(camera:String) {
 			var cam:FlxCamera = LuaUtils.cameraFromString(camera);
 			return FlxG.mouse.getScreenPosition(cam).x;
@@ -1123,15 +1104,9 @@ class FunkinLua {
 			}
 		});
 
-		Lua_helper.add_callback(lua, "luaSpriteExists", function(tag:String) {
-			return game.modchartSprites.exists(tag);
-		});
-		Lua_helper.add_callback(lua, "luaTextExists", function(tag:String) {
-			return game.modchartTexts.exists(tag);
-		});
-		Lua_helper.add_callback(lua, "luaSoundExists", function(tag:String) {
-			return game.modchartSounds.exists(tag);
-		});
+		Lua_helper.add_callback(lua, "luaSpriteExists",	function(tag:String) return game.modchartSprites.exists(tag));
+		Lua_helper.add_callback(lua, "luaTextExists",	function(tag:String) return game.modchartTexts.exists(tag));
+		Lua_helper.add_callback(lua, "luaSoundExists",	function(tag:String) return game.modchartSounds.exists(tag));
 
 		Lua_helper.add_callback(lua, "setHealthBarColors", function(left:String, right:String) {
 			game.healthBar.setColors(CoolUtil.colorFromString(left), CoolUtil.colorFromString(right));
