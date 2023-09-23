@@ -20,10 +20,11 @@
 	
 	<!-- ______________________ PSYCH ENGINE CUSTOMIZATION ______________________ -->
 
-	<define name="MODS_ALLOWED" if="desktop" />
-	<define name="HSCRIPT_ALLOWED" if="desktop" />
-	<define name="LUA_ALLOWED" if="desktop" />
-	<define name="VIDEOS_ALLOWED" if="windows || linux || android" unless="32bits"/>
+	<define name="CRASH_HANDLER"	if="desktop" />
+	<define name="MODS_ALLOWED"		if="desktop" />
+	<define name="HSCRIPT_ALLOWED"	if="desktop" />
+	<define name="LUA_ALLOWED"		if="desktop" />
+	<define name="VIDEOS_ALLOWED"	if="windows || linux || android" unless="32bits"/>
 
 	<!-- ____________________________ Window Settings ___________________________ -->
 
@@ -44,9 +45,9 @@
 
 	<!-- _____________________________ Path Settings ____________________________ -->
 
-	<set name="BUILD_DIR" value="export/debug" if="debug" />
+	<set name="BUILD_DIR" value="export/debug"	 if="debug" />
 	<set name="BUILD_DIR" value="export/release" unless="debug" />
-	<set name="BUILD_DIR" value="export/32bit" if="32bits" />
+	<set name="BUILD_DIR" value="export/32bit"	 if="32bits" />
 
 	<classpath name="source" />
 
@@ -56,28 +57,28 @@
 	<define name="CRASH_HANDLER" if="desktop release" />
 
 	<!-- Preload Assets -->
-	<define name="PRELOAD_ALL" unless="web" />
+	<define name="PRELOAD_ALL"	  unless="web" />
 	<define name="NO_PRELOAD_ALL" unless="PRELOAD_ALL"/>
 
 	<assets path="assets/fonts" />
 	<assets path="assets/preload" rename="assets" exclude="*.ogg" if="web"/>
-	<assets path="assets/preload" rename="assets" exclude="*.mp3"  unless="web"/>
+	<assets path="assets/preload" rename="assets" exclude="*.mp3" unless="web"/>
 
 	<!-- DONT ENABLE THIS -->
 	<define name="CHECK_FOR_UPDATES" if="desktop officialBuild"/>
 
 	<!-- Week Assets -->
-	<library name="videos"        preload="true" />
+	<library name="videos"				preload="true" />
 	<section if="PRELOAD_ALL">
-		<library name="songs"         preload="true" />
-		<library name="shared"        preload="true" />
-		<library name="week_assets"   preload="true" />
+		<library name="songs"			preload="true" />
+		<library name="shared"			preload="true" />
+		<library name="week_assets"		preload="true" />
 	</section>
 	
 	<section if="NO_PRELOAD_ALL">
-		<library name="songs"         preload="false" />
-		<library name="shared"        preload="false" />
-		<library name="week_assets"   preload="false" />
+		<library name="songs"			preload="false" />
+		<library name="shared"			preload="false" />
+		<library name="week_assets"		preload="false" />
 	</section>
 	
 	<assets path="assets/videos"        library="videos"        if="VIDEOS_ALLOWED"/>
@@ -100,18 +101,18 @@
 	<haxelib name="flixel-addons" />
 
 	<!--Psych stuff needed-->
-	<haxelib name="linc_luajit" if="LUA_ALLOWED"/>
-	<haxelib name="SScript" if="HSCRIPT_ALLOWED"/>
-	<haxelib name="hxCodec" if="VIDEOS_ALLOWED"/>
-	<haxelib name="discord_rpc" if="desktop"/>
+	<haxelib name="linc_luajit"	if="LUA_ALLOWED"/>
+	<haxelib name="SScript"		if="HSCRIPT_ALLOWED"/>
+	<haxelib name="hxCodec"		if="VIDEOS_ALLOWED"/>
+	<haxelib name="discord_rpc"	if="desktop"/>
 	<haxelib name="tjson" />
 	<haxedef name="openflPos" />
 	<haxedef name="hscriptPos" />
 
 	<!-- Enables a terminal log prompt on debug builds -->
-	<haxelib name="hscript" if="debug"/>
-	<haxelib name="hxcpp-debug-server" if="debug"/>
-	<haxedef name="HXC_LIBVLC_LOGGING" if="VIDEOS_ALLOWED debug" />
+	<haxelib name="hscript"				if="debug"/>
+	<haxelib name="hxcpp-debug-server"	if="debug"/>
+	<haxedef name="HXC_LIBVLC_LOGGING"	if="VIDEOS_ALLOWED debug" />
 	
 	<!-- ______________________________ Haxedefines _____________________________ -->
 
@@ -128,7 +129,7 @@
 	<!-- <haxedef name="FLX_NO_MOUSE" if="mobile" /> -->
 	<!-- <haxedef name="FLX_NO_KEYBOARD" if="mobile" /> -->
 	<!-- <haxedef name="FLX_NO_TOUCH" if="desktop" /> -->
-	<!--<haxedef name="FLX_NO_GAMEPAD" />-->
+	<!-- <haxedef name="FLX_NO_GAMEPAD" />-->
 
 	<!--Disable the Flixel core sound tray-->
 	<!--<haxedef name="FLX_NO_SOUND_TRAY" />-->

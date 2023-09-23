@@ -2142,6 +2142,12 @@ class ChartingState extends MusicBeatState
 		super.update(elapsed);
 	}
 
+	override public function onFocusLost():Void
+	{
+		FlxG.sound.music.pause();
+		if(vocals != null) vocals.pause();
+	}
+
 	function updateZoom() {
 		var daZoom:Float = zoomList[curZoom];
 		var zoomThing:String = '1 / ' + daZoom;

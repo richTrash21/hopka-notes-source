@@ -165,28 +165,20 @@ class Paths
 	}
 
 	static public function sound(key:String, ?library:String):Sound
-	{
-		var sound:Sound = returnSound('sounds', key, library);
-		return sound;
-	}
+		return returnSound('sounds', key, library);
 
 	inline static public function soundRandom(key:String, min:Int, max:Int, ?library:String)
 		return sound(key + FlxG.random.int(min, max), library);
 
 	inline static public function music(key:String, ?library:String):Sound
-	{
-		var file:Sound = returnSound('music', key, library);
-		return file;
-	}
+		return returnSound('music', key, library);
 
 	inline static public function voices(song:String):Any
 	{
 		#if html5
 		return 'songs:assets/songs/${formatToSongPath(song)}/Voices.$SOUND_EXT';
 		#else
-		var songKey:String = '${formatToSongPath(song)}/Voices';
-		var voices = returnSound('songs', songKey);
-		return voices;
+		return returnSound('songs', '${formatToSongPath(song)}/Voices');
 		#end
 	}
 
@@ -195,9 +187,7 @@ class Paths
 		#if html5
 		return 'songs:assets/songs/${formatToSongPath(song)}/Inst.$SOUND_EXT';
 		#else
-		var songKey:String = '${formatToSongPath(song)}/Inst';
-		var inst = returnSound('songs', songKey);
-		return inst;
+		return returnSound('songs', '${formatToSongPath(song)}/Inst');
 		#end
 	}
 
