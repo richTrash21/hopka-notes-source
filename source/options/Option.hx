@@ -77,9 +77,7 @@ class Option
 	public function change()
 	{
 		//nothing lol
-		if(onChange != null) {
-			onChange();
-		}
+		if(onChange != null) onChange();
 	}
 
 	public function getValue():Dynamic
@@ -93,16 +91,16 @@ class Option
 
 	private function get_text()
 	{
-		if(child != null) {
+		if(child != null)
 			return child.text;
-		}
+
 		return null;
 	}
 	private function set_text(newValue:String = '')
 	{
-		if(child != null) {
+		if(child != null)
 			child.text = newValue;
-		}
+		
 		return null;
 	}
 

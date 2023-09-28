@@ -165,7 +165,7 @@ class HScript extends SScript
 		#end
 	}
 
-	public function executeCode(?funcToRun:String = null, ?funcArgs:Array<Dynamic> = null):SCall
+	public function executeCode(?funcToRun:String = null, ?funcArgs:Array<Dynamic> = null):#if (SScript >= "6.1.8") TeaCall #else SCall #end
 	{
 		if (funcToRun == null) return null;
 
@@ -191,7 +191,7 @@ class HScript extends SScript
 		return callValue;
 	}
 
-	public function executeFunction(funcToRun:String = null, funcArgs:Array<Dynamic>):SCall
+	public function executeFunction(funcToRun:String = null, funcArgs:Array<Dynamic>):#if (SScript >= "6.1.8") TeaCall #else SCall #end
 	{
 		if (funcToRun == null)
 			return null;
@@ -203,7 +203,7 @@ class HScript extends SScript
 	{
 		#if LUA_ALLOWED
 		funk.addLocalCallback("runHaxeCode", function(codeToRun:String, ?varsToBring:Any = null, ?funcToRun:String = null, ?funcArgs:Array<Dynamic> = null):Dynamic {
-			var retVal:SCall = null;
+			var retVal:#if (SScript >= "6.1.8") TeaCall #else SCall #end = null;
 			#if (SScript >= "3.0.0")
 			initHaxeModuleCode(funk, codeToRun);
 			if(varsToBring != null)
@@ -282,7 +282,15 @@ class HScript extends SScript
 		#end
 	}
 
-	#if (SScript >= "3.0.3")
+	#if (SScript >= "6.1.8")
+	override public function kill()
+	{
+		origin = null;
+		parentLua = null;
+
+		super.kill();
+	}
+	#elseif (SScript >= "3.0.3")
 	override public function destroy()
 	{
 		origin = null;

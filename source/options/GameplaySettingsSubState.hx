@@ -39,6 +39,12 @@ class GameplaySettingsSubState extends BaseOptionsMenu
 		addOption(option);
 		option.onChange = function() FlxG.autoPause = ClientPrefs.data.autoPause;
 
+		var option:Option = new Option('Deafen on Lost Focus',
+			"If checked, slightly deafens the game's sound while off focus.\nNOTE: Works only when Auto Pause is unchecked.",
+			'lostFocusDeafen',
+			'bool');
+		addOption(option);
+
 		var option:Option = new Option('Disable Reset Button',
 			"If checked, pressing Reset won't do anything.",
 			'noReset',

@@ -18,7 +18,7 @@ class NoteOffsetState extends MusicBeatState
 	public var camGame:FlxCamera;
 	public var camOther:FlxCamera;
 
-	var coolText:FlxText;
+	var placement:Float = FlxG.width * 0.35;
 	var rating:FlxSprite;
 	var comboNums:FlxSpriteGroup;
 	var dumbTexts:FlxTypedGroup<FlxText>;
@@ -72,10 +72,6 @@ class NoteOffsetState extends MusicBeatState
 		add(boyfriend);
 
 		// Combo stuff
-		coolText = new FlxText(0, 0, 0, '', 32);
-		coolText.screenCenter();
-		coolText.x = FlxG.width * 0.35;
-
 		rating = new FlxSprite().loadGraphic(Paths.image('sick'));
 		rating.cameras = [camHUD];
 		rating.antialiasing = ClientPrefs.data.antialiasing;
@@ -89,15 +85,14 @@ class NoteOffsetState extends MusicBeatState
 		add(comboNums);
 
 		var seperatedScore:Array<Int> = [];
-		for (i in 0...3)
-		{
-			seperatedScore.push(FlxG.random.int(0, 9));
-		}
+		for (i in 0...3) seperatedScore.push(FlxG.random.int(0, 9));
 
 		var daLoop:Int = 0;
 		for (i in seperatedScore)
 		{
-			var numScore:FlxSprite = new FlxSprite(43 * daLoop).loadGraphic(Paths.image('num' + i));
+			var numScore:FlxSprite = new FlxSprite(43 * daLoop).loadGraphic(Paths.image('num'), true, 100, 120);
+			numScore.animation.add(Std.string(i), [i], 0, false);
+			numScore.animation.play(Std.string(i));
 			numScore.cameras = [camHUD];
 			numScore.antialiasing = ClientPrefs.data.antialiasing;
 			numScore.setGraphicSize(Std.int(numScore.width * 0.5));
@@ -183,12 +178,7 @@ class NoteOffsetState extends MusicBeatState
 	{
 		var addNum:Int = 1;
 		if(FlxG.keys.pressed.SHIFT || FlxG.gamepads.anyPressed(LEFT_SHOULDER))
-		{
-			if(onComboMenu)
-				addNum = 10;
-			else
-				addNum = 3;
-		}
+			addNum = onComboMenu ? 10 : 3;
 
 		if(FlxG.gamepads.anyJustPressed(ANY)) controls.controllerMode = true;
 		else if(FlxG.mouse.justPressed) controls.controllerMode = false;
@@ -252,22 +242,14 @@ class NoteOffsetState extends MusicBeatState
 						{
 							switch(i)
 							{
-								case 0:
-									ClientPrefs.data.comboOffset[0] -= addNum;
-								case 1:
-									ClientPrefs.data.comboOffset[0] += addNum;
-								case 2:
-									ClientPrefs.data.comboOffset[1] += addNum;
-								case 3:
-									ClientPrefs.data.comboOffset[1] -= addNum;
-								case 4:
-									ClientPrefs.data.comboOffset[2] -= addNum;
-								case 5:
-									ClientPrefs.data.comboOffset[2] += addNum;
-								case 6:
-									ClientPrefs.data.comboOffset[3] += addNum;
-								case 7:
-									ClientPrefs.data.comboOffset[3] -= addNum;
+								case 0: ClientPrefs.data.comboOffset[0] -= addNum;
+								case 1: ClientPrefs.data.comboOffset[0] += addNum;
+								case 2: ClientPrefs.data.comboOffset[1] += addNum;
+								case 3: ClientPrefs.data.comboOffset[1] -= addNum;
+								case 4: ClientPrefs.data.comboOffset[2] -= addNum;
+								case 5: ClientPrefs.data.comboOffset[2] += addNum;
+								case 6: ClientPrefs.data.comboOffset[3] += addNum;
+								case 7: ClientPrefs.data.comboOffset[3] -= addNum;
 							}
 						}
 					}
@@ -295,7 +277,6 @@ class NoteOffsetState extends MusicBeatState
 				gamepadPressed = !FlxG.gamepads.anyJustPressed(START) && controls.ACCEPT;
 				gamepadReleased = !FlxG.gamepads.anyJustReleased(START) && controls.justReleased('accept');
 			}
-			//
 
 			// probably there's a better way to do this but, oh well.
 			if (FlxG.mouse.justPressed || gamepadPressed)
@@ -312,7 +293,6 @@ class NoteOffsetState extends MusicBeatState
 					holdingObjectType = true;
 					startComboOffset.x = ClientPrefs.data.comboOffset[2];
 					startComboOffset.y = ClientPrefs.data.comboOffset[3];
-					//trace('yo bro');
 				}
 				else if (startMousePos.x - rating.x >= 0 && startMousePos.x - rating.x <= rating.width &&
 						 startMousePos.y - rating.y >= 0 && startMousePos.y - rating.y <= rating.height)
@@ -320,13 +300,10 @@ class NoteOffsetState extends MusicBeatState
 					holdingObjectType = false;
 					startComboOffset.x = ClientPrefs.data.comboOffset[0];
 					startComboOffset.y = ClientPrefs.data.comboOffset[1];
-					//trace('heya');
 				}
 			}
-			if(FlxG.mouse.justReleased || gamepadReleased) {
+			if(FlxG.mouse.justReleased || gamepadReleased)
 				holdingObjectType = null;
-				//trace('dead');
-			}
 
 			if(holdingObjectType != null)
 			{
@@ -348,9 +325,8 @@ class NoteOffsetState extends MusicBeatState
 			if(controls.RESET)
 			{
 				for (i in 0...ClientPrefs.data.comboOffset.length)
-				{
 					ClientPrefs.data.comboOffset[i] = 0;
-				}
+				
 				repositionCombo();
 			}
 		}
@@ -427,10 +403,7 @@ class NoteOffsetState extends MusicBeatState
 	{
 		super.beatHit();
 
-		if(lastBeatHit == curBeat)
-		{
-			return;
-		}
+		if(lastBeatHit == curBeat) return;
 
 		if(curBeat % 2 == 0)
 		{
@@ -443,20 +416,16 @@ class NoteOffsetState extends MusicBeatState
 			FlxG.camera.zoom = 1.15;
 
 			if(zoomTween != null) zoomTween.cancel();
-			zoomTween = FlxTween.tween(FlxG.camera, {zoom: 1}, 1, {ease: FlxEase.circOut, onComplete: function(twn:FlxTween)
-				{
-					zoomTween = null;
-				}
+			zoomTween = FlxTween.tween(FlxG.camera, {zoom: 1}, 1, {ease: FlxEase.circOut,
+				onComplete: function(twn:FlxTween) zoomTween = null
 			});
 
 			beatText.alpha = 1;
 			beatText.y = 320;
 			beatText.velocity.y = -150;
 			if(beatTween != null) beatTween.cancel();
-			beatTween = FlxTween.tween(beatText, {alpha: 0}, 1, {ease: FlxEase.sineIn, onComplete: function(twn:FlxTween)
-				{
-					beatTween = null;
-				}
+			beatTween = FlxTween.tween(beatText, {alpha: 0}, 1, {ease: FlxEase.sineIn,
+				onComplete: function(twn:FlxTween) beatTween = null
 			});
 		}
 
@@ -466,11 +435,11 @@ class NoteOffsetState extends MusicBeatState
 	function repositionCombo()
 	{
 		rating.screenCenter();
-		rating.x = coolText.x - 40 + ClientPrefs.data.comboOffset[0];
+		rating.x = placement - 40 + ClientPrefs.data.comboOffset[0];
 		rating.y -= 60 + ClientPrefs.data.comboOffset[1];
 
 		comboNums.screenCenter();
-		comboNums.x = coolText.x - 90 + ClientPrefs.data.comboOffset[2];
+		comboNums.x = placement - 90 + ClientPrefs.data.comboOffset[2];
 		comboNums.y += 80 - ClientPrefs.data.comboOffset[3];
 		reloadTexts();
 	}
@@ -486,10 +455,7 @@ class NoteOffsetState extends MusicBeatState
 			dumbTexts.add(text);
 			text.cameras = [camHUD];
 
-			if(i > 1)
-			{
-				text.y += 24;
-			}
+			if(i > 1) text.y += 24;
 		}
 	}
 
@@ -531,18 +497,8 @@ class NoteOffsetState extends MusicBeatState
 			controllerPointer.visible = controls.controllerMode;
 		}
 
-		var str:String;
-		var str2:String;
-		if(onComboMenu)
-			str = 'Combo Offset';
-		else
-			str = 'Note/Beat Delay';
-
-		if(!controls.controllerMode)
-			str2 = '(Press Accept to Switch)';
-		else
-			str2 = '(Press Start to Switch)';
-
+		var str:String = onComboMenu ? 'Combo Offset' : 'Note/Beat Delay';
+		var str2:String = !controls.controllerMode ? '(Press Accept to Switch)' : '(Press Start to Switch)';
 		changeModeText.text = '< ${str.toUpperCase()} ${str2.toUpperCase()} >';
 	}
 }

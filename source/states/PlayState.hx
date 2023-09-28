@@ -55,12 +55,12 @@ import sys.io.File;
 #end
 
 #if VIDEOS_ALLOWED 
-#if (hxCodec >= "3.0.0")
-//import objects.FlxVideo as VideoHandler;
+import hxvlc.flixel.FlxVideo as VideoHandler;
+/*#if (hxCodec >= "3.0.0")
 import hxcodec.flixel.FlxVideo as VideoHandler;
 #elseif (hxCodec >= "2.6.1") import hxcodec.VideoHandler;
 #elseif (hxCodec == "2.6.0") import VideoHandler;
-#else import vlc.MP4Handler as VideoHandler; #end
+#else import vlc.MP4Handler as VideoHandler; #end*/
 #end
 
 import objects.Note;
@@ -469,7 +469,7 @@ class PlayState extends MusicBeatState
 		if(ClientPrefs.data.downScroll) timeTxt.y = FlxG.height - 44;
 		if(ClientPrefs.data.timeBarType == 'Song Name') timeTxt.text = SONG.song;
 
-		timeBar = new HealthBar(0, timeTxt.y + (timeTxt.height / 4), 'timeBar', function() return songPercent, 0, 1);
+		timeBar = new HealthBar(0, timeTxt.y + (timeTxt.height * 0.25), 'timeBar', function() return songPercent, 0, 1);
 		if(isPixelStage) timeBar.antialiasing = false;
 		timeBar.scrollFactor.set();
 		timeBar.screenCenter(X);
@@ -813,8 +813,8 @@ class PlayState extends MusicBeatState
 		char.y += char.positionArray[1];
 	}
 
-	var video:VideoHandler;
-	public function startVideo(name:String)
+	public var video:VideoHandler = null;
+	public function startVideo(name:String, antialias:Bool = true)
 	{
 		#if VIDEOS_ALLOWED
 			inCutscene = true;
@@ -832,8 +832,10 @@ class PlayState extends MusicBeatState
 			}
 
 			playingVideo = true;
-			video = new VideoHandler();
-			#if (hxCodec >= "3.0.0")
+			if(video == null) video = new VideoHandler(antialias);
+			video.play(filepath);
+			video.onEndReached.add(endVideo, true);
+			/*#if (hxCodec >= "3.0.0")
 				// Recent versions
 				video.play(filepath);
 				video.onEndReached.add(endVideo, true);
@@ -841,7 +843,7 @@ class PlayState extends MusicBeatState
 				// Older versions
 				video.playVideo(filepath);
 				video.finishCallback = endVideo;
-			#end
+			#end*/
 		#else
 			FlxG.log.warn('Platform not supported!');
 			startAndEnd();
@@ -853,9 +855,10 @@ class PlayState extends MusicBeatState
 	{
 		#if VIDEOS_ALLOWED
 			playingVideo = false;
-			#if (hxCodec >= "3.0.0")
-				video.dispose();
-			#end
+			video.stop();
+			video.dispose();
+			//#if (hxCodec >= "3.0.0") video.dispose(); #end
+			video = null;
 			startAndEnd();
 			return;
 		#end
@@ -972,7 +975,7 @@ class PlayState extends MusicBeatState
 			}
 			moveCameraSection();
 
-			startTimer = new FlxTimer().start(Conductor.crochet / 1000 / playbackRate, function(tmr:FlxTimer)
+			startTimer = new FlxTimer().start(Conductor.crochet * 0.001 / playbackRate, function(tmr:FlxTimer)
 			{
 				if (gf != null && tmr.loopsLeft % Math.round(gfSpeed * gf.danceEveryNumBeats) == 0 && gf.animation.curAnim != null && !gf.animation.curAnim.name.startsWith("sing") && !gf.stunned)
 					gf.dance();
@@ -1040,13 +1043,14 @@ class PlayState extends MusicBeatState
 		spr.cameras = [camHUD];
 		spr.scrollFactor.set();
 
-		if (isPixelStage) spr.setGraphicSize(Std.int(spr.width * daPixelZoom));
-		spr.updateHitbox();
-
+		if (isPixelStage) {
+			spr.setGraphicSize(Std.int(spr.width * daPixelZoom));
+			spr.updateHitbox();
+		}
 		spr.screenCenter();
 		spr.antialiasing = antialias;
 		insert(members.indexOf(notes), spr);
-		FlxTween.tween(spr, {/*y: spr.y + 100,*/ alpha: 0}, Conductor.crochet / 1000, {
+		FlxTween.tween(spr, {/*y: spr.y + 100,*/ alpha: 0}, Conductor.crochet * 0.001, {
 			ease: FlxEase.cubeInOut,
 			onComplete: function(twn:FlxTween)
 			{
@@ -1237,14 +1241,11 @@ class PlayState extends MusicBeatState
 				var daNoteData:Int = Std.int(songNotes[1] % 4);
 				var gottaHitNote:Bool = section.mustHitSection;
 
-				if (songNotes[1] > 3)
-				{
-					gottaHitNote = !section.mustHitSection;
-				}
+				if (songNotes[1] > 3) gottaHitNote = !section.mustHitSection;
 
 				var oldNote:Note;
 				if (unspawnNotes.length > 0)
-					oldNote = unspawnNotes[Std.int(unspawnNotes.length - 1)];
+					oldNote = unspawnNotes[unspawnNotes.length - 1];
 				else
 					oldNote = null;
 
@@ -1266,7 +1267,7 @@ class PlayState extends MusicBeatState
 				if(floorSus > 0) {
 					for (susNote in 0...floorSus+1)
 					{
-						oldNote = unspawnNotes[Std.int(unspawnNotes.length - 1)];
+						oldNote = unspawnNotes[unspawnNotes.length - 1];
 
 						var sustainNote:Note = new Note(daStrumTime + (Conductor.stepCrochet * susNote), daNoteData, oldNote, true);
 						sustainNote.mustPress = gottaHitNote;
@@ -1287,8 +1288,7 @@ class PlayState extends MusicBeatState
 								oldNote.updateHitbox();
 							}
 
-							if(ClientPrefs.data.downScroll)
-								sustainNote.correctionOffset = 0;
+							if(ClientPrefs.data.downScroll) sustainNote.correctionOffset = 0;
 						}
 						else if(oldNote.isSustainNote)
 						{
@@ -1326,9 +1326,8 @@ class PlayState extends MusicBeatState
 				}
 			}
 		}
-		for (event in SONG.events) //Event Notes
-			for (i in 0...event[1].length)
-				makeEvent(event, i);
+		//Event Notes
+		for (event in SONG.events) for (i in 0...event[1].length) makeEvent(event, i);
 
 		unspawnNotes.sort(sortByTime);
 		generatedMusic = true;
@@ -1545,7 +1544,7 @@ class PlayState extends MusicBeatState
 			vocals.pitch = playbackRate;
 			vocals.play();
 		}
-}
+	}
 
 	public var paused:Bool = false;
 	public var canReset:Bool = true;
@@ -1562,9 +1561,8 @@ class PlayState extends MusicBeatState
 			#if ACHIEVEMENTS_ALLOWED
 			if(!startingSong && !endingSong && boyfriend.animation.curAnim != null && boyfriend.animation.curAnim.name.startsWith('idle')) {
 				boyfriendIdleTime += elapsed;
-				if(boyfriendIdleTime >= 0.15) { // Kind of a mercy thing for making the achievement easier to get as it's apparently frustrating to some playerss
-					boyfriendIdled = true;
-				}
+				// Kind of a mercy thing for making the achievement easier to get as it's apparently frustrating to some playerss
+				if(boyfriendIdleTime >= 0.15) boyfriendIdled = true;
 			} else {
 				boyfriendIdleTime = 0;
 			}
@@ -1585,10 +1583,10 @@ class PlayState extends MusicBeatState
 			if(callOnScripts('onPause', null, true) != FunkinLua.Function_Stop) openPauseMenu();
 
 		//idk how it will behave on an older versions sooooo...
-		#if (hxCodec >= "3.0.0")
-		if (playingVideo && (controls.PAUSE || controls.ACCEPT || FlxG.keys.justPressed.SPACE))
+		//#if (hxCodec >= "3.0.0")
+		if (playingVideo && (controls.PAUSE || controls.ACCEPT))
 			endVideo();
-		#end
+		//#end
 
 		if (controls.justPressed('debug_1') && !endingSong && !inCutscene)
 			openChartEditor();
@@ -1630,7 +1628,7 @@ class PlayState extends MusicBeatState
 			var songCalc:Float = (songLength - curTime);
 			if(ClientPrefs.data.timeBarType == 'Time Elapsed') songCalc = curTime;
 
-			var secondsTotal:Int = Math.floor(songCalc / 1000);
+			var secondsTotal:Int = Math.floor(songCalc * 0.001);
 			if(secondsTotal < 0) secondsTotal = 0;
 
 			if(ClientPrefs.data.timeBarType != 'Song Name')
@@ -1760,8 +1758,8 @@ class PlayState extends MusicBeatState
 		// why does camFollow represent camera position????
 
 		// UPD: much better. need to make this a pull request to official psych lmao
-		setOnScripts('cameraX', /*camFollow.x*/ FlxG.camera.scroll.x + (FlxG.camera.width * 0.5));
-		setOnScripts('cameraY', /*camFollow.y*/ FlxG.camera.scroll.y + (FlxG.camera.height * 0.5));
+		setOnScripts('cameraX', /*camFollow.x*/ FlxG.camera.scroll.x - (FlxG.camera.width * 0.5));
+		setOnScripts('cameraY', /*camFollow.y*/ FlxG.camera.scroll.y - (FlxG.camera.height * 0.5));
 		setOnScripts('botPlay', cpuControlled);
 		callOnScripts('onUpdatePost', [elapsed]);
 	}
@@ -2143,13 +2141,10 @@ class PlayState extends MusicBeatState
 			vocals.pause();
 			vocals.volume = 0;
 		}
-		if(ClientPrefs.data.noteOffset <= 0 || ignoreNoteOffset) {
+		if(ClientPrefs.data.noteOffset <= 0 || ignoreNoteOffset)
 			endCallback();
-		} else {
-			finishTimer = new FlxTimer().start(ClientPrefs.data.noteOffset / 1000, function(tmr:FlxTimer) {
-				endCallback();
-			});
-		}
+		else
+			finishTimer = new FlxTimer().start(ClientPrefs.data.noteOffset * 0.001, function(tmr:FlxTimer) endCallback());
 	}
 
 	public var transitioning = false;
@@ -2177,6 +2172,7 @@ class PlayState extends MusicBeatState
 		inCutscene = false;
 		playingVideo = false;
 		updateTime = false;
+		//startTimer.cancel();
 
 		deathCounter = 0;
 		seenCutscene = false;
@@ -2320,21 +2316,22 @@ class PlayState extends MusicBeatState
 
 	private function cachePopUpScore()
 	{
-		if (stageUI != "normal")
+		/*if (stageUI != "normal")
 		{
 			uiPrefix = '${stageUI}UI/';
 			if (PlayState.isPixelStage) uiSuffix = '-pixel';
-		}
+		}*/
 
-		for (rat in ratingsData)  Paths.image(uiPrefix + rat.image + uiSuffix);
-		for (i in 0...10)		  Paths.image(uiPrefix + 'num' + i + uiSuffix);
+		for (rat in ratingsData) Paths.image(uiPrefix + rat.image + uiSuffix);
+		Paths.image(uiPrefix + 'num' + uiSuffix);
+		//for (i in 0...10)		 Paths.image(uiPrefix + 'num' + i + uiSuffix);
 	}
 
 	private function popUpScore(note:Note = null):Void
 	{
 		var noteDiff:Float = Math.abs(note.strumTime - Conductor.songPosition + ClientPrefs.data.ratingOffset);
 
-		var placement:Float =  FlxG.width * 0.35;
+		var placement:Float = FlxG.width * 0.35;
 		var rating:FlxSprite = new FlxSprite();
 		var score:Int = 350;
 
@@ -2372,28 +2369,24 @@ class PlayState extends MusicBeatState
 		rating.loadGraphic(Paths.image(uiPrefix + daRating.image + uiSuffix));
 		rating.cameras = [camHUD];
 		rating.screenCenter();
-		rating.x = placement - 40;
-		rating.y -= 60;
+		rating.x = placement - 40 + ClientPrefs.data.comboOffset[0];
+		rating.y -= 60 + ClientPrefs.data.comboOffset[1];
 		rating.acceleration.y = 550 * playbackRate * playbackRate;
 		rating.velocity.y -= FlxG.random.int(140, 175) * playbackRate;
 		rating.velocity.x -= FlxG.random.int(0, 10) * playbackRate;
 		rating.visible = (!ClientPrefs.data.hideHud && showRating);
-		rating.x += ClientPrefs.data.comboOffset[0];
-		rating.y -= ClientPrefs.data.comboOffset[1];
 		rating.antialiasing = antialias;
 
 		var comboSpr:FlxSprite = new FlxSprite().loadGraphic(Paths.image(uiPrefix + 'combo' + uiSuffix));
 		comboSpr.cameras = [camHUD];
 		comboSpr.screenCenter();
-		comboSpr.x = placement;
+		comboSpr.x = placement + ClientPrefs.data.comboOffset[0];
+		comboSpr.y = 60 - ClientPrefs.data.comboOffset[1];
 		comboSpr.acceleration.y = FlxG.random.int(200, 300) * playbackRate * playbackRate;
 		comboSpr.velocity.y -= FlxG.random.int(140, 160) * playbackRate;
+		comboSpr.velocity.x = FlxG.random.int(1, 10) * playbackRate;
 		comboSpr.visible = (!ClientPrefs.data.hideHud && showCombo);
-		comboSpr.x += ClientPrefs.data.comboOffset[0];
-		comboSpr.y -= ClientPrefs.data.comboOffset[1];
 		comboSpr.antialiasing = antialias;
-		comboSpr.y += 60;
-		comboSpr.velocity.x += FlxG.random.int(1, 10) * playbackRate;
 
 		insert(members.indexOf(strumLineNotes), rating);
 		
@@ -2403,35 +2396,22 @@ class PlayState extends MusicBeatState
 			lastRating = rating;
 		}
 
-		if (!PlayState.isPixelStage)
-		{
-			rating.setGraphicSize(Std.int(rating.width * 0.7));
-			comboSpr.setGraphicSize(Std.int(comboSpr.width * 0.7));
-		}
-		else
-		{
-			rating.setGraphicSize(Std.int(rating.width * daPixelZoom * 0.85));
-			comboSpr.setGraphicSize(Std.int(comboSpr.width * daPixelZoom * 0.85));
-		}
+		rating.setGraphicSize(Std.int(rating.width * (!PlayState.isPixelStage ? 0.7 : daPixelZoom * 0.85)));
+		comboSpr.setGraphicSize(Std.int(comboSpr.width * (!PlayState.isPixelStage ? 0.7 : daPixelZoom * 0.85)));
 
 		comboSpr.updateHitbox();
 		rating.updateHitbox();
 
 		var seperatedScore:Array<Int> = [];
 
-		if(combo >= 1000) {
-			seperatedScore.push(Math.floor(combo / 1000) % 10);
-		}
-		seperatedScore.push(Math.floor(combo / 100) % 10);
-		seperatedScore.push(Math.floor(combo / 10) % 10);
+		if(combo >= 1000) seperatedScore.push(Math.floor(combo * 0.001) % 10);
+		seperatedScore.push(Math.floor(combo * 0.01) % 10);
+		seperatedScore.push(Math.floor(combo * 0.1) % 10);
 		seperatedScore.push(combo % 10);
 
 		var daLoop:Int = 0;
 		var xThing:Float = 0;
-		if (showCombo)
-		{
-			insert(members.indexOf(strumLineNotes), comboSpr);
-		}
+		if (showCombo) insert(members.indexOf(strumLineNotes), comboSpr);
 		if (!ClientPrefs.data.comboStacking)
 		{
 			if (lastCombo != null) lastCombo.kill();
@@ -2447,16 +2427,17 @@ class PlayState extends MusicBeatState
 		}
 		for (i in seperatedScore)
 		{
-			var numScore:FlxSprite = new FlxSprite().loadGraphic(Paths.image(uiPrefix + 'num' + Std.int(i) + uiSuffix));
+			var numScore:FlxSprite = new FlxSprite().loadGraphic(Paths.image(uiPrefix + 'num' + uiSuffix), true, !isPixelStage ? 100 : 10, !isPixelStage ? 120 : 12);
+			numScore.animation.add(Std.string(i), [i], 0, false);
+			numScore.animation.play(Std.string(i));
 			numScore.cameras = [camHUD];
 			numScore.screenCenter();
-			numScore.x = placement + (43 * daLoop) - 90 + ClientPrefs.data.comboOffset[2];
-			numScore.y += 80 - ClientPrefs.data.comboOffset[3];
+			numScore.x = placement + (43 * daLoop) - 90 + ClientPrefs.data.comboOffset[2] + FlxG.random.int(-5, 5);
+			numScore.y = 80 - ClientPrefs.data.comboOffset[3] + FlxG.random.int(-5, 5);
 			
 			if (!ClientPrefs.data.comboStacking) lastScore.push(numScore);
 
-			if (!PlayState.isPixelStage) numScore.setGraphicSize(Std.int(numScore.width * 0.5));
-			else numScore.setGraphicSize(Std.int(numScore.width * daPixelZoom));
+			numScore.setGraphicSize(Std.int(numScore.width * (!PlayState.isPixelStage ? 0.5 : daPixelZoom)));
 			numScore.updateHitbox();
 
 			numScore.acceleration.y = FlxG.random.int(200, 300) * playbackRate * playbackRate;
@@ -2466,14 +2447,10 @@ class PlayState extends MusicBeatState
 			numScore.antialiasing = antialias;
 
 			//if (combo >= 10 || combo == 0)
-			if(showComboNum)
-				insert(members.indexOf(strumLineNotes), numScore);
+			if(showComboNum) insert(members.indexOf(strumLineNotes), numScore);
 
 			FlxTween.tween(numScore, {alpha: 0}, 0.2 / playbackRate, {
-				onComplete: function(tween:FlxTween)
-				{
-					numScore.destroy();
-				},
+				onComplete: function(tween:FlxTween) numScore.destroy(),
 				startDelay: Conductor.crochet * 0.002 / playbackRate
 			});
 
@@ -2776,7 +2753,7 @@ class PlayState extends MusicBeatState
 
 		if (vocals != null) vocals.volume = 1;
 
-		strumPlayAnim(true, Std.int(Math.abs(note.noteData)), Conductor.stepCrochet * 1.25 / 1000 / playbackRate);
+		strumPlayAnim(true, Std.int(Math.abs(note.noteData)), Conductor.stepCrochet * 1.25 * 0.001 / playbackRate);
 		note.hitByOpponent = true;
 
 		var result:Dynamic = callOnLuas('opponentNoteHit', [notes.members.indexOf(note), Math.abs(note.noteData), note.noteType, note.isSustainNote]);
@@ -2864,7 +2841,7 @@ class PlayState extends MusicBeatState
 				var spr = playerStrums.members[note.noteData];
 				if(spr != null) spr.playAnim('confirm', true);
 			}
-			else strumPlayAnim(false, Std.int(Math.abs(note.noteData)), Conductor.stepCrochet * 1.25 / 1000 / playbackRate);
+			else strumPlayAnim(false, Std.int(Math.abs(note.noteData)), Conductor.stepCrochet * 1.25 * 0.001 / playbackRate);
 			if(vocals != null) vocals.volume = 1;
 
 			var isSus:Bool = note.isSustainNote; //GET OUT OF MY HEAD, GET OUT OF MY HEAD, GET OUT OF MY HEAD
@@ -2913,7 +2890,11 @@ class PlayState extends MusicBeatState
 			if(script != null)
 			{
 				script.call('onDestroy');
+				#if (SScript >= "6.1.8")
+				script.kill();
+				#elseif (SScript >= "3.0.3")
 				script.destroy();
+				#end
 			}
 
 		while (hscriptArray.length > 0) hscriptArray.pop();
@@ -3064,6 +3045,14 @@ class PlayState extends MusicBeatState
 		try
 		{
 			var newScript:HScript = new HScript(null, file);
+			#if (SScript >= "6.1.8")
+			if(newScript.parsingException != null) // only last exeption error now :'(
+			{
+				addTextToDebug('ERROR ON LOADING ($file): ${newScript.parsingException.message.substr(0, newScript.parsingException.message.indexOf('\n'))}', FlxColor.RED);
+				newScript.kill();
+				return;
+			}
+			#else
 			@:privateAccess
 			if(newScript.parsingExceptions != null && newScript.parsingExceptions.length > 0)
 			{
@@ -3074,6 +3063,7 @@ class PlayState extends MusicBeatState
 				newScript.destroy();
 				return;
 			}
+			#end
 
 			hscriptArray.push(newScript);
 			if(newScript.exists('onCreate'))
@@ -3085,7 +3075,11 @@ class PlayState extends MusicBeatState
 						if (e != null)
 							addTextToDebug('ERROR ($file: onCreate) - ${e.message.substr(0, e.message.indexOf('\n'))}', FlxColor.RED);
 
+					#if (SScript >= "6.1.8")
+					newScript.kill();
+					#else
 					newScript.destroy();
+					#end
 					hscriptArray.remove(newScript);
 					trace('failed to initialize sscript interp!!! ($file)');
 				}
@@ -3099,7 +3093,11 @@ class PlayState extends MusicBeatState
 			var newScript:HScript = cast (SScript.global.get(file), HScript);
 			if(newScript != null)
 			{
+				#if (SScript >= "6.1.8")
+				newScript.kill();
+				#else
 				newScript.destroy();
+				#end
 				hscriptArray.remove(newScript);
 			}
 		}

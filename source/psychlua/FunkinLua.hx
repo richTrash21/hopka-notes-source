@@ -733,9 +733,7 @@ class FunkinLua {
 
 		// others
 		Lua_helper.add_callback(lua, "triggerEvent", function(name:String, arg1:Dynamic, arg2:Dynamic) {
-			var value1:String = arg1;
-			var value2:String = arg2;
-			game.triggerEvent(name, value1, value2, Conductor.songPosition);
+			game.triggerEvent(name, Std.string(arg1), Std.string(arg2), Conductor.songPosition);
 			//trace('Triggered event: ' + name + ', ' + value1 + ', ' + value2);
 			return true;
 		});
@@ -1246,10 +1244,10 @@ class FunkinLua {
 			}
 			return false;
 		});
-		Lua_helper.add_callback(lua, "startVideo", function(videoFile:String) {
+		Lua_helper.add_callback(lua, "startVideo", function(videoFile:String, antialias:Bool = true) {
 			#if VIDEOS_ALLOWED
 			if(FileSystem.exists(Paths.video(videoFile))) {
-				game.startVideo(videoFile);
+				game.startVideo(videoFile, antialias);
 				return true;
 			} else {
 				luaTrace('startVideo: Video file not found: ' + videoFile, false, false, FlxColor.RED);
@@ -1495,7 +1493,9 @@ class FunkinLua {
 		if(hscript != null)
 		{
 			hscript.active = false;
-			#if (SScript >= "3.0.3")
+			#if (SScript >= "6.1.8")
+			hscript.kill();
+			#elseif (SScript >= "3.0.3")
 			hscript.destroy();
 			#end
 			hscript = null;

@@ -19,7 +19,6 @@ import haxe.CallStack;
 import haxe.io.Path;
 import sys.FileSystem;
 import sys.io.File;
-import sys.io.Process;
 #end
 
 class Main extends Sprite
@@ -36,7 +35,7 @@ class Main extends Sprite
 
 	public static var fpsVar:FPS;
 	public static var fpsShadow:FPS;
-	private static var _focusVolume:Float = 1; // ignore
+	@:noCompletion private static var _focusVolume:Float = 1; // ignore
 
 	// You can pretty much ignore everything from here on - your code should go in your states.
 
@@ -57,15 +56,13 @@ class Main extends Sprite
 
 	private function volumeOnFocus() {
 		// dont ask
-		FlxG.sound.volume = _focusVolume;
-		//trace('volume: ' + FlxG.sound.volume);
+		if (ClientPrefs.data.lostFocusDeafen) FlxG.sound.volume = _focusVolume;
 	}
 
 	private static function volumeOnFocusLost() {
 		// dont ask
 		_focusVolume = FlxG.sound.volume;
-		FlxG.sound.volume *= 0.5;
-		//trace('volume: ' + FlxG.sound.volume);
+		if (ClientPrefs.data.lostFocusDeafen) FlxG.sound.volume *= 0.5;
 	}
 
 	private function init(?E:Event):Void
@@ -83,9 +80,7 @@ class Main extends Sprite
 
 		if (game.zoom == -1.0)
 		{
-			var ratioX:Float = stageWidth / game.width;
-			var ratioY:Float = stageHeight / game.height;
-			game.zoom = Math.min(ratioX, ratioY);
+			game.zoom = Math.min(stageWidth / game.width, stageHeight / game.height);
 			game.width = Math.ceil(stageWidth / game.zoom);
 			game.height = Math.ceil(stageHeight / game.zoom);
 		}
@@ -103,7 +98,7 @@ class Main extends Sprite
 		addChild(fpsVar);
 		Lib.current.stage.align = "tl";
 		Lib.current.stage.scaleMode = StageScaleMode.NO_SCALE;
-		if(fpsVar != null){
+		if(fpsVar != null) {
 			fpsVar.visible = ClientPrefs.data.showFPS;
 			fpsShadow.visible = ClientPrefs.data.showFPS;
 		}
@@ -134,15 +129,14 @@ class Main extends Sprite
 		// shader coords fix
 		FlxG.signals.gameResized.add(function (w, h) {
 			if (FlxG.cameras != null) {
-			for (cam in FlxG.cameras.list) {
-				@:privateAccess
-				if (cam != null && cam._filters != null)
-					resetSpriteCache(cam.flashSprite);
-			}
+				for (cam in FlxG.cameras.list) {
+					@:privateAccess
+					if (cam != null && cam._filters != null)
+						resetSpriteCache(cam.flashSprite);
+				}
 			}
 
-			if (FlxG.game != null)
-			resetSpriteCache(FlxG.game);
+			if (FlxG.game != null) resetSpriteCache(FlxG.game);
 		});
 	}
 
@@ -179,7 +173,7 @@ class Main extends Sprite
 			}
 		}
 
-		errMsg += "\nUncaught Error: " + e.error + "\nyou done goofed" /*"\nPlease report this error to the GitHub page: https://github.com/ShadowMario/FNF-PsychEngine\n\n> Crash Handler written by: sqirra-rng"*/;
+		errMsg += "\nUncaught Error: " + e.error + "\n\nnote: you done goofed" /*"\nPlease report this error to the GitHub page: https://github.com/ShadowMario/FNF-PsychEngine\n\n> Crash Handler written by: sqirra-rng"*/;
 
 		if (!FileSystem.exists("./crash/"))
 			FileSystem.createDirectory("./crash/");

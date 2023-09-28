@@ -114,7 +114,7 @@ class BaseOptionsMenu extends MusicBeatSubstate
 	var holdValue:Float = 0;
 	override function update(elapsed:Float)
 	{
-		if (controls.UI_UP_P)  changeSelection(-1);
+		if (controls.UI_UP_P)   changeSelection(-1);
 		if (controls.UI_DOWN_P) changeSelection(1);
 
 		if (controls.BACK) {
@@ -125,10 +125,7 @@ class BaseOptionsMenu extends MusicBeatSubstate
 		if(nextAccept <= 0)
 		{
 			var usesCheckbox = true;
-			if(curOption.type != 'bool')
-			{
-				usesCheckbox = false;
-			}
+			if(curOption.type != 'bool') usesCheckbox = false;
 
 			if(usesCheckbox)
 			{
@@ -145,9 +142,8 @@ class BaseOptionsMenu extends MusicBeatSubstate
 					if(holdTime > 0.5 || pressed) {
 						if(pressed) {
 							var add:Dynamic = null;
-							if(curOption.type != 'string') {
+							if(curOption.type != 'string')
 								add = controls.UI_LEFT ? -curOption.changeValue : curOption.changeValue;
-							}
 
 							switch(curOption.type)
 							{
@@ -172,15 +168,13 @@ class BaseOptionsMenu extends MusicBeatSubstate
 									if(controls.UI_LEFT_P) --num;
 									else num++;
 
-									if(num < 0) {
+									if (num < 0)
 										num = curOption.options.length - 1;
-									} else if(num >= curOption.options.length) {
+									else if(num >= curOption.options.length)
 										num = 0;
-									}
 
 									curOption.curOption = num;
 									curOption.setValue(curOption.options[num]); //lol
-									//trace(curOption.options[num]);
 							}
 							updateTextFrom(curOption);
 							curOption.change();
@@ -226,25 +220,19 @@ class BaseOptionsMenu extends MusicBeatSubstate
 			}
 		}
 
-		if(nextAccept > 0) {
-			nextAccept -= 1;
-		}
+		if(nextAccept > 0) --nextAccept;
 		super.update(elapsed);
 	}
 
 	function updateTextFrom(option:Option) {
-		var text:String = option.displayFormat;
 		var val:Dynamic = option.getValue();
 		if(option.type == 'percent') val *= 100;
-		var def:Dynamic = option.defaultValue;
-		option.text = text.replace('%v', val).replace('%d', def);
+		option.text = option.displayFormat.replace('%v', val).replace('%d', option.defaultValue);
 	}
 
 	function clearHold()
 	{
-		if(holdTime > 0.5) {
-			FlxG.sound.play(Paths.sound('scrollMenu'));
-		}
+		if(holdTime > 0.5) FlxG.sound.play(Paths.sound('scrollMenu'));
 		holdTime = 0;
 	}
 	
@@ -264,19 +252,11 @@ class BaseOptionsMenu extends MusicBeatSubstate
 
 		for (item in grpOptions.members) {
 			item.targetY = bullShit - curSelected;
+			item.alpha = item.targetY == 0 ? 1 : 0.6;
 			bullShit++;
-
-			item.alpha = 0.6;
-			if (item.targetY == 0) {
-				item.alpha = 1;
-			}
 		}
-		for (text in grpTexts) {
-			text.alpha = 0.6;
-			if(text.ID == curSelected) {
-				text.alpha = 1;
-			}
-		}
+		for (text in grpTexts)
+			text.alpha = text.ID == curSelected ? 1 : 0.6;
 
 		descBox.setPosition(descText.x - 10, descText.y - 10);
 		descBox.setGraphicSize(Std.int(descText.width + 20), Std.int(descText.height + 25));
@@ -287,8 +267,6 @@ class BaseOptionsMenu extends MusicBeatSubstate
 	}
 
 	function reloadCheckboxes() {
-		for (checkbox in checkboxGroup) {
-			checkbox.daValue = (optionsArray[checkbox.ID].getValue() == true);
-		}
+		for (checkbox in checkboxGroup) checkbox.daValue = (optionsArray[checkbox.ID].getValue() == true);
 	}
 }

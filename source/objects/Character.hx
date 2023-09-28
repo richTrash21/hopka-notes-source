@@ -148,17 +148,16 @@ class Character extends FlxSprite
 						var animFps:Int = anim.fps;
 						var animLoop:Bool = !!anim.loop; //Bruh
 						var animIndices:Array<Int> = anim.indices;
-						if(animIndices != null && animIndices.length > 0) {
+						if(animIndices != null && animIndices.length > 0)
 							animation.addByIndices(animAnim, animName, animIndices, "", animFps, animLoop);
-						} else {
+						else
 							animation.addByPrefix(animAnim, animName, animFps, animLoop);
-						}
 
-						if(anim.offsets != null && anim.offsets.length > 1) {
+						if(anim.offsets != null && anim.offsets.length > 1)
 							addOffset(anim.anim, anim.offsets[0], anim.offsets[1]);
-						}
 					}
-				} else quickAnimAdd('idle', 'BF idle dance');
+				}
+				else quickAnimAdd('idle', 'BF idle dance');
 				//trace('Loaded file to character ' + curCharacter);
 		}
 		originalFlipX = flipX;
@@ -227,9 +226,7 @@ class Character extends FlxSprite
 			if(danceIdle)
 			{
 				danced = !danced;
-
-				if (danced) playAnim('danceRight' + idleSuffix);
-				else playAnim('danceLeft' + idleSuffix);
+				playAnim('dance' + (danced ? 'Right' : 'Left') + idleSuffix);
 			}
 			else if(animation.getByName('idle' + idleSuffix) != null)
 				playAnim('idle' + idleSuffix);
@@ -254,10 +251,11 @@ class Character extends FlxSprite
 
 		if (curCharacter.startsWith('gf'))
 		{
-			if (AnimName == 'singLEFT') danced = true;
-			else if (AnimName == 'singRIGHT') danced = false;
-
-			if (AnimName == 'singUP' || AnimName == 'singDOWN')
+			if (AnimName == 'singLEFT')
+				danced = true;
+			else if (AnimName == 'singRIGHT')
+				danced = false;
+			else if (AnimName == 'singUP' || AnimName == 'singDOWN')
 				danced = !danced;
 		}
 	}
@@ -275,10 +273,7 @@ class Character extends FlxSprite
 			danceEveryNumBeats = (danceIdle ? 1 : 2);
 		else if(lastDanceIdle != danceIdle)
 		{
-			var calc:Float = danceEveryNumBeats;
-			if(danceIdle) calc /= 2;
-			else calc *= 2;
-
+			var calc:Float = danceEveryNumBeats * (danceIdle ? 0.5 : 2);
 			danceEveryNumBeats = Math.round(Math.max(calc, 1));
 		}
 		settingCharacterUp = false;

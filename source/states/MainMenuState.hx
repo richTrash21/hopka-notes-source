@@ -1,6 +1,8 @@
 package states;
 
 import flixel.FlxObject;
+import flixel.addons.display.FlxBackdrop;
+import flixel.addons.display.FlxGridOverlay;
 import flixel.addons.transition.FlxTransitionableState;
 import flixel.effects.FlxFlicker;
 
@@ -16,7 +18,7 @@ import backend.Achievements;
 
 class MainMenuState extends MusicBeatState
 {
-	public static var psychEngineVersion:String = '0.7.1G_08.17.23' #if debug + ' [DEBUG]' #end; //This is also used for Discord RPC
+	public static var psychEngineVersion:String = '0.7.1' #if debug + ' [DEBUG]' #end; //This is also used for Discord RPC
 	//btw g in the version states that it is a github version, specicfically from 08.17.23 at 20:25:54 (GMT +4) 🤓
 	public static var curSelected:Int = 0;
 
@@ -66,6 +68,7 @@ class MainMenuState extends MusicBeatState
 		persistentUpdate = persistentDraw = true;
 
 		var yScroll:Float = Math.max(0.25 - (0.05 * (optionShit.length - 4)), 0.1);
+
 		var bg:FlxSprite = new FlxSprite(-80).loadGraphic(Paths.image('menuBG'));
 		bg.antialiasing = ClientPrefs.data.antialiasing;
 		bg.scrollFactor.set(0, yScroll);
@@ -86,19 +89,19 @@ class MainMenuState extends MusicBeatState
 		magenta.visible = false;
 		magenta.color = 0xFFfd719b;
 		add(magenta);
+
+		var grid:FlxBackdrop = new FlxBackdrop(FlxGridOverlay.createGrid(80, 80, 160, 160, true, 0x33FFFFFF, 0x0));
+		grid.scrollFactor.set(0, yScroll);
+		grid.velocity.set(40, 40);
+		add(grid);
 		
 		menuItems = new FlxTypedGroup<FlxSprite>();
 		add(menuItems);
 
-		var scale:Float = 1;
-
 		for (i in 0...optionShit.length)
 		{
-			var offset:Float = 108 - (Math.max(optionShit.length, 4) - 4) * 80;
-			var menuItem:FlxSprite = new FlxSprite(0, (i * 140)  + offset);
+			var menuItem:FlxSprite = new FlxSprite(0, (i * 140) + 108 - (Math.max(optionShit.length, 4) - 4) * 80);
 			menuItem.antialiasing = ClientPrefs.data.antialiasing;
-			menuItem.scale.x = scale;
-			menuItem.scale.y = scale;
 			menuItem.frames = Paths.getSparrowAtlas('mainmenu/menu_' + optionShit[i]);
 			menuItem.animation.addByPrefix('idle', optionShit[i] + " basic", 24);
 			menuItem.animation.addByPrefix('selected', optionShit[i] + " white", 24);
@@ -106,9 +109,7 @@ class MainMenuState extends MusicBeatState
 			menuItem.ID = i;
 			menuItem.screenCenter(X);
 			menuItems.add(menuItem);
-			var scr:Float = (optionShit.length - 4) * 0.135;
-			if(optionShit.length < 6) scr = 0;
-			menuItem.scrollFactor.set(0, scr);
+			menuItem.scrollFactor.set(0, optionShit.length < 6 ? 0 : (optionShit.length - 4) * 0.135);
 			menuItem.updateHitbox();
 		}
 
@@ -163,8 +164,8 @@ class MainMenuState extends MusicBeatState
 
 		if (!selectedSomethin)
 		{
-			if (controls.UI_UP_P)     changeItem(-1);
-			if (controls.UI_DOWN_P)	  changeItem(1);
+			if (controls.UI_UP_P)   changeItem(-1);
+			if (controls.UI_DOWN_P) changeItem(1);
 
 			if (controls.BACK)
 			{
@@ -176,9 +177,7 @@ class MainMenuState extends MusicBeatState
 			if (controls.ACCEPT)
 			{
 				if (optionShit[curSelected] == 'donate')
-				{
 					CoolUtil.browserLoad('https://t.me/hopka_notes');
-				}
 				else
 				{
 					selectedSomethin = true;
@@ -192,10 +191,7 @@ class MainMenuState extends MusicBeatState
 						{
 							FlxTween.tween(spr, {alpha: 0}, 0.4, {
 								ease: FlxEase.quadOut,
-								onComplete: function(twn:FlxTween)
-								{
-									spr.kill();
-								}
+								onComplete: function(twn:FlxTween) spr.kill()
 							});
 						}
 						else
@@ -240,11 +236,6 @@ class MainMenuState extends MusicBeatState
 		}
 
 		super.update(elapsed);
-
-		menuItems.forEach(function(spr:FlxSprite)
-		{
-			spr.screenCenter(X);
-		});
 	}
 
 	function changeItem(huh:Int = 0)
@@ -265,11 +256,7 @@ class MainMenuState extends MusicBeatState
 			if (spr.ID == curSelected)
 			{
 				spr.animation.play('selected');
-				var add:Float = 0;
-				if(menuItems.length > 4) {
-					add = menuItems.length * 8;
-				}
-				camFollow.setPosition(spr.getGraphicMidpoint().x, spr.getGraphicMidpoint().y - add);
+				camFollow.setPosition(spr.getGraphicMidpoint().x, spr.getGraphicMidpoint().y - (menuItems.length > 4 ? menuItems.length * 8 : 0));
 				spr.centerOffsets();
 			}
 		});
