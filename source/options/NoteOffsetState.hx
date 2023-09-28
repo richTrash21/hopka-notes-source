@@ -97,6 +97,8 @@ class NoteOffsetState extends MusicBeatState
 			numScore.antialiasing = ClientPrefs.data.antialiasing;
 			numScore.setGraphicSize(Std.int(numScore.width * 0.5));
 			numScore.updateHitbox();
+			numScore.offset.x += FlxG.random.int(-2, 2);
+			numScore.offset.y += FlxG.random.int(-2, 2);
 			comboNums.add(numScore);
 			daLoop++;
 		}
