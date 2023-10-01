@@ -29,9 +29,9 @@ class MusicBeatState extends FlxUIState
 
 		super.create();
 
-		if(!skip) {
+		if(!skip)
 			openSubState(new CustomFadeTransition(0.7, true));
-		}
+
 		FlxTransitionableState.skipNextTransOut = false;
 		timePassedOnState = 0;
 	}
@@ -52,19 +52,12 @@ class MusicBeatState extends FlxUIState
 				stepHit();
 
 			if(PlayState.SONG != null)
-			{
-				if (oldStep < curStep)
-					updateSection();
-				else
-					rollbackSection();
-			}
+				(oldStep < curStep) ? updateSection() : rollbackSection();
 		}
 
 		if(FlxG.save.data != null) FlxG.save.data.fullscreen = FlxG.fullscreen;
 		
-		stagesFunc(function(stage:BaseStage) {
-			stage.update(elapsed);
-		});
+		stagesFunc(function(stage:BaseStage) stage.update(elapsed));
 
 		super.update(elapsed);
 	}

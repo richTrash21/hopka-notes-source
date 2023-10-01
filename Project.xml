@@ -20,6 +20,10 @@
 	
 	<!-- ______________________ PSYCH ENGINE CUSTOMIZATION ______________________ -->
 
+	<!-- for debugging without an actual debug build lmao -->
+	<!-- just need to not forget to comment this one on the REAL relese build -->
+	<define name="NOT_ACTUAL_RELESE" />
+	<define name="RELESE_BUILD_FR"	unless="NOT_ACTUAL_RELESE" />
 	<define name="CRASH_HANDLER"	if="desktop" />
 	<define name="MODS_ALLOWED"		if="desktop" />
 	<define name="HSCRIPT_ALLOWED"	if="desktop" />
@@ -113,7 +117,7 @@
 	<!-- Enables a terminal log prompt on debug builds -->
 	<haxelib name="hscript"				if="debug"/>
 	<haxelib name="hxcpp-debug-server"	if="debug"/>
-	<haxedef name="HXVLC_LOGGING"	if="VIDEOS_ALLOWED debug" />
+	<haxedef name="HXVLC_LOGGING"		if="VIDEOS_ALLOWED debug" />
 	<haxedef name="HXC_LIBVLC_LOGGING"	if="VIDEOS_ALLOWED debug" />
 	
 	<!-- ______________________________ Haxedefines _____________________________ -->

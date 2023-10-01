@@ -100,7 +100,6 @@ class FreeplayState extends MusicBeatState
 			var icon:HealthIcon = new HealthIcon(songs[i].songCharacter);
 			icon.sprTracker = songText;
 
-			
 			// too laggy with a lot of songs, so i had to recode the logic for it
 			songText.visible = songText.active = songText.isMenuItem = false;
 			icon.visible = icon.active = false;
@@ -118,8 +117,8 @@ class FreeplayState extends MusicBeatState
 		scoreText = new FlxText(FlxG.width * 0.7, 5, 0, "", 32);
 		scoreText.setFormat(Paths.font("vcr.ttf"), 32, FlxColor.WHITE, RIGHT);
 
-		scoreBG = new FlxSprite(scoreText.x - 6, 0).makeGraphic(1, 66, 0xFF000000);
-		scoreBG.alpha = 0.6;
+		scoreBG = new FlxSprite(scoreText.x - 6, 0).makeGraphic(1, 66, 0x99000000);
+		//scoreBG.alpha = 0.6;
 		add(scoreBG);
 
 		diffText = new FlxText(scoreText.x, scoreText.y + 36, 0, "", 24);
@@ -148,10 +147,8 @@ class FreeplayState extends MusicBeatState
 		
 		changeSelection();
 
-		var swag:Alphabet = new Alphabet(1, 0, "swag");
-
-		var textBG:FlxSprite = new FlxSprite(0, FlxG.height - 26).makeGraphic(FlxG.width, 26, 0xFF000000);
-		textBG.alpha = 0.6;
+		var textBG:FlxSprite = new FlxSprite(0, FlxG.height - 26).makeGraphic(FlxG.width, 26, 0x99000000);
+		//textBG.alpha = 0.6;
 		add(textBG);
 
 		#if PRELOAD_ALL
@@ -207,10 +204,9 @@ class FreeplayState extends MusicBeatState
 	var holdTime:Float = 0;
 	override function update(elapsed:Float)
 	{
-		if (FlxG.sound.music.volume < 0.7)
-		{
+		if (FlxG.sound.music.volume < 0.7) 
 			FlxG.sound.music.volume += 0.5 * FlxG.elapsed;
-		}
+		
 		lerpScore = Math.floor(FlxMath.lerp(lerpScore, intendedScore, FlxMath.bound(elapsed * 24, 0, 1)));
 		lerpRating = FlxMath.lerp(lerpRating, intendedRating, FlxMath.bound(elapsed * 12, 0, 1));
 
@@ -220,13 +216,11 @@ class FreeplayState extends MusicBeatState
 			lerpRating = intendedRating;
 
 		var ratingSplit:Array<String> = Std.string(CoolUtil.floorDecimal(lerpRating * 100, 2)).split('.');
-		if(ratingSplit.length < 2) { //No decimals, add an empty space
+		if(ratingSplit.length < 2) //No decimals, add an empty space
 			ratingSplit.push('');
-		}
 		
-		while(ratingSplit[1].length < 2) { //Less than 2 decimals in it, add decimals then
+		while(ratingSplit[1].length < 2) //Less than 2 decimals in it, add decimals then
 			ratingSplit[1] += '0';
-		}
 
 		scoreText.text = 'PERSONAL BEST: ' + lerpScore + ' (' + ratingSplit.join('.') + '%)';
 		positionHighscore();
@@ -290,9 +284,7 @@ class FreeplayState extends MusicBeatState
 		if (controls.BACK)
 		{
 			persistentUpdate = false;
-			if(colorTween != null) {
-				colorTween.cancel();
-			}
+			if(colorTween != null) colorTween.cancel();
 			FlxG.sound.play(Paths.sound('cancelMenu'));
 			MusicBeatState.switchState(new MainMenuState());
 		}
@@ -351,9 +343,7 @@ class FreeplayState extends MusicBeatState
 				PlayState.storyDifficulty = curDifficulty;
 
 				trace('CURRENT WEEK: ' + WeekData.getWeekFileName());
-				if(colorTween != null) {
-					colorTween.cancel();
-				}
+				if(colorTween != null) colorTween.cancel();
 			}
 			catch(e:Dynamic)
 			{
@@ -439,14 +429,10 @@ class FreeplayState extends MusicBeatState
 			
 		var newColor:Int = songs[curSelected].color;
 		if(newColor != intendedColor) {
-			if(colorTween != null) {
-				colorTween.cancel();
-			}
+			if(colorTween != null) colorTween.cancel();
 			intendedColor = newColor;
 			colorTween = FlxTween.color(bg, 1, bg.color, intendedColor, {
-				onComplete: function(twn:FlxTween) {
-					colorTween = null;
-				}
+				onComplete: function(twn:FlxTween) colorTween = null
 			});
 		}
 
@@ -455,18 +441,14 @@ class FreeplayState extends MusicBeatState
 		var bullShit:Int = 0;
 
 		for (i in 0...iconArray.length)
-		{
 			iconArray[i].alpha = 0.6;
-		}
 
 		iconArray[curSelected].alpha = 1;
 
 		for (item in grpSongs.members)
 		{
 			bullShit++;
-			item.alpha = 0.6;
-			if (item.targetY == curSelected)
-				item.alpha = 1;
+			item.alpha = item.targetY == curSelected ? 1 : 0.6;
 		}
 		
 		Mods.currentModDirectory = songs[curSelected].folder;

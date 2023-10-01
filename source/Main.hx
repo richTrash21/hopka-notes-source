@@ -149,6 +149,7 @@ class Main extends Sprite
 
 	// Code was entirely made by sqirra-rng for their fnf engine named "Izzy Engine", big props to them!!!
 	// very cool person for real they don't get enough credit for their work
+	// by sqirra-rng
 	#if CRASH_HANDLER
 	function onCrash(e:UncaughtErrorEvent):Void
 	{
@@ -173,11 +174,11 @@ class Main extends Sprite
 			}
 		}
 
-		errMsg += "\nUncaught Error: " + e.error + "\n\nnote: you done goofed" /*"\nPlease report this error to the GitHub page: https://github.com/ShadowMario/FNF-PsychEngine\n\n> Crash Handler written by: sqirra-rng"*/;
+		errMsg += "
+			\nUncaught Error: " + e.error + "\n\ntl;dr" + #if RELESE_BUILD_FR " - i messed up whoops (richTrash21)" #else " - you done goofed (richTrash21)" #end
+			/*"\nPlease report this error to the GitHub page: https://github.com/ShadowMario/FNF-PsychEngine\n\n> Crash Handler written by: sqirra-rng"*/;
 
-		if (!FileSystem.exists("./crash/"))
-			FileSystem.createDirectory("./crash/");
-
+		if (!FileSystem.exists("./crash/")) FileSystem.createDirectory("./crash/");
 		File.saveContent(path, errMsg + "\n");
 
 		Sys.println(errMsg);

@@ -8,7 +8,9 @@ import flixel.effects.FlxFlicker;
 
 import lime.app.Application;
 
+#if !RELESE_BUILD_FR
 import states.editors.MasterEditorMenu;
+#end
 import options.OptionsState;
 
 #if ACHIEVEMENTS_ALLOWED
@@ -226,7 +228,7 @@ class MainMenuState extends MusicBeatState
 					});
 				}
 			}
-			#if desktop
+			#if (desktop && !RELESE_BUILD_FR)
 			else if (controls.justPressed('debug_1'))
 			{
 				selectedSomethin = true;

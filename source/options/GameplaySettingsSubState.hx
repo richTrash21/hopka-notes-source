@@ -26,6 +26,18 @@ class GameplaySettingsSubState extends BaseOptionsMenu
 			'bool');
 		addOption(option);
 
+		var option:Option = new Option('Directional Camera',
+			'If checked, moves camera acording to the note pressed.',
+			'camScript',
+			'bool');
+		addOption(option);
+
+		var option:Option = new Option('Use Note Logic',
+			'If unchecked, camera moves according to the Character\'s animation, rather then Strum animation.\nNOTE: Works only if \"Directional Camera\" is checked.',
+			'camScriptNote',
+			'bool');
+		addOption(option);
+
 		var option:Option = new Option('Ghost Tapping',
 			"If checked, you won't get misses from pressing keys\nwhile there are no notes able to be hit.",
 			'ghostTapping',
@@ -40,7 +52,7 @@ class GameplaySettingsSubState extends BaseOptionsMenu
 		option.onChange = function() FlxG.autoPause = ClientPrefs.data.autoPause;
 
 		var option:Option = new Option('Deafen on Lost Focus',
-			"If checked, slightly deafens the game's sound while off focus.\nNOTE: Works only when Auto Pause is unchecked.",
+			"If checked, slightly deafens the game's sound while off focus.\nNOTE: Works only when \"Auto Pause\" is unchecked.",
 			'lostFocusDeafen',
 			'bool');
 		addOption(option);
