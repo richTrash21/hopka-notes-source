@@ -128,7 +128,7 @@ class PlayState extends MusicBeatState
 	public var songSpeedTween:FlxTween;
 	public var songSpeed(default, set):Float = 1;
 	public var songSpeedType:String = "multiplicative";
-	public var noteKillOffset:Float = 350;
+	public static var noteKillOffset:Float = 350;
 
 	public var playbackRate(default, set):Float = 1;
 
@@ -139,8 +139,7 @@ class PlayState extends MusicBeatState
 	public static var stageUI:String = "normal";
 	public static var isPixelStage(get, never):Bool;
 
-	@:noCompletion
-	static function get_isPixelStage():Bool
+	@:noCompletion static function get_isPixelStage():Bool
 		return stageUI == "pixel";
 
 	public static var SONG:SwagSong = null;
@@ -149,7 +148,7 @@ class PlayState extends MusicBeatState
 	public static var storyPlaylist:Array<String> = [];
 	public static var storyDifficulty:Int = 1;
 
-	public var spawnTime:Float = 2000;
+	public static var spawnTime:Float = 2000;
 
 	public var inst:FlxSound;
 	public var vocals:FlxSound;
@@ -173,7 +172,7 @@ class PlayState extends MusicBeatState
 	public var camZooming:Bool = false;
 	public var camZoomingMult:Float = 1;
 	public var camZoomingDecay:Float = 1;
-	private var curSong:String = "";
+	public var curSong:String = "";
 
 	public var gfSpeed:Int = 1;
 	public var health:Float = 1;
@@ -226,7 +225,7 @@ class PlayState extends MusicBeatState
 
 	// how big to stretch the pixel art assets
 	public static var daPixelZoom:Float = 6;
-	private var singAnimations:Array<String> = ['singLEFT', 'singDOWN', 'singUP', 'singRIGHT'];
+	private static var singAnimations:Array<String> = ['singLEFT', 'singDOWN', 'singUP', 'singRIGHT'];
 
 	public var playingVideo:Bool = false;
 	public var inCutscene:Bool = false;
@@ -539,11 +538,12 @@ class PlayState extends MusicBeatState
 		scoreTxt.visible = !ClientPrefs.data.hideHud;
 		add(scoreTxt);
 
-		botplayTxt = new FlxText(400, timeBar.y + 55, FlxG.width - 800, "BOTPLAY", 32);
+		botplayTxt = new FlxText(0, timeBar.y + 55, FlxG.width - 800, "BOTPLAY", 32);
 		botplayTxt.setFormat(Paths.font("vcr.ttf"), 32, FlxColor.WHITE, CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
 		botplayTxt.scrollFactor.set();
 		botplayTxt.borderSize = 1.25;
 		botplayTxt.visible = cpuControlled;
+		botplayTxt.screenCenter(X);
 		add(botplayTxt);
 		if(ClientPrefs.data.downScroll) botplayTxt.y = timeBar.y - 78;
 		
@@ -958,9 +958,9 @@ class PlayState extends MusicBeatState
 
 				var introAssets:Map<String, Array<String>> = new Map<String, Array<String>>();
 				var introImagesArray:Array<String> = switch(stageUI) {
-					case "pixel": ['${stageUI}UI/ready-pixel', '${stageUI}UI/set-pixel', '${stageUI}UI/date-pixel'];
-					case "normal": ["ready", "set" ,"go"];
-					default: ['${stageUI}UI/ready', '${stageUI}UI/set', '${stageUI}UI/go'];
+					case "pixel":	['${stageUI}UI/ready-pixel', '${stageUI}UI/set-pixel', '${stageUI}UI/date-pixel'];
+					case "normal":	["ready", "set" ,"go"];
+					default:		['${stageUI}UI/ready', '${stageUI}UI/set', '${stageUI}UI/go'];
 				}
 				introAssets.set(stageUI, introImagesArray);
 
@@ -1239,7 +1239,7 @@ class PlayState extends MusicBeatState
 						unspawnNotes.push(sustainNote);
 						
 						sustainNote.correctionOffset = swagNote.height * 0.5;
-						if(!PlayState.isPixelStage)
+						if(!isPixelStage)
 						{
 							if(oldNote.isSustainNote)
 							{
@@ -1389,9 +1389,9 @@ class PlayState extends MusicBeatState
 				if(vocals != null) vocals.pause();
 			}
 
-			if(startTimer != null && !startTimer.finished)	 startTimer.active = false;
-			if(finishTimer != null && !finishTimer.finished) finishTimer.active = false;
-			if(songSpeedTween != null)						 songSpeedTween.active = false;
+			if(startTimer != null && !startTimer.finished)	  startTimer.active = false;
+			if(finishTimer != null && !finishTimer.finished)  finishTimer.active = false;
+			if(songSpeedTween != null)						  songSpeedTween.active = false;
 
 			var chars:Array<Character> = [boyfriend, gf, dad];
 			for (char in chars)
@@ -1414,9 +1414,9 @@ class PlayState extends MusicBeatState
 		{
 			if (FlxG.sound.music != null && !startingSong) resyncVocals();
 
-			if(startTimer != null && !startTimer.finished)	 startTimer.active = true;
-			if(finishTimer != null && !finishTimer.finished) finishTimer.active = true;
-			if(songSpeedTween != null)						 songSpeedTween.active = true;
+			if(startTimer != null && !startTimer.finished)	  startTimer.active = true;
+			if(finishTimer != null && !finishTimer.finished)  finishTimer.active = true;
+			if(songSpeedTween != null)						  songSpeedTween.active = true;
 
 			var chars:Array<Character> = [boyfriend, gf, dad];
 			for (char in chars)
@@ -1570,18 +1570,16 @@ class PlayState extends MusicBeatState
 		FlxG.watch.addQuick("stepShit", curStep);
 
 		// RESET = Quick Game Over Screen
-		if (!ClientPrefs.data.noReset && controls.RESET && canReset && !inCutscene && startedCountdown && !endingSong)
-		{
+		if (!ClientPrefs.data.noReset && controls.RESET && canReset && !inCutscene && startedCountdown && !endingSong) {
 			health = 0;
-			trace("RESET = True");
+			doDeathCheck();
 		}
-		doDeathCheck();
 
 		if (unspawnNotes[0] != null)
 		{
 			var time:Float = spawnTime * playbackRate;
-			if(songSpeed < 1)					time /= songSpeed;
-			if(unspawnNotes[0].multSpeed < 1)	time /= unspawnNotes[0].multSpeed;
+			if(songSpeed < 1)				   time /= songSpeed;
+			if(unspawnNotes[0].multSpeed < 1)  time /= unspawnNotes[0].multSpeed;
 
 			while (unspawnNotes.length > 0 && unspawnNotes[0].strumTime - Conductor.songPosition < time)
 			{
@@ -2144,13 +2142,13 @@ class PlayState extends MusicBeatState
 					var difficulty:String = Difficulty.getFilePath();
 
 					trace('LOADING NEXT SONG');
-					trace(Paths.formatToSongPath(PlayState.storyPlaylist[0]) + difficulty);
+					trace(Paths.formatToSongPath(storyPlaylist[0]) + difficulty);
 
 					FlxTransitionableState.skipNextTransIn = true;
 					FlxTransitionableState.skipNextTransOut = true;
 					prevCamFollow = camFollow;
 
-					PlayState.SONG = Song.loadFromJson(PlayState.storyPlaylist[0] + difficulty, PlayState.storyPlaylist[0]);
+					SONG = Song.loadFromJson(storyPlaylist[0] + difficulty, storyPlaylist[0]);
 					FlxG.sound.music.stop();
 
 					cancelMusicFadeTween();
@@ -2260,7 +2258,7 @@ class PlayState extends MusicBeatState
 		if (stageUI != "normal")
 		{
 			uiPrefix = '${stageUI}UI/';
-			if (PlayState.isPixelStage) uiSuffix = '-pixel';
+			if (isPixelStage) uiSuffix = '-pixel';
 			antialias = !isPixelStage;
 		}
 
@@ -2294,8 +2292,8 @@ class PlayState extends MusicBeatState
 			lastRating = rating;
 		}
 
-		rating.setGraphicSize(Std.int(rating.width * (!PlayState.isPixelStage ? 0.7 : daPixelZoom * 0.85)));
-		comboSpr.setGraphicSize(Std.int(comboSpr.width * (!PlayState.isPixelStage ? 0.7 : daPixelZoom * 0.85)));
+		rating.setGraphicSize(Std.int(rating.width * (!isPixelStage ? 0.7 : daPixelZoom * 0.85)));
+		comboSpr.setGraphicSize(Std.int(comboSpr.width * (!isPixelStage ? 0.7 : daPixelZoom * 0.85)));
 
 		comboSpr.updateHitbox();
 		rating.updateHitbox();
@@ -2335,7 +2333,7 @@ class PlayState extends MusicBeatState
 			
 			if (!ClientPrefs.data.comboStacking) lastScore.push(numScore);
 
-			numScore.setGraphicSize(Std.int(numScore.width * (!PlayState.isPixelStage ? 0.5 : daPixelZoom)));
+			numScore.setGraphicSize(Std.int(numScore.width * (!isPixelStage ? 0.5 : daPixelZoom)));
 			numScore.updateHitbox();
 
 			numScore.offset.x += FlxG.random.int(-2, 2);
