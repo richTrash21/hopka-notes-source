@@ -60,11 +60,10 @@ class PauseSubState extends MusicBeatSubstate
 
 
 		pauseMusic = new FlxSound();
-		if(songName != null) {
+		if (songName != null)
 			pauseMusic.loadEmbedded(Paths.music(songName), true, true);
-		} else if (songName != 'None') {
+		else if (songName != 'None')
 			pauseMusic.loadEmbedded(Paths.music(Paths.formatToSongPath(ClientPrefs.data.pauseMusic)), true, true);
-		}
 		pauseMusic.volume = 0;
 		pauseMusic.play(false, FlxG.random.int(0, Std.int(pauseMusic.length / 2)));
 
@@ -146,18 +145,13 @@ class PauseSubState extends MusicBeatSubstate
 	override function update(elapsed:Float)
 	{
 		cantUnpause -= elapsed;
-		if (pauseMusic.volume < 0.5)
-			pauseMusic.volume += 0.01 * elapsed;
+		if (pauseMusic.volume < 0.5) pauseMusic.volume += 0.01 * elapsed;
 
 		super.update(elapsed);
 		updateSkipTextStuff();
 
-		var upP = controls.UI_UP_P;
-		var downP = controls.UI_DOWN_P;
-		var accepted = controls.ACCEPT;
-
-		if(upP) changeSelection(-1);
-		if(downP) changeSelection(1);
+		if (controls.UI_UP_P)	changeSelection(-1);
+		if (controls.UI_DOWN_P)	changeSelection(1);
 
 		var daSelected:String = menuItems[curSelected];
 		switch (daSelected)
@@ -179,27 +173,22 @@ class PauseSubState extends MusicBeatSubstate
 				if(controls.UI_LEFT || controls.UI_RIGHT)
 				{
 					holdTime += elapsed;
-					if(holdTime > 0.5)
-					{
-						curTime += 45000 * elapsed * (controls.UI_LEFT ? -1 : 1);
-					}
+					if(holdTime > 0.5) curTime += 45000 * elapsed * (controls.UI_LEFT ? -1 : 1);
 
-					if(curTime >= FlxG.sound.music.length) curTime -= FlxG.sound.music.length;
-					else if(curTime < 0) curTime += FlxG.sound.music.length;
+					if (curTime >= FlxG.sound.music.length) curTime -= FlxG.sound.music.length;
+					else if (curTime < 0) curTime += FlxG.sound.music.length;
 					updateSkipTimeText();
 				}
 		}
 
-		if (accepted && (cantUnpause <= 0 || !controls.controllerMode))
+		if (controls.ACCEPT && (cantUnpause <= 0 || !controls.controllerMode))
 		{
 			if (menuItems == difficultyChoices)
 			{
-				try{
-					if(menuItems.length - 1 != curSelected && difficultyChoices.contains(daSelected)) {
-
+				try {
+					if (menuItems.length - 1 != curSelected && difficultyChoices.contains(daSelected)) {
 						var name:String = PlayState.SONG.song;
-						var poop = Highscore.formatSong(name, curSelected);
-						PlayState.SONG = Song.loadFromJson(poop, name);
+						PlayState.SONG = Song.loadFromJson(Highscore.formatSong(name, curSelected), name);
 						PlayState.storyDifficulty = curSelected;
 						MusicBeatState.resetState();
 						FlxG.sound.music.volume = 0;
@@ -207,7 +196,7 @@ class PauseSubState extends MusicBeatSubstate
 						PlayState.chartingMode = false;
 						return;
 					}					
-				}catch(e:Dynamic){
+				} catch(e:Dynamic) {
 					trace('ERROR! $e');
 
 					var errorStr:String = e.toString();
@@ -221,7 +210,6 @@ class PauseSubState extends MusicBeatSubstate
 					super.update(elapsed);
 					return;
 				}
-
 
 				menuItems = menuItemsOG;
 				regenMenu();
@@ -266,10 +254,6 @@ class PauseSubState extends MusicBeatSubstate
 					PlayState.instance.finishSong(true);
 				case 'Toggle Botplay':
 					PlayState.instance.cpuControlled = !PlayState.instance.cpuControlled;
-					PlayState.changedDifficulty = true;
-					PlayState.instance.botplayTxt.visible = PlayState.instance.cpuControlled;
-					PlayState.instance.botplayTxt.alpha = 1;
-					PlayState.instance.botplaySine = 0;
 				case 'Options':
 					PlayState.instance.paused = true; // For lua
 					PlayState.instance.vocals.volume = 0;
@@ -287,8 +271,7 @@ class PauseSubState extends MusicBeatSubstate
 					PlayState.deathCounter = 0;
 
 					Mods.loadTopMod();
-					if(PlayState.isStoryMode) MusicBeatState.switchState(new StoryMenuState());
-					else MusicBeatState.switchState(new FreeplayState());
+					MusicBeatState.switchState(PlayState.isStoryMode ? new StoryMenuState() : new FreeplayState());
 					PlayState.cancelMusicFadeTween();
 					FlxG.sound.playMusic(Paths.music('freakyMenu'));
 					FlxG.camera.pixelPerfectRender = false;
@@ -328,7 +311,6 @@ class PauseSubState extends MusicBeatSubstate
 	override function destroy()
 	{
 		pauseMusic.destroy();
-
 		super.destroy();
 	}
 

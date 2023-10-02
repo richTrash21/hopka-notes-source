@@ -175,9 +175,15 @@ class PlayState extends MusicBeatState
 	public var curSong:String = "";
 
 	public var gfSpeed:Int = 1;
-	public var health:Float = 1;
 	public var combo:Int = 0;
+	public var health(default, set):Float = 1;
 
+	function set_health(value:Float):Float {
+		health = FlxMath.bound(value, 0, 2);
+		doDeathCheck();
+		return health;
+	}
+		
 	public var healthBar:HealthBar;
 	public var timeBar:HealthBar;
 	var songPercent:Float = 0;
@@ -195,9 +201,9 @@ class PlayState extends MusicBeatState
 	//Gameplay settings
 	public var healthGain:Float = 1;
 	public var healthLoss:Float = 1;
-	public var instakillOnMiss:Bool = false;
-	public var cpuControlled:Bool = false;
 	public var practiceMode:Bool = false;
+	public var instakillOnMiss:Bool = false;
+	public var cpuControlled(default, set):Bool = false;
 
 	public var botplaySine:Float = 0;
 	public var botplayTxt:FlxText;
@@ -452,9 +458,10 @@ class PlayState extends MusicBeatState
 
 		Conductor.songPosition = -5000 / Conductor.songPosition;
 		var showTime:Bool = (ClientPrefs.data.timeBarType != 'Disabled');
-		timeTxt = new FlxText(STRUM_X + (FlxG.width * 0.5) - 248, 19, 400, "", 32);
+		timeTxt = new FlxText(/*STRUM_X + (FlxG.width * 0.5) - 248*/ 0, 19, 400, "", 32);
 		timeTxt.setFormat(Paths.font("vcr.ttf"), 32, FlxColor.WHITE, CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
 		timeTxt.scrollFactor.set();
+		timeTxt.screenCenter(X);
 		timeTxt.alpha = 0;
 		timeTxt.borderSize = 2;
 		timeTxt.visible = updateTime = showTime;
@@ -586,8 +593,8 @@ class PlayState extends MusicBeatState
 		for (folder in foldersToCheck)
 			for (file in FileSystem.readDirectory(folder))
 			{
-				if(file.toLowerCase().endsWith('.lua')) new FunkinLua(folder + file);
-				if(file.toLowerCase().endsWith('.hx'))  initHScript(folder + file);
+				if (file.toLowerCase().endsWith('.lua')) new FunkinLua(folder + file);
+				if (file.toLowerCase().endsWith('.hx'))  initHScript(folder + file);
 			}
 		#end
 
@@ -628,15 +635,27 @@ class PlayState extends MusicBeatState
 		if(eventNotes.length < 1) checkEventNote();
 	}
 
+	// yes i am a nerd!! 🤓🤓
+	function set_cpuControlled(value:Bool):Bool
+	{
+		if (botplayTxt != null) {
+			botplayTxt.visible = value;
+			botplayTxt.alpha = 1;
+			botplaySine = 0;
+		}
+		if (!changedDifficulty && value) changedDifficulty = true;
+		return cpuControlled = value;
+	}
+
 	function set_songSpeed(value:Float):Float
 	{
 		if(generatedMusic)
 		{
 			var ratio:Float = value / songSpeed; //funny word huh
-			if(ratio != 1)
+			if (ratio != 1)
 			{
 				for (note in notes.members) note.resizeByRatio(ratio);
-				for (note in unspawnNotes) note.resizeByRatio(ratio);
+				for (note in unspawnNotes)  note.resizeByRatio(ratio);
 			}
 		}
 		songSpeed = value;
@@ -655,7 +674,7 @@ class PlayState extends MusicBeatState
 			if(ratio != 1)
 			{
 				for (note in notes.members) note.resizeByRatio(ratio);
-				for (note in unspawnNotes) note.resizeByRatio(ratio);
+				for (note in unspawnNotes)  note.resizeByRatio(ratio);
 			}
 		}
 		playbackRate = value;
@@ -667,17 +686,23 @@ class PlayState extends MusicBeatState
 
 	public function addTextToDebug(text:String, color:FlxColor) {
 		#if LUA_ALLOWED
-		var newText:DebugLuaText = luaDebugGroup.recycle(DebugLuaText);
-		newText.text = text;
-		newText.color = color;
-		newText.disableTime = 6;
-		newText.alpha = 1;
-		newText.setPosition(10, 8 - newText.height);
+		if (!isDead) { // ACTUALLY CAN CAUSES MEMORY LEAK!!!
+			if (luaDebugGroup == null) {
+				trace("can't and debug text - 'luaDebugGroup' is null!!!");
+				return;
+			}
+			var newText:DebugLuaText = luaDebugGroup.recycle(DebugLuaText);
+			newText.text = text;
+			newText.color = color;
+			newText.disableTime = 6;
+			newText.alpha = 1;
+			newText.setPosition(10, 8 - newText.height);
 
-		luaDebugGroup.forEachAlive(function(spr:DebugLuaText)
-			spr.y += newText.height + 2
-		);
-		luaDebugGroup.add(newText);
+			luaDebugGroup.forEachAlive(function(spr:DebugLuaText)
+				spr.y += newText.height + 2
+			);
+			luaDebugGroup.add(newText);
+		}
 		#end
 	}
 
@@ -797,7 +822,7 @@ class PlayState extends MusicBeatState
 		char.y += char.positionArray[1];
 	}
 
-	public var video:VideoHandler = null;
+	private var video:VideoHandler = null;
 	public function startVideo(name:String, antialias:Bool = true)
 	{
 		#if VIDEOS_ALLOWED
@@ -838,13 +863,13 @@ class PlayState extends MusicBeatState
 	function endVideo():Void
 	{
 		#if VIDEOS_ALLOWED
-			playingVideo = false;
-			video.stop();
-			video.dispose();
-			//#if (hxCodec >= "3.0.0") video.dispose(); #end
-			video = null;
-			startAndEnd();
-			return;
+		playingVideo = false;
+		video.stop();
+		video.dispose();
+		//#if (hxCodec >= "3.0.0") video.dispose(); #end
+		startAndEnd();
+		video = null;
+		return;
 		#end
 	}
 
@@ -853,7 +878,7 @@ class PlayState extends MusicBeatState
 	var dialogueCount:Int = 0;
 	public var psychDialogue:DialogueBoxPsych;
 	//You don't have to add a song, just saying. You can just do "startDialogue(DialogueBoxPsych.parseDialogue(Paths.json(songName + '/dialogue')))" and it should load dialogue.json
-	public function startDialogue(dialogueFile:DialogueFile, ?song:String = null):Void
+	public function startDialogue(dialogueFile:DialogueFile, ?song:String = null)
 	{
 		// TO DO: Make this more flexible, maybe?
 		if(psychDialogue != null) return;
@@ -891,13 +916,12 @@ class PlayState extends MusicBeatState
 	{
 		var introAssets:Map<String, Array<String>> = new Map<String, Array<String>>();
 		var introImagesArray:Array<String> = switch(stageUI) {
-			case "pixel": ['${stageUI}UI/ready-pixel', '${stageUI}UI/set-pixel', '${stageUI}UI/date-pixel'];
-			case "normal": ["ready", "set" ,"go"];
-			default: ['${stageUI}UI/ready', '${stageUI}UI/set', '${stageUI}UI/go'];
+			case "pixel":	['${stageUI}UI/ready-pixel', '${stageUI}UI/set-pixel', '${stageUI}UI/date-pixel'];
+			case "normal":	["ready", "set" ,"go"];
+			default:		['${stageUI}UI/ready', '${stageUI}UI/set', '${stageUI}UI/go'];
 		}
 		introAssets.set(stageUI, introImagesArray);
-		var introAlts:Array<String> = introAssets.get(stageUI);
-		for (asset in introAlts) Paths.image(asset);
+		for (asset in introAssets.get(stageUI)) Paths.image(asset);
 		
 		Paths.sound('intro3'  + introSoundsSuffix);
 		Paths.sound('intro2'  + introSoundsSuffix);
@@ -1456,9 +1480,13 @@ class PlayState extends MusicBeatState
 	function resetRPC(?cond:Bool = false)
 	{
 		#if desktop
-		(cond)
-			? DiscordClient.changePresence(detailsText, SONG.song + " (" + storyDifficultyText + ")", iconP2.getCharacter(), true, songLength - Conductor.songPosition - ClientPrefs.data.noteOffset)
-			: DiscordClient.changePresence(detailsText, SONG.song + " (" + storyDifficultyText + ")", iconP2.getCharacter());
+		DiscordClient.changePresence(
+			detailsText,
+			SONG.song + " (" + storyDifficultyText + ")",
+			iconP2.getCharacter(),
+			cond,
+			(cond) ? songLength - Conductor.songPosition - ClientPrefs.data.noteOffset : null
+		);
 		#end
 	}
 
@@ -1490,7 +1518,17 @@ class PlayState extends MusicBeatState
 
 		FlxG.camera.followLerp = 0;
 		if(!inCutscene && !paused) {
-			FlxG.camera.followLerp = FlxMath.bound(elapsed * 2.4 * cameraSpeed * playbackRate / (FlxG.updateFramerate / 60), 0, 1);
+			/**
+			 *	--[ idk, just wanted to write smth out of my frustration atm - `richTrash21` ]--
+			 *
+			 *	!!! calcs below was mesured with `elapsed = 0.0024` and on `240 fps` !!!
+			 *	 >  pre flixel `5.4.0` 		pixel/frame ≈ 0.0096
+			 *	 >  post flixel `5.4.0`		pixel/frame ≈ 0.0006 (WTF?????????)
+			 *
+			 *	to achieve pre `5.4.0` lerp now you need to multiply the whole lerp value by `16`!!!
+			 *	i hate being a programmer sm
+			 */
+			FlxG.camera.followLerp = FlxMath.bound(elapsed * 2.4 * cameraSpeed * playbackRate / (FlxG.updateFramerate / 60) #if (flixel >= "5.4.0") * 16 #end, 0, 1);
 			#if ACHIEVEMENTS_ALLOWED
 			if(!startingSong && !endingSong && boyfriend.animation.curAnim != null && boyfriend.animation.curAnim.name.startsWith('idle')) {
 				boyfriendIdleTime += elapsed;
@@ -1511,7 +1549,7 @@ class PlayState extends MusicBeatState
 			botplayTxt.alpha = 1 - Math.sin((Math.PI * botplaySine) / 180);
 		}
 
-		if (controls.PAUSE && startedCountdown && canPause) if(callOnScripts('onPause', null, true) != FunkinLua.Function_Stop) openPauseMenu();
+		if (controls.PAUSE && startedCountdown && canPause) if (callOnScripts('onPause', null, true) != FunkinLua.Function_Stop) openPauseMenu();
 
 		//idk how it will behave on an older versions sooooo...
 		//#if (hxCodec >= "3.0.0")
@@ -1531,7 +1569,7 @@ class PlayState extends MusicBeatState
 		iconP2.scale.set(mult, mult);
 		iconP2.updateHitbox();
 
-		if (health > 2) health = 2;
+		//if (health > 2) health = 2;
 		iconP1.x = healthBar.barCenter + (150 * iconP1.scale.x - 150) * 0.5 - 26;
 		iconP2.x = healthBar.barCenter - (150 * iconP2.scale.x) * 0.5 - 52;
 		iconP1.animation.curAnim.curFrame = (healthBar.percent < 20) ? 1 : 0;
@@ -1570,10 +1608,8 @@ class PlayState extends MusicBeatState
 		FlxG.watch.addQuick("stepShit", curStep);
 
 		// RESET = Quick Game Over Screen
-		if (!ClientPrefs.data.noReset && controls.RESET && canReset && !inCutscene && startedCountdown && !endingSong) {
+		if (!ClientPrefs.data.noReset && controls.RESET && canReset && !inCutscene && startedCountdown && !endingSong)
 			health = 0;
-			doDeathCheck();
-		}
 
 		if (unspawnNotes[0] != null)
 		{
@@ -1668,9 +1704,7 @@ class PlayState extends MusicBeatState
 			}
 			if ((FlxG.keys.pressed.SHIFT && FlxG.keys.justPressed.B) || FlxG.keys.justPressed.THREE) { // quick botplay for testing shit
 				cpuControlled = !cpuControlled;
-				botplayTxt.visible = cpuControlled;
-				botplayTxt.alpha = 1;
-				botplaySine = 0;
+				changedDifficulty = false;
 			}
 		}
 		#end

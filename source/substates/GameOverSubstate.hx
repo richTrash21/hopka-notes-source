@@ -132,8 +132,7 @@ class GameOverSubstate extends MusicBeatSubstate
 			}*/
 		}
 		
-		if(updateCamera) FlxG.camera.followLerp = FlxMath.bound(elapsed * 0.6 / (FlxG.updateFramerate / 60), 0, 1);
-		else FlxG.camera.followLerp = 0;
+		FlxG.camera.followLerp = updateCamera ? FlxMath.bound(elapsed * 0.6 / (FlxG.updateFramerate / 60) #if (flixel >= "5.4.0") * 16 #end, 0, 1) : 0;
 
 		if (FlxG.sound.music.playing) Conductor.songPosition = FlxG.sound.music.time;
 		PlayState.instance.callOnScripts('onUpdatePost', [elapsed]);
@@ -149,14 +148,14 @@ class GameOverSubstate extends MusicBeatSubstate
 			if (ret != FunkinLua.Function_Stop) {
 				isEnding = true;
 				boyfriend.playAnim('deathConfirm', true);
+
 				FlxG.sound.music.stop();
 				var endSound = Paths.music(endSoundName);
 				FlxG.sound.play(endSound != null ? endSound : Paths.sound(endSoundName));
+				
 				new FlxTimer().start(0.7, function(tmr:FlxTimer)
-				{
-					FlxG.camera.fade(FlxColor.BLACK, 2, false, function() MusicBeatState.resetState());
-				});
-			//PlayState.instance.callOnScripts('onGameOverConfirm', [true]);
+					FlxG.camera.fade(FlxColor.BLACK, 2, false, function() MusicBeatState.resetState())
+				);
 			}
 		}
 	}
