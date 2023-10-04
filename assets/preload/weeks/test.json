@@ -11,10 +11,11 @@
 	"weekBackground": "stage",
 
 	"storyName": "",
+	"difficulties": "Normal",
 	"weekBefore": "test",
 	"weekName": "test",
 	"startUnlocked": true,
 
-	"hideStoryMode": false,
+	"hideStoryMode": true,
 	"hideFreeplay": false
 }

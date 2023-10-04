@@ -37,6 +37,8 @@ typedef AnimArray = {
 
 class Character extends FlxSprite
 {
+	public static var DEFAULT_CHARACTER(default, null):String = 'bf'; //In case a character is missing, it will use BF on its place
+
 	public var animOffsets:Map<String, Array<Dynamic>>;
 	public var debugMode:Bool = false;
 
@@ -69,7 +71,6 @@ class Character extends FlxSprite
 	public var originalFlipX:Bool = false;
 	public var healthColorArray:Array<Int> = [255, 0, 0];
 
-	public static var DEFAULT_CHARACTER:String = 'bf'; //In case a character is missing, it will use BF on its place
 	public function new(x:Float, y:Float, ?character:String = 'bf', ?isPlayer:Bool = false)
 	{
 		super(x, y);
@@ -107,11 +108,10 @@ class Character extends FlxSprite
 				#if MODS_ALLOWED
 				var modAnimToFind:String = Paths.modFolders('images/' + json.image + '/Animation.json');
 				var animToFind:String = Paths.getPath('images/' + json.image + '/Animation.json', TEXT);
-				if (FileSystem.exists(modAnimToFind) || FileSystem.exists(animToFind) || Assets.exists(animToFind))
+				useAtlas = (FileSystem.exists(modAnimToFind) || FileSystem.exists(animToFind) || Assets.exists(animToFind));
 				#else
-				if (Assets.exists(Paths.getPath('images/' + json.image + '/Animation.json', TEXT)))
+				useAtlas = Assets.exists(Paths.getPath('images/' + json.image + '/Animation.json', TEXT));
 				#end
-					useAtlas = true;
 
 				if(!useAtlas) frames = Paths.getAtlas(json.image);
 				else frames = AtlasFrameMaker.construct(json.image);
@@ -130,13 +130,13 @@ class Character extends FlxSprite
 				// data
 				healthIcon = json.healthicon;
 				singDuration = json.sing_duration;
-				flipX = (json.flip_x == true);
+				flipX = json.flip_x;
 
 				if(json.healthbar_colors != null && json.healthbar_colors.length > 2)
 					healthColorArray = json.healthbar_colors;
 
 				// antialiasing
-				noAntialiasing = (json.no_antialiasing == true);
+				noAntialiasing = json.no_antialiasing;
 				antialiasing = ClientPrefs.data.antialiasing ? !noAntialiasing : false;
 
 				// animations
@@ -162,7 +162,7 @@ class Character extends FlxSprite
 		}
 		originalFlipX = flipX;
 
-		if(animOffsets.exists('singLEFTmiss') || animOffsets.exists('singDOWNmiss') || animOffsets.exists('singUPmiss') || animOffsets.exists('singRIGHTmiss')) hasMissAnimations = true;
+		hasMissAnimations = (animOffsets.exists('singLEFTmiss') || animOffsets.exists('singDOWNmiss') || animOffsets.exists('singUPmiss') || animOffsets.exists('singRIGHTmiss'));
 		recalculateDanceIdle();
 		dance();
 
@@ -199,7 +199,7 @@ class Character extends FlxSprite
 
 			if (animation.curAnim.name.startsWith('sing'))
 				holdTimer += elapsed;
-			else if(isPlayer)
+			else if (isPlayer)
 				holdTimer = 0;
 
 			if (!isPlayer && holdTimer >= Conductor.stepCrochet * (0.0011 / (FlxG.sound.music != null ? FlxG.sound.music.pitch : 1)) * singDuration)
@@ -208,7 +208,7 @@ class Character extends FlxSprite
 				holdTimer = 0;
 			}
 
-			if(animation.curAnim.finished && animation.getByName(animation.curAnim.name + '-loop') != null)
+			if (animation.curAnim.finished && animation.getByName(animation.curAnim.name + '-loop') != null)
 				playAnim(animation.curAnim.name + '-loop');
 		}
 		super.update(elapsed);
@@ -223,12 +223,12 @@ class Character extends FlxSprite
 	{
 		if (!debugMode && !skipDance && !specialAnim)
 		{
-			if(danceIdle)
+			if (danceIdle)
 			{
 				danced = !danced;
 				playAnim('dance' + (danced ? 'Right' : 'Left') + idleSuffix);
 			}
-			else if(animation.getByName('idle' + idleSuffix) != null)
+			else
 				playAnim('idle' + idleSuffix);
 		}
 	}
@@ -243,10 +243,10 @@ class Character extends FlxSprite
 		}
 		animation.play(AnimName, Force, Reversed, Frame);
 
-		var daOffset = animOffsets.get(AnimName);
-		if (animOffsets.exists(AnimName))
+		if (animOffsets.exists(AnimName)) {
+			var daOffset = animOffsets.get(AnimName);
 			offset.set(daOffset[0], daOffset[1]);
-		else
+		} else
 			offset.set(0, 0);
 
 		if (curCharacter.startsWith('gf'))
@@ -269,13 +269,11 @@ class Character extends FlxSprite
 		var lastDanceIdle:Bool = danceIdle;
 		danceIdle = (animation.getByName('danceLeft' + idleSuffix) != null && animation.getByName('danceRight' + idleSuffix) != null);
 
-		if(settingCharacterUp)
+		if (settingCharacterUp)
 			danceEveryNumBeats = (danceIdle ? 1 : 2);
-		else if(lastDanceIdle != danceIdle)
-		{
-			var calc:Float = danceEveryNumBeats * (danceIdle ? 0.5 : 2);
-			danceEveryNumBeats = Math.round(Math.max(calc, 1));
-		}
+		else if (lastDanceIdle != danceIdle)
+			danceEveryNumBeats = Math.round(Math.max(danceEveryNumBeats * (danceIdle ? 0.5 : 2), 1));
+
 		settingCharacterUp = false;
 	}
 

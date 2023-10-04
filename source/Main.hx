@@ -92,7 +92,7 @@ class Main extends Sprite
 
 		#if !mobile
 		fpsVar = new FPS(10, 3, 0xFFFFFF);
-		fpsShadow = new FPS(11, 4, 0x000000);
+		fpsShadow = new FPS(11, 4);
 		fpsShadow.shadow = true;
 		addChild(fpsShadow);
 		addChild(fpsVar);

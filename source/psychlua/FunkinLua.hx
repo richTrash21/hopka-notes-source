@@ -532,9 +532,8 @@ class FunkinLua {
 						game.callOnLuas('onTweenCompleted', [tag, vars]);
 					}
 				}));
-			} else {
+			} else
 				luaTrace('doTweenColor: Couldnt find object: ' + vars, false, false, FlxColor.RED);
-			}
 		});
 
 		//Tween shit, but for strums
@@ -613,10 +612,8 @@ class FunkinLua {
 		Lua_helper.add_callback(lua, "mouseReleased", function(button:String) {
 			var released:Bool = FlxG.mouse.justReleased;
 			switch(button){
-				case 'middle':
-					released = FlxG.mouse.justReleasedMiddle;
-				case 'right':
-					released = FlxG.mouse.justReleasedRight;
+				case 'middle':	released = FlxG.mouse.justReleasedMiddle;
+				case 'right':	released = FlxG.mouse.justReleasedRight;
 			}
 			return released;
 		});

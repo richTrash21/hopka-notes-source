@@ -30,7 +30,12 @@ class FPS extends TextField
 		The current frame rate, expressed using frames-per-second
 	**/
 	public var currentFPS(default, null):Int;
-	public var shadow:Bool = false;
+	public var shadow(default, set):Bool = false;
+
+	@:noCompletion function set_shadow(value:Bool) {
+		textColor = 0x000000;
+		return shadow = value;
+	}
 
 	@:noCompletion private var cacheCount:Int;
 	@:noCompletion private var currentTime:Float;
@@ -65,8 +70,7 @@ class FPS extends TextField
 	}
 
 	// Event Handlers
-	@:noCompletion
-	private #if !flash override #end function __enterFrame(deltaTime:Float):Void
+	@:noCompletion private #if !flash override #end function __enterFrame(deltaTime:Float):Void
 	{
 		currentTime += deltaTime;
 		times.push(currentTime);
@@ -90,10 +94,13 @@ class FPS extends TextField
 			text += "\nMemory: " + memoryMegas + " MB";
 			#end
 
-			if(!shadow) textColor = 0xFFFFFFFF;
-			if (memoryMegas > 3000 || currentFPS <= ClientPrefs.data.framerate / 2)
+			if(!shadow)
 			{
-				if(!shadow) textColor = 0xFFFF0000;
+				textColor = 0xFFFFFFFF;
+				if (memoryMegas > 3000 || currentFPS <= ClientPrefs.data.framerate / 2)
+				{
+					textColor = 0xFFFF0000;
+				}
 			}
 
 			#if (gl_stats && !disable_cffi && (!html5 || !canvas))

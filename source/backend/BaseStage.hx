@@ -128,12 +128,9 @@ class BaseStage extends FlxBasic
 
 		switch(type)
 		{
-			case 'image':
-				Paths.image(key);
-			case 'sound':
-				Paths.sound(key);
-			case 'music':
-				Paths.music(key);
+			case 'image': Paths.image(key);
+			case 'sound': Paths.sound(key);
+			case 'music': Paths.music(key);
 		}
 	}
 

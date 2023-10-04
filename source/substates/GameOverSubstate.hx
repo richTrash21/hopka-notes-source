@@ -17,29 +17,22 @@ class GameOverSubstate extends MusicBeatSubstate
 	public var camFollow:FlxObject;
 	public var updateCamera:Bool = false;
 
-	public static var characterName:String = 'bf-dead';
-	public static var deathSoundName:String = 'fnf_loss_sfx';
-	public static var loopSoundName:String = 'gameOver';
-	public static var endSoundName:String = 'gameOverEnd';
+	// better structurised now
+	public static var characterName(default, set):String = 'bf-dead';
+	public static var deathSoundName(default, set):String = 'fnf_loss_sfx';
+	public static var loopSoundName(default, set):String = 'gameOver';
+	public static var endSoundName(default, set):String = 'gameOverEnd';
 
 	public static var instance:GameOverSubstate;
 
-	// better structurised now
 	public static function resetVariables(_song:backend.Song.SwagSong)
 	{
 		if(_song != null)
 		{
-			characterName = (_song.gameOverChar != null && _song.gameOverChar.trim().length > 0) ? _song.gameOverChar : 'bf-dead';
-			deathSoundName = (_song.gameOverSound != null && _song.gameOverSound.trim().length > 0) ? _song.gameOverSound : 'fnf_loss_sfx';
-			loopSoundName = (_song.gameOverLoop != null && _song.gameOverLoop.trim().length > 0) ? _song.gameOverLoop : 'gameOver';
-			endSoundName = (_song.gameOverEnd != null && _song.gameOverEnd.trim().length > 0) ? _song.gameOverEnd : 'gameOverEnd';
-		}
-		else
-		{
-			characterName = 'bf-dead';
-			deathSoundName = 'fnf_loss_sfx';
-			loopSoundName = 'gameOver';
-			endSoundName = 'gameOverEnd';
+			characterName = _song.gameOverChar;
+			deathSoundName = _song.gameOverSound;
+			loopSoundName = _song.gameOverLoop;
+			endSoundName = _song.gameOverEnd;
 		}
 	}
 
@@ -75,7 +68,6 @@ class GameOverSubstate extends MusicBeatSubstate
 		add(camFollow);
 
 		FlxG.camera.follow(camFollow, LOCKON, 0);
-		//FlxG.camera.snapToTarget();
 	}
 
 	public var startedDeath:Bool = false;
@@ -132,7 +124,7 @@ class GameOverSubstate extends MusicBeatSubstate
 			}*/
 		}
 		
-		FlxG.camera.followLerp = updateCamera ? FlxMath.bound(elapsed * 0.6 / (FlxG.updateFramerate / 60) #if (flixel >= "5.4.0") * 16 #end, 0, 1) : 0;
+		FlxG.camera.followLerp = updateCamera ? elapsed * 0.6 / (FlxG.updateFramerate / 60) #if (flixel >= "5.4.0") * 16 #end : 0;
 
 		if (FlxG.sound.music.playing) Conductor.songPosition = FlxG.sound.music.time;
 		PlayState.instance.callOnScripts('onUpdatePost', [elapsed]);
@@ -150,8 +142,7 @@ class GameOverSubstate extends MusicBeatSubstate
 				boyfriend.playAnim('deathConfirm', true);
 
 				FlxG.sound.music.stop();
-				var endSound = Paths.music(endSoundName);
-				FlxG.sound.play(endSound != null ? endSound : Paths.sound(endSoundName));
+				FlxG.sound.play(Paths.sound(endSoundName));
 				
 				new FlxTimer().start(0.7, function(tmr:FlxTimer)
 					FlxG.camera.fade(FlxColor.BLACK, 2, false, function() MusicBeatState.resetState())
@@ -164,5 +155,25 @@ class GameOverSubstate extends MusicBeatSubstate
 	{
 		instance = null;
 		super.destroy();
+	}
+
+	@:noCompletion static function set_characterName(value:String):String {
+		characterName = (value != null && value.trim().length > 0) ? value : 'bf-dead';
+		return value;
+	}
+	@:noCompletion static function set_deathSoundName(value:String):String {
+		deathSoundName = (value != null && value.trim().length > 0) ? value : 'fnf_loss_sfx';
+		Paths.sound(deathSoundName);
+		return value;
+	}
+	@:noCompletion static function set_loopSoundName(value:String):String {
+		loopSoundName = (value != null && value.trim().length > 0) ? value : 'gameOver';
+		Paths.sound(loopSoundName);
+		return value;
+	}
+	@:noCompletion static function set_endSoundName(value:String):String {
+		endSoundName = (value != null && value.trim().length > 0) ? value : 'gameOverEnd';
+		Paths.sound(endSoundName);
+		return value;
 	}
 }

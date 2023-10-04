@@ -21,7 +21,6 @@ import backend.Achievements;
 class MainMenuState extends MusicBeatState
 {
 	public static var psychEngineVersion:String = '0.7.1' #if debug + ' [DEBUG]' #end; //This is also used for Discord RPC
-	//btw g in the version states that it is a github version, specicfically from 08.17.23 at 20:25:54 (GMT +4) 🤓
 	public static var curSelected:Int = 0;
 
 	var menuItems:FlxTypedGroup<FlxSprite>;
@@ -115,7 +114,7 @@ class MainMenuState extends MusicBeatState
 			menuItem.updateHitbox();
 		}
 
-		FlxG.camera.follow(camFollow, null, 0);
+		FlxG.camera.follow(camFollow, null);
 
 		var versionShit:FlxText = new FlxText(12, FlxG.height - 44, 0, "Psych Engine v" + psychEngineVersion, 12);
 		versionShit.scrollFactor.set();

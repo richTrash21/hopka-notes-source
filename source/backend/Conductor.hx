@@ -23,10 +23,6 @@ class Conductor
 
 	public static var bpmChangeMap:Array<BPMChangeEvent> = [];
 
-	public function new()
-	{
-	}
-
 	public static function judgeNote(arr:Array<Rating>, diff:Float=0):Rating // die
 	{
 		var data:Array<Rating> = arr;
@@ -58,7 +54,7 @@ class Conductor
 		return lastChange;
 	}
 
-	public static function getBPMFromStep(step:Float){
+	public static function getBPMFromStep(step:Float):BPMChangeEvent {
 		var lastChange:BPMChangeEvent = {
 			stepTime: 0,
 			songTime: 0,
@@ -74,29 +70,27 @@ class Conductor
 		return lastChange;
 	}
 
-	public static function beatToSeconds(beat:Float): Float{
+	public static function beatToSeconds(beat:Float):Float {
 		var step = beat * 4;
 		var lastChange = getBPMFromStep(step);
 		return lastChange.songTime + ((step - lastChange.stepTime) / (lastChange.bpm / 60)/4) * 1000; // TODO: make less shit and take BPM into account PROPERLY
 	}
 
-	public static function getStep(time:Float){
+	public static function getStep(time:Float) {
 		var lastChange = getBPMFromSeconds(time);
 		return lastChange.stepTime + (time - lastChange.songTime) / lastChange.stepCrochet;
 	}
 
-	public static function getStepRounded(time:Float){
+	public static function getStepRounded(time:Float) {
 		var lastChange = getBPMFromSeconds(time);
 		return lastChange.stepTime + Math.floor(time - lastChange.songTime) / lastChange.stepCrochet;
 	}
 
-	public static function getBeat(time:Float){
-		return getStep(time)/4;
-	}
+	public static function getBeat(time:Float)
+		return getStep(time) / 4;
 
-	public static function getBeatRounded(time:Float):Int{
-		return Math.floor(getStepRounded(time)/4);
-	}
+	public static function getBeatRounded(time:Float):Int
+		return Math.floor(getStepRounded(time) / 4);
 
 	public static function mapBPMChanges(song:SwagSong)
 	{
@@ -133,15 +127,13 @@ class Conductor
 		return val != null ? val : 4;
 	}
 
-	inline public static function calculateCrochet(bpm:Float){
-		return (60/bpm)*1000;
-	}
+	inline public static function calculateCrochet(bpm:Float)
+		return (60 / bpm) * 1000;
 
 	public static function set_bpm(newBPM:Float):Float {
 		bpm = newBPM;
 		crochet = calculateCrochet(bpm);
 		stepCrochet = crochet / 4;
-
-		return bpm = newBPM;
+		return newBPM;
 	}
 }

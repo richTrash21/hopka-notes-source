@@ -36,7 +36,7 @@ class Note extends FlxSprite
 
 	public var strumTime:Float = 0;
 	public var mustPress:Bool = false;
-	public var noteData:Int = 0;
+	public var noteData(get, default):Int = 0;
 	public var canBeHit:Bool = false;
 	public var tooLate:Bool = false;
 	public var wasGoodHit:Bool = false;
@@ -116,11 +116,12 @@ class Note extends FlxSprite
 	public var hitsoundChartEditor:Bool = true;
 	public var hitsound:String = 'hitsound';
 
+	@:noCompletion function get_noteData():Int
+		return Std.int(Math.abs(noteData));
+
 	private function set_multSpeed(value:Float):Float {
 		resizeByRatio(value / multSpeed);
-		multSpeed = value;
-		//trace('fuck cock');
-		return value;
+		return multSpeed = value;
 	}
 
 	public function resizeByRatio(ratio:Float) //haha funny twitter shit
@@ -134,9 +135,7 @@ class Note extends FlxSprite
 
 	private function set_texture(value:String):String {
 		if(texture != value) reloadNote(value);
-
-		texture = value;
-		return value;
+		return texture = value;
 	}
 
 	public function defaultRGB()
@@ -153,7 +152,7 @@ class Note extends FlxSprite
 	}
 
 	private function set_noteType(value:String):String {
-		noteSplashData.texture = PlayState.SONG != null ? PlayState.SONG.splashSkin : 'noteSplashes';
+		noteSplashData.texture = PlayState.SONG != null ? PlayState.SONG.splashSkin : 'noteSplashes/noteSplashes';
 		defaultRGB();
 
 		if(noteData > -1 && noteType != value) {
