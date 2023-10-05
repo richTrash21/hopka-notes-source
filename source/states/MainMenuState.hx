@@ -25,11 +25,9 @@ class MainMenuState extends MusicBeatState
 
 	var menuItems:FlxTypedGroup<FlxSprite>;
 	private var camGame:FlxCamera;
-	#if ACHIEVEMENTS_ALLOWED
-	private var camAchievement:FlxCamera;
-	#end
+	#if ACHIEVEMENTS_ALLOWED private var camAchievement:FlxCamera; #end
 	
-	var optionShit:Array<String> = [
+	static var optionShit:Array<String> = [
 		'story_mode',
 		'freeplay',
 		#if (MODS_ALLOWED && debug) 'mods', #end //shouldn't be included in release build lmao
@@ -39,7 +37,6 @@ class MainMenuState extends MusicBeatState
 	];
 
 	var magenta:FlxSprite;
-	var camFollow:FlxObject;
 
 	override function create()
 	{
@@ -78,9 +75,6 @@ class MainMenuState extends MusicBeatState
 		bg.screenCenter();
 		add(bg);
 
-		camFollow = new FlxObject(0, 0, 1, 1);
-		add(camFollow);
-
 		magenta = new FlxSprite(-80).loadGraphic(Paths.image('menuDesat'));
 		magenta.antialiasing = ClientPrefs.data.antialiasing;
 		magenta.scrollFactor.set(0, yScroll);
@@ -114,7 +108,7 @@ class MainMenuState extends MusicBeatState
 			menuItem.updateHitbox();
 		}
 
-		FlxG.camera.follow(camFollow, null);
+		FlxG.camera.follow(menuItems.members[0], null, 0);
 
 		var versionShit:FlxText = new FlxText(12, FlxG.height - 44, 0, "Psych Engine v" + psychEngineVersion, 12);
 		versionShit.scrollFactor.set();
@@ -177,8 +171,7 @@ class MainMenuState extends MusicBeatState
 
 			if (controls.ACCEPT)
 			{
-				if (optionShit[curSelected] == 'donate')
-					CoolUtil.browserLoad('https://t.me/hopka_notes');
+				if (optionShit[curSelected] == 'donate') CoolUtil.browserLoad('https://t.me/hopka_notes');
 				else
 				{
 					selectedSomethin = true;
@@ -199,9 +192,7 @@ class MainMenuState extends MusicBeatState
 						{
 							FlxFlicker.flicker(spr, 1, 0.06, false, false, function(flick:FlxFlicker)
 							{
-								var daChoice:String = optionShit[curSelected];
-
-								switch (daChoice)
+								switch (optionShit[curSelected])
 								{
 									case 'story_mode':
 										MusicBeatState.switchState(new StoryMenuState());
@@ -257,7 +248,7 @@ class MainMenuState extends MusicBeatState
 			if (spr.ID == curSelected)
 			{
 				spr.animation.play('selected');
-				camFollow.setPosition(spr.getGraphicMidpoint().x, spr.getGraphicMidpoint().y - (menuItems.length > 4 ? menuItems.length * 8 : 0));
+				FlxG.camera.follow(spr, null, 0);
 				spr.centerOffsets();
 			}
 		});

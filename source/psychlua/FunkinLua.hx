@@ -35,16 +35,15 @@ import psychlua.HScript;
 import psychlua.ModchartSprite;
 
 class FunkinLua {
-	public static var Function_Stop:Dynamic = "##PSYCHLUA_FUNCTIONSTOP";
-	public static var Function_Continue:Dynamic = "##PSYCHLUA_FUNCTIONCONTINUE";
-	public static var Function_StopLua:Dynamic = "##PSYCHLUA_FUNCTIONSTOPLUA";
-	public static var Function_StopHScript:Dynamic = "##PSYCHLUA_FUNCTIONSTOPHSCRIPT";
-	public static var Function_StopAll:Dynamic = "##PSYCHLUA_FUNCTIONSTOPALL";
+	public static var Function_Stop(default, never):Dynamic = "##PSYCHLUA_FUNCTIONSTOP";
+	public static var Function_Continue(default, never):Dynamic = "##PSYCHLUA_FUNCTIONCONTINUE";
+	public static var Function_StopLua(default, never):Dynamic = "##PSYCHLUA_FUNCTIONSTOPLUA";
+	public static var Function_StopHScript(default, never):Dynamic = "##PSYCHLUA_FUNCTIONSTOPHSCRIPT";
+	public static var Function_StopAll(default, never):Dynamic = "##PSYCHLUA_FUNCTIONSTOPALL";
 
 	#if LUA_ALLOWED
 	public var lua:State = null;
 	#end
-	public var camTarget:FlxCamera;
 	public var scriptName:String = '';
 	public var closed:Bool = false;
 
@@ -56,16 +55,29 @@ class FunkinLua {
 	public static var customFunctions:Map<String, Dynamic> = new Map<String, Dynamic>();
 
 	public function new(scriptName:String) {
+		this.scriptName = scriptName;
 		#if LUA_ALLOWED
 		lua = LuaL.newstate();
 		LuaL.openlibs(lua);
 
-		//trace('Lua version: ' + Lua.version());
-		//trace("LuaJIT version: " + Lua.versionJIT());
+		/*try {
+			var result:Dynamic = LuaL.dofile(lua, scriptName);
+			var resultStr:String = Lua.tostring(lua, result);
+			if(resultStr != null && result != 0) {
+				trace(resultStr);
+				#if windows
+				lime.app.Application.current.window.alert(resultStr, 'Error on lua script!');
+				#else
+				luaTrace('$scriptName\n$resultStr', true, false, FlxColor.RED);
+				#end
+				lua = null;
+				return;
+			}
+		} catch(e:Dynamic) {
+			trace(e);
+			return;
+		}*/
 
-		//LuaL.dostring(lua, CLENSE);
-
-		this.scriptName = scriptName;
 		var game:PlayState = PlayState.instance;
 		game.luaArray.push(this);
 
@@ -1323,7 +1335,7 @@ class FunkinLua {
 		ShaderFunctions.implement(this);
 		DeprecatedFunctions.implement(this);
 		
-		try{
+		try {
 			var result:Dynamic = LuaL.dofile(lua, scriptName);
 			var resultStr:String = Lua.tostring(lua, result);
 			if(resultStr != null && result != 0) {

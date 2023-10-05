@@ -136,8 +136,12 @@ class PlayState extends MusicBeatState
 	public var dadGroup:FlxSpriteGroup;
 	public var gfGroup:FlxSpriteGroup;
 	public static var curStage:String = '';
-	public static var stageUI:String = "normal";
+
 	public static var isPixelStage(get, never):Bool;
+	public static var stageUI:String = "normal";
+	public var introSoundsSuffix:String = '';
+	public var uiPrefix:String = '';
+	public var uiSuffix:String = '';
 
 	@:noCompletion static function get_isPixelStage():Bool
 		return stageUI == "pixel";
@@ -178,7 +182,7 @@ class PlayState extends MusicBeatState
 	public var combo:Int = 0;
 	public var health(default, set):Float = 1;
 
-	function set_health(value:Float):Float {
+	@:noCompletion function set_health(value:Float):Float {
 		health = FlxMath.bound(value, 0, 2);
 		doDeathCheck();
 		return health;
@@ -213,7 +217,7 @@ class PlayState extends MusicBeatState
 	public var camHUD:FlxCamera;
 	public var camGame:FlxCamera;
 	public var camOther:FlxCamera;
-	public var cameraSpeed(default, set):Float = 1;
+	public var cameraSpeed:Float = 1;
 
 	public var songScore:Int = 0;
 	public var songHits:Int = 0;
@@ -231,7 +235,6 @@ class PlayState extends MusicBeatState
 
 	// how big to stretch the pixel art assets
 	public static var daPixelZoom:Float = 6;
-	private static var singAnimations:Array<String> = ['singLEFT', 'singDOWN', 'singUP', 'singRIGHT'];
 
 	public var playingVideo:Bool = false;
 	public var inCutscene:Bool = false;
@@ -262,12 +265,10 @@ class PlayState extends MusicBeatState
 	#if LUA_ALLOWED
 	private var luaDebugGroup:FlxTypedGroup<DebugLuaText>;
 	#end
-	public var introSoundsSuffix:String = '';
-	public var uiPrefix:String = '';
-	public var uiSuffix:String = '';
 
 	// Less laggy controls
-	private static var keysArray(default, null):Array<String> = ['note_left', 'note_down', 'note_up', 'note_right'];
+	private static var keysArray(default, never):Array<String> = ['note_left', 'note_down', 'note_up', 'note_right'];
+	private static var singAnimations(default, never):Array<String> = ['singLEFT', 'singDOWN', 'singUP', 'singRIGHT'];
 
 	public var precacheList:Map<String, String> = new Map<String, String>();
 	public var songName:String;
@@ -342,14 +343,17 @@ class PlayState extends MusicBeatState
 
 		defaultCamZoom = stageData.defaultZoom;
 
-		stageUI = "normal";
+		stageUI = (stageData.isPixelStage) ? "pixel" : "normal";
 		if (stageData.stageUI != null && stageData.stageUI.trim().length > 0)
 			stageUI = stageData.stageUI;
-		else {
-			if (stageData.isPixelStage)
-				stageUI = "pixel";
+
+		if (stageUI != "normal")
+		{
+			introSoundsSuffix = '-$stageUI';
+			uiSuffix = '-$stageUI';
+			uiPrefix = '${stageUI}UI/';
 		}
-		
+
 		BF_X = stageData.boyfriend[0];
 		BF_Y = stageData.boyfriend[1];
 		GF_X = stageData.girlfriend[0];
@@ -379,12 +383,6 @@ class PlayState extends MusicBeatState
 		switch (curStage)
 		{
 			case 'stage': new states.stages.StageWeek1(); //Week 1
-		}
-
-		if(isPixelStage) {
-			introSoundsSuffix = '-pixel';
-			uiSuffix = '-pixel';
-			uiPrefix = '${stageUI}UI/';
 		}
 
 		add(gfGroup);
@@ -499,7 +497,6 @@ class PlayState extends MusicBeatState
 
 		FlxG.camera.follow(camFollow, LOCKON, 0);
 		FlxG.camera.zoom = defaultCamZoom;
-		FlxG.camera.followLerp = 0;
 		FlxG.camera.snapToTarget();
 		// will give pixel stages more pixelated look (???????????????????)
 		// dont ask why its down here idfk
@@ -639,11 +636,6 @@ class PlayState extends MusicBeatState
 		if (!changedDifficulty && value) changedDifficulty = true;
 		setOnScripts('botPlay', value);
 		return cpuControlled = value;
-	}
-
-	function set_cameraSpeed(value:Float) {
-		cameraSpeed = value;
-		return value;
 	}
 
 	function set_songSpeed(value:Float):Float
@@ -913,14 +905,10 @@ class PlayState extends MusicBeatState
 
 	function cacheCountdown()
 	{
-		var introAssets:Map<String, Array<String>> = new Map<String, Array<String>>();
-		var introImagesArray:Array<String> = switch(stageUI) {
-			case "pixel":	['${stageUI}UI/ready-pixel', '${stageUI}UI/set-pixel', '${stageUI}UI/date-pixel'];
-			case "normal":	["ready", "set" ,"go"];
-			default:		['${stageUI}UI/ready', '${stageUI}UI/set', '${stageUI}UI/go'];
-		}
-		introAssets.set(stageUI, introImagesArray);
-		for (asset in introAssets.get(stageUI)) Paths.image(asset);
+		// no more useless maps!!!
+		Paths.image(uiPrefix + 'ready' + uiSuffix);
+		Paths.image(uiPrefix + 'set' + uiSuffix);
+		Paths.image(uiPrefix + 'go' + uiSuffix);
 		
 		Paths.sound('intro3'  + introSoundsSuffix);
 		Paths.sound('intro2'  + introSoundsSuffix);
@@ -970,15 +958,6 @@ class PlayState extends MusicBeatState
 			moveCameraSection();
 
 			var swagCounter:Int = 0;
-			var introAssets:Map<String, Array<String>> = new Map<String, Array<String>>();
-			var introImagesArray:Array<String> = switch(stageUI) {
-				case "pixel":	['${stageUI}UI/ready-pixel', '${stageUI}UI/set-pixel', '${stageUI}UI/date-pixel'];
-				case "normal":	["ready", "set" ,"go"];
-				default:		['${stageUI}UI/ready', '${stageUI}UI/set', '${stageUI}UI/go'];
-			}
-			introAssets.set(stageUI, introImagesArray);
-
-			var introAlts:Array<String> = introAssets.get(stageUI);
 			var antialias:Bool = (ClientPrefs.data.antialiasing && !isPixelStage);
 			var tick:Countdown = THREE;
 
@@ -997,15 +976,15 @@ class PlayState extends MusicBeatState
 						FlxG.sound.play(Paths.sound('intro3' + introSoundsSuffix), 0.6);
 						tick = THREE;
 					case 1:
-						countdownReady = createCountdownSprite(introAlts[0], antialias);
+						countdownReady = createCountdownSprite(uiPrefix + 'ready' + uiSuffix, antialias); // automatic sprite handeling😱😱
 						FlxG.sound.play(Paths.sound('intro2' + introSoundsSuffix), 0.6);
 						tick = TWO;
 					case 2:
-						countdownSet = createCountdownSprite(introAlts[1], antialias);
+						countdownSet = createCountdownSprite(uiPrefix + 'set' + uiSuffix, antialias);
 						FlxG.sound.play(Paths.sound('intro1' + introSoundsSuffix), 0.6);
 						tick = ONE;
 					case 3:
-						countdownGo = createCountdownSprite(introAlts[2], antialias);
+						countdownGo = createCountdownSprite(uiPrefix + 'go' + uiSuffix, antialias);
 						FlxG.sound.play(Paths.sound('introGo' + introSoundsSuffix), 0.6);
 						tick = GO;
 					case 4:
@@ -1970,10 +1949,7 @@ class PlayState extends MusicBeatState
 							var lastAlpha:Float = dad.alpha;
 							dad.alpha = 0.00001;
 							dad = dadMap.get(value2);
-							if(!dad.curCharacter.startsWith('gf-') && dad.curCharacter != 'gf')
-								gf.visible = (wasGf && gf != null);
-							else if(gf != null)
-								gf.visible = false;
+							if(gf != null) gf.visible = wasGf;
 							dad.alpha = lastAlpha;
 							iconP2.changeIcon(dad.healthIcon);
 						}
@@ -2096,19 +2072,19 @@ class PlayState extends MusicBeatState
 			if(doDeathCheck()) return false;
 		}
 
+		endingSong = true;
+		canPause = false;
+		deathCounter = 0;
+
 		FlxG.camera.pixelPerfectRender = false;
 		camHUD.pixelPerfectRender = false;
 		timeBar.visible = false;
 		timeTxt.visible = false;
-		canPause = false;
-		endingSong = true;
+		seenCutscene = false;
+		playingVideo = false;
 		camZooming = false;
 		inCutscene = false;
-		playingVideo = false;
 		updateTime = false;
-
-		deathCounter = 0;
-		seenCutscene = false;
 
 		#if ACHIEVEMENTS_ALLOWED
 		if(achievementObj != null) return false;
@@ -2249,17 +2225,19 @@ class PlayState extends MusicBeatState
 
 	private function cachePopUpScore()
 	{
-		for (rat in ratingsData) Paths.image(uiPrefix + rat.image + uiSuffix);
-		Paths.image(uiPrefix + 'num' + uiSuffix);
-		//for (i in 0...10)		 Paths.image(uiPrefix + 'num' + i + uiSuffix);
+		if (ClientPrefs.data.enableCombo)
+		{
+			for (rat in ratingsData) Paths.image(uiPrefix + rat.image + uiSuffix);
+			Paths.image(uiPrefix + 'num' + uiSuffix);
+		}
 	}
 
 	private function popUpScore(note:Note = null):Void
 	{
 		//tryna do MS based judgment due to popular demand
-		var daRating:Rating = Conductor.judgeNote(ratingsData,
-			Math.abs(note.strumTime - Conductor.songPosition + ClientPrefs.data.ratingOffset) / playbackRate);
+		var daRating:Rating = Conductor.judgeNote(ratingsData, Math.abs(note.strumTime - Conductor.songPosition + ClientPrefs.data.ratingOffset) / playbackRate);
 
+		var antialias:Bool = isPixelStage ? false : ClientPrefs.data.antialiasing;
 		var placement:Float = FlxG.width * 0.35;
 		var score:Int = 350;
 
@@ -2282,123 +2260,113 @@ class PlayState extends MusicBeatState
 			}
 		}
 
-		var antialias:Bool = ClientPrefs.data.antialiasing;
-
-		if (stageUI != "normal")
+		// доволен??🙄🙄
+		if (ClientPrefs.data.enableCombo)
 		{
-			uiPrefix = '${stageUI}UI/';
-			if (isPixelStage) uiSuffix = '-pixel';
-			antialias = !isPixelStage;
-		}
+			var rating:FlxSprite = new FlxSprite().loadGraphic(Paths.image(uiPrefix + daRating.image + uiSuffix));
+			rating.cameras = [camHUD];
+			rating.screenCenter(Y);
+			rating.x = placement - 40 + ClientPrefs.data.comboOffset[0];
+			rating.y -= 60 + ClientPrefs.data.comboOffset[1];
+			rating.acceleration.y = 550 * playbackRate * playbackRate;
+			rating.velocity.y -= FlxG.random.int(140, 175) * playbackRate;
+			rating.velocity.x -= FlxG.random.int(1, 10) * playbackRate;
+			rating.angularVelocity = rating.velocity.x * FlxG.random.int(1, -1, [0]);
+			rating.visible = (!ClientPrefs.data.hideHud && showRating);
+			rating.antialiasing = antialias;
 
-		var rating:FlxSprite = new FlxSprite().loadGraphic(Paths.image(uiPrefix + daRating.image + uiSuffix));
-		rating.cameras = [camHUD];
-		rating.screenCenter(Y);
-		rating.x = placement - 40 + ClientPrefs.data.comboOffset[0];
-		rating.y -= 60 + ClientPrefs.data.comboOffset[1];
-		rating.acceleration.y = 550 * playbackRate * playbackRate;
-		rating.velocity.y -= FlxG.random.int(140, 175) * playbackRate;
-		rating.velocity.x -= FlxG.random.int(1, 10) * playbackRate;
-		rating.angularVelocity = rating.velocity.x * FlxG.random.int(1, -1, [0]);
-		rating.visible = (!ClientPrefs.data.hideHud && showRating);
-		rating.antialiasing = antialias;
+			rating.setGraphicSize(Std.int(rating.width * (isPixelStage ? daPixelZoom * 0.85 : 0.7)));
+			rating.updateHitbox();
 
-		var comboSpr:FlxSprite = new FlxSprite().loadGraphic(Paths.image(uiPrefix + 'combo' + uiSuffix));
-		comboSpr.cameras = [camHUD];
-		comboSpr.screenCenter(Y);
-		comboSpr.x = placement + ClientPrefs.data.comboOffset[0];
-		comboSpr.y += 60 - ClientPrefs.data.comboOffset[1];
-		comboSpr.acceleration.y = FlxG.random.int(200, 300) * playbackRate * playbackRate;
-		comboSpr.velocity.y -= FlxG.random.int(140, 160) * playbackRate;
-		comboSpr.velocity.x = FlxG.random.int(1, 10) * playbackRate;
-		comboSpr.visible = (!ClientPrefs.data.hideHud && showCombo);
-		comboSpr.antialiasing = antialias;
+			var comboSpr:FlxSprite = new FlxSprite().loadGraphic(Paths.image(uiPrefix + 'combo' + uiSuffix));
+			comboSpr.cameras = [camHUD];
+			comboSpr.screenCenter(Y);
+			comboSpr.x = placement + ClientPrefs.data.comboOffset[0];
+			comboSpr.y += 60 - ClientPrefs.data.comboOffset[1];
+			comboSpr.acceleration.y = FlxG.random.int(200, 300) * playbackRate * playbackRate;
+			comboSpr.velocity.y -= FlxG.random.int(140, 160) * playbackRate;
+			comboSpr.velocity.x = FlxG.random.int(1, 10) * playbackRate;
+			comboSpr.visible = (!ClientPrefs.data.hideHud && showCombo);
+			comboSpr.antialiasing = antialias;
 
-		insert(members.indexOf(strumLineNotes), rating);
-		
-		if (!ClientPrefs.data.comboStacking)
-		{
-			if (lastRating != null) lastRating.kill();
-			lastRating = rating;
-		}
+			comboSpr.setGraphicSize(Std.int(comboSpr.width * (isPixelStage ? daPixelZoom * 0.85 : 0.7)));
+			comboSpr.updateHitbox();
 
-		rating.setGraphicSize(Std.int(rating.width * (!isPixelStage ? 0.7 : daPixelZoom * 0.85)));
-		comboSpr.setGraphicSize(Std.int(comboSpr.width * (!isPixelStage ? 0.7 : daPixelZoom * 0.85)));
-
-		comboSpr.updateHitbox();
-		rating.updateHitbox();
-
-		var seperatedScore:Array<Int> = [];
-
-		if(combo >= 1000) seperatedScore.push(Math.floor(combo * 0.001) % 10);
-		seperatedScore.push(Math.floor(combo * 0.01) % 10);
-		seperatedScore.push(Math.floor(combo * 0.1) % 10);
-		seperatedScore.push(combo % 10);
-
-		if (showCombo) insert(members.indexOf(strumLineNotes), comboSpr);
-		if (!ClientPrefs.data.comboStacking)
-		{
-			if (lastCombo != null) lastCombo.kill();
-			lastCombo = comboSpr;
-		}
-		if (lastScore != null)
-		{
-			while (lastScore.length > 0)
+			if (showRating) insert(members.indexOf(strumLineNotes), rating);
+			if (!ClientPrefs.data.comboStacking)
 			{
-				lastScore[0].kill();
-				lastScore.remove(lastScore[0]);
+				if (lastRating != null) lastRating.kill();
+				lastRating = rating;
 			}
-		}
 
-		var daLoop:Int = 0;
-		var xThing:Float = 0;
-		for (i in seperatedScore)
-		{
-			var numScore:FlxSprite = new FlxSprite().loadGraphic(Paths.image(uiPrefix + 'num' + uiSuffix), true, !isPixelStage ? 100 : 10, !isPixelStage ? 120 : 12);
-			numScore.animation.add(Std.string(i), [i], 0, false);
-			numScore.animation.play(Std.string(i));
-			numScore.cameras = [camHUD];
-			numScore.screenCenter(Y);
-			numScore.x = placement + (45 * daLoop) - 90 + ClientPrefs.data.comboOffset[2];
-			numScore.y += 80 - ClientPrefs.data.comboOffset[3];
-			
-			if (!ClientPrefs.data.comboStacking) lastScore.push(numScore);
+			if (showCombo) insert(members.indexOf(strumLineNotes), comboSpr);
+			if (!ClientPrefs.data.comboStacking)
+			{
+				if (lastCombo != null) lastCombo.kill();
+				lastCombo = comboSpr;
+			}
+		
+			var seperatedScore:Array<Int> = [];
 
-			numScore.setGraphicSize(Std.int(numScore.width * (!isPixelStage ? 0.5 : daPixelZoom)));
-			numScore.updateHitbox();
+			if(combo >= 1000) seperatedScore.push(Math.floor(combo * 0.001) % 10);
+			seperatedScore.push(Math.floor(combo * 0.01) % 10);
+			seperatedScore.push(Math.floor(combo * 0.1) % 10);
+			seperatedScore.push(combo % 10);
 
-			numScore.offset.x += FlxG.random.int(-2, 2);
-			numScore.offset.y += FlxG.random.int(-2, 2);
-			numScore.acceleration.y = FlxG.random.int(200, 300) * playbackRate * playbackRate;
-			numScore.velocity.y -= FlxG.random.int(140, 160) * playbackRate;
-			numScore.velocity.x = FlxG.random.float(-5, 5) * playbackRate;
-			numScore.angularVelocity = -numScore.velocity.x;
-			numScore.visible = !ClientPrefs.data.hideHud;
-			numScore.antialiasing = antialias;
+			if (lastScore != null)
+			{
+				while (lastScore.length > 0)
+				{
+					lastScore[0].kill();
+					lastScore.remove(lastScore[0]);
+				}
+			}
 
-			if(showComboNum) insert(members.indexOf(strumLineNotes), numScore);
+			var daLoop:Int = 0;
+			var xThing:Float = 0;
+			for (i in seperatedScore)
+			{
+				var numScore:FlxSprite = new FlxSprite().loadGraphic(Paths.image(uiPrefix + 'num' + uiSuffix), true, isPixelStage ? 10 : 100, isPixelStage ? 12 : 120);
+				numScore.animation.add(Std.string(i), [i], 0, false);
+				numScore.animation.play(Std.string(i));
+				numScore.cameras = [camHUD];
+				numScore.screenCenter(Y);
+				numScore.x = placement + (45 * daLoop) - 90 + ClientPrefs.data.comboOffset[2];
+				numScore.y += 80 - ClientPrefs.data.comboOffset[3];
+				numScore.setGraphicSize(Std.int(numScore.width * (isPixelStage ? daPixelZoom * 0.85 : 0.5)));
+				numScore.updateHitbox();
 
-			FlxTween.tween(numScore, {alpha: 0}, 0.2 / playbackRate, {
-				onComplete: function(tween:FlxTween) numScore.destroy(),
-				startDelay: Conductor.crochet * 0.002 / playbackRate
+				numScore.offset.x += FlxG.random.int(-2, 2);
+				numScore.offset.y += FlxG.random.int(-2, 2);
+				numScore.acceleration.y = FlxG.random.int(200, 300) * playbackRate * playbackRate;
+				numScore.velocity.y -= FlxG.random.int(140, 160) * playbackRate;
+				numScore.velocity.x = FlxG.random.float(-5, 5) * playbackRate;
+				numScore.angularVelocity = -numScore.velocity.x;
+				numScore.visible = !ClientPrefs.data.hideHud;
+				numScore.antialiasing = antialias;
+
+				if (!ClientPrefs.data.comboStacking) lastScore.push(numScore);
+				if (showComboNum) insert(members.indexOf(strumLineNotes), numScore);
+
+				FlxTween.tween(numScore, {alpha: 0}, 0.2 / playbackRate, {
+					onComplete: function(tween:FlxTween) numScore.destroy(),
+					startDelay: Conductor.crochet * 0.002 / playbackRate
+				});
+
+				daLoop++;
+				if(numScore.x > xThing) xThing = numScore.x;
+			}
+			comboSpr.x = xThing + 50;
+			FlxTween.tween(rating, {alpha: 0}, 0.2 / playbackRate, {
+				onComplete: function(tween:FlxTween) rating.destroy(),
+				startDelay: Conductor.crochet * 0.001 / playbackRate
 			});
 
-			daLoop++;
-			if(numScore.x > xThing) xThing = numScore.x;
+			FlxTween.tween(comboSpr, {alpha: 0}, 0.2 / playbackRate, {
+				onComplete: function(tween:FlxTween) comboSpr.destroy(),
+				startDelay: Conductor.crochet * 0.002 / playbackRate
+			});
 		}
-		comboSpr.x = xThing + 50;
-		FlxTween.tween(rating, {alpha: 0}, 0.2 / playbackRate, {
-			startDelay: Conductor.crochet * 0.001 / playbackRate
-		});
-
-		FlxTween.tween(comboSpr, {alpha: 0}, 0.2 / playbackRate, {
-			onComplete: function(tween:FlxTween)
-			{
-				comboSpr.destroy();
-				rating.destroy();
-			},
-			startDelay: Conductor.crochet * 0.002 / playbackRate
-		});
 	}
 
 	public var strumsBlocked:Array<Bool> = [];
@@ -2604,8 +2572,7 @@ class PlayState extends MusicBeatState
 	function noteMissCommon(direction:Int, note:Note = null)
 	{
 		// score and data
-		var subtract:Float = 0.05;
-		if(note != null) subtract = note.missHealth;
+		var subtract:Float = note != null ? note.missHealth : 0.05;
 		health -= subtract * healthLoss;
 
 		if(instakillOnMiss) doDeathCheck(true);

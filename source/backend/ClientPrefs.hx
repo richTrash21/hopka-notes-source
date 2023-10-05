@@ -47,6 +47,7 @@ class SaveVariables {
 	public var hitsoundVolume:Float = 0;
 	public var pauseMusic:String = 'Noodles';
 	public var checkForUpdates:Bool = true;
+	public var enableCombo:Bool = true;
 	public var comboStacking:Bool = true;
 	public var gameplaySettings:Map<String, Dynamic> = [
 		'scrollspeed' => 1.0,
@@ -78,10 +79,7 @@ class SaveVariables {
 	public var safeFrames:Float = 10;
 	public var discordRPC:Bool = true;
 
-	public function new()
-	{
-		//Why does haxe needs this again?
-	}
+	public function new() { /*Why does haxe needs this again?*/ }
 }
 
 class ClientPrefs {
@@ -113,6 +111,7 @@ class ClientPrefs {
 		'debug_1'		=> [SEVEN],
 		'debug_2'		=> [EIGHT]
 	];
+
 	public static var gamepadBinds:Map<String, Array<FlxGamepadInputID>> = [
 		'note_up'		=> [DPAD_UP, Y],
 		'note_left'		=> [DPAD_LEFT, X],
@@ -129,6 +128,7 @@ class ClientPrefs {
 		'pause'			=> [START],
 		'reset'			=> [BACK]
 	];
+
 	public static var defaultKeys:Map<String, Array<FlxKey>> = null;
 	public static var defaultButtons:Map<String, Array<FlxGamepadInputID>> = null;
 
@@ -137,18 +137,14 @@ class ClientPrefs {
 		if(controller != true)
 		{
 			for (key in keyBinds.keys())
-			{
 				if(defaultKeys.exists(key))
 					keyBinds.set(key, defaultKeys.get(key).copy());
-			}
 		}
 		if(controller != false)
 		{
 			for (button in gamepadBinds.keys())
-			{
 				if(defaultButtons.exists(button))
 					gamepadBinds.set(button, defaultButtons.get(button).copy());
-			}
 		}
 	}
 
@@ -165,10 +161,9 @@ class ClientPrefs {
 	}
 
 	public static function saveSettings() {
-		for (key in Reflect.fields(data)) {
-			//trace('saved variable: $key');
+		for (key in Reflect.fields(data))
 			Reflect.setField(FlxG.save.data, key, Reflect.field(data, key));
-		}
+
 		#if ACHIEVEMENTS_ALLOWED
 		FlxG.save.data.achievementsMap = Achievements.achievementsMap;
 		FlxG.save.data.henchmenDeath = Achievements.henchmenDeath;
@@ -188,15 +183,13 @@ class ClientPrefs {
 		if(data == null) data = new SaveVariables();
 		if(defaultData == null) defaultData = new SaveVariables();
 
-		for (key in Reflect.fields(data)) {
-			if (key != 'gameplaySettings' && Reflect.hasField(FlxG.save.data, key)) {
-				//trace('loaded variable: $key');
+		for (key in Reflect.fields(data))
+			if (key != 'gameplaySettings' && Reflect.hasField(FlxG.save.data, key))
 				Reflect.setField(data, key, Reflect.field(FlxG.save.data, key));
-			}
-		}
 		
 		if(Main.fpsVar != null) {
 			Main.fpsVar.visible = data.showFPS;
+			Main.fpsShadow.visible = data.showFPS;
 		}
 
 		#if (!html5 && !switch)
@@ -218,10 +211,8 @@ class ClientPrefs {
 		}
 		
 		// flixel automatically saves your volume!
-		if(FlxG.save.data.volume != null)
-			FlxG.sound.volume = FlxG.save.data.volume;
-		if (FlxG.save.data.mute != null)
-			FlxG.sound.muted = FlxG.save.data.mute;
+		if(FlxG.save.data.volume != null) FlxG.sound.volume = FlxG.save.data.volume;
+		if(FlxG.save.data.mute != null)   FlxG.sound.muted = FlxG.save.data.mute;
 
 		#if desktop
 		DiscordClient.check();
@@ -234,23 +225,21 @@ class ClientPrefs {
 		{
 			if(save.data.keyboard != null) {
 				var loadedControls:Map<String, Array<FlxKey>> = save.data.keyboard;
-				for (control => keys in loadedControls) {
+				for (control => keys in loadedControls)
 					if(keyBinds.exists(control)) keyBinds.set(control, keys);
-				}
 			}
 			if(save.data.gamepad != null) {
 				var loadedControls:Map<String, Array<FlxGamepadInputID>> = save.data.gamepad;
-				for (control => keys in loadedControls) {
+				for (control => keys in loadedControls)
 					if(gamepadBinds.exists(control)) gamepadBinds.set(control, keys);
-				}
 			}
 			reloadVolumeKeys();
 		}
 	}
 
 	inline public static function getGameplaySetting(name:String, defaultValue:Dynamic = null, ?customDefaultValue:Bool = false):Dynamic {
-		if(!customDefaultValue) defaultValue = defaultData.gameplaySettings.get(name);
-		return /*PlayState.isStoryMode ? defaultValue : */ (data.gameplaySettings.exists(name) ? data.gameplaySettings.get(name) : defaultValue);
+		if (!customDefaultValue) defaultValue = defaultData.gameplaySettings.get(name);
+		return (data.gameplaySettings.exists(name) ? data.gameplaySettings.get(name) : defaultValue);
 	}
 
 	public static function reloadVolumeKeys() {
@@ -259,6 +248,7 @@ class ClientPrefs {
 		TitleState.volumeUpKeys = keyBinds.get('volume_up').copy();
 		toggleVolumeKeys(true);
 	}
+
 	public static function toggleVolumeKeys(turnOn:Bool) {
 		if(turnOn)
 		{

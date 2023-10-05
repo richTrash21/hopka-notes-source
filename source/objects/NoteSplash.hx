@@ -13,7 +13,6 @@ typedef NoteSplashConfig = {
 class NoteSplash extends FlxSprite
 {
 	public var rgbShader:PixelSplashShaderRef;
-	private var idleAnim:String;
 	private var _textureLoaded:String = null;
 	private var _configLoaded:String = null;
 
@@ -23,16 +22,13 @@ class NoteSplash extends FlxSprite
 	public function new(x:Float = 0, y:Float = 0) {
 		super(x, y);
 
-		var skin:String = null;
-		if(PlayState.SONG.splashSkin != null && PlayState.SONG.splashSkin.length > 0) skin = PlayState.SONG.splashSkin;
-		else skin = defaultNoteSplash + getSplashSkinPostfix();
+		var skin:String = (PlayState.SONG.splashSkin != null && PlayState.SONG.splashSkin.length > 0) ? PlayState.SONG.splashSkin : defaultNoteSplash + getSplashSkinPostfix();
 		
 		rgbShader = new PixelSplashShaderRef();
 		shader = rgbShader.shader;
 		precacheConfig(skin);
 		_configLoaded = skin;
 		scrollFactor.set();
-		//setupNoteSplash(x, y, 0);
 	}
 
 	override function destroy()
@@ -51,11 +47,7 @@ class NoteSplash extends FlxSprite
 		else if(PlayState.SONG.splashSkin != null && PlayState.SONG.splashSkin.length > 0) texture = PlayState.SONG.splashSkin;
 		else texture = defaultNoteSplash + getSplashSkinPostfix();
 		
-		var config:NoteSplashConfig = null;
-		if(_textureLoaded != texture)
-			config = loadAnims(texture);
-		else
-			config = precacheConfig(_configLoaded);
+		var config:NoteSplashConfig = _textureLoaded != texture ? loadAnims(texture) : precacheConfig(_configLoaded);
 
 		var tempShader:RGBPalette = null;
 		if((note == null || note.noteSplashData.useRGBShader) && (PlayState.SONG == null || !PlayState.SONG.disableNoteRGB))
@@ -72,8 +64,7 @@ class NoteSplash extends FlxSprite
 			else tempShader = Note.globalRgbShaders[direction];
 		}
 
-		alpha = ClientPrefs.data.splashAlpha;
-		if(note != null) alpha = note.noteSplashData.a;
+		alpha = note != null ? note.noteSplashData.a : ClientPrefs.data.splashAlpha;
 		rgbShader.copyValues(tempShader);
 
 		if(note != null) antialiasing = note.noteSplashData.antialiasing;
@@ -90,7 +81,6 @@ class NoteSplash extends FlxSprite
 		if(config != null)
 		{
 			var animID:Int = direction + ((animNum - 1) * Note.colArray.length);
-			//trace('anim: ${animation.curAnim.name}, $animID');
 			var offs:Array<Float> = config.offsets[FlxMath.wrap(animID, 0, config.offsets.length-1)];
 			offset.x += offs[0];
 			offset.y += offs[1];
@@ -103,17 +93,11 @@ class NoteSplash extends FlxSprite
 			offset.y += -55;
 		}
 
-		if(animation.curAnim != null)
-			animation.curAnim.frameRate = FlxG.random.int(minFps, maxFps);
+		if(animation.curAnim != null) animation.curAnim.frameRate = FlxG.random.int(minFps, maxFps);
 	}
 
 	public static function getSplashSkinPostfix()
-	{
-		var skin:String = '';
-		if(ClientPrefs.data.splashSkin != ClientPrefs.defaultData.splashSkin)
-			skin = '-' + ClientPrefs.data.splashSkin.trim().toLowerCase().replace(' ', '_');
-		return skin;
-	}
+		return (ClientPrefs.data.splashSkin != ClientPrefs.defaultData.splashSkin) ? '-' + ClientPrefs.data.splashSkin.trim().toLowerCase().replace(' ', '_') : '';
 
 	function loadAnims(skin:String, ?animName:String = null):NoteSplashConfig {
 		maxAnims = 0;
@@ -132,19 +116,15 @@ class NoteSplash extends FlxSprite
 		config = precacheConfig(skin);
 		_configLoaded = skin;
 
-		if(animName == null)
-			animName = config != null ? config.anim : 'note splash';
+		if(animName == null) animName = config != null ? config.anim : 'note splash';
 
 		while(true) {
 			var animID:Int = maxAnims + 1;
 			for (i in 0...Note.colArray.length) {
-				if (!addAnimAndCheck('note$i-$animID', '$animName ${Note.colArray[i]} $animID', 24, false)) {
-					//trace('maxAnims: $maxAnims');
+				if (!addAnimAndCheck('note$i-$animID', '$animName ${Note.colArray[i]} $animID', 24, false))
 					return config;
-				}
 			}
 			maxAnims++;
-			//trace('currently: $maxAnims');
 		}
 	}
 
@@ -196,11 +176,7 @@ class PixelSplashShaderRef {
 
 	public function copyValues(tempShader:RGBPalette)
 	{
-		var enabled:Bool = false;
 		if(tempShader != null)
-			enabled = true;
-
-		if(enabled)
 		{
 			for (i in 0...3)
 			{
@@ -220,10 +196,8 @@ class PixelSplashShaderRef {
 		shader.b.value = [0, 0, 0];
 		shader.mult.value = [1];
 
-		var pixel:Float = 1;
-		if(PlayState.isPixelStage) pixel = PlayState.daPixelZoom;
+		var pixel:Float = PlayState.isPixelStage ? PlayState.daPixelZoom : 1;
 		shader.uBlocksize.value = [pixel, pixel];
-		//trace('Created shader ' + Conductor.songPosition);
 	}
 }
 
@@ -268,8 +242,5 @@ class PixelSplashShader extends FlxShader
 			gl_FragColor = flixel_texture2DCustom(bitmap, openfl_TextureCoordv);
 		}')
 
-	public function new()
-	{
-		super();
-	}
+	public function new() { super(); }
 }

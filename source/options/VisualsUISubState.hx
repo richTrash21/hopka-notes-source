@@ -157,14 +157,20 @@ class VisualsUISubState extends BaseOptionsMenu
 
 		#if desktop
 		var option:Option = new Option('Discord Rich Presence',
-			"Uncheck this to prevent accidental leaks, it will hide the Application from your \"Playing\" box on Discord",
+			"Uncheck this to prevent accidental leaks, it will hide the Application from your \"Playing\" box on Discord.",
 			'discordRPC',
 			'bool');
 		addOption(option);
 		#end
 
+		var option:Option = new Option('Show Ratings and Combo',
+			"If unchecked, Ratings and Combo won't popup. Good for those who don't want anything to obscure their vision.", // or for pussies
+			'enableCombo', // sice showCombo was already taken lmao
+			'bool');
+		addOption(option);
+
 		var option:Option = new Option('Combo Stacking',
-			"If unchecked, Ratings and Combo won't stack, saving on System Memory and making them easier to read",
+			"If unchecked, Ratings and Combo won't stack, saving on System Memory and making them easier to read.\nNOTE: Will have no effect if 'Show Ratings and Combo' is unchecked.",
 			'comboStacking',
 			'bool');
 		addOption(option);

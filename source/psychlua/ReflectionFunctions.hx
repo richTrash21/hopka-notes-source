@@ -121,11 +121,9 @@ class ReflectionFunctions
 			var groupOrArray:Dynamic = Reflect.getProperty(LuaUtils.getTargetInstance(), obj);
 			if(Std.isOfType(groupOrArray, FlxTypedGroup)) {
 				var sex = groupOrArray.members[index];
-				if(!dontDestroy)
-					sex.kill();
+				if(!dontDestroy) sex.kill();
 				groupOrArray.remove(sex, true);
-				if(!dontDestroy)
-					sex.destroy();
+				if(!dontDestroy) sex.destroy();
 				return;
 			}
 			groupOrArray.remove(groupOrArray[index]);
@@ -188,20 +186,12 @@ class ReflectionFunctions
 		var split:Array<String> = funcStr.split('.');
 		var funcToRun:Function = null;
 		var obj:Dynamic = classObj;
-		//trace('start: $obj');
-		if(obj == null)
-		{
-			return null;
-		}
+		if(obj == null) return null;
 
 		for (i in 0...split.length)
-		{
 			obj = LuaUtils.getVarInArray(obj, split[i].trim());
-			//trace(obj, split[i]);
-		}
 
 		funcToRun = cast obj;
-		//trace('end: $obj');
 		return funcToRun != null ? Reflect.callMethod(obj, funcToRun, args) : null;
 	}
 }
