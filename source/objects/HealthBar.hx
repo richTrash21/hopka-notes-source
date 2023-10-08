@@ -69,9 +69,7 @@ class HealthBar extends FlxSpriteGroup
 		leftBar.setPosition(bg.x, bg.y);
 		rightBar.setPosition(bg.x, bg.y);
 
-		var leftSize:Float = 0;
-		if(leftToRight) leftSize = FlxMath.lerp(0, barWidth, percent / 100);
-		else leftSize = FlxMath.lerp(0, barWidth, 1 - percent / 100);
+		var leftSize:Float = FlxMath.lerp(0, barWidth, leftToRight ? percent / 100 : 1 - percent / 100);
 
 		leftBar.clipRect.width = leftSize;
 		leftBar.clipRect.height = barHeight;
@@ -109,8 +107,7 @@ class HealthBar extends FlxSpriteGroup
 
 	private function set_percent(value:Float)
 	{
-		var doUpdate:Bool = false;
-		if(value != percent) doUpdate = true;
+		var doUpdate:Bool = value != percent;
 		percent = value;
 
 		if(doUpdate) updateBar();

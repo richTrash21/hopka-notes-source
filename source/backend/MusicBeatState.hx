@@ -6,6 +6,8 @@ import flixel.FlxState;
 
 class MusicBeatState extends FlxUIState
 {
+	public static var transTime:Float = 0.45;
+
 	private var curSection:Int = 0;
 	private var stepsToDo:Int = 0;
 
@@ -15,22 +17,15 @@ class MusicBeatState extends FlxUIState
 	private var curDecStep:Float = 0;
 	private var curDecBeat:Float = 0;
 	public var controls(get, never):Controls;
-	private function get_controls()
-	{
-		return Controls.instance;
-	}
-
-	public static var camBeat:FlxCamera;
+	private function get_controls():Controls return Controls.instance;
 
 	override function create() {
-		camBeat = FlxG.camera;
 		var skip:Bool = FlxTransitionableState.skipNextTransOut;
 		#if MODS_ALLOWED Mods.updatedOnState = false; #end
 
 		super.create();
 
-		if(!skip)
-			openSubState(new CustomFadeTransition(0.7, true));
+		if(!skip) openSubState(new CustomFadeTransition(transTime, true));
 
 		FlxTransitionableState.skipNextTransOut = false;
 		timePassedOnState = 0;
@@ -39,7 +34,6 @@ class MusicBeatState extends FlxUIState
 	public static var timePassedOnState:Float = 0;
 	override function update(elapsed:Float)
 	{
-		//everyStep();
 		var oldStep:Int = curStep;
 		timePassedOnState += elapsed;
 
@@ -48,8 +42,7 @@ class MusicBeatState extends FlxUIState
 
 		if (oldStep != curStep)
 		{
-			if(curStep > 0)
-				stepHit();
+			if(curStep > 0) stepHit();
 
 			if(PlayState.SONG != null)
 				(oldStep < curStep) ? updateSection() : rollbackSection();
@@ -132,19 +125,20 @@ class MusicBeatState extends FlxUIState
 	// Custom made Trans in
 	public static function startTransition(nextState:FlxState = null)
 	{
-		if(nextState == null)
-			nextState = FlxG.state;
+		if(nextState == null) nextState = FlxG.state;
 
-		FlxG.state.openSubState(new CustomFadeTransition(0.6, false));
+		getStateWithSubState().openSubState(new CustomFadeTransition(transTime, false));
 		if(nextState == FlxG.state)
 			CustomFadeTransition.finishCallback = function() FlxG.resetState();
 		else
 			CustomFadeTransition.finishCallback = function() FlxG.switchState(nextState);
 	}
 
-	public static function getState():MusicBeatState {
+	public static function getState():MusicBeatState
 		return cast (FlxG.state, MusicBeatState);
-	}
+
+	public static function getStateWithSubState()
+		return FlxG.state.subState != null ? FlxG.state.subState : FlxG.state;
 
 	public function stepHit():Void
 	{
@@ -154,14 +148,12 @@ class MusicBeatState extends FlxUIState
 			stage.stepHit();
 		});
 
-		if (curStep % 4 == 0)
-			beatHit();
+		if (curStep % 4 == 0) beatHit();
 	}
 
 	public var stages:Array<BaseStage> = [];
 	public function beatHit():Void
 	{
-		//trace('Beat: ' + curBeat);
 		stagesFunc(function(stage:BaseStage) {
 			stage.curBeat = curBeat;
 			stage.curDecBeat = curDecBeat;
@@ -171,7 +163,6 @@ class MusicBeatState extends FlxUIState
 
 	public function sectionHit():Void
 	{
-		//trace('Section: ' + curSection + ', Beat: ' + curBeat + ', Step: ' + curStep);
 		stagesFunc(function(stage:BaseStage) {
 			stage.curSection = curSection;
 			stage.sectionHit();

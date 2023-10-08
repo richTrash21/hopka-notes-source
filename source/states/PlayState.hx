@@ -299,7 +299,7 @@ class PlayState extends MusicBeatState
 		healthLoss = ClientPrefs.getGameplaySetting('healthloss');
 		instakillOnMiss = ClientPrefs.getGameplaySetting('instakill');
 		practiceMode = ClientPrefs.getGameplaySetting('practice');
-		cpuControlled = ClientPrefs.getGameplaySetting('botplay');
+		cpuControlled = ClientPrefs.getGameplaySetting('botplay') || ClientPrefs.getGameplaySetting('showcase');
 
 		camGame = new FlxCamera();
 		camHUD = new FlxCamera();
@@ -498,6 +498,8 @@ class PlayState extends MusicBeatState
 		FlxG.camera.follow(camFollow, LOCKON, 0);
 		FlxG.camera.zoom = defaultCamZoom;
 		FlxG.camera.snapToTarget();
+		camHUD.visible = !ClientPrefs.getGameplaySetting('showcase');
+
 		// will give pixel stages more pixelated look (???????????????????)
 		// dont ask why its down here idfk
 		FlxG.camera.pixelPerfectRender = isPixelStage;
@@ -535,7 +537,7 @@ class PlayState extends MusicBeatState
 		scoreTxt.visible = !ClientPrefs.data.hideHud;
 		add(scoreTxt);
 
-		botplayTxt = new FlxText(0, timeBar.y + 55, FlxG.width - 800, "BOTPLAY", 32);
+		botplayTxt = new FlxText(0, timeBar.y + 55, FlxG.width - 800, "PUSSY", 32);
 		botplayTxt.setFormat(Paths.font("vcr.ttf"), 32, FlxColor.WHITE, CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
 		botplayTxt.scrollFactor.set();
 		botplayTxt.borderSize = 1.25;
@@ -1121,6 +1123,7 @@ class PlayState extends MusicBeatState
 		callOnScripts('onSkipDialogue', [dialogueCount]);
 	}
 
+	var showcaseTxt:FlxText;
 	function startSong():Void
 	{
 		startingSong = false;
@@ -1143,6 +1146,17 @@ class PlayState extends MusicBeatState
 		songLength = FlxG.sound.music.length;
 		FlxTween.tween(timeBar, {alpha: 1}, 0.5, {ease: FlxEase.circOut});
 		FlxTween.tween(timeTxt, {alpha: 1}, 0.5, {ease: FlxEase.circOut});
+
+		if(ClientPrefs.getGameplaySetting('showcase')) {
+			showcaseTxt = new FlxText(30, FlxG.height - 55, 0, "> SHOWCASE", 32);
+			showcaseTxt.setFormat(Paths.font("vcr.ttf"), 32, FlxColor.WHITE, LEFT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
+			showcaseTxt.scrollFactor.set();
+			showcaseTxt.borderSize = 1.25;
+			showcaseTxt.alpha = 0;
+			add(showcaseTxt);
+			showcaseTxt.cameras = [camOther];
+			//FlxTween.tween(showcaseTxt, {alpha: 1}, 1.6, {ease: FlxEase.backOut, type: FlxTweenType.PINGPONG});
+		}
 
 		#if desktop
 		// Updating Discord Rich Presence (with Time Left)
@@ -1312,9 +1326,9 @@ class PlayState extends MusicBeatState
 	}
 
 	function eventEarlyTrigger(event:EventNote):Float {
-		var returnedValue:Null<Float> = callOnScripts('eventEarlyTrigger', [event.event, event.value1, event.value2, event.strumTime], true, [], [0]);
-		if(returnedValue != null && returnedValue != 0 && returnedValue != FunkinLua.Function_Continue)
-			return returnedValue;
+		var ret:Null<Float> = callOnScripts('eventEarlyTrigger', [event.event, event.value1, event.value2, event.strumTime], true, [], [0]);
+		if(ret != null && ret != 0 && ret != FunkinLua.Function_Continue)
+			return ret;
 
 		switch(event.event) {
 			case 'Kill Henchmen': //Better timing so that the kill sound matches the beat intended
@@ -1413,9 +1427,9 @@ class PlayState extends MusicBeatState
 		{
 			if (FlxG.sound.music != null && !startingSong) resyncVocals();
 
-			if(startTimer != null && !startTimer.finished)	  startTimer.active = true;
-			if(finishTimer != null && !finishTimer.finished)  finishTimer.active = true;
-			if(songSpeedTween != null)						  songSpeedTween.active = true;
+			if (startTimer != null && !startTimer.finished)	  startTimer.active = true;
+			if (finishTimer != null && !finishTimer.finished) finishTimer.active = true;
+			if (songSpeedTween != null)						  songSpeedTween.active = true;
 
 			var chars:Array<Character> = [boyfriend, gf, dad];
 			for (char in chars)
@@ -1529,6 +1543,7 @@ class PlayState extends MusicBeatState
 		if(botplayTxt != null && botplayTxt.visible) {
 			botplaySine += 180 * elapsed;
 			botplayTxt.alpha = 1 - Math.sin((Math.PI * botplaySine) / 180);
+			if(showcaseTxt != null) showcaseTxt.alpha = 1 - Math.sin((Math.PI * botplaySine) / 180);
 		}
 
 		if (controls.PAUSE && startedCountdown && canPause) {
@@ -2274,6 +2289,7 @@ class PlayState extends MusicBeatState
 			rating.angularVelocity = rating.velocity.x * FlxG.random.int(1, -1, [0]);
 			rating.visible = (!ClientPrefs.data.hideHud && showRating);
 			rating.antialiasing = antialias;
+			rating.scrollFactor.set();
 
 			rating.setGraphicSize(Std.int(rating.width * (isPixelStage ? daPixelZoom * 0.85 : 0.7)));
 			rating.updateHitbox();
@@ -2288,6 +2304,7 @@ class PlayState extends MusicBeatState
 			comboSpr.velocity.x = FlxG.random.int(1, 10) * playbackRate;
 			comboSpr.visible = (!ClientPrefs.data.hideHud && showCombo);
 			comboSpr.antialiasing = antialias;
+			comboSpr.scrollFactor.set();
 
 			comboSpr.setGraphicSize(Std.int(comboSpr.width * (isPixelStage ? daPixelZoom * 0.85 : 0.7)));
 			comboSpr.updateHitbox();
@@ -2333,6 +2350,8 @@ class PlayState extends MusicBeatState
 				numScore.screenCenter(Y);
 				numScore.x = placement + (45 * daLoop) - 90 + ClientPrefs.data.comboOffset[2];
 				numScore.y += 80 - ClientPrefs.data.comboOffset[3];
+				numScore.scrollFactor.set();
+
 				numScore.setGraphicSize(Std.int(numScore.width * (isPixelStage ? daPixelZoom * 0.85 : 0.5)));
 				numScore.updateHitbox();
 

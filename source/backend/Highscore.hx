@@ -75,9 +75,7 @@ class Highscore
 	}
 
 	public static function formatSong(song:String, diff:Int):String
-	{
 		return Paths.formatToSongPath(song) + Difficulty.getFilePath(diff);
-	}
 
 	public static function getScore(song:String, diff:Int):Int
 	{
@@ -109,16 +107,12 @@ class Highscore
 	public static function load():Void
 	{
 		if (FlxG.save.data.weekScores != null)
-		{
 			weekScores = FlxG.save.data.weekScores;
-		}
+
 		if (FlxG.save.data.songScores != null)
-		{
 			songScores = FlxG.save.data.songScores;
-		}
+
 		if (FlxG.save.data.songRating != null)
-		{
 			songRating = FlxG.save.data.songRating;
-		}
 	}
 }

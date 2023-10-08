@@ -374,6 +374,7 @@ class ChartingState extends MusicBeatState
 
 		updateGrid();
 		super.create();
+		CustomFadeTransition.nextCamera = FlxG.camera;
 		lime.app.Application.current.window.onDropFile.add(LoadFromFile);// by Redar13
 	}
 	function LoadFromFile(file:String){

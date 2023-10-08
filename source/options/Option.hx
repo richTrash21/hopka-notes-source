@@ -38,31 +38,20 @@ class Option
 		{
 			switch(type)
 			{
-				case 'bool':
-					defaultValue = false;
-				case 'int' | 'float':
-					defaultValue = 0;
-				case 'percent':
-					defaultValue = 1;
-				case 'string':
-					defaultValue = '';
-					if(options.length > 0) {
-						defaultValue = options[0];
-					}
+				case 'bool':		  defaultValue = false;
+				case 'int' | 'float': defaultValue = 0;
+				case 'percent':		  defaultValue = 1;
+				case 'string':		  defaultValue = (options.length > 0) ? options[0] : '';
 			}
 		}
 
-		if(getValue() == null) {
-			setValue(defaultValue);
-		}
+		if(getValue() == null) setValue(defaultValue);
 
 		switch(type)
 		{
 			case 'string':
 				var num:Int = options.indexOf(getValue());
-				if(num > -1) {
-					curOption = num;
-				}
+				if(num > -1) curOption = num;
 	
 			case 'percent':
 				displayFormat = '%v%';
@@ -81,13 +70,10 @@ class Option
 	}
 
 	public function getValue():Dynamic
-	{
 		return Reflect.getProperty(ClientPrefs.data, variable);
-	}
+
 	public function setValue(value:Dynamic)
-	{
 		Reflect.setProperty(ClientPrefs.data, variable, value);
-	}
 
 	private function get_text()
 	{

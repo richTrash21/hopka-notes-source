@@ -68,6 +68,7 @@ class SaveVariables {
 		'instakill' => false,
 		'practice' => false,
 		'botplay' => false,
+		'showcase' => false,
 		'opponentplay' => false
 	];
 

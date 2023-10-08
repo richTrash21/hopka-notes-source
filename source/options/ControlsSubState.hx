@@ -196,7 +196,6 @@ class ControlsSubState extends MusicBeatSubstate
 
 			playstationCheck(attach);
 			attach.scaleX = Math.min(1, 230 / attach.width);
-			//attach.text = key;
 
 			// spawn black bars at the right of the key name
 			var black:AttachedSprite = new AttachedSprite();
@@ -244,7 +243,6 @@ class ControlsSubState extends MusicBeatSubstate
 		
 		playstationCheck(attach);
 		attach.scaleX = Math.min(1, 230 / attach.width);
-		//attach.text = text;
 
 		bind.kill();
 		grpBinds.remove(bind);
@@ -459,21 +457,20 @@ class ControlsSubState extends MusicBeatSubstate
 	{
 		if(move != 0)
 		{
-			//var dir:Int = Math.round(move / Math.abs(move));
 			curSelected += move;
 
-			if(curSelected < 0) curSelected = curOptions.length - 1;
+			if (curSelected < 0) curSelected = curOptions.length - 1;
 			else if (curSelected >= curOptions.length) curSelected = 0;
 		}
 
 		var num:Int = curOptionsValid[curSelected];
 		var addNum:Int = 0;
-		if(num < 3) addNum = 3 - num;
-		else if(num > lastID - 4) addNum = (lastID - 4) - num;
+		if (num < 3) addNum = 3 - num;
+		else if (num > lastID - 4) addNum = (lastID - 4) - num;
 
-		grpDisplay.forEachAlive(function(item:Alphabet) {
-			item.targetY = item.ID - num - addNum;
-		});
+		grpDisplay.forEachAlive(function(item:Alphabet)
+			item.targetY = item.ID - num - addNum
+		);
 
 		grpOptions.forEachAlive(function(item:Alphabet)
 		{

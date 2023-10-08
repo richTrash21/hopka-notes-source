@@ -471,12 +471,9 @@ class NotesSubState extends MusicBeatSubstate
 													ClientPrefs.defaultData.arrowRGBPixel[curSelectedNote][i];
 					switch(i)
 					{
-						case 0:
-							getShader().r = strumRGB.r = color;
-						case 1:
-							getShader().g = strumRGB.g = color;
-						case 2:
-							getShader().b = strumRGB.b = color;
+						case 0: getShader().r = strumRGB.r = color;
+						case 1: getShader().g = strumRGB.g = color;
+						case 2: getShader().b = strumRGB.b = color;
 					}
 					dataArray[curSelectedNote][i] = color;
 				}
@@ -688,12 +685,9 @@ class NotesSubState extends MusicBeatSubstate
 		var strumRGB:RGBShaderReference = myNotes.members[curSelectedNote].rgbShader;
 		switch(curSelectedMode)
 		{
-			case 0:
-				getShader().r = strumRGB.r = color;
-			case 1:
-				getShader().g = strumRGB.g = color;
-			case 2:
-				getShader().b = strumRGB.b = color;
+			case 0: getShader().r = strumRGB.r = color;
+			case 1: getShader().g = strumRGB.g = color;
+			case 2: getShader().b = strumRGB.b = color;
 		}
 	}
 

@@ -36,7 +36,7 @@ class Note extends FlxSprite
 
 	public var strumTime:Float = 0;
 	public var mustPress:Bool = false;
-	public var noteData(get, default):Int = 0;
+	public var noteData:Int = 0;
 	public var canBeHit:Bool = false;
 	public var tooLate:Bool = false;
 	public var wasGoodHit:Bool = false;
@@ -115,9 +115,6 @@ class Note extends FlxSprite
 	public var hitsoundDisabled:Bool = false;
 	public var hitsoundChartEditor:Bool = true;
 	public var hitsound:String = 'hitsound';
-
-	@:noCompletion function get_noteData():Int
-		return Std.int(Math.abs(noteData));
 
 	private function set_multSpeed(value:Float):Float {
 		resizeByRatio(value / multSpeed);

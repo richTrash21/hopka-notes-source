@@ -8,72 +8,72 @@ class GameplaySettingsSubState extends BaseOptionsMenu
 		rpcTitle = 'Gameplay Settings Menu'; //for Discord Rich Presence
 
 		//I'd suggest using "Downscroll" as an example for making your own option since it is the simplest here
-		var option:Option = new Option('Downscroll', //Name
+		addOption(new Option('Downscroll', //Name
 			'If checked, notes go Down instead of Up, simple enough.', //Description
 			'downScroll', //Save data variable name
-			'bool'); //Variable type
-		addOption(option);
+			'bool' //Variable type
+		));
 
-		var option:Option = new Option('Middlescroll',
+		addOption(new Option('Middlescroll',
 			'If checked, your notes get centered.',
 			'middleScroll',
-			'bool');
-		addOption(option);
+			'bool'
+		));
 
-		var option:Option = new Option('Opponent Notes',
+		addOption(new Option('Opponent Notes',
 			'If unchecked, opponent notes get hidden.',
 			'opponentStrums',
-			'bool');
-		addOption(option);
+			'bool'
+		));
 
-		var option:Option = new Option('Directional Camera',
+		addOption(new Option('Directional Camera',
 			'If checked, moves camera acording to the note pressed.',
 			'camScript',
-			'bool');
-		addOption(option);
+			'bool'
+		));
 
-		var option:Option = new Option('Use Note Logic',
+		addOption(new Option('Use Note Logic',
 			'If unchecked, camera moves according to the Character\'s animation, rather then Strum animation.\nNOTE: Works only if \"Directional Camera\" is checked.',
 			'camScriptNote',
-			'bool');
-		addOption(option);
+			'bool'
+		));
 
-		var option:Option = new Option('Ghost Tapping',
+		addOption(new Option('Ghost Tapping',
 			"If checked, you won't get misses from pressing keys\nwhile there are no notes able to be hit.",
 			'ghostTapping',
-			'bool');
-		addOption(option);
+			'bool'
+		));
 		
 		var option:Option = new Option('Auto Pause',
 			"If checked, the game automatically pauses if the screen isn't on focus.",
 			'autoPause',
 			'bool');
-		addOption(option);
 		option.onChange = function() FlxG.autoPause = ClientPrefs.data.autoPause;
+		addOption(option);
 
-		var option:Option = new Option('Deafen on Lost Focus',
+		addOption(new Option('Deafen on Lost Focus',
 			"If checked, slightly deafens the game's sound while off focus.\nNOTE: Works only when \"Auto Pause\" is unchecked.",
 			'lostFocusDeafen',
-			'bool');
-		addOption(option);
+			'bool'
+		));
 
-		var option:Option = new Option('Disable Reset Button',
+		addOption(new Option('Disable Reset Button',
 			"If checked, pressing Reset won't do anything.",
 			'noReset',
-			'bool');
-		addOption(option);
+			'bool'
+		));
 
 		var option:Option = new Option('Hitsound Volume',
 			'Funny notes does \"Tick!\" when you hit them."',
 			'hitsoundVolume',
 			'percent');
-		addOption(option);
 		option.scrollSpeed = 1.6;
 		option.minValue = 0.0;
 		option.maxValue = 1;
 		option.changeValue = 0.1;
 		option.decimals = 1;
 		option.onChange = function() FlxG.sound.play(Paths.sound('hitsound'), ClientPrefs.data.hitsoundVolume);
+		addOption(option);
 
 		var option:Option = new Option('Rating Offset',
 			'Changes how late/early you have to hit for a "Sick!"\nHigher values mean you have to hit later.',

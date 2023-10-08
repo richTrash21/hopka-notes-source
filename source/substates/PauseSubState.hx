@@ -248,6 +248,7 @@ class PauseSubState extends MusicBeatSubstate
 						close();
 					}
 				case 'End Song':
+					CustomFadeTransition.nextCamera = FlxG.camera;
 					close();
 					PlayState.instance.notes.clear();
 					PlayState.instance.unspawnNotes = [];
@@ -266,6 +267,7 @@ class PauseSubState extends MusicBeatSubstate
 					}
 					OptionsState.onPlayState = true;
 				case "Exit to menu":
+					pauseMusic.stop();
 					#if desktop DiscordClient.resetClientID(); #end
 					PlayState.seenCutscene = false;
 					PlayState.deathCounter = 0;
@@ -333,12 +335,10 @@ class PauseSubState extends MusicBeatSubstate
 			bullShit++;
 
 			item.alpha = 0.6;
-			// item.setGraphicSize(Std.int(item.width * 0.8));
 
 			if (item.targetY == 0)
 			{
 				item.alpha = 1;
-				// item.setGraphicSize(Std.int(item.width));
 
 				if(item == skipTimeTracker)
 				{

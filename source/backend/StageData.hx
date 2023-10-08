@@ -58,11 +58,7 @@ class StageData {
 			stage = 'stage';
 
 		var stageFile:StageFile = getStageFile(stage);
-		if(stageFile == null) { //preventing crashes
-			forceNextDirectory = '';
-		} else {
-			forceNextDirectory = stageFile.directory;
-		}
+		forceNextDirectory = stageFile != null ? stageFile.directory : ''; //preventing crashes
 	}
 
 	public static function getStageFile(stage:String):StageFile {
@@ -90,7 +86,5 @@ class StageData {
 
 	// LMFAOOOOOOOOOOOOOOOOOO GET BUTCHERED!!!!!!!!!!!!
 	public static function vanillaSongStage(songName):String
-	{
 		return 'stage';
-	}
 }
