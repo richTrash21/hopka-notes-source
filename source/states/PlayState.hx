@@ -331,7 +331,6 @@ class PlayState extends MusicBeatState
 		detailsPausedText = "Paused - " + detailsText;
 		#end
 
-		GameOverSubstate.resetVariables(SONG);
 		songName = Paths.formatToSongPath(SONG.song);
 		if(SONG.stage == null || SONG.stage.length < 1)
 			SONG.stage = StageData.vanillaSongStage(songName);
@@ -388,6 +387,9 @@ class PlayState extends MusicBeatState
 		add(gfGroup);
 		add(dadGroup);
 		add(boyfriendGroup);
+
+		// for character precaching
+		GameOverSubstate.resetVariables(SONG);
 
 		#if LUA_ALLOWED
 		luaDebugGroup = new FlxTypedGroup<DebugLuaText>();
@@ -1552,10 +1554,12 @@ class PlayState extends MusicBeatState
 		}
 
 		//idk how it will behave on an older versions sooooo...
+		//UPD: using hxvlc from now on (idfk whats the difference)
 		//#if (hxCodec >= "3.0.0")
 		if (playingVideo && (controls.PAUSE || controls.ACCEPT)) endVideo();
 		//#end
 
+		// :trollface:
 		#if !RELESE_BUILD_FR
 		if (controls.justPressed('debug_1') && !endingSong && !inCutscene) openChartEditor();
 		if (controls.justPressed('debug_2') && !endingSong && !inCutscene) openCharacterEditor();
@@ -2344,8 +2348,7 @@ class PlayState extends MusicBeatState
 			for (i in seperatedScore)
 			{
 				var numScore:FlxSprite = new FlxSprite().loadGraphic(Paths.image(uiPrefix + 'num' + uiSuffix), true, isPixelStage ? 10 : 100, isPixelStage ? 12 : 120);
-				numScore.animation.add(Std.string(i), [i], 0, false);
-				numScore.animation.play(Std.string(i));
+				numScore.frame = numScore.frames.frames[i];
 				numScore.cameras = [camHUD];
 				numScore.screenCenter(Y);
 				numScore.x = placement + (45 * daLoop) - 90 + ClientPrefs.data.comboOffset[2];
@@ -2765,6 +2768,7 @@ class PlayState extends MusicBeatState
 	}
 
 	override function destroy() {
+		if (CustomSubstate.instance != null) CustomSubstate.instance.destroy();
 		#if LUA_ALLOWED
 		for (i in 0...luaArray.length) {
 			var lua:FunkinLua = luaArray[0];
@@ -2923,11 +2927,15 @@ class PlayState extends MusicBeatState
 		try
 		{
 			var newScript:HScript = new HScript(null, file);
-			#if (SScript >= "6.1.8")
+			//#if (SScript >= "6.1.8")
 			if(newScript.parsingException != null) // only last exeption error now :'(
 			{
 				addTextToDebug('ERROR ON LOADING ($file): ${newScript.parsingException.message.substr(0, newScript.parsingException.message.indexOf('\n'))}', FlxColor.RED);
+				#if (SScript >= "6.1.8")
 				newScript.kill();
+				#else
+				newScript.destroy();
+				#end
 				return;
 			}
 			/*#else
@@ -2939,8 +2947,8 @@ class PlayState extends MusicBeatState
 					if(e != null) addTextToDebug('ERROR ON LOADING ($file): ${e.message.substr(0, e.message.indexOf('\n'))}', FlxColor.RED);
 				newScript.destroy();
 				return;
-			}*/
-			#end
+			}
+			#end*/
 
 			hscriptArray.push(newScript);
 			if(newScript.exists('onCreate'))

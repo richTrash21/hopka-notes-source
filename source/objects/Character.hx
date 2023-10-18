@@ -33,6 +33,8 @@ typedef AnimArray = {
 	var loop:Bool;
 	var indices:Array<Int>;
 	var offsets:Array<Int>;
+	/*@:optional*/ var animflip_x:Bool;
+	/*@:optional*/ var animflip_y:Bool;
 }
 
 class Character extends FlxSprite
@@ -113,8 +115,7 @@ class Character extends FlxSprite
 				useAtlas = Assets.exists(Paths.getPath('images/' + json.image + '/Animation.json', TEXT));
 				#end
 
-				if(!useAtlas) frames = Paths.getAtlas(json.image);
-				else frames = AtlasFrameMaker.construct(json.image);
+				frames = !useAtlas ? Paths.getAtlas(json.image) : AtlasFrameMaker.construct(json.image);
 
 				imageFile = json.image;
 				if(json.scale != 1) {
@@ -146,18 +147,20 @@ class Character extends FlxSprite
 						var animAnim:String = '' + anim.anim;
 						var animName:String = '' + anim.name;
 						var animFps:Int = anim.fps;
-						var animLoop:Bool = !!anim.loop; //Bruh
+						var animLoop:Bool = anim.loop;
 						var animIndices:Array<Int> = anim.indices;
+						var animFlipX:Bool = anim.animflip_x;
+						var animFlipY:Bool = anim.animflip_y;
 						if(animIndices != null && animIndices.length > 0)
-							animation.addByIndices(animAnim, animName, animIndices, "", animFps, animLoop);
+							animation.addByIndices(animAnim, animName, animIndices, "", animFps, animLoop, animFlipX, animFlipY);
 						else
-							animation.addByPrefix(animAnim, animName, animFps, animLoop);
+							animation.addByPrefix(animAnim, animName, animFps, animLoop, animFlipX, animFlipY);
 
 						if(anim.offsets != null && anim.offsets.length > 1)
 							addOffset(anim.anim, anim.offsets[0], anim.offsets[1]);
 					}
 				}
-				else quickAnimAdd('idle', 'BF idle dance');
+				else animation.addByPrefix('idle', 'BF idle dance', 24, false);
 				//trace('Loaded file to character ' + curCharacter);
 		}
 		originalFlipX = flipX;
@@ -279,7 +282,4 @@ class Character extends FlxSprite
 
 	public function addOffset(name:String, x:Float = 0, y:Float = 0)
 		animOffsets[name] = [x, y];
-
-	public function quickAnimAdd(name:String, anim:String)
-		animation.addByPrefix(name, anim, 24, false);
 }

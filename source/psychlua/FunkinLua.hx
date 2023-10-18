@@ -938,7 +938,7 @@ class FunkinLua {
 			return false;
 		});
 
-		Lua_helper.add_callback(lua, "addAnimationByIndices", function(obj:String, name:String, prefix:String, indices:String, framerate:Int = 24, loop:Bool = false)
+		Lua_helper.add_callback(lua, "addAnimationByIndices", function(obj:String, name:String, prefix:String, indices:Any = null, framerate:Int = 24, loop:Bool = false)
 			return LuaUtils.addAnimByIndices(obj, name, prefix, indices, framerate, loop)
 		);
 

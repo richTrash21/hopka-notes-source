@@ -421,10 +421,7 @@ class Note extends FlxSprite
 		}
 
 		if (tooLate && !inEditor)
-		{
-			if (alpha > 0.3)
-				alpha = 0.3;
-		}
+			if (alpha > 0.3) alpha = 0.3;
 	}
 
 	override public function destroy()
@@ -459,10 +456,7 @@ class Note extends FlxSprite
 			y = strumY + offsetY + correctionOffset + Math.sin(angleDir) * distance;
 			if(myStrum.downScroll && isSustainNote)
 			{
-				if(PlayState.isPixelStage)
-				{
-					y -= PlayState.daPixelZoom * 9.5;
-				}
+				if(PlayState.isPixelStage) y -= PlayState.daPixelZoom * 9.5;
 				y -= (frameHeight * scale.y) - (Note.swagWidth / 2);
 			}
 		}

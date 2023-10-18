@@ -9,7 +9,9 @@
 			"fps": 24,
 			"anim": "firstDeath",
 			"indices": [],
-			"name": "BF dies"
+			"name": "BF dies",
+			"animflip_x": false,
+			"animflip_y": false
 		},
 		{
 			"offsets": [
@@ -20,7 +22,9 @@
 			"fps": 24,
 			"anim": "deathLoop",
 			"indices": [],
-			"name": "BF Dead Loop"
+			"name": "BF Dead Loop",
+			"animflip_x": false,
+			"animflip_y": false
 		},
 		{
 			"offsets": [
@@ -31,7 +35,9 @@
 			"fps": 24,
 			"anim": "deathConfirm",
 			"indices": [],
-			"name": "BF Dead confirm"
+			"name": "BF Dead confirm",
+			"animflip_x": false,
+			"animflip_y": false
 		}
 	],
 	"no_antialiasing": false,

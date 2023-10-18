@@ -39,25 +39,21 @@ class LuaUtils
 			if(PlayState.instance.variables.exists(splitProps[0]))
 			{
 				var retVal:Dynamic = PlayState.instance.variables.get(splitProps[0]);
-				if(retVal != null)
-					target = retVal;
+				if(retVal != null) target = retVal;
 			}
 			else target = Reflect.getProperty(instance, splitProps[0]);
 
 			for (i in 1...splitProps.length)
 			{
 				var j:Dynamic = splitProps[i].substr(0, splitProps[i].length - 1);
-				if(i >= splitProps.length-1) //Last array
-					target[j] = value;
-				else //Anything else
-					target = target[j];
+				if(i >= splitProps.length-1) target[j] = value; //Last array
+				else target = target[j]; //Anything else
 			}
 			return target;
 		}
 
 		if(allowMaps && isMap(instance))
 		{
-			//trace(instance);
 			instance.set(variable, value);
 			return value;
 		}
@@ -79,11 +75,9 @@ class LuaUtils
 			if(PlayState.instance.variables.exists(splitProps[0]))
 			{
 				var retVal:Dynamic = PlayState.instance.variables.get(splitProps[0]);
-				if(retVal != null)
-					target = retVal;
+				if(retVal != null) target = retVal;
 			}
-			else
-				target = Reflect.getProperty(instance, splitProps[0]);
+			else target = Reflect.getProperty(instance, splitProps[0]);
 
 			for (i in 1...splitProps.length)
 			{
@@ -93,24 +87,18 @@ class LuaUtils
 			return target;
 		}
 		
-		if(allowMaps && isMap(instance))
-		{
-			//trace(instance);
-			return instance.get(variable);
-		}
+		if(allowMaps && isMap(instance)) return instance.get(variable);
 
 		if(PlayState.instance.variables.exists(variable))
 		{
 			var retVal:Dynamic = PlayState.instance.variables.get(variable);
-			if(retVal != null)
-				return retVal;
+			if(retVal != null) return retVal;
 		}
 		return Reflect.getProperty(instance, variable);
 	}
 	
 	public static function isMap(variable:Dynamic)
 	{
-		//trace(variable);
 		if(variable.exists != null && variable.keyValueIterator != null) return true;
 		return false;
 	}
@@ -119,9 +107,7 @@ class LuaUtils
 		var split:Array<String> = variable.split('.');
 		if(split.length > 1) {
 			var obj:Dynamic = Reflect.getProperty(leArray, split[0]);
-			for (i in 1...split.length-1)
-				obj = Reflect.getProperty(obj, split[i]);
-
+			for (i in 1...split.length-1) obj = Reflect.getProperty(obj, split[i]);
 			leArray = obj;
 			variable = split[split.length-1];
 		}
@@ -133,13 +119,10 @@ class LuaUtils
 		var split:Array<String> = variable.split('.');
 		if(split.length > 1) {
 			var obj:Dynamic = Reflect.getProperty(leArray, split[0]);
-			for (i in 1...split.length-1)
-				obj = Reflect.getProperty(obj, split[i]);
-
+			for (i in 1...split.length-1) obj = Reflect.getProperty(obj, split[i]);
 			leArray = obj;
 			variable = split[split.length-1];
 		}
-
 		if(allowMaps && isMap(leArray)) return leArray.get(variable);
 		return Reflect.getProperty(leArray, variable);
 	}
@@ -169,23 +152,17 @@ class LuaUtils
 	}
 
 	inline public static function getTextObject(name:String):FlxText
-	{
 		return #if LUA_ALLOWED PlayState.instance.modchartTexts.exists(name) ? PlayState.instance.modchartTexts.get(name) : #end Reflect.getProperty(PlayState.instance, name);
-	}
 	
 	public static function isOfTypes(value:Any, types:Array<Dynamic>)
 	{
 		for (type in types)
-		{
 			if(Std.isOfType(value, type)) return true;
-		}
 		return false;
 	}
 	
 	public static inline function getTargetInstance()
-	{
 		return PlayState.instance.isDead ? GameOverSubstate.instance : PlayState.instance;
-	}
 
 	public static inline function getLowestCharacterGroup():FlxSpriteGroup
 	{
@@ -218,11 +195,11 @@ class LuaUtils
 			{
 				var strIndices:Array<String> = cast (indices, String).trim().split(',');
 				var myIndices:Array<Int> = [];
-				for (i in 0...strIndices.length) {
-					myIndices.push(Std.parseInt(strIndices[i]));
-				}
+				for (i in 0...strIndices.length) myIndices.push(Std.parseInt(strIndices[i]));
 				indices = myIndices;
 			}
+			else if (Std.isOfType(indices, Float))	indices = [Std.int(indices)];
+			else if (Std.isOfType(indices, Int))	indices = [indices];
 
 			obj.animation.addByIndices(name, prefix, indices, '', framerate, loop);
 			if(obj.animation.curAnim == null)
@@ -255,9 +232,7 @@ class LuaUtils
 
 	public static function resetTextTag(tag:String) {
 		#if LUA_ALLOWED
-		if(!PlayState.instance.modchartTexts.exists(tag)) {
-			return;
-		}
+		if(!PlayState.instance.modchartTexts.exists(tag)) return;
 
 		var target:FlxText = PlayState.instance.modchartTexts.get(tag);
 		target.kill();
@@ -269,9 +244,7 @@ class LuaUtils
 
 	public static function resetSpriteTag(tag:String) {
 		#if LUA_ALLOWED
-		if(!PlayState.instance.modchartSprites.exists(tag)) {
-			return;
-		}
+		if(!PlayState.instance.modchartSprites.exists(tag)) return;
 
 		var target:ModchartSprite = PlayState.instance.modchartSprites.get(tag);
 		target.kill();

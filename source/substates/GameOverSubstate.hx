@@ -52,7 +52,12 @@ class GameOverSubstate extends MusicBeatSubstate
 
 		Conductor.songPosition = 0;
 
-		boyfriend = new Character(x, y, characterName, true);
+		if(PlayState.instance.boyfriendMap.exists(characterName)) {
+			boyfriend = PlayState.instance.boyfriendMap.get(characterName);
+			boyfriend.setPosition(x, y);
+			boyfriend.alpha = 1;
+		}
+		else boyfriend = new Character(x, y, characterName, true);
 		boyfriend.x += boyfriend.positionArray[0];
 		boyfriend.y += boyfriend.positionArray[1];
 		add(boyfriend);
@@ -159,20 +164,21 @@ class GameOverSubstate extends MusicBeatSubstate
 
 	@:noCompletion static function set_characterName(value:String):String {
 		characterName = (value != null && value.trim().length > 0) ? value : 'bf-dead';
+		if(!PlayState.instance.boyfriendMap.exists(characterName)) PlayState.instance.addCharacterToList(characterName, 0);
 		return value;
 	}
 	@:noCompletion static function set_deathSoundName(value:String):String {
-		deathSoundName = (value != null && value.trim().length > 0) ? value : 'fnf_loss_sfx';
+		deathSoundName = (value != null) ? value : 'fnf_loss_sfx';
 		Paths.sound(deathSoundName);
 		return value;
 	}
 	@:noCompletion static function set_loopSoundName(value:String):String {
-		loopSoundName = (value != null && value.trim().length > 0) ? value : 'gameOver';
+		loopSoundName = (value != null) ? value : 'gameOver';
 		Paths.sound(loopSoundName);
 		return value;
 	}
 	@:noCompletion static function set_endSoundName(value:String):String {
-		endSoundName = (value != null && value.trim().length > 0) ? value : 'gameOverEnd';
+		endSoundName = (value != null) ? value : 'gameOverEnd';
 		Paths.sound(endSoundName);
 		return value;
 	}

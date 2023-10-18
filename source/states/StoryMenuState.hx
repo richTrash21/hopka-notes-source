@@ -58,12 +58,6 @@ class StoryMenuState extends MusicBeatState
 		txtWeekTitle.setFormat("VCR OSD Mono", 32, FlxColor.WHITE, RIGHT);
 		txtWeekTitle.alpha = 0.7;
 
-		var rankText:FlxText = new FlxText(0, 10);
-		rankText.text = 'RANK: GREAT';
-		rankText.setFormat(Paths.font("vcr.ttf"), 32);
-		rankText.size = scoreText.size;
-		rankText.screenCenter(X);
-
 		var ui_tex = Paths.getSparrowAtlas('campaign_menu_UI_assets');
 		var bgYellow:FlxSprite = new FlxSprite(0, 56).makeGraphic(FlxG.width, 386, 0xFFF9CF51);
 		bgSprite = new FlxSprite(0, 56);
@@ -164,11 +158,8 @@ class StoryMenuState extends MusicBeatState
 		add(tracksSprite);
 
 		txtTracklist = new FlxText(FlxG.width * 0.05, tracksSprite.y + 60, 0, "", 32);
-		txtTracklist.alignment = CENTER;
-		txtTracklist.font = rankText.font;
-		txtTracklist.color = 0xFFe55777;
+		txtTracklist.setFormat(Paths.font("vcr.ttf"), 32, 0xFFe55777, CENTER);
 		add(txtTracklist);
-		// add(rankText);
 		add(scoreText);
 		add(txtWeekTitle);
 
@@ -186,53 +177,31 @@ class StoryMenuState extends MusicBeatState
 
 	override function update(elapsed:Float)
 	{
-		// scoreText.setFormat('VCR OSD Mono', 32);
 		lerpScore = Math.floor(FlxMath.lerp(lerpScore, intendedScore, FlxMath.bound(elapsed * 30, 0, 1)));
 		if(Math.abs(intendedScore - lerpScore) < 10) lerpScore = intendedScore;
 
 		scoreText.text = "WEEK SCORE:" + lerpScore;
 
-		// FlxG.watch.addQuick('font', scoreText.font);
-
 		if (!movedBack && !selectedWeek)
 		{
 			var upP = controls.UI_UP_P;
 			var downP = controls.UI_DOWN_P;
-			if (upP)
-			{
-				changeWeek(-1);
-				FlxG.sound.play(Paths.sound('scrollMenu'));
-			}
-
-			if (downP)
-			{
-				changeWeek(1);
-				FlxG.sound.play(Paths.sound('scrollMenu'));
-			}
+			if (upP) changeWeek(-1);
+			if (downP) changeWeek(1);
 
 			if(FlxG.mouse.wheel != 0)
 			{
 				FlxG.sound.play(Paths.sound('scrollMenu'), 0.4);
-				changeWeek(-FlxG.mouse.wheel);
+				changeWeek(-FlxG.mouse.wheel, 0.4);
 				changeDifficulty();
 			}
 
-			if (controls.UI_RIGHT)
-				rightArrow.animation.play('press')
-			else
-				rightArrow.animation.play('idle');
+			rightArrow.animation.play(controls.UI_RIGHT ? 'press' : 'idle');
+			leftArrow.animation.play(controls.UI_LEFT ? 'press' : 'idle');
 
-			if (controls.UI_LEFT)
-				leftArrow.animation.play('press');
-			else
-				leftArrow.animation.play('idle');
-
-			if (controls.UI_RIGHT_P)
-				changeDifficulty(1);
-			else if (controls.UI_LEFT_P)
-				changeDifficulty(-1);
-			else if (upP || downP)
-				changeDifficulty();
+			if (controls.UI_RIGHT_P)	 changeDifficulty(1);
+			else if (controls.UI_LEFT_P) changeDifficulty(-1);
+			else if (upP || downP)		 changeDifficulty();
 
 			if(FlxG.keys.justPressed.CONTROL)
 			{
@@ -278,9 +247,7 @@ class StoryMenuState extends MusicBeatState
 			// We can't use Dynamic Array .copy() because that crashes HTML5, here's a workaround.
 			var songArray:Array<String> = [];
 			var leWeek:Array<Dynamic> = loadedWeeks[curWeek].songs;
-			for (i in 0...leWeek.length) {
-				songArray.push(leWeek[i][0]);
-			}
+			for (i in 0...leWeek.length) songArray.push(leWeek[i][0]);
 
 			// Nevermind that's stupid lmao
 			try
@@ -311,12 +278,8 @@ class StoryMenuState extends MusicBeatState
 				grpWeekText.members[curWeek].startFlashing();
 
 				for (char in grpWeekCharacters.members)
-				{
 					if (char.character != '' && char.hasConfirmAnimation)
-					{
 						char.animation.play('confirm');
-					}
-				}
 				stopspamming = true;
 			}
 
@@ -348,7 +311,6 @@ class StoryMenuState extends MusicBeatState
 
 		var diff:String = Difficulty.getString(curDifficulty);
 		var newImage:FlxGraphic = Paths.image('menudifficulties/' + Paths.formatToSongPath(diff));
-		//trace(Mods.currentModDirectory + ', menudifficulties/' + Paths.formatToSongPath(diff));
 
 		if(sprDifficulty.graphic != newImage)
 		{
@@ -360,9 +322,8 @@ class StoryMenuState extends MusicBeatState
 
 			if(tweenDifficulty != null) tweenDifficulty.cancel();
 			tweenDifficulty = FlxTween.tween(sprDifficulty, {y: leftArrow.y + 15, alpha: 1}, 0.07, {onComplete: function(twn:FlxTween)
-			{
-				tweenDifficulty = null;
-			}});
+				tweenDifficulty = null
+			});
 		}
 		lastDifficultyName = diff;
 
@@ -374,8 +335,9 @@ class StoryMenuState extends MusicBeatState
 	var lerpScore:Int = 0;
 	var intendedScore:Int = 0;
 
-	function changeWeek(change:Int = 0):Void
+	function changeWeek(change:Int = 0, vol:Float = 1):Void
 	{
+		if(change != 0) FlxG.sound.play(Paths.sound('scrollMenu'), vol);
 		curWeek += change;
 
 		if (curWeek >= loadedWeeks.length)
@@ -396,36 +358,23 @@ class StoryMenuState extends MusicBeatState
 		for (item in grpWeekText.members)
 		{
 			item.targetY = bullShit - curWeek;
-			if (item.targetY == Std.int(0) && unlocked)
-				item.alpha = 1;
-			else
-				item.alpha = 0.6;
+			item.alpha = (item.targetY == Std.int(0) && unlocked) ? 1 : 0.6;
 			bullShit++;
 		}
 
 		bgSprite.visible = true;
 		var assetName:String = leWeek.weekBackground;
-		if(assetName == null || assetName.length < 1) {
-			bgSprite.visible = false;
-		} else {
-			bgSprite.loadGraphic(Paths.image('menubackgrounds/menu_' + assetName));
-		}
+		if(assetName == null || assetName.length < 1) bgSprite.visible = false;
+		else bgSprite.loadGraphic(Paths.image('menubackgrounds/menu_' + assetName));
 		PlayState.storyWeek = curWeek;
 
 		Difficulty.loadFromWeek();
 		difficultySelectors.visible = unlocked;
 
-		if(Difficulty.list.contains(Difficulty.getDefault()))
-			curDifficulty = Math.round(Math.max(0, Difficulty.defaultList.indexOf(Difficulty.getDefault())));
-		else
-			curDifficulty = 0;
+		curDifficulty = Difficulty.list.contains(Difficulty.getDefault()) ? Math.round(Math.max(0, Difficulty.defaultList.indexOf(Difficulty.getDefault()))) : 0;
 
 		var newPos:Int = Difficulty.list.indexOf(lastDifficultyName);
-		//trace('Pos of ' + lastDifficultyName + ' is ' + newPos);
-		if(newPos > -1)
-		{
-			curDifficulty = newPos;
-		}
+		if(newPos > -1) curDifficulty = newPos;
 		updateText();
 	}
 
@@ -437,21 +386,14 @@ class StoryMenuState extends MusicBeatState
 	function updateText()
 	{
 		var weekArray:Array<String> = loadedWeeks[curWeek].weekCharacters;
-		for (i in 0...grpWeekCharacters.length) {
-			grpWeekCharacters.members[i].changeCharacter(weekArray[i]);
-		}
+		for (i in 0...grpWeekCharacters.length) grpWeekCharacters.members[i].changeCharacter(weekArray[i]);
 
 		var leWeek:WeekData = loadedWeeks[curWeek];
 		var stringThing:Array<String> = [];
-		for (i in 0...leWeek.songs.length) {
-			stringThing.push(leWeek.songs[i][0]);
-		}
+		for (i in 0...leWeek.songs.length) stringThing.push(leWeek.songs[i][0]);
 
 		txtTracklist.text = '';
-		for (i in 0...stringThing.length)
-		{
-			txtTracklist.text += stringThing[i] + '\n';
-		}
+		for (i in 0...stringThing.length) txtTracklist.text += stringThing[i] + '\n';
 
 		txtTracklist.text = txtTracklist.text.toUpperCase();
 
