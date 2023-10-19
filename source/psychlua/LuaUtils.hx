@@ -198,7 +198,7 @@ class LuaUtils
 				for (i in 0...strIndices.length) myIndices.push(Std.parseInt(strIndices[i]));
 				indices = myIndices;
 			}
-			else if (Std.isOfType(indices, Float))	indices = [Std.int(indices)];
+			else if (Std.isOfType(indices, Float))	indices = [cast (indices, Int)];
 			else if (Std.isOfType(indices, Int))	indices = [indices];
 
 			obj.animation.addByIndices(name, prefix, indices, '', framerate, loop);

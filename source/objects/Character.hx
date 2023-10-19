@@ -33,8 +33,8 @@ typedef AnimArray = {
 	var loop:Bool;
 	var indices:Array<Int>;
 	var offsets:Array<Int>;
-	/*@:optional*/ var animflip_x:Bool;
-	/*@:optional*/ var animflip_y:Bool;
+	@:optional var animflip_x:Bool;
+	@:optional var animflip_y:Bool;
 }
 
 class Character extends FlxSprite
@@ -80,89 +80,67 @@ class Character extends FlxSprite
 		animOffsets = new Map<String, Array<Dynamic>>();
 		curCharacter = character;
 		this.isPlayer = isPlayer;
-		switch (curCharacter)
-		{
-			//case 'your character name in case you want to hardcode them instead':
 
-			default:
-				var characterPath:String = 'characters/' + curCharacter + '.json';
+		var characterPath:String = 'characters/' + curCharacter + '.json';
+		#if MODS_ALLOWED
+		var path:String = Paths.modFolders(characterPath);
+		if(!FileSystem.exists(path)) path = Paths.getPreloadPath(characterPath);
 
-				#if MODS_ALLOWED
-				var path:String = Paths.modFolders(characterPath);
-				if(!FileSystem.exists(path)) path = Paths.getPreloadPath(characterPath);
+		if(!FileSystem.exists(path))
+		#else
+		var path:String = Paths.getPreloadPath(characterPath);
+		if(!Assets.exists(path))
+		#end
+			path = Paths.getPreloadPath('characters/' + DEFAULT_CHARACTER + '.json'); //If a character couldn't be found, change him to BF just to prevent a crash
 
-				if(!FileSystem.exists(path))
-				#else
-				var path:String = Paths.getPreloadPath(characterPath);
-				if(!Assets.exists(path))
-				#end
-					path = Paths.getPreloadPath('characters/' + DEFAULT_CHARACTER + '.json'); //If a character couldn't be found, change him to BF just to prevent a crash
+		#if MODS_ALLOWED
+		var rawJson = File.getContent(path);
+		#else
+		var rawJson = Assets.getText(path);
+		#end
 
-				#if MODS_ALLOWED
-				var rawJson = File.getContent(path);
-				#else
-				var rawJson = Assets.getText(path);
-				#end
+		var json:CharacterFile = cast Json.parse(rawJson);
+		var useAtlas:Bool = false;
 
-				var json:CharacterFile = cast Json.parse(rawJson);
-				var useAtlas:Bool = false;
+		#if MODS_ALLOWED
+		var modAnimToFind:String = Paths.modFolders('images/' + json.image + '/Animation.json');
+		var animToFind:String = Paths.getPath('images/' + json.image + '/Animation.json', TEXT);
+		useAtlas = (FileSystem.exists(modAnimToFind) || FileSystem.exists(animToFind) || Assets.exists(animToFind));
+		#else
+		useAtlas = Assets.exists(Paths.getPath('images/' + json.image + '/Animation.json', TEXT));
+		#end
 
-				#if MODS_ALLOWED
-				var modAnimToFind:String = Paths.modFolders('images/' + json.image + '/Animation.json');
-				var animToFind:String = Paths.getPath('images/' + json.image + '/Animation.json', TEXT);
-				useAtlas = (FileSystem.exists(modAnimToFind) || FileSystem.exists(animToFind) || Assets.exists(animToFind));
-				#else
-				useAtlas = Assets.exists(Paths.getPath('images/' + json.image + '/Animation.json', TEXT));
-				#end
+		frames = !useAtlas ? Paths.getAtlas(json.image) : AtlasFrameMaker.construct(json.image);
 
-				frames = !useAtlas ? Paths.getAtlas(json.image) : AtlasFrameMaker.construct(json.image);
-
-				imageFile = json.image;
-				if(json.scale != 1) {
-					jsonScale = json.scale;
-					setGraphicSize(Std.int(width * jsonScale));
-					updateHitbox();
-				}
-
-				// positioning
-				positionArray = json.position;
-				cameraPosition = json.camera_position;
-
-				// data
-				healthIcon = json.healthicon;
-				singDuration = json.sing_duration;
-				flipX = json.flip_x;
-
-				if(json.healthbar_colors != null && json.healthbar_colors.length > 2)
-					healthColorArray = json.healthbar_colors;
-
-				// antialiasing
-				noAntialiasing = json.no_antialiasing;
-				antialiasing = ClientPrefs.data.antialiasing ? !noAntialiasing : false;
-
-				// animations
-				animationsArray = json.animations;
-				if(animationsArray != null && animationsArray.length > 0) {
-					for (anim in animationsArray) {
-						var animAnim:String = '' + anim.anim;
-						var animName:String = '' + anim.name;
-						var animFps:Int = anim.fps;
-						var animLoop:Bool = anim.loop;
-						var animIndices:Array<Int> = anim.indices;
-						var animFlipX:Bool = anim.animflip_x;
-						var animFlipY:Bool = anim.animflip_y;
-						if(animIndices != null && animIndices.length > 0)
-							animation.addByIndices(animAnim, animName, animIndices, "", animFps, animLoop, animFlipX, animFlipY);
-						else
-							animation.addByPrefix(animAnim, animName, animFps, animLoop, animFlipX, animFlipY);
-
-						if(anim.offsets != null && anim.offsets.length > 1)
-							addOffset(anim.anim, anim.offsets[0], anim.offsets[1]);
-					}
-				}
-				else animation.addByPrefix('idle', 'BF idle dance', 24, false);
-				//trace('Loaded file to character ' + curCharacter);
+		imageFile = json.image;
+		if(json.scale != 1) {
+			jsonScale = json.scale;
+			setGraphicSize(Std.int(width * jsonScale));
+			updateHitbox();
 		}
+
+		// positioning
+		positionArray = json.position;
+		cameraPosition = json.camera_position;
+
+		// data
+		healthIcon = json.healthicon;
+		singDuration = json.sing_duration;
+		flipX = json.flip_x;
+
+		if(json.healthbar_colors != null && json.healthbar_colors.length > 2)
+			healthColorArray = json.healthbar_colors;
+
+		// antialiasing
+		noAntialiasing = json.no_antialiasing;
+		antialiasing = ClientPrefs.data.antialiasing ? !noAntialiasing : false;
+
+		// animations
+		animationsArray = json.animations;
+		if(animationsArray != null && animationsArray.length > 0) {
+			for (anim in animationsArray) generateAnim(anim);
+		}
+		else addAnim('idle', 'BF idle dance', null, 24, false);
 		originalFlipX = flipX;
 
 		hasMissAnimations = (animOffsets.exists('singLEFTmiss') || animOffsets.exists('singDOWNmiss') || animOffsets.exists('singUPmiss') || animOffsets.exists('singRIGHTmiss'));
@@ -239,8 +217,8 @@ class Character extends FlxSprite
 	public function playAnim(AnimName:String, Force:Bool = false, Reversed:Bool = false, Frame:Int = 0):Void
 	{
 		specialAnim = false;
-		@:privateAccess // if there is no animation named "AnimName" then just skips the whole shit
-		if(AnimName == null || animation._animations.get(AnimName) == null) {
+		// if there is no animation named "AnimName" then just skips the whole shit
+		if(AnimName == null || animation.getByName(AnimName) == null) {
 			FlxG.log.warn("No animation called \"" + AnimName + "\"");
 			return;
 		}
@@ -268,7 +246,7 @@ class Character extends FlxSprite
 
 	public var danceEveryNumBeats:Int = 2;
 	private var settingCharacterUp:Bool = true;
-	public function recalculateDanceIdle() {
+	public function recalculateDanceIdle(){
 		var lastDanceIdle:Bool = danceIdle;
 		danceIdle = (animation.getByName('danceLeft' + idleSuffix) != null && animation.getByName('danceRight' + idleSuffix) != null);
 
@@ -278,6 +256,40 @@ class Character extends FlxSprite
 			danceEveryNumBeats = Math.round(Math.max(danceEveryNumBeats * (danceIdle ? 0.5 : 2), 1));
 
 		settingCharacterUp = false;
+	}
+
+	//creates a copy of this character🤯😱
+	public function copy():Character {
+		var faker:Character = new Character(x, y, curCharacter, isPlayer);
+		faker.debugMode = debugMode;
+		return faker;
+	}
+
+	/**
+	 * for reuse in character edditor.
+	 * btw stolen from redar13 :3
+	 * https://i.imgur.com/P7MDx2C.png
+	 */
+	public function generateAnim(Anim:AnimArray) {
+		if(Anim != null) {
+			var animAnim:String = '' + Anim.anim;
+			var animName:String = '' + Anim.name;
+			var animFps:Int = Anim.fps;
+			var animLoop:Bool = Anim.loop;
+			var animIndices:Array<Int> = Anim.indices;
+			var animFlipX:Bool = Anim.animflip_x;
+			var animFlipY:Bool = Anim.animflip_y;
+			addAnim(animAnim, animName, animIndices, animFps, animLoop, animFlipX, animFlipY);
+			if(Anim.offsets != null && Anim.offsets.length > 1) addOffset(animAnim, Anim.offsets[0], Anim.offsets[1]);
+		}
+	}
+
+	//quick n' easy animation setup
+	public function addAnim(Name:String, Prefix:String, ?Indices:Array<Int>, FrameRate:Int = 24, Looped:Bool = true, FlipX:Bool = false, FlipY:Bool = false) {
+		if (Indices != null && Indices.length > 0)
+			animation.addByIndices(Name, Prefix, Indices, "", FrameRate, Looped, FlipX, FlipY);
+		else
+			animation.addByPrefix(Name, Prefix, FrameRate, Looped, FlipX, FlipY);
 	}
 
 	public function addOffset(name:String, x:Float = 0, y:Float = 0)
