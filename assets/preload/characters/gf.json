@@ -2,6 +2,7 @@
 	"animations": [
 		{
 			"loop": false,
+			"loop_point": 0,
 			"offsets": [
 				0,
 				0
@@ -15,6 +16,7 @@
 		},
 		{
 			"loop": false,
+			"loop_point": 0,
 			"offsets": [
 				0,
 				-9
@@ -45,6 +47,7 @@
 		},
 		{
 			"loop": false,
+			"loop_point": 0,
 			"offsets": [
 				0,
 				-9
@@ -81,6 +84,7 @@
 	],
 	"healthicon": "gf",
 	"flip_x": false,
+	"flip_y": false,
 	"healthbar_colors": [
 		165,
 		0,

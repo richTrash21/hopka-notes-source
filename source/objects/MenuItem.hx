@@ -7,10 +7,8 @@ class MenuItem extends FlxSprite
 
 	public function new(x:Float, y:Float, weekName:String = '')
 	{
-		super(x, y);
-		loadGraphic(Paths.image('storymenu/' + weekName));
+		super(x, y, Paths.image('storymenu/' + weekName));
 		antialiasing = ClientPrefs.data.antialiasing;
-		//trace('Test added: ' + WeekData.getWeekNumber(weekNum) + ' (' + weekNum + ')');
 	}
 
 	private var isFlashing:Bool = false;
@@ -31,12 +29,7 @@ class MenuItem extends FlxSprite
 		super.update(elapsed);
 		y = FlxMath.lerp(y, (targetY * 120) + 480, FlxMath.bound(elapsed * 10.2, 0, 1));
 
-		if (isFlashing)
-			flashingInt += 1;
-
-		if (flashingInt % fakeFramerate >= Math.floor(fakeFramerate / 2))
-			color = 0xFF33ffff;
-		else
-			color = FlxColor.WHITE;
+		if (isFlashing) flashingInt += 1;
+		color = (flashingInt % fakeFramerate >= Math.floor(fakeFramerate / 2)) ? 0xFF33ffff : FlxColor.WHITE;
 	}
 }

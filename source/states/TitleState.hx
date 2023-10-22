@@ -188,9 +188,8 @@ class TitleState extends MusicBeatState
 
 		//why add bg when it doesn't need to exist???
 		if (titleJSON.backgroundSprite != null && titleJSON.backgroundSprite.length > 0 && titleJSON.backgroundSprite != "none") {
-			var bg:FlxSprite = new FlxSprite();
+			var bg:FlxSprite = new FlxSprite(0, 0, Paths.image(titleJSON.backgroundSprite));
 			bg.antialiasing = ClientPrefs.data.antialiasing;
-			bg.loadGraphic(Paths.image(titleJSON.backgroundSprite));
 			// bg.setGraphicSize(Std.int(bg.width * 0.6));
 			// bg.updateHitbox();
 			add(bg);
@@ -287,7 +286,7 @@ class TitleState extends MusicBeatState
 
 		credTextShit.visible = false;
 
-		ngSpr = new FlxSprite(0, FlxG.height * 0.52).loadGraphic(Paths.image('newgrounds_logo'));
+		ngSpr = new FlxSprite(0, FlxG.height * 0.52, Paths.image('newgrounds_logo'));
 		add(ngSpr);
 		ngSpr.visible = false;
 		ngSpr.setGraphicSize(Std.int(ngSpr.width * 0.8));

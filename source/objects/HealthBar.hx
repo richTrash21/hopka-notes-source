@@ -26,7 +26,7 @@ class HealthBar extends FlxSpriteGroup
 		if(valueFunction != null) this.valueFunction = valueFunction;
 		setBounds(boundX, boundY);
 		
-		bg = new FlxSprite().loadGraphic(Paths.image(image));
+		bg = new FlxSprite(0, 0, Paths.image(image));
 		bg.antialiasing = ClientPrefs.data.antialiasing;
 		barWidth = Std.int(bg.width - 6);
 		barHeight = Std.int(bg.height - 6);
@@ -69,23 +69,25 @@ class HealthBar extends FlxSpriteGroup
 		leftBar.setPosition(bg.x, bg.y);
 		rightBar.setPosition(bg.x, bg.y);
 
+		var rectLeft:FlxRect = leftBar.clipRect;
+		var rectRight:FlxRect = rightBar.clipRect;
 		var leftSize:Float = FlxMath.lerp(0, barWidth, leftToRight ? percent / 100 : 1 - percent / 100);
 
-		leftBar.clipRect.width = leftSize;
-		leftBar.clipRect.height = barHeight;
-		leftBar.clipRect.x = barOffset.x;
-		leftBar.clipRect.y = barOffset.y;
+		rectLeft.width = leftSize;
+		rectLeft.height = barHeight;
+		rectLeft.x = barOffset.x;
+		rectLeft.y = barOffset.y;
 
-		rightBar.clipRect.width = barWidth - leftSize;
-		rightBar.clipRect.height = barHeight;
-		rightBar.clipRect.x = barOffset.x + leftSize;
-		rightBar.clipRect.y = barOffset.y;
+		rectRight.width = barWidth - leftSize;
+		rectRight.height = barHeight;
+		rectRight.x = barOffset.x + leftSize;
+		rectRight.y = barOffset.y;
 
 		barCenter = leftBar.x + leftSize + barOffset.x;
 
 		// flixel is retarded
-		leftBar.clipRect = leftBar.clipRect;
-		rightBar.clipRect = rightBar.clipRect;
+		leftBar.clipRect = rectLeft;
+		rightBar.clipRect = rectRight;
 	}
 
 	public function regenerateClips()

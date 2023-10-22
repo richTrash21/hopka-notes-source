@@ -22,6 +22,7 @@ typedef CharacterFile = {
 	var camera_position:Array<Float>;
 
 	var flip_x:Bool;
+	var flip_y:Bool;
 	var no_antialiasing:Bool;
 	var healthbar_colors:Array<Int>;
 }
@@ -31,10 +32,11 @@ typedef AnimArray = {
 	var name:String;
 	var fps:Int;
 	var loop:Bool;
+	var loop_point:Int;
 	var indices:Array<Int>;
 	var offsets:Array<Int>;
-	@:optional var animflip_x:Bool;
-	@:optional var animflip_y:Bool;
+	var animflip_x:Bool;
+	var animflip_y:Bool;
 }
 
 class Character extends FlxSprite
@@ -71,6 +73,7 @@ class Character extends FlxSprite
 	public var jsonScale:Float = 1;
 	public var noAntialiasing:Bool = false;
 	public var originalFlipX:Bool = false;
+	public var originalFlipY:Bool = false;
 	public var healthColorArray:Array<Int> = [255, 0, 0];
 
 	public function new(x:Float, y:Float, ?character:String = 'bf', ?isPlayer:Bool = false)
@@ -127,6 +130,7 @@ class Character extends FlxSprite
 		healthIcon = json.healthicon;
 		singDuration = json.sing_duration;
 		flipX = json.flip_x;
+		flipY = json.flip_y;
 
 		if(json.healthbar_colors != null && json.healthbar_colors.length > 2)
 			healthColorArray = json.healthbar_colors;
@@ -142,6 +146,7 @@ class Character extends FlxSprite
 		}
 		else addAnim('idle', 'BF idle dance', null, 24, false);
 		originalFlipX = flipX;
+		originalFlipY = flipY;
 
 		hasMissAnimations = (animOffsets.exists('singLEFTmiss') || animOffsets.exists('singDOWNmiss') || animOffsets.exists('singUPmiss') || animOffsets.exists('singRIGHTmiss'));
 		recalculateDanceIdle();
@@ -227,8 +232,7 @@ class Character extends FlxSprite
 		if (animOffsets.exists(AnimName)) {
 			var daOffset = animOffsets.get(AnimName);
 			offset.set(daOffset[0], daOffset[1]);
-		} else
-			offset.set(0, 0);
+		} else offset.set(0, 0);
 
 		if (curCharacter.startsWith('gf'))
 		{
@@ -246,7 +250,7 @@ class Character extends FlxSprite
 
 	public var danceEveryNumBeats:Int = 2;
 	private var settingCharacterUp:Bool = true;
-	public function recalculateDanceIdle(){
+	public function recalculateDanceIdle() {
 		var lastDanceIdle:Bool = danceIdle;
 		danceIdle = (animation.getByName('danceLeft' + idleSuffix) != null && animation.getByName('danceRight' + idleSuffix) != null);
 
@@ -273,23 +277,23 @@ class Character extends FlxSprite
 	public function generateAnim(Anim:AnimArray) {
 		if(Anim != null) {
 			var animAnim:String = '' + Anim.anim;
-			var animName:String = '' + Anim.name;
-			var animFps:Int = Anim.fps;
-			var animLoop:Bool = Anim.loop;
-			var animIndices:Array<Int> = Anim.indices;
-			var animFlipX:Bool = Anim.animflip_x;
-			var animFlipY:Bool = Anim.animflip_y;
-			addAnim(animAnim, animName, animIndices, animFps, animLoop, animFlipX, animFlipY);
-			if(Anim.offsets != null && Anim.offsets.length > 1) addOffset(animAnim, Anim.offsets[0], Anim.offsets[1]);
+			var animOffsets:Array<Int> = Anim.offsets;
+			addAnim(animAnim, '' + Anim.name, Anim.indices, Anim.fps, Anim.loop, Anim.animflip_x, Anim.animflip_y, Anim.loop_point);
+			if(animOffsets != null && animOffsets.length > 1) addOffset(animAnim, animOffsets[0], animOffsets[1]);
+			else addOffset(animAnim);
 		}
 	}
 
 	//quick n' easy animation setup
-	public function addAnim(Name:String, Prefix:String, ?Indices:Array<Int>, FrameRate:Int = 24, Looped:Bool = true, FlipX:Bool = false, FlipY:Bool = false) {
+	public function addAnim(Name:String, Prefix:String, ?Indices:Array<Int>, FrameRate:Int = 24, Looped:Bool = true, FlipX:Bool = false, FlipY:Bool = false, LoopPoint:Int = 0) {
 		if (Indices != null && Indices.length > 0)
 			animation.addByIndices(Name, Prefix, Indices, "", FrameRate, Looped, FlipX, FlipY);
 		else
 			animation.addByPrefix(Name, Prefix, FrameRate, Looped, FlipX, FlipY);
+		var addedAnim:flixel.animation.FlxAnimation = animation.getByName(Name);
+		if (addedAnim != null) {
+			addedAnim.loopPoint = LoopPoint; // better than -loop anims lmao
+		}
 	}
 
 	public function addOffset(name:String, x:Float = 0, y:Float = 0)

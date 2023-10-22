@@ -884,20 +884,19 @@ class FunkinLua {
 			}
 		});
 
-		Lua_helper.add_callback(lua, "makeLuaSprite", function(tag:String, ?image:String = null, ?x:Float = 0, ?y:Float = 0) {
+		Lua_helper.add_callback(lua, "makeLuaSprite", function(tag:String, ?image:String = null, ?x:Float = 0, ?y:Float = 0, ?animated:Bool = false, ?spriteType:String = "sparrow") {
 			tag = tag.replace('.', '');
 			LuaUtils.resetSpriteTag(tag);
-			var leSprite:ModchartSprite = new ModchartSprite(x, y);
-			if(image != null && image.length > 0)
-				leSprite.loadGraphic(Paths.image(image));
+			var leSprite:ModchartSprite = new ModchartSprite(x, y, (!animated && image != null && image.length > 0) ? Paths.image(image) : null);
+			if(animated) LuaUtils.loadFrames(leSprite, image, spriteType);
+			else leSprite.active = true;
 			game.modchartSprites.set(tag, leSprite);
-			leSprite.active = true;
 		});
 		Lua_helper.add_callback(lua, "makeAnimatedLuaSprite", function(tag:String, ?image:String = null, ?x:Float = 0, ?y:Float = 0, ?spriteType:String = "sparrow") {
+			FunkinLua.luaTrace("makeAnimatedLuaSprite is deprecated! Use makeLuaSprite instead", false, true); // just wanted to merge them
 			tag = tag.replace('.', '');
 			LuaUtils.resetSpriteTag(tag);
 			var leSprite:ModchartSprite = new ModchartSprite(x, y);
-
 			LuaUtils.loadFrames(leSprite, image, spriteType);
 			game.modchartSprites.set(tag, leSprite);
 		});

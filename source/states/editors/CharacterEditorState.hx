@@ -63,7 +63,7 @@ class CharacterEditorState extends MusicBeatState
 
 	override function create()
 	{
-		FlxG.sound.playMusic(Paths.music(Paths.formatToSongPath(ClientPrefs.data.pauseMusic)), 0.5);
+		FlxG.sound.playMusic(Paths.music(Paths.formatToSongPath(ClientPrefs.data.pauseMusic)), 0.4);
 		if(ClientPrefs.data.cacheOnGPU) Paths.clearStoredMemory();
 
 		camEditor = new FlxCamera();
@@ -82,8 +82,7 @@ class CharacterEditorState extends MusicBeatState
 		charLayer = new FlxTypedGroup<Character>();
 		add(charLayer);
 
-		var pointer:FlxGraphic = FlxGraphic.fromClass(GraphicCursorCross);
-		cameraFollowPointer = new FlxSprite().loadGraphic(pointer);
+		cameraFollowPointer = new FlxSprite(0, 0, FlxGraphic.fromClass(GraphicCursorCross));
 		cameraFollowPointer.setGraphicSize(40, 40);
 		cameraFollowPointer.updateHitbox();
 		add(cameraFollowPointer);
@@ -273,6 +272,7 @@ class CharacterEditorState extends MusicBeatState
 			],
 			"healthicon": "face",
 			"flip_x": false,
+			"flip_y": false,
 			"healthbar_colors": [
 				161,
 				161,
@@ -338,6 +338,7 @@ class CharacterEditorState extends MusicBeatState
 				character.jsonScale = parsedJson.scale;
 				character.noAntialiasing = parsedJson.no_antialiasing;
 				character.originalFlipX = parsedJson.flip_x;
+				character.originalFlipY = parsedJson.flip_y;
 				character.healthIcon = parsedJson.healthicon;
 				character.healthColorArray = parsedJson.healthbar_colors;
 				character.setPosition(character.positionArray[0] + OFFSET_X + 100, character.positionArray[1]);
@@ -373,11 +374,14 @@ class CharacterEditorState extends MusicBeatState
 	var positionCameraYStepper:FlxUINumericStepper;
 
 	var flipXCheckBox:FlxUICheckBox;
+	var flipYCheckBox:FlxUICheckBox;
 	var noAntialiasingCheckBox:FlxUICheckBox;
 
 	var healthColorStepperR:FlxUINumericStepper;
 	var healthColorStepperG:FlxUINumericStepper;
 	var healthColorStepperB:FlxUINumericStepper;
+
+	var optimizeJsonBox:FlxUICheckBox;
 
 	function addCharacterUI() {
 		var tab_group = new FlxUI(null, UI_box);
@@ -408,15 +412,21 @@ class CharacterEditorState extends MusicBeatState
 
 		scaleStepper = new FlxUINumericStepper(15, singDurationStepper.y + 40, 0.1, 1, 0.05, 10, 1);
 
-		flipXCheckBox = new FlxUICheckBox(singDurationStepper.x + 80, singDurationStepper.y, null, null, "Flip X", 50);
+		flipXCheckBox = new FlxUICheckBox(singDurationStepper.x + 75, singDurationStepper.y, null, null, "Flip X", 40);
 		flipXCheckBox.checked = char.flipX;
 		if(char.isPlayer) flipXCheckBox.checked = !flipXCheckBox.checked;
 		flipXCheckBox.callback = function() {
 			char.originalFlipX = !char.originalFlipX;
-			char.flipX = char.originalFlipX;
-			if(char.isPlayer) char.flipX = !char.flipX;
-
+			char.flipX = char.isPlayer ? !char.originalFlipX : char.originalFlipX;
 			ghostChar.flipX = char.flipX;
+		};
+
+		flipYCheckBox = new FlxUICheckBox(flipXCheckBox.x + 55, flipXCheckBox.y, null, null, "Flip Y", 40);
+		flipYCheckBox.checked = char.flipY;
+		flipYCheckBox.callback = function() {
+			char.originalFlipY = !char.originalFlipY;
+			char.flipY = char.originalFlipY;
+			ghostChar.flipY = char.flipY;
 		};
 
 		noAntialiasingCheckBox = new FlxUICheckBox(flipXCheckBox.x, flipXCheckBox.y + 40, null, null, "No Antialiasing", 80);
@@ -427,19 +437,19 @@ class CharacterEditorState extends MusicBeatState
 			ghostChar.antialiasing = char.antialiasing;
 		};
 
-		positionXStepper = new FlxUINumericStepper(flipXCheckBox.x + 110, flipXCheckBox.y, 10, char.positionArray[0], -9000, 9000, 0);
-		positionYStepper = new FlxUINumericStepper(positionXStepper.x + 60, positionXStepper.y, 10, char.positionArray[1], -9000, 9000, 0);
+		positionXStepper = new FlxUINumericStepper(flipXCheckBox.x + 110, flipXCheckBox.y, 10, char.positionArray[0], -9999, 9999, 0);
+		positionYStepper = new FlxUINumericStepper(positionXStepper.x + 60, positionXStepper.y, 10, char.positionArray[1], -9999, 9999, 0);
 
-		positionCameraXStepper = new FlxUINumericStepper(positionXStepper.x, positionXStepper.y + 40, 10, char.cameraPosition[0], -9000, 9000, 0);
-		positionCameraYStepper = new FlxUINumericStepper(positionYStepper.x, positionYStepper.y + 40, 10, char.cameraPosition[1], -9000, 9000, 0);
+		positionCameraXStepper = new FlxUINumericStepper(positionXStepper.x, positionXStepper.y + 40, 10, char.cameraPosition[0], -9999, 9999, 0);
+		positionCameraYStepper = new FlxUINumericStepper(positionYStepper.x, positionYStepper.y + 40, 10, char.cameraPosition[1], -9999, 9999, 0);
 
-		var saveCharacterButton:FlxButton = new FlxButton(reloadImage.x, noAntialiasingCheckBox.y + 40, "Save Character", function()
-			saveCharacter()
-		);
+		var saveCharacterButton:FlxButton = new FlxButton(reloadImage.x, noAntialiasingCheckBox.y + 40, "Save Character", saveCharacter);
+
+		optimizeJsonBox = new FlxUICheckBox(saveCharacterButton.x, saveCharacterButton.y-20, null, null, "Optimize JSON?", 55);
 
 		healthColorStepperR = new FlxUINumericStepper(singDurationStepper.x, saveCharacterButton.y, 20, char.healthColorArray[0], 0, 255, 0);
-		healthColorStepperG = new FlxUINumericStepper(singDurationStepper.x + 65, saveCharacterButton.y, 20, char.healthColorArray[1], 0, 255, 0);
-		healthColorStepperB = new FlxUINumericStepper(singDurationStepper.x + 130, saveCharacterButton.y, 20, char.healthColorArray[2], 0, 255, 0);
+		healthColorStepperG = new FlxUINumericStepper(singDurationStepper.x + 60, saveCharacterButton.y, 20, char.healthColorArray[1], 0, 255, 0);
+		healthColorStepperB = new FlxUINumericStepper(singDurationStepper.x + 120, saveCharacterButton.y, 20, char.healthColorArray[2], 0, 255, 0);
 
 		tab_group.add(new FlxText(15, imageInputText.y - 18, 0, 'Image file name:'));
 		tab_group.add(new FlxText(15, healthIconInputText.y - 18, 0, 'Health icon name:'));
@@ -455,6 +465,7 @@ class CharacterEditorState extends MusicBeatState
 		tab_group.add(singDurationStepper);
 		tab_group.add(scaleStepper);
 		tab_group.add(flipXCheckBox);
+		tab_group.add(flipYCheckBox);
 		tab_group.add(noAntialiasingCheckBox);
 		tab_group.add(positionXStepper);
 		tab_group.add(positionYStepper);
@@ -464,6 +475,7 @@ class CharacterEditorState extends MusicBeatState
 		tab_group.add(healthColorStepperG);
 		tab_group.add(healthColorStepperB);
 		tab_group.add(saveCharacterButton);
+		tab_group.add(optimizeJsonBox);
 		UI_characterbox.addGroup(tab_group);
 	}
 
@@ -476,6 +488,7 @@ class CharacterEditorState extends MusicBeatState
 	var animationLoopCheckBox:FlxUICheckBox;
 	var animationFlipXCheckBox:FlxUICheckBox;
 	var animationFlipYCheckBox:FlxUICheckBox;
+	var animationLoopPoint:FlxUINumericStepper;
 	function addAnimationsUI() {
 		var tab_group = new FlxUI(null, UI_box);
 		tab_group.name = "Animations";
@@ -483,17 +496,18 @@ class CharacterEditorState extends MusicBeatState
 		animationInputText = new FlxUIInputText(15, 85, 80, '', 8);
 		animationNameInputText = new FlxUIInputText(animationInputText.x, animationInputText.y + 35, 150, '', 8);
 		animationIndicesInputText = new FlxUIInputText(animationNameInputText.x, animationNameInputText.y + 40, 250, '', 8);
-		animationNameFramerate = new FlxUINumericStepper(animationInputText.x + 170, animationInputText.y, 1, 24, 0, 240, 0);
-		animationLoopCheckBox = new FlxUICheckBox(animationNameInputText.x + 170, animationNameInputText.y - 1, null, null, "Should it Loop?", 100);
-		animationFlipXCheckBox = new FlxUICheckBox(animationNameFramerate.x + 80, animationNameFramerate.y - animationNameFramerate.height - 5, null, null, "Flip X", 100);
-		animationFlipYCheckBox = new FlxUICheckBox(animationFlipXCheckBox.x, animationFlipXCheckBox.y + animationFlipXCheckBox.height + 5, null, null, "Flip Y", 100);
+		animationNameFramerate = new FlxUINumericStepper(animationInputText.x + 170, animationInputText.y, 1, 24, 0, 240);
+		animationLoopCheckBox = new FlxUICheckBox(animationNameInputText.x + 170, animationNameInputText.y - 1, null, null, "Looped?", 50);
+		animationFlipXCheckBox = new FlxUICheckBox(animationNameFramerate.x + 85, animationNameFramerate.y - animationNameFramerate.height - 5, null, null, "Flip X", 40);
+		animationFlipYCheckBox = new FlxUICheckBox(animationFlipXCheckBox.x, animationFlipXCheckBox.y + animationFlipXCheckBox.height + 5, null, null, "Flip Y", 40);
+		animationLoopPoint = new FlxUINumericStepper(animationFlipYCheckBox.x, animationLoopCheckBox.y, 1, 0, 0);
 
 		animationDropDown = new FlxUIDropDownMenu(15, animationInputText.y - 55, FlxUIDropDownMenu.makeStrIdLabelArray([''], true), function(pressed:String) {
-			var selectedAnimation:Int = Std.parseInt(pressed);
-			var anim:AnimArray = char.animationsArray[selectedAnimation];
+			var anim:AnimArray = char.animationsArray[Std.parseInt(pressed)];
 			animationInputText.text = anim.anim;
 			animationNameInputText.text = anim.name;
 			animationLoopCheckBox.checked = anim.loop;
+			animationLoopPoint.value = anim.loop_point;
 			animationNameFramerate.value = anim.fps;
 			animationFlipXCheckBox.checked = anim.animflip_x;
 			animationFlipYCheckBox.checked = anim.animflip_y;
@@ -504,13 +518,9 @@ class CharacterEditorState extends MusicBeatState
 
 		ghostDropDown = new FlxUIDropDownMenu(animationDropDown.x + 150, animationDropDown.y, FlxUIDropDownMenu.makeStrIdLabelArray([''], true), function(pressed:String) {
 			var selectedAnimation:Int = Std.parseInt(pressed);
-			ghostChar.visible = false;
-			char.alpha = 1;
-			if(selectedAnimation > 0) {
-				ghostChar.visible = true;
-				ghostChar.playAnim(ghostChar.animationsArray[selectedAnimation-1].anim, true);
-				char.alpha = 0.85;
-			}
+			ghostChar.visible = selectedAnimation > 0;
+			char.alpha = selectedAnimation > 0 ? 0.85 : 1;
+			if(selectedAnimation > 0) ghostChar.playAnim(ghostChar.animationsArray[selectedAnimation-1].anim, true);
 		});
 
 		var addUpdateButton:FlxButton = new FlxButton(70, animationIndicesInputText.y + 30, "Add/Update", function() {
@@ -530,9 +540,8 @@ class CharacterEditorState extends MusicBeatState
 
 			if(indicesStr.length > 1) {
 				for (i in 0...indicesStr.length) {
-					var index:Int = Std.parseInt(indicesStr[i]);
-					if(indicesStr[i] != null && indicesStr[i] != '' && !Math.isNaN(index) && index > -1)
-						indices.push(index);
+					@:optional var index:Int = Std.parseInt(indicesStr[i]);
+					if(!Math.isNaN(index) && index > -1) indices.push(index);
 				}
 			}
 
@@ -552,14 +561,13 @@ class CharacterEditorState extends MusicBeatState
 				name: animationNameInputText.text,
 				fps: Math.round(animationNameFramerate.value),
 				loop: animationLoopCheckBox.checked,
+				loop_point: Math.round(animationLoopPoint.value),
 				indices: indices,
 				offsets: lastOffsets,
 				animflip_x: animationFlipXCheckBox.checked,
 				animflip_y: animationFlipYCheckBox.checked
 			};
-			char.addAnim(newAnim.anim, newAnim.name, newAnim.indices, newAnim.fps, newAnim.loop, newAnim.animflip_x, newAnim.animflip_y);
-
-			if(!char.animOffsets.exists(newAnim.anim)) char.addOffset(newAnim.anim, 0, 0);
+			char.generateAnim(newAnim);
 			char.animationsArray.push(newAnim);
 
 			if(lastAnim == animationInputText.text) {
@@ -607,6 +615,7 @@ class CharacterEditorState extends MusicBeatState
 		tab_group.add(new FlxText(animationNameFramerate.x, animationNameFramerate.y - 18, 0, 'Framerate:'));
 		tab_group.add(new FlxText(animationNameInputText.x, animationNameInputText.y - 18, 0, 'Animation on .XML/.TXT file:'));
 		tab_group.add(new FlxText(animationIndicesInputText.x, animationIndicesInputText.y - 18, 0, 'ADVANCED - Animation Indices:'));
+		tab_group.add(new FlxText(animationLoopPoint.x, animationNameInputText.y - 18, 0, 'Loop Point:'));
 
 		tab_group.add(animationInputText);
 		tab_group.add(animationNameInputText);
@@ -615,6 +624,7 @@ class CharacterEditorState extends MusicBeatState
 		tab_group.add(animationLoopCheckBox);
 		tab_group.add(animationFlipXCheckBox);
 		tab_group.add(animationFlipYCheckBox);
+		tab_group.add(animationLoopPoint);
 		tab_group.add(addUpdateButton);
 		tab_group.add(removeButton);
 		tab_group.add(ghostDropDown);
@@ -794,6 +804,7 @@ class CharacterEditorState extends MusicBeatState
 			singDurationStepper.value = char.singDuration;
 			scaleStepper.value = char.jsonScale;
 			flipXCheckBox.checked = char.originalFlipX;
+			flipYCheckBox.checked = char.originalFlipY;
 			noAntialiasingCheckBox.checked = char.noAntialiasing;
 			resetHealthBarColor();
 			leHealthIcon.changeIcon(healthIconInputText.text, false);
@@ -885,9 +896,9 @@ class CharacterEditorState extends MusicBeatState
 			textAnim.text = char.animationsArray[curAnim].anim;
 			var curAnim:FlxAnimation = char.animation.getByName(textAnim.text);
 			if(curAnim == null || curAnim.frames.length < 1) textAnim.text += ' (ERROR!)';
-		} else {
+			else if(textAnim.text.endsWith('-loop')) textAnim.text += ' (-loop is DEPRECATED!)';
+		} else
 			textAnim.text = '';
-		}
 
 		var inputTexts:Array<FlxUIInputText> = [animationInputText, imageInputText, healthIconInputText, animationNameInputText, animationIndicesInputText];
 		for (i in 0...inputTexts.length) {
@@ -1027,11 +1038,12 @@ class CharacterEditorState extends MusicBeatState
 			"camera_position": char.cameraPosition,
 
 			"flip_x": char.originalFlipX,
+			"flip_y": char.originalFlipY,
 			"no_antialiasing": char.noAntialiasing,
 			"healthbar_colors": char.healthColorArray
 		};
 
-		var data:String = haxe.Json.stringify(json, "\t");
+		var data:String = haxe.Json.stringify(json, !optimizeJsonBox.checked ? "\t" : null);
 
 		if (data.length > 0)
 		{

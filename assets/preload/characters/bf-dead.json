@@ -6,6 +6,7 @@
 				11
 			],
 			"loop": false,
+			"loop_point": 0,
 			"fps": 24,
 			"anim": "firstDeath",
 			"indices": [],
@@ -19,6 +20,7 @@
 				5
 			],
 			"loop": true,
+			"loop_point": 0,
 			"fps": 24,
 			"anim": "deathLoop",
 			"indices": [],
@@ -32,6 +34,7 @@
 				69
 			],
 			"loop": false,
+			"loop_point": 0,
 			"fps": 24,
 			"anim": "deathConfirm",
 			"indices": [],
@@ -48,6 +51,7 @@
 	],
 	"healthicon": "bf",
 	"flip_x": true,
+	"flip_y": false,
 	"healthbar_colors": [
 		49,
 		176,

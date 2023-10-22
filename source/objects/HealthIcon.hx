@@ -1,5 +1,7 @@
 package objects;
 
+import flixel.graphics.frames.FlxFrame;
+
 class HealthIcon extends FlxSprite
 {
 	public var sprTracker:FlxSprite;
@@ -40,8 +42,6 @@ class HealthIcon extends FlxSprite
 	override function updateHitbox() {
 		super.updateHitbox();
 		offset.set(iconOffsets[0], iconOffsets[1]);
-		//offset.x = iconOffsets[0];
-		//offset.y = iconOffsets[1];
 	}
 
 	public function getCharacter():String

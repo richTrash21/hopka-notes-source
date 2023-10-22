@@ -86,7 +86,7 @@ class EditorPlayState extends MusicBeatSubstate
 		if(ClientPrefs.data.hitsoundVolume > 0) Paths.sound('hitsound');
 
 		/* setting up Editor PlayState stuff */
-		var bg:FlxSprite = new FlxSprite().loadGraphic(Paths.image('menuDesat'));
+		var bg:FlxSprite = new FlxSprite(0, 0, Paths.image('menuDesat'));
 		bg.antialiasing = ClientPrefs.data.antialiasing;
 		bg.scrollFactor.set();
 		bg.color = 0xFF101010;
@@ -108,7 +108,6 @@ class EditorPlayState extends MusicBeatSubstate
 		
 		generateStaticArrows(0);
 		generateStaticArrows(1);
-		/***************/
 		
 		scoreTxt = new FlxText(10, FlxG.height - 50, FlxG.width - 20, "", 20);
 		scoreTxt.setFormat(Paths.font("vcr.ttf"), 20, FlxColor.WHITE, CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
@@ -227,19 +226,14 @@ class EditorPlayState extends MusicBeatSubstate
 		}
 		super.stepHit();
 
-		if(curStep == lastStepHit) {
-			return;
-		}
+		if(curStep == lastStepHit) return;
 		lastStepHit = curStep;
 	}
 
 	var lastBeatHit:Int = -1;
 	override function beatHit()
 	{
-		if(lastBeatHit >= curBeat) {
-			//trace('BEAT HIT: ' + curBeat + ', LAST HIT: ' + lastBeatHit);
-			return;
-		}
+		if(lastBeatHit >= curBeat) return;
 		notes.sort(FlxSort.byY, ClientPrefs.data.downScroll ? FlxSort.ASCENDING : FlxSort.DESCENDING);
 
 		super.beatHit();
@@ -249,10 +243,9 @@ class EditorPlayState extends MusicBeatSubstate
 	override function sectionHit()
 	{
 		if (PlayState.SONG.notes[curSection] != null)
-		{
 			if (PlayState.SONG.notes[curSection].changeBPM)
 				Conductor.bpm = PlayState.SONG.notes[curSection].bpm;
-		}
+
 		super.sectionHit();
 	}
 
@@ -283,15 +276,12 @@ class EditorPlayState extends MusicBeatSubstate
 	// Borrowed from PlayState
 	function generateSong(dataPath:String)
 	{
-		// FlxG.log.add(ChartParser.parse());
 		songSpeed = PlayState.SONG.speed;
 		var songSpeedType:String = ClientPrefs.getGameplaySetting('scrolltype');
 		switch(songSpeedType)
 		{
-			case "multiplicative":
-				songSpeed = PlayState.SONG.speed * ClientPrefs.getGameplaySetting('scrollspeed');
-			case "constant":
-				songSpeed = ClientPrefs.getGameplaySetting('scrollspeed');
+			case "multiplicative": songSpeed = PlayState.SONG.speed * ClientPrefs.getGameplaySetting('scrollspeed');
+			case "constant": songSpeed = ClientPrefs.getGameplaySetting('scrollspeed');
 		}
 		noteKillOffset = Math.max(Conductor.stepCrochet, 350 / songSpeed * playbackRate);
 
@@ -324,31 +314,17 @@ class EditorPlayState extends MusicBeatSubstate
 				if(daStrumTime < startPos) continue;
 
 				var daNoteData:Int = Std.int(songNotes[1] % 4);
-				var gottaHitNote:Bool = section.mustHitSection;
-
-				if (songNotes[1] > 3)
-				{
-					gottaHitNote = !section.mustHitSection;
-				}
-
-				var oldNote:Note;
-				if (unspawnNotes.length > 0)
-					oldNote = unspawnNotes[Std.int(unspawnNotes.length - 1)];
-				else
-					oldNote = null;
+				var gottaHitNote:Bool = songNotes[1] > 3 ? !section.mustHitSection : section.mustHitSection;
+				var oldNote:Note = unspawnNotes.length > 0 ? unspawnNotes[Std.int(unspawnNotes.length - 1)] : null;
 
 				var swagNote:Note = new Note(daStrumTime, daNoteData, oldNote, this);
 				swagNote.mustPress = gottaHitNote;
 				swagNote.sustainLength = songNotes[2];
 				swagNote.gfNote = (section.gfSection && (songNotes[1]<4));
-				swagNote.noteType = songNotes[3];
-				if(!Std.isOfType(songNotes[3], String)) swagNote.noteType = ChartingState.noteTypeList[songNotes[3]]; //Backward compatibility + compatibility with Week 7 charts
-
+				swagNote.noteType = !Std.isOfType(songNotes[3], String) ? ChartingState.noteTypeList[songNotes[3]] : songNotes[3]; //Backward compatibility + compatibility with Week 7 charts
 				swagNote.scrollFactor.set();
 
-				var susLength:Float = swagNote.sustainLength;
-
-				susLength = susLength / Conductor.stepCrochet;
+				var susLength:Float = swagNote.sustainLength / Conductor.stepCrochet;
 				unspawnNotes.push(swagNote);
 
 				var floorSus:Int = Math.floor(susLength);
@@ -375,34 +351,16 @@ class EditorPlayState extends MusicBeatSubstate
 								oldNote.updateHitbox();
 							}
 
-							if(ClientPrefs.data.downScroll)
-								sustainNote.correctionOffset = 0;
+							if(ClientPrefs.data.downScroll) sustainNote.correctionOffset = 0;
 						}
 
-						if (sustainNote.mustPress) sustainNote.x += FlxG.width / 2; // general offset
-						else if(ClientPrefs.data.middleScroll)
-						{
-							sustainNote.x += 310;
-							if(daNoteData > 1) //Up and Right
-							{
-								sustainNote.x += FlxG.width / 2 + 25;
-							}
-						}
+						if (sustainNote.mustPress)				sustainNote.x += FlxG.width * 0.5; // general offset
+						else if (ClientPrefs.data.middleScroll)	sustainNote.x += daNoteData > 1 ? FlxG.width * 0.5 + 335 : 310;
 					}
 				}
 
-				if (swagNote.mustPress)
-				{
-					swagNote.x += FlxG.width / 2; // general offset
-				}
-				else if(ClientPrefs.data.middleScroll)
-				{
-					swagNote.x += 310;
-					if(daNoteData > 1) //Up and Right
-					{
-						swagNote.x += FlxG.width / 2 + 25;
-					}
-				}
+				if (swagNote.mustPress)					swagNote.x += FlxG.width * 0.5; // general offset
+				else if (ClientPrefs.data.middleScroll)	swagNote.x += daNoteData > 1 ? FlxG.width * 0.5 + 335 : 310;
 			}
 		}
 
@@ -415,7 +373,6 @@ class EditorPlayState extends MusicBeatSubstate
 		var strumLineY:Float = ClientPrefs.data.downScroll ? (FlxG.height - 150) : 50;
 		for (i in 0...4)
 		{
-			// FlxG.log.add(i);
 			var targetAlpha:Float = 1;
 			if (player < 1)
 			{
@@ -427,17 +384,10 @@ class EditorPlayState extends MusicBeatSubstate
 			babyArrow.downScroll = ClientPrefs.data.downScroll;
 			babyArrow.alpha = targetAlpha;
 
-			if (player == 1)
-				playerStrums.add(babyArrow);
+			if (player == 1) playerStrums.add(babyArrow);
 			else
 			{
-				if(ClientPrefs.data.middleScroll)
-				{
-					babyArrow.x += 310;
-					if(i > 1) { //Up and Right
-						babyArrow.x += FlxG.width / 2 + 25;
-					}
-				}
+				if(ClientPrefs.data.middleScroll) babyArrow.x += i > 1 ? FlxG.width * 0.5 + 335 : 310;
 				opponentStrums.add(babyArrow);
 			}
 
@@ -448,13 +398,8 @@ class EditorPlayState extends MusicBeatSubstate
 
 	public function finishSong():Void
 	{
-		if(ClientPrefs.data.noteOffset <= 0) {
-			endSong();
-		} else {
-			finishTimer = new FlxTimer().start(ClientPrefs.data.noteOffset / 1000, function(tmr:FlxTimer) {
-				endSong();
-			});
-		}
+		if(ClientPrefs.data.noteOffset <= 0) endSong();
+		else finishTimer = new FlxTimer().start(ClientPrefs.data.noteOffset / 1000, function(tmr:FlxTimer) endSong());
 	}
 
 	public function endSong()
@@ -471,26 +416,17 @@ class EditorPlayState extends MusicBeatSubstate
 
 	private function cachePopUpScore()
 	{
-		for (rating in ratingsData)
-			Paths.image(rating.image);
-		
-		for (i in 0...10)
-			Paths.image('num' + i);
+		for (rating in ratingsData) Paths.image(rating.image);
+		Paths.image('num');
 	}
 
 	private function popUpScore(note:Note = null):Void
 	{
 		var noteDiff:Float = Math.abs(note.strumTime - Conductor.songPosition + ClientPrefs.data.ratingOffset);
-		//trace(noteDiff, ' ' + Math.abs(note.strumTime - Conductor.songPosition));
 
 		vocals.volume = 1;
-		var placement:String = Std.string(combo);
+		var placement:Float = FlxG.width * 0.35;
 
-		var coolText:FlxText = new FlxText(0, 0, 0, placement, 32);
-		coolText.screenCenter();
-		coolText.x = FlxG.width * 0.35;
-
-		var rating:FlxSprite = new FlxSprite();
 		var score:Int = 350;
 
 		//tryna do MS based judgment due to popular demand
@@ -512,30 +448,30 @@ class EditorPlayState extends MusicBeatSubstate
 			RecalculateRating(false);
 		}
 
-		var pixelShitPart1:String = "";
-		var pixelShitPart2:String = '';
-
-		rating.loadGraphic(Paths.image(pixelShitPart1 + daRating.image + pixelShitPart2));
-		rating.screenCenter();
-		rating.x = coolText.x - 40;
-		rating.y -= 60;
+		var rating:FlxSprite = new FlxSprite(placement - 40 + ClientPrefs.data.comboOffset[0], 0, Paths.image(daRating.image));
+		rating.screenCenter(Y);
+		rating.y -= 60 + ClientPrefs.data.comboOffset[1];
 		rating.acceleration.y = 550 * playbackRate * playbackRate;
 		rating.velocity.y -= FlxG.random.int(140, 175) * playbackRate;
-		rating.velocity.x -= FlxG.random.int(0, 10) * playbackRate;
+		rating.velocity.x -= FlxG.random.int(1, 10) * playbackRate;
+		rating.angularVelocity = rating.velocity.x * FlxG.random.int(1, -1, [0]);
 		rating.visible = (!ClientPrefs.data.hideHud && showRating);
-		rating.x += ClientPrefs.data.comboOffset[0];
-		rating.y -= ClientPrefs.data.comboOffset[1];
+		rating.scrollFactor.set();
 
-		var comboSpr:FlxSprite = new FlxSprite().loadGraphic(Paths.image(pixelShitPart1 + 'combo' + pixelShitPart2));
-		comboSpr.screenCenter();
-		comboSpr.x = coolText.x;
+		rating.setGraphicSize(Std.int(rating.width * 0.7));
+		rating.updateHitbox();
+
+		var comboSpr:FlxSprite = new FlxSprite(placement + ClientPrefs.data.comboOffset[0], 0, Paths.image('combo'));
+		comboSpr.screenCenter(Y);
+		comboSpr.y += 60 - ClientPrefs.data.comboOffset[1];
 		comboSpr.acceleration.y = FlxG.random.int(200, 300) * playbackRate * playbackRate;
 		comboSpr.velocity.y -= FlxG.random.int(140, 160) * playbackRate;
+		comboSpr.velocity.x = FlxG.random.int(1, 10) * playbackRate;
 		comboSpr.visible = (!ClientPrefs.data.hideHud && showCombo);
-		comboSpr.x += ClientPrefs.data.comboOffset[0];
-		comboSpr.y -= ClientPrefs.data.comboOffset[1];
-		comboSpr.y += 60;
-		comboSpr.velocity.x += FlxG.random.int(1, 10) * playbackRate;
+		comboSpr.scrollFactor.set();
+
+		comboSpr.setGraphicSize(Std.int(comboSpr.width * 0.7));
+		comboSpr.updateHitbox();
 
 		insert(members.indexOf(strumLineNotes), rating);
 		
@@ -545,26 +481,15 @@ class EditorPlayState extends MusicBeatSubstate
 			lastRating = rating;
 		}
 
-		rating.setGraphicSize(Std.int(rating.width * 0.7));
-		rating.updateHitbox();
-		comboSpr.setGraphicSize(Std.int(comboSpr.width * 0.7));
-		comboSpr.updateHitbox();
-
 		var seperatedScore:Array<Int> = [];
-
-		if(combo >= 1000) {
-			seperatedScore.push(Math.floor(combo / 1000) % 10);
-		}
+		if(combo >= 1000) seperatedScore.push(Math.floor(combo / 1000) % 10);
 		seperatedScore.push(Math.floor(combo / 100) % 10);
 		seperatedScore.push(Math.floor(combo / 10) % 10);
 		seperatedScore.push(combo % 10);
 
 		var daLoop:Int = 0;
 		var xThing:Float = 0;
-		if (showCombo)
-		{
-			insert(members.indexOf(strumLineNotes), comboSpr);
-		}
+		if (showCombo) insert(members.indexOf(strumLineNotes), comboSpr);
 		if (!ClientPrefs.data.comboStacking)
 		{
 			if (lastCombo != null) lastCombo.kill();
@@ -580,31 +505,30 @@ class EditorPlayState extends MusicBeatSubstate
 		}
 		for (i in seperatedScore)
 		{
-			var numScore:FlxSprite = new FlxSprite().loadGraphic(Paths.image(pixelShitPart1 + 'num' + Std.int(i) + pixelShitPart2));
-			numScore.screenCenter();
-			numScore.x = coolText.x + (43 * daLoop) - 90 + ClientPrefs.data.comboOffset[2];
+			var numScore:FlxSprite = new FlxSprite(placement + (45 * daLoop) - 90 + ClientPrefs.data.comboOffset[2]).loadGraphic(Paths.image('num'), true, 100, 120);
+			numScore.frame = numScore.frames.frames[i];
+			numScore.screenCenter(Y);
+			numScore.x = placement + (43 * daLoop) - 90 + ClientPrefs.data.comboOffset[2];
 			numScore.y += 80 - ClientPrefs.data.comboOffset[3];
+			numScore.scrollFactor.set();
 			
-			if (!ClientPrefs.data.comboStacking)
-				lastScore.push(numScore);
+			if (!ClientPrefs.data.comboStacking) lastScore.push(numScore);
 
 			numScore.setGraphicSize(Std.int(numScore.width * 0.5));
 			numScore.updateHitbox();
 
+			numScore.offset.x += FlxG.random.int(-2, 2);
+			numScore.offset.y += FlxG.random.int(-2, 2);
 			numScore.acceleration.y = FlxG.random.int(200, 300) * playbackRate * playbackRate;
 			numScore.velocity.y -= FlxG.random.int(140, 160) * playbackRate;
 			numScore.velocity.x = FlxG.random.float(-5, 5) * playbackRate;
+			numScore.angularVelocity = -numScore.velocity.x;
 			numScore.visible = !ClientPrefs.data.hideHud;
 
-			//if (combo >= 10 || combo == 0)
-			if(showComboNum)
-				insert(members.indexOf(strumLineNotes), numScore);
+			if(showComboNum) insert(members.indexOf(strumLineNotes), numScore);
 
 			FlxTween.tween(numScore, {alpha: 0}, 0.2 / playbackRate, {
-				onComplete: function(tween:FlxTween)
-				{
-					numScore.destroy();
-				},
+				onComplete: function(tween:FlxTween) numScore.destroy(),
 				startDelay: Conductor.crochet * 0.002 / playbackRate
 			});
 
@@ -612,26 +536,14 @@ class EditorPlayState extends MusicBeatSubstate
 			if(numScore.x > xThing) xThing = numScore.x;
 		}
 		comboSpr.x = xThing + 50;
-		/*
-			trace(combo);
-			trace(seperatedScore);
-			*/
-
-		coolText.text = Std.string(seperatedScore);
-		// add(coolText);
 
 		FlxTween.tween(rating, {alpha: 0}, 0.2 / playbackRate, {
+			onComplete: function(tween:FlxTween) rating.destroy(),
 			startDelay: Conductor.crochet * 0.001 / playbackRate
 		});
 
 		FlxTween.tween(comboSpr, {alpha: 0}, 0.2 / playbackRate, {
-			onComplete: function(tween:FlxTween)
-			{
-				coolText.destroy();
-				comboSpr.destroy();
-
-				rating.destroy();
-			},
+			onComplete: function(tween:FlxTween) comboSpr.destroy(),
 			startDelay: Conductor.crochet * 0.002 / playbackRate
 		});
 	}
@@ -640,8 +552,6 @@ class EditorPlayState extends MusicBeatSubstate
 	{
 		var eventKey:FlxKey = event.keyCode;
 		var key:Int = PlayState.getKeyFromEvent(keysArray, eventKey);
-		//trace('Pressed: ' + eventKey);
-
 		if (!controls.controllerMode && FlxG.keys.checkStatus(eventKey, JUST_PRESSED)) keyPressed(key);
 	}
 
@@ -705,8 +615,6 @@ class EditorPlayState extends MusicBeatSubstate
 	{
 		var eventKey:FlxKey = event.keyCode;
 		var key:Int = PlayState.getKeyFromEvent(keysArray, eventKey);
-		//trace('Pressed: ' + eventKey);
-
 		if(!controls.controllerMode && key > -1) keyReleased(key);
 	}
 
@@ -840,8 +748,7 @@ class EditorPlayState extends MusicBeatSubstate
 	function spawnNoteSplashOnNote(note:Note) {
 		if(note != null) {
 			var strum:StrumNote = playerStrums.members[note.noteData];
-			if(strum != null)
-				spawnNoteSplash(strum.x, strum.y, note.noteData, note);
+			if(strum != null) spawnNoteSplash(strum.x, strum.y, note.noteData, note);
 		}
 	}
 
@@ -901,7 +808,6 @@ class EditorPlayState extends MusicBeatSubstate
 			else if (goods > 0) ratingFC = 'GFC';
 			else if (sicks > 0) ratingFC = 'SFC';
 		}
-		else if (songMisses < 10)
-			ratingFC = 'SDCB';
+		else if (songMisses < 10) ratingFC = 'SDCB';
 	}
 }
