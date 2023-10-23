@@ -195,7 +195,7 @@ class Character extends FlxSprite
 			}
 
 			if (animation.curAnim.finished && animation.getByName(animation.curAnim.name + '-loop') != null)
-				playAnim(animation.curAnim.name + '-loop');	
+				playAnim(animation.curAnim.name + '-loop');
 		}
 		super.update(elapsed);
 	}
