@@ -63,7 +63,7 @@ class StrumNote extends FlxSprite
 
 		if(PlayState.isPixelStage)
 		{
-			var graphic = Paths.image('pixelUI/' + texture);
+			var graphic = Paths.image('pixelUI/' + (Paths.fileExists('images/pixelUI/$texture.png', IMAGE) ? texture : Note.defaultNoteSkin));
 			loadGraphic(graphic, true, Math.floor(graphic.width / 4), Math.floor(graphic.height / 5));
 
 			antialiasing = false;
@@ -95,7 +95,7 @@ class StrumNote extends FlxSprite
 		}
 		else
 		{
-			frames = Paths.getSparrowAtlas(texture);
+			frames = Paths.getSparrowAtlas(Paths.fileExists('images/$texture.png', IMAGE) ? texture : Note.defaultNoteSkin);
 			animation.addByPrefix('green', 'arrowUP');
 			animation.addByPrefix('blue', 'arrowDOWN');
 			animation.addByPrefix('purple', 'arrowLEFT');
@@ -125,18 +125,12 @@ class StrumNote extends FlxSprite
 			}
 		}
 		updateHitbox();
-
-		if(lastAnim != null)
-		{
-			playAnim(lastAnim, true);
-		}
+		if(lastAnim != null) playAnim(lastAnim, true);
 	}
 
 	public function postAddedToGroup() {
 		playAnim('static');
-		x += Note.swagWidth * noteData;
-		x += 50;
-		x += ((FlxG.width / 2) * player);
+		x += Note.swagWidth * noteData + 50 + ((FlxG.width / 2) * player);
 		ID = noteData;
 	}
 

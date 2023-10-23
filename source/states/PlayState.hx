@@ -183,17 +183,26 @@ class PlayState extends MusicBeatState
 	public var health(default, set):Float = 1;
 
 	@:noCompletion function set_health(value:Float):Float {
-		health = FlxMath.bound(value, 0, 2);
+		health = FlxMath.bound(value, healthBar.bounds.min, healthBar.bounds.max);
 		doDeathCheck();
-		if(healthBar != null) {
-			if(iconP1 != null) iconP1.animation.curAnim.curFrame = healthBar.percent < 20 ? 1 : 0;
-			if(iconP2 != null) iconP2.animation.curAnim.curFrame = healthBar.percent > 80 ? 1 : 0;
-		}
+		iconP1.animation.curAnim.curFrame = healthBar.percent < 20 ? 1 : 0;
+		iconP2.animation.curAnim.curFrame = healthBar.percent > 80 ? 1 : 0;
 		return health;
 	}
 		
 	public var healthBar:HealthBar;
 	public var timeBar:HealthBar;
+	public var healthBarLeftToRight(default, set):Bool = false;
+	@:noCompletion function set_healthBarLeftToRight(value:Bool):Bool {
+		if(healthBarLeftToRight != value) {
+			healthBarLeftToRight = value;
+			healthBar.leftToRight = value;			
+			healthBar.setColors(healthBar.rightBar.color, healthBar.leftBar.color);
+			iconP1.animation.curAnim.flipX = !value;
+			iconP2.animation.curAnim.flipX = value;
+		}
+		return value;
+	}
 	var songPercent:Float = 0;
 
 	public var ratingsData:Array<Rating> = Rating.loadDefault();
@@ -522,7 +531,7 @@ class PlayState extends MusicBeatState
 		healthBar = new HealthBar(0, FlxG.height * (!ClientPrefs.data.downScroll ? 0.89 : 0.11), 'healthBar', function() return health, 0, 2);
 		healthBar.antialiasing = !isPixelStage;
 		healthBar.screenCenter(X);
-		healthBar.leftToRight = false;
+		healthBar.leftToRight = healthBarLeftToRight;
 		healthBar.scrollFactor.set();
 		healthBar.visible = !ClientPrefs.data.hideHud;
 		healthBar.alpha = ClientPrefs.data.healthBarAlpha;
@@ -1578,8 +1587,13 @@ class PlayState extends MusicBeatState
 		iconP2.scale.set(mult, mult);
 		iconP2.updateHitbox();
 
-		iconP1.x = healthBar.barCenter + (150 * iconP1.scale.x - 150) * 0.5 - 26;
-		iconP2.x = healthBar.barCenter - (150 * iconP2.scale.x) * 0.5 - 52;
+		if(healthBarLeftToRight) {
+			iconP1.x = healthBar.barCenter - (iconP1.frameWidth * iconP1.scale.x) * 0.5 - 52;
+			iconP2.x = healthBar.barCenter + (iconP2.frameWidth * iconP2.scale.x - iconP2.frameWidth) * 0.5 - 26;
+		} else {
+			iconP1.x = healthBar.barCenter + (iconP1.frameWidth * iconP1.scale.x - iconP1.frameWidth) * 0.5 - 26;
+			iconP2.x = healthBar.barCenter - (iconP2.frameWidth * iconP2.scale.x) * 0.5 - 52;
+		}
 		
 		if (startedCountdown && !paused) Conductor.songPosition += FlxG.elapsed * 1000 * playbackRate;
 
@@ -1851,7 +1865,7 @@ class PlayState extends MusicBeatState
 				gfSpeed = Math.round(flValue1);
 
 			case 'Add Camera Zoom':
-				if(ClientPrefs.data.camZooms && FlxG.camera.zoom < 1.35) {
+				if(ClientPrefs.data.camZooms /*&& FlxG.camera.zoom < 1.35*/) {
 					if(flValue1 == null) flValue1 = 0.015;
 					if(flValue2 == null) flValue2 = 0.03;
 
@@ -2851,7 +2865,7 @@ class PlayState extends MusicBeatState
 			if (generatedMusic && !endingSong && !isCameraOnForcedPos)
 				moveCameraSection(curSection);
 
-			if (camZooming && FlxG.camera.zoom < 1.35 && ClientPrefs.data.camZooms)
+			if (camZooming /*&& FlxG.camera.zoom < 1.35*/ && ClientPrefs.data.camZooms)
 			{
 				FlxG.camera.zoom += 0.015 * camZoomingMult;
 				camHUD.zoom += 0.03 * camZoomingMult;

@@ -195,7 +195,7 @@ class Character extends FlxSprite
 			}
 
 			if (animation.curAnim.finished && animation.getByName(animation.curAnim.name + '-loop') != null)
-				playAnim(animation.curAnim.name + '-loop');
+				playAnim(animation.curAnim.name + '-loop');	
 		}
 		super.update(elapsed);
 	}
@@ -205,17 +205,19 @@ class Character extends FlxSprite
 	/**
 	 * FOR GF DANCING SHIT
 	 */
-	public function dance()
+	public function dance(Force:Bool = false)
 	{
 		if (!debugMode && !skipDance && !specialAnim)
 		{
+			var forceAnim:Bool = (animation.curAnim != null && animation.curAnim.looped && animation.curAnim.loopPoint > 0
+				&& animation.curAnim.curFrame >= animation.curAnim.loopPoint) || Force; //🤯🤯🤯
 			if (danceIdle)
 			{
 				danced = !danced;
-				playAnim('dance' + (danced ? 'Right' : 'Left') + idleSuffix);
+				playAnim('dance' + (danced ? 'Right' : 'Left') + idleSuffix, forceAnim);
 			}
 			else
-				playAnim('idle' + idleSuffix);
+				playAnim('idle' + idleSuffix, forceAnim);
 		}
 	}
 

@@ -10,7 +10,6 @@ import states.stages.StageWeek1 as BackgroundStage;
 
 class NoteOffsetState extends MusicBeatState
 {
-	var stageDirectory:String = 'week1';
 	var boyfriend:Character;
 	var gf:Character;
 
@@ -23,7 +22,7 @@ class NoteOffsetState extends MusicBeatState
 	var comboNums:FlxSpriteGroup;
 	var dumbTexts:FlxTypedGroup<FlxText>;
 
-	var barPercent:Float = 0;
+	var barPercent(default, set):Float = 0;
 	var delayMin:Int = -500;
 	var delayMax:Int = 500;
 	var timeBar:HealthBar;
@@ -35,6 +34,9 @@ class NoteOffsetState extends MusicBeatState
 
 	var controllerPointer:FlxSprite;
 	var _lastControllerMode:Bool = false;
+
+	@:noCompletion function set_barPercent(value:Float):Float
+		return barPercent = FlxMath.bound(value, delayMin, delayMax);
 
 	override public function create()
 	{
@@ -57,7 +59,7 @@ class NoteOffsetState extends MusicBeatState
 		FlxG.sound.pause();
 
 		// Stage
-		Paths.setCurrentLevel(stageDirectory);
+		Paths.setCurrentLevel('week1');
 		new BackgroundStage();
 
 		// Characters
@@ -336,28 +338,21 @@ class NoteOffsetState extends MusicBeatState
 		{
 			if(controls.UI_LEFT_P)
 			{
-				barPercent = Math.max(delayMin, Math.min(ClientPrefs.data.noteOffset - 1, delayMax));
+				barPercent = ClientPrefs.data.noteOffset - 1;
 				updateNoteDelay();
 			}
 			else if(controls.UI_RIGHT_P)
 			{
-				barPercent = Math.max(delayMin, Math.min(ClientPrefs.data.noteOffset + 1, delayMax));
+				barPercent = ClientPrefs.data.noteOffset + 1;
 				updateNoteDelay();
 			}
 
-			var mult:Int = 1;
-			if(controls.UI_LEFT || controls.UI_RIGHT)
-			{
-				holdTime += elapsed;
-				if(controls.UI_LEFT) mult = -1;
-			}
-
+			if(controls.UI_LEFT || controls.UI_RIGHT) holdTime += elapsed;
 			if(controls.UI_LEFT_R || controls.UI_RIGHT_R) holdTime = 0;
 
 			if(holdTime > 0.5)
 			{
-				barPercent += 100 * addNum * elapsed * mult;
-				barPercent = Math.max(delayMin, Math.min(barPercent, delayMax));
+				barPercent += 100 * addNum * elapsed * (controls.UI_LEFT ? -1 : 1);
 				updateNoteDelay();
 			}
 

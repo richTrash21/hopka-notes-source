@@ -314,11 +314,7 @@ class Note extends FlxSprite
 				skin = defaultNoteSkin + postfix;
 		}
 
-		var animName:String = null;
-		if(animation.curAnim != null) {
-			animName = animation.curAnim.name;
-		}
-
+		var animName:String = animation.curAnim != null ? animation.curAnim.name : null;
 		var skinPixel:String = skin;
 		var lastScaleY:Float = scale.y;
 		var skinPostfix:String = getNoteSkinPostfix();
@@ -358,14 +354,9 @@ class Note extends FlxSprite
 				centerOrigin();
 			}
 		}
-
-		if(isSustainNote) {
-			scale.y = lastScaleY;
-		}
+		if(isSustainNote) scale.y = lastScaleY;
 		updateHitbox();
-
-		if(animName != null)
-			animation.play(animName, true);
+		if(animName != null) animation.play(animName, true);
 	}
 
 	public static function getNoteSkinPostfix()
