@@ -68,8 +68,8 @@ class HealthBar extends FlxSpriteGroup
 	{
 		if(leftBar == null || rightBar == null) return;
 
-		leftBar.setPosition(bg.x, bg.y);
-		rightBar.setPosition(bg.x, bg.y);
+		//leftBar.setPosition(bg.x, bg.y);
+		//rightBar.setPosition(bg.x, bg.y);
 
 		var leftSize:Float = FlxMath.lerp(0, barWidth, leftToRight ? percent / 100 : 1 - percent / 100);
 

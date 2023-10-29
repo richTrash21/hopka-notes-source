@@ -73,10 +73,9 @@ class MenuCharacterEditorState extends MusicBeatState
 	var UI_mainbox:FlxUITabMenu;
 	var blockPressWhileTypingOn:Array<FlxUIInputText> = [];
 	function addEditorBox() {
-		var tabs = [
-			{name: 'Character Type', label: 'Character Type'},
-		];
-		UI_typebox = new FlxUITabMenu(null, tabs, true);
+		UI_typebox = new FlxUITabMenu(null, [
+			{name: 'Character Type', label: 'Character Type'}
+		], true);
 		UI_typebox.resize(120, 180);
 		UI_typebox.x = 100;
 		UI_typebox.y = FlxG.height - UI_typebox.height - 50;
@@ -84,10 +83,9 @@ class MenuCharacterEditorState extends MusicBeatState
 		addTypeUI();
 		add(UI_typebox);
 
-		var tabs = [
-			{name: 'Character', label: 'Character'},
-		];
-		UI_mainbox = new FlxUITabMenu(null, tabs, true);
+		UI_mainbox = new FlxUITabMenu(null, [
+			{name: 'Character', label: 'Character'}
+		], true);
 		UI_mainbox.resize(240, 180);
 		UI_mainbox.x = FlxG.width - UI_mainbox.width - 100;
 		UI_mainbox.y = FlxG.height - UI_mainbox.height - 50;
@@ -95,16 +93,12 @@ class MenuCharacterEditorState extends MusicBeatState
 		addCharacterUI();
 		add(UI_mainbox);
 
-		var loadButton:FlxButton = new FlxButton(0, 480, "Load Character", function() {
-			loadCharacter();
-		});
+		var loadButton:FlxButton = new FlxButton(0, 480, "Load Character", function() loadCharacter());
 		loadButton.screenCenter(X);
 		loadButton.x -= 60;
 		add(loadButton);
 	
-		var saveButton:FlxButton = new FlxButton(0, 480, "Save Character", function() {
-			saveCharacter();
-		});
+		var saveButton:FlxButton = new FlxButton(0, 480, "Save Character", function() saveCharacter());
 		saveButton.screenCenter(X);
 		saveButton.x += 60;
 		add(saveButton);
@@ -168,9 +162,7 @@ class MenuCharacterEditorState extends MusicBeatState
 			characterFile.flipX = flipXCheckbox.checked;
 		};
 
-		var reloadImageButton:FlxButton = new FlxButton(140, confirmInputText.y + 30, "Reload Char", function() {
-			reloadSelectedCharacter();
-		});
+		var reloadImageButton:FlxButton = new FlxButton(140, confirmInputText.y + 30, "Reload Char", function() reloadSelectedCharacter());
 		
 		scaleStepper = new FlxUINumericStepper(140, imageInputText.y, 0.05, 1, 0.1, 30, 2);
 
@@ -194,12 +186,9 @@ class MenuCharacterEditorState extends MusicBeatState
 		girlfriendCheckbox.checked = false;
 
 		switch(curTypeSelected) {
-			case 0:
-				opponentCheckbox.checked = true;
-			case 1:
-				boyfriendCheckbox.checked = true;
-			case 2:
-				girlfriendCheckbox.checked = true;
+			case 0: opponentCheckbox.checked = true;
+			case 1: boyfriendCheckbox.checked = true;
+			case 2: girlfriendCheckbox.checked = true;
 		}
 
 		updateCharacters();

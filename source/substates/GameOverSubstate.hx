@@ -2,6 +2,7 @@ package substates;
 
 import objects.Character;
 import flixel.FlxObject;
+import flixel.math.FlxPoint;
 
 #if LUA_ALLOWED
 import psychlua.*;
@@ -18,42 +19,50 @@ class GameOverSubstate extends MusicBeatSubstate
 	public var updateCamera:Bool = false;
 
 	// better structurised now
-	public static var characterName(default, set):String = 'bf-dead';
-	public static var deathSoundName(default, set):String = 'fnf_loss_sfx';
-	public static var loopSoundName(default, set):String = 'gameOver';
-	public static var endSoundName(default, set):String = 'gameOverEnd';
+	public static var characterName:String = 'bf-dead';
+	public static var deathSoundName:String = 'fnf_loss_sfx';
+	public static var loopSoundName:String = 'gameOver';
+	public static var endSoundName:String = 'gameOverEnd';
 
 	public static var instance:GameOverSubstate;
+	public static var game(default, null):PlayState;
 
 	public static function resetVariables(_song:backend.Song.SwagSong)
 	{
 		if(_song != null)
 		{
-			characterName = _song.gameOverChar;
-			deathSoundName = _song.gameOverSound;
-			loopSoundName = _song.gameOverLoop;
-			endSoundName = _song.gameOverEnd;
+			characterName = (_song.gameOverChar != null && _song.gameOverChar.trim().length > 0) ? _song.gameOverChar : 'bf-dead';
+			deathSoundName = (_song.gameOverSound != null && _song.gameOverSound.trim().length > 0) ? _song.gameOverSound : 'fnf_loss_sfx';
+			loopSoundName = (_song.gameOverLoop != null && _song.gameOverLoop.trim().length > 0) ? _song.gameOverLoop : 'gameOver';
+			endSoundName = (_song.gameOverEnd != null && _song.gameOverEnd.trim().length > 0) ? _song.gameOverEnd : 'gameOverEnd';
+
+			if(!PlayState.instance.boyfriendMap.exists(characterName))
+				PlayState.instance.addCharacterToList(characterName, 0);
+			Paths.sound(deathSoundName);
+			Paths.sound(loopSoundName);
+			Paths.sound(endSoundName);
 		}
 	}
 
 	override function create()
 	{
 		instance = this;
-		PlayState.instance.callOnScripts('onGameOverStart');
+		game.callOnScripts('onGameOverStart');
 
 		super.create();
 	}
 
 	public function new(x:Float, y:Float)
 	{
+		game = PlayState.instance;
 		super();
 
-		PlayState.instance.setOnScripts('inGameOver', true);
+		game.setOnScripts('inGameOver', true);
 
 		Conductor.songPosition = 0;
 
-		if(PlayState.instance.boyfriendMap.exists(characterName)) {
-			boyfriend = PlayState.instance.boyfriendMap.get(characterName);
+		if(game.boyfriendMap.exists(characterName)) {
+			boyfriend = game.boyfriendMap.get(characterName);
 			boyfriend.setPosition(x, y);
 			boyfriend.alpha = 1;
 		}
@@ -68,9 +77,10 @@ class GameOverSubstate extends MusicBeatSubstate
 
 		boyfriend.playAnim('firstDeath');
 
-		camFollow = new FlxObject(boyfriend.getGraphicMidpoint().x, boyfriend.getGraphicMidpoint().y, 1, 1);
-		FlxG.camera.focusOn(new flixel.math.FlxPoint(FlxG.camera.scroll.x + (FlxG.camera.width * 0.5), FlxG.camera.scroll.y + (FlxG.camera.height * 0.5)));
+		var midpoint:FlxPoint = boyfriend.getGraphicMidpoint();
+		camFollow = new FlxObject(midpoint.x, midpoint.y, 1, 1);
 		add(camFollow);
+		midpoint.put();
 
 		FlxG.camera.follow(camFollow, LOCKON, 0);
 	}
@@ -81,7 +91,7 @@ class GameOverSubstate extends MusicBeatSubstate
 	{
 		super.update(elapsed);
 
-		PlayState.instance.callOnScripts('onUpdate', [elapsed]);
+		game.callOnScripts('onUpdate', [elapsed]);
 
 		if (controls.ACCEPT) endBullshit();
 
@@ -97,7 +107,7 @@ class GameOverSubstate extends MusicBeatSubstate
 			MusicBeatState.switchState(PlayState.isStoryMode ? new states.StoryMenuState() : new states.FreeplayState());
 
 			FlxG.sound.playMusic(Paths.music('freakyMenu'));
-			PlayState.instance.callOnScripts('onGameOverConfirm', [false]);
+			game.callOnScripts('onGameOverConfirm', [false]);
 		}
 		
 		if (boyfriend.animation.curAnim != null)
@@ -132,7 +142,7 @@ class GameOverSubstate extends MusicBeatSubstate
 		FlxG.camera.followLerp = updateCamera ? elapsed * 0.6 / (FlxG.updateFramerate / 60) #if (flixel >= "5.4.0") * 16 #end : 0;
 
 		if (FlxG.sound.music.playing) Conductor.songPosition = FlxG.sound.music.time;
-		PlayState.instance.callOnScripts('onUpdatePost', [elapsed]);
+		game.callOnScripts('onUpdatePost', [elapsed]);
 	}
 
 	var isEnding:Bool = false;
@@ -141,7 +151,7 @@ class GameOverSubstate extends MusicBeatSubstate
 	{
 		if (!isEnding)
 		{
-			var ret:Dynamic = PlayState.instance.callOnScripts('onGameOverConfirm', [true], true);
+			var ret:Dynamic = game.callOnScripts('onGameOverConfirm', [true], true);
 			if (ret != FunkinLua.Function_Stop) {
 				isEnding = true;
 				boyfriend.playAnim('deathConfirm', true);
@@ -158,28 +168,8 @@ class GameOverSubstate extends MusicBeatSubstate
 
 	override function destroy()
 	{
+		game = null;
 		instance = null;
 		super.destroy();
-	}
-
-	@:noCompletion static function set_characterName(value:String):String {
-		characterName = (value != null && value.trim().length > 0) ? value : 'bf-dead';
-		if(!PlayState.instance.boyfriendMap.exists(characterName)) PlayState.instance.addCharacterToList(characterName, 0);
-		return value;
-	}
-	@:noCompletion static function set_deathSoundName(value:String):String {
-		deathSoundName = (value != null) ? value : 'fnf_loss_sfx';
-		Paths.sound(deathSoundName);
-		return value;
-	}
-	@:noCompletion static function set_loopSoundName(value:String):String {
-		loopSoundName = (value != null) ? value : 'gameOver';
-		Paths.sound(loopSoundName);
-		return value;
-	}
-	@:noCompletion static function set_endSoundName(value:String):String {
-		endSoundName = (value != null) ? value : 'gameOverEnd';
-		Paths.sound(endSoundName);
-		return value;
 	}
 }

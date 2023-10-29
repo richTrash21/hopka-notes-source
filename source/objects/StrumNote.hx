@@ -11,6 +11,10 @@ class StrumNote extends FlxSprite
 	public var downScroll:Bool = false;//plan on doing scroll directions soon -bb
 	public var sustainReduce:Bool = true;
 	private var player:Int;
+
+	// better pixel note handeling
+	public static var isPixelNote:Bool = false;
+	public static var pixelScale:Float = 6;
 	
 	public var texture(default, set):String = null;
 	private function set_texture(value:String):String {
@@ -23,12 +27,15 @@ class StrumNote extends FlxSprite
 
 	public var useRGBShader:Bool = true;
 	public function new(x:Float, y:Float, leData:Int, player:Int) {
+		isPixelNote = PlayState.isPixelStage;
+		pixelScale = PlayState.daPixelZoom;
+
 		rgbShader = new RGBShaderReference(this, Note.initializeGlobalRGBShader(leData));
 		rgbShader.enabled = false;
 		if(PlayState.SONG != null && PlayState.SONG.disableNoteRGB) useRGBShader = false;
 		
 		var arr:Array<FlxColor> = ClientPrefs.data.arrowRGB[leData];
-		if(PlayState.isPixelStage) arr = ClientPrefs.data.arrowRGBPixel[leData];
+		if(isPixelNote) arr = ClientPrefs.data.arrowRGBPixel[leData];
 		
 		if(leData <= arr.length)
 		{
@@ -61,13 +68,13 @@ class StrumNote extends FlxSprite
 		var lastAnim:String = null;
 		if(animation.curAnim != null) lastAnim = animation.curAnim.name;
 
-		if(PlayState.isPixelStage)
+		if(isPixelNote)
 		{
 			var graphic = Paths.image('pixelUI/' + (Paths.fileExists('images/pixelUI/$texture.png', IMAGE) ? texture : Note.defaultNoteSkin));
 			loadGraphic(graphic, true, Math.floor(graphic.width / 4), Math.floor(graphic.height / 5));
 
 			antialiasing = false;
-			setGraphicSize(Std.int(width * PlayState.daPixelZoom));
+			setGraphicSize(Std.int(width * pixelScale));
 
 			animation.add('green', [6]);
 			animation.add('red', [7]);

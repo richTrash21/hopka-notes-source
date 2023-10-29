@@ -90,8 +90,6 @@ class NoteSplashDebugState extends MusicBeatState
 		stepperMaxFps.name = 'max_fps';
 		add(stepperMaxFps);
 
-
-		//
 		offsetsText = new FlxText(300, 150, 680, '', 16);
 		offsetsText.setFormat(Paths.font("vcr.ttf"), 16, FlxColor.WHITE, CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
 		offsetsText.scrollFactor.set();
@@ -287,8 +285,7 @@ class NoteSplashDebugState extends MusicBeatState
 		}
 
 		var strToSave = config.anim + '\n' + config.minFps + ' ' + config.maxFps;
-		for (offGroup in config.offsets)
-			strToSave += '\n' + offGroup[0] + ' ' + offGroup[1];
+		for (offGroup in config.offsets) strToSave += '\n' + offGroup[0] + ' ' + offGroup[1];
 
 		var pathSplit:Array<String> = (Paths.getPath('images/$texturePath.png', IMAGE, true).split('.png')[0] + '.txt').split(':');
 		var path:String = pathSplit[pathSplit.length-1].trim();
@@ -325,10 +322,7 @@ class NoteSplashDebugState extends MusicBeatState
 	function reloadAnims()
 	{
 		var loopContinue:Bool = true;
-		splashes.forEachAlive(function(spr:FlxSprite)
-		{
-			spr.animation.destroyAnimations();
-		});
+		splashes.forEachAlive(function(spr:FlxSprite) spr.animation.destroyAnimations());
 
 		maxAnims = 0;
 		while(loopContinue)
@@ -413,10 +407,5 @@ class NoteSplashDebugState extends MusicBeatState
 	{
 		spr.animation.addByPrefix(name, anim, framerate, loop);
 		return spr.animation.getByName(name) != null;
-	}
-
-	override function destroy()
-	{
-		super.destroy();
 	}
 }

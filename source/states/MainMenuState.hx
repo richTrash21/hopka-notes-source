@@ -24,8 +24,10 @@ class MainMenuState extends MusicBeatState
 	public static var curSelected:Int = 0;
 
 	var menuItems:FlxTypedGroup<FlxSprite>;
+	#if ACHIEVEMENTS_ALLOWED
 	private var camGame:FlxCamera;
-	#if ACHIEVEMENTS_ALLOWED private var camAchievement:FlxCamera; #end
+	private var camAchievement:FlxCamera;
+	#end
 	
 	static var optionShit:Array<String> = [
 		'story_mode',
@@ -50,15 +52,15 @@ class MainMenuState extends MusicBeatState
 		DiscordClient.changePresence("In the Menus", null);
 		#end
 
-		camGame = new FlxCamera();
 		#if ACHIEVEMENTS_ALLOWED
+		camGame = new FlxCamera();
 		camAchievement = new FlxCamera();
 		camAchievement.bgColor.alpha = 0;
-		#end
 
 		FlxG.cameras.reset(camGame);
-		#if ACHIEVEMENTS_ALLOWED FlxG.cameras.add(camAchievement, false); #end
+		FlxG.cameras.add(camAchievement, false);
 		FlxG.cameras.setDefaultDrawTarget(camGame, true);
+		#end
 
 		transIn = FlxTransitionableState.defaultTransIn;
 		transOut = FlxTransitionableState.defaultTransOut;

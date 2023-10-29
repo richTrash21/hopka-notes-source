@@ -83,6 +83,28 @@ class VisualsUISubState extends BaseOptionsMenu
 		option.decimals = 1;
 		addOption(option);
 
+		var option:Option = new Option('Sustain Note Opacity',
+			'How much transparent should the Sustain Notes be.',
+			'susAlpha', //i want to kms
+			'percent');
+		option.scrollSpeed = 1.6;
+		option.minValue = 0.0;
+		option.maxValue = 1;
+		option.changeValue = 0.1;
+		option.decimals = 1;
+		addOption(option);
+		
+		var option:Option = new Option('Health Bar Opacity',
+			'How much transparent should the health bar and icons be.',
+			'healthBarAlpha',
+			'percent');
+		option.scrollSpeed = 1.6;
+		option.minValue = 0.0;
+		option.maxValue = 1;
+		option.changeValue = 0.1;
+		option.decimals = 1;
+		addOption(option);
+
 		addOption(new Option('Hide HUD',
 			'If checked, hides most HUD elements.',
 			'hideHud',
@@ -113,17 +135,6 @@ class VisualsUISubState extends BaseOptionsMenu
 			'scoreZoom',
 			'bool'
 		));
-
-		var option:Option = new Option('Health Bar Opacity',
-			'How much transparent should the health bar and icons be.',
-			'healthBarAlpha',
-			'percent');
-		option.scrollSpeed = 1.6;
-		option.minValue = 0.0;
-		option.maxValue = 1;
-		option.changeValue = 0.1;
-		option.decimals = 1;
-		addOption(option);
 		
 		#if !mobile
 		var option:Option = new Option('FPS Counter',

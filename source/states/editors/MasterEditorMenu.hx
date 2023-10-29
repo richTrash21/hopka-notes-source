@@ -60,10 +60,7 @@ class MasterEditorMenu extends MusicBeatState
 		directoryTxt.scrollFactor.set();
 		add(directoryTxt);
 		
-		for (folder in Mods.getModDirectories())
-		{
-			directories.push(folder);
-		}
+		for (folder in Mods.getModDirectories()) directories.push(folder);
 
 		var found:Int = directories.indexOf(Mods.currentModDirectory);
 		if(found > -1) curDirectory = found;
@@ -77,29 +74,14 @@ class MasterEditorMenu extends MusicBeatState
 
 	override function update(elapsed:Float)
 	{
-		if (controls.UI_UP_P)
-		{
-			changeSelection(-1);
-		}
-		if (controls.UI_DOWN_P)
-		{
-			changeSelection(1);
-		}
+		if (controls.UI_UP_P)	changeSelection(-1);
+		if (controls.UI_DOWN_P)	changeSelection(1);
 		#if MODS_ALLOWED
-		if(controls.UI_LEFT_P)
-		{
-			changeDirectory(-1);
-		}
-		if(controls.UI_RIGHT_P)
-		{
-			changeDirectory(1);
-		}
+		if(controls.UI_LEFT_P)	changeDirectory(-1);
+		if(controls.UI_RIGHT_P)	changeDirectory(1);
 		#end
 
-		if (controls.BACK)
-		{
-			MusicBeatState.switchState(new MainMenuState());
-		}
+		if (controls.BACK) MusicBeatState.switchState(new MainMenuState());
 
 		if (controls.ACCEPT)
 		{
@@ -130,15 +112,7 @@ class MasterEditorMenu extends MusicBeatState
 		{
 			item.targetY = bullShit - curSelected;
 			bullShit++;
-
-			item.alpha = 0.6;
-			// item.setGraphicSize(Std.int(item.width * 0.8));
-
-			if (item.targetY == 0)
-			{
-				item.alpha = 1;
-				// item.setGraphicSize(Std.int(item.width));
-			}
+			item.alpha = item.targetY == 0 ? 1 : 0.6;
 		}
 		super.update(elapsed);
 	}
@@ -158,8 +132,7 @@ class MasterEditorMenu extends MusicBeatState
 	#if MODS_ALLOWED
 	function changeDirectory(change:Int = 0)
 	{
-		FlxG.sound.play(Paths.sound('scrollMenu'), 0.4);
-
+		if(change != 0) FlxG.sound.play(Paths.sound('scrollMenu'), 0.4);
 		curDirectory += change;
 
 		if(curDirectory < 0)

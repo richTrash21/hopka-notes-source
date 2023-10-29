@@ -23,6 +23,7 @@ import backend.Rating;
 import flixel.FlxBasic;
 import flixel.FlxObject;
 import flixel.FlxSubState;
+import flixel.math.FlxPoint;
 import flixel.addons.transition.FlxTransitionableState;
 import flixel.util.FlxSort;
 import flixel.util.FlxStringUtil;
@@ -181,22 +182,20 @@ class PlayState extends MusicBeatState
 	public var gfSpeed:Int = 1;
 	public var combo:Int = 0;
 	public var health(default, set):Float = 1;
-
 	@:noCompletion function set_health(value:Float):Float {
 		health = FlxMath.bound(value, healthBar.bounds.min, healthBar.bounds.max);
 		doDeathCheck();
-		iconP1.animation.curAnim.curFrame = healthBar.percent < 20 ? 1 : 0;
-		iconP2.animation.curAnim.curFrame = healthBar.percent > 80 ? 1 : 0;
 		return health;
 	}
 		
 	public var healthBar:HealthBar;
 	public var timeBar:HealthBar;
-	public var healthBarLeftToRight(default, set):Bool = false;
+	public var healthBarLeftToRight(get, set):Bool;
+	@:noCompletion function get_healthBarLeftToRight():Bool
+		return healthBar.leftToRight;
 	@:noCompletion function set_healthBarLeftToRight(value:Bool):Bool {
 		if(healthBarLeftToRight != value) {
-			healthBarLeftToRight = value;
-			healthBar.leftToRight = value;			
+			healthBar.leftToRight = value;
 			healthBar.setColors(healthBar.rightBar.color, healthBar.leftBar.color);
 			iconP1.animation.curAnim.flipX = !value;
 			iconP2.animation.curAnim.flipX = value;
@@ -397,7 +396,7 @@ class PlayState extends MusicBeatState
 		dadGroup = new FlxSpriteGroup(DAD_X, DAD_Y);
 		gfGroup = new FlxSpriteGroup(GF_X, GF_Y);
 
-		switch (curStage)
+		switch (curStage) //lol
 		{
 			case 'stage': new states.stages.StageWeek1(); //Week 1
 		}
@@ -455,10 +454,12 @@ class PlayState extends MusicBeatState
 		boyfriendGroup.add(boyfriend);
 		startCharacterScripts(boyfriend.curCharacter);
 
-		var camPos:Array<Float> = [girlfriendCameraOffset[0], girlfriendCameraOffset[1]];
+		var camPos:FlxPoint = FlxPoint.get(girlfriendCameraOffset[0], girlfriendCameraOffset[1]);
 		if(gf != null) {
-			camPos[0] += gf.getGraphicMidpoint().x + gf.cameraPosition[0];
-			camPos[1] += gf.getGraphicMidpoint().y + gf.cameraPosition[1];
+			var gfMidpoint:FlxPoint = gf.getGraphicMidpoint();
+			camPos.x += gfMidpoint.x + gf.cameraPosition[0];
+			camPos.y += gfMidpoint.y + gf.cameraPosition[1];
+			gfMidpoint.put();
 		}
 
 		if(dad.curCharacter.startsWith('gf')) {
@@ -507,13 +508,13 @@ class PlayState extends MusicBeatState
 
 		generateSong(SONG.song);
 
-		camFollow = new FlxObject(camPos[0], camPos[1], 1, 1);
-
 		if (prevCamFollow != null) {
 			camFollow = prevCamFollow;
 			prevCamFollow = null;
-		}
+		} else 
+			camFollow = new FlxObject(camPos.x, camPos.y, 1, 1);
 		add(camFollow);
+		camPos.put();
 
 		FlxG.camera.follow(camFollow, LOCKON, 0);
 		FlxG.camera.zoom = defaultCamZoom;
@@ -522,8 +523,9 @@ class PlayState extends MusicBeatState
 
 		// will give pixel stages more pixelated look (???????????????????)
 		// dont ask why its down here idfk
-		FlxG.camera.pixelPerfectRender = isPixelStage;
-		camHUD.pixelPerfectRender = isPixelStage;
+		// nvmd have almost no effect
+		//FlxG.camera.pixelPerfectRender = isPixelStage;
+		//camHUD.pixelPerfectRender = isPixelStage;
 
 		FlxG.worldBounds.set(0, 0, FlxG.width, FlxG.height);
 		moveCameraSection();
@@ -531,7 +533,7 @@ class PlayState extends MusicBeatState
 		healthBar = new HealthBar(0, FlxG.height * (!ClientPrefs.data.downScroll ? 0.89 : 0.11), 'healthBar', function() return health, 0, 2);
 		healthBar.antialiasing = !isPixelStage;
 		healthBar.screenCenter(X);
-		healthBar.leftToRight = healthBarLeftToRight;
+		healthBar.leftToRight = false;
 		healthBar.scrollFactor.set();
 		healthBar.visible = !ClientPrefs.data.hideHud;
 		healthBar.alpha = ClientPrefs.data.healthBarAlpha;
@@ -1143,7 +1145,7 @@ class PlayState extends MusicBeatState
 		callOnScripts('onSkipDialogue', [dialogueCount]);
 	}
 
-	var showcaseTxt:FlxText;
+	//var showcaseTxt:FlxText;
 	function startSong():Void
 	{
 		startingSong = false;
@@ -1167,7 +1169,7 @@ class PlayState extends MusicBeatState
 		FlxTween.tween(timeBar, {alpha: 1}, 0.5, {ease: FlxEase.circOut});
 		FlxTween.tween(timeTxt, {alpha: 1}, 0.5, {ease: FlxEase.circOut});
 
-		if(ClientPrefs.getGameplaySetting('showcase')) {
+		/*if(ClientPrefs.getGameplaySetting('showcase')) {
 			showcaseTxt = new FlxText(30, FlxG.height - 55, 0, "> SHOWCASE", 32);
 			showcaseTxt.setFormat(Paths.font("vcr.ttf"), 32, FlxColor.WHITE, LEFT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
 			showcaseTxt.scrollFactor.set();
@@ -1176,7 +1178,7 @@ class PlayState extends MusicBeatState
 			add(showcaseTxt);
 			showcaseTxt.cameras = [camOther];
 			//FlxTween.tween(showcaseTxt, {alpha: 1}, 1.6, {ease: FlxEase.backOut, type: FlxTweenType.PINGPONG});
-		}
+		}*/
 
 		#if desktop
 		// Updating Discord Rich Presence (with Time Left)
@@ -1433,6 +1435,16 @@ class PlayState extends MusicBeatState
 			for (tween in modchartTweens) tween.active = false;
 			for (timer in modchartTimers) timer.active = false;
 			#end
+
+			// TODO: FINISH THIS SHIT
+			/*@:privateAccess FlxTween.globalManager.forEach(function(tween:FlxTween)
+				if(!tween.isTweenOf(SubState)) tween.active = false
+			);
+			// TODO: better way of pausing timers on substate opening
+			FlxTimer.globalManager.forEach(function(timer:FlxTimer) timer.active = false);
+			for(sound in FlxG.sound.list) {
+
+			}*/
 		}
 
 		super.openSubState(SubState);
@@ -1445,10 +1457,11 @@ class PlayState extends MusicBeatState
 		{
 			if (FlxG.sound.music != null && !startingSong) resyncVocals();
 
+			/*
 			if (startTimer != null && !startTimer.finished)	  startTimer.active = true;
 			if (finishTimer != null && !finishTimer.finished) finishTimer.active = true;
 			if (songSpeedTween != null)						  songSpeedTween.active = true;
-
+			
 			var chars:Array<Character> = [boyfriend, gf, dad];
 			for (char in chars)
 				if(char != null && char.colorTween != null)
@@ -1458,6 +1471,11 @@ class PlayState extends MusicBeatState
 			for (tween in modchartTweens) tween.active = true;
 			for (timer in modchartTimers) timer.active = true;
 			#end
+			*/
+
+			FlxTween.globalManager.forEach(function(tween:FlxTween) tween.active = true);
+			FlxTimer.globalManager.forEach(function(timer:FlxTimer) timer.active = true);
+			FlxG.sound.resume();
 
 			paused = false;
 			callOnScripts('onResume');
@@ -1527,7 +1545,6 @@ class PlayState extends MusicBeatState
 
 		//FlxG.camera.followLerp = 0;
 		if(!inCutscene && !paused) {
-			
 			/**
 			 *	--[ idk, just wanted to write smth out of my frustration atm - `richTrash21` ]--
 			 *
@@ -1559,7 +1576,7 @@ class PlayState extends MusicBeatState
 		if(botplayTxt != null && botplayTxt.visible) {
 			botplaySine += 180 * elapsed;
 			botplayTxt.alpha = 1 - Math.sin((Math.PI * botplaySine) / 180);
-			if(showcaseTxt != null) showcaseTxt.alpha = 1 - Math.sin((Math.PI * botplaySine) / 180);
+			//if(showcaseTxt != null) showcaseTxt.alpha = 1 - Math.sin((Math.PI * botplaySine) / 180);
 		}
 
 		if (controls.PAUSE && startedCountdown && canPause) {
@@ -1588,12 +1605,15 @@ class PlayState extends MusicBeatState
 		iconP2.updateHitbox();
 
 		if(healthBarLeftToRight) {
-			iconP1.x = healthBar.barCenter - (iconP1.frameWidth * iconP1.scale.x) * 0.5 - 52;
-			iconP2.x = healthBar.barCenter + (iconP2.frameWidth * iconP2.scale.x - iconP2.frameWidth) * 0.5 - 26;
+			iconP1.x = healthBar.barCenter - (150 * iconP1.scale.x) * 0.5 - 52;
+			iconP2.x = healthBar.barCenter + (150 * iconP2.scale.x - 150) * 0.5 - 26;
 		} else {
-			iconP1.x = healthBar.barCenter + (iconP1.frameWidth * iconP1.scale.x - iconP1.frameWidth) * 0.5 - 26;
-			iconP2.x = healthBar.barCenter - (iconP2.frameWidth * iconP2.scale.x) * 0.5 - 52;
+			iconP1.x = healthBar.barCenter + (150 * iconP1.scale.x - 150) * 0.5 - 26;
+			iconP2.x = healthBar.barCenter - (150 * iconP2.scale.x) * 0.5 - 52;
 		}
+
+		iconP1.animation.curAnim.curFrame = healthBar.percent < 20 ? 1 : 0;
+		iconP2.animation.curAnim.curFrame = healthBar.percent > 80 ? 1 : 0;
 		
 		if (startedCountdown && !paused) Conductor.songPosition += FlxG.elapsed * 1000 * playbackRate;
 
@@ -1650,7 +1670,8 @@ class PlayState extends MusicBeatState
 			{
 				if(!cpuControlled)
 					keysCheck();
-				else if(boyfriend.animation.curAnim != null && boyfriend.holdTimer > Conductor.stepCrochet * (0.0011 / FlxG.sound.music.pitch) * boyfriend.singDuration && boyfriend.animation.curAnim.name.startsWith('sing') && !boyfriend.animation.curAnim.name.endsWith('miss'))
+				else if(boyfriend.animation.curAnim != null && boyfriend.holdTimer > Conductor.stepCrochet * (0.0011 / FlxG.sound.music.pitch) * boyfriend.singDuration
+					&& boyfriend.animation.curAnim.name.startsWith('sing') && !boyfriend.animation.curAnim.name.endsWith('miss'))
 					boyfriend.dance();
 
 				if(notes.length > 0)
@@ -1736,6 +1757,9 @@ class PlayState extends MusicBeatState
 		persistentUpdate = false;
 		persistentDraw = true;
 		paused = true;
+		FlxTween.globalManager.forEach(function(tween:FlxTween) tween.active = false); //so pause tweens wont stop
+		FlxTimer.globalManager.forEach(function(timer:FlxTimer) timer.active = false);
+		FlxG.sound.pause();
 
 		if(FlxG.sound.music != null)
 		{
@@ -1797,7 +1821,7 @@ class PlayState extends MusicBeatState
 
 				paused = true;
 
-				if (vocals != null) vocals.stop();
+				if(vocals != null) vocals.stop();
 				FlxG.sound.music.stop();
 
 				persistentUpdate = false;
@@ -1806,7 +1830,9 @@ class PlayState extends MusicBeatState
 				for (tween in modchartTweens) tween.active = true;
 				for (timer in modchartTimers) timer.active = true;
 				#end
-				openSubState(new GameOverSubstate(boyfriend.getScreenPosition().x - boyfriend.positionArray[0], boyfriend.getScreenPosition().y - boyfriend.positionArray[1]));
+				var screenPos:FlxPoint = boyfriend.getScreenPosition();
+				openSubState(new GameOverSubstate(screenPos.x - boyfriend.positionArray[0], screenPos.y - boyfriend.positionArray[1]));
+				screenPos.put();
 
 				#if desktop
 				// Game Over doesn't get his own variable because it's only used here
@@ -2049,22 +2075,25 @@ class PlayState extends MusicBeatState
 
 	public function moveCamera(char:String)
 	{
+		var charMidpoint:FlxPoint;
 		switch(char)
 		{
 			case 'dad' | 'opponent':
-				camFollow.setPosition(
-					dad.getMidpoint().x + 150 + dad.cameraPosition[0] + opponentCameraOffset[0],
-					dad.getMidpoint().y - 100 + dad.cameraPosition[1] + opponentCameraOffset[1]);
+				charMidpoint = dad.getMidpoint();
+				charMidpoint.x += 150 + dad.cameraPosition[0] + opponentCameraOffset[0];
+				charMidpoint.y += -100 + dad.cameraPosition[1] + opponentCameraOffset[1];
 			case 'gf' | 'girlfriend':
-				camFollow.setPosition(
-					gf.getMidpoint().x + gf.cameraPosition[0] + girlfriendCameraOffset[0],
-					gf.getMidpoint().y + gf.cameraPosition[1] + girlfriendCameraOffset[1]);
-			default:
-				camFollow.setPosition(
-					boyfriend.getMidpoint().x - 100 - boyfriend.cameraPosition[0] + boyfriendCameraOffset[0],
-					boyfriend.getMidpoint().y - 100 + boyfriend.cameraPosition[1] + boyfriendCameraOffset[1]);
+				charMidpoint = gf.getMidpoint();
+				charMidpoint.x += gf.cameraPosition[0] + girlfriendCameraOffset[0];
+				charMidpoint.y += gf.cameraPosition[1] + girlfriendCameraOffset[1];
+			default: // boyfriend/invalid character
+				charMidpoint = boyfriend.getMidpoint();
+				charMidpoint.x += -100 - boyfriend.cameraPosition[0] + boyfriendCameraOffset[0];
+				charMidpoint.y += -100 + boyfriend.cameraPosition[1] + boyfriendCameraOffset[1];
 		}
+		camFollow.setPosition(charMidpoint.x, charMidpoint.y);
 		callOnScripts('onMoveCamera', [char]);
+		charMidpoint.put();
 	}
 
 	public function finishSong(?ignoreNoteOffset:Bool = false):Void
@@ -2100,8 +2129,8 @@ class PlayState extends MusicBeatState
 		canPause = false;
 		deathCounter = 0;
 
-		FlxG.camera.pixelPerfectRender = false;
-		camHUD.pixelPerfectRender = false;
+		//FlxG.camera.pixelPerfectRender = false;
+		//camHUD.pixelPerfectRender = false;
 		timeBar.visible = false;
 		timeTxt.visible = false;
 		seenCutscene = false;
@@ -2797,8 +2826,8 @@ class PlayState extends MusicBeatState
 		while (hscriptArray.length > 0) hscriptArray.pop();
 		#end
 
-		FlxG.camera.pixelPerfectRender = false;
-		camHUD.pixelPerfectRender = false;
+		//FlxG.camera.pixelPerfectRender = false;
+		//camHUD.pixelPerfectRender = false;
 		FlxG.stage.removeEventListener(KeyboardEvent.KEY_DOWN, onKeyPress);
 		FlxG.stage.removeEventListener(KeyboardEvent.KEY_UP, onKeyRelease);
 		FlxAnimationController.globalSpeed = 1;

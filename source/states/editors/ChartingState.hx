@@ -78,7 +78,7 @@ class ChartingState extends MusicBeatState
 		['Screen Shake', "Value 1: Camera shake\nValue 2: HUD shake\n\nEvery value works as the following example: \"1, 0.05\".\nThe first number (1) is the duration.\nThe second number (0.05) is the intensity."],
 		['Change Character', "Value 1: Character to change (Dad, BF, GF)\nValue 2: New character's name"],
 		['Change Scroll Speed', "Value 1: Scroll Speed Multiplier (1 is default)\nValue 2: Time it takes to change fully in seconds."],
-		['Set Property', "Value 1: Variable name\nValue 2: New value"],
+		['Set Property', "Value 1: Variable name\nValue 2: New value\nNOTE: DOESN'T WORK WITH BOOLEANS!!!"],
 		['Play Sound', "Value 1: Sound file name\nValue 2: Volume (Default: 1), ranges from 0 to 1"]
 	];
 
@@ -187,7 +187,6 @@ class ChartingState extends MusicBeatState
 		192
 	];
 
-	var text:String = "";
 	public static var vortex:Bool = false;
 	public var mouseQuant:Bool = false;
 	override function create()
@@ -302,46 +301,39 @@ class ChartingState extends MusicBeatState
 		dummyArrow.antialiasing = ClientPrefs.data.antialiasing;
 		add(dummyArrow);
 
-		var tabs = [
+		UI_box = new FlxUITabMenu(null, [
 			{name: "Song", label: 'Song'},
 			{name: "Section", label: 'Section'},
 			{name: "Note", label: 'Note'},
 			{name: "Events", label: 'Events'},
 			{name: "Charting", label: 'Charting'},
-			{name: "Data", label: 'Data'},
-		];
-
-		UI_box = new FlxUITabMenu(null, tabs, true);
+			{name: "Data", label: 'Data'}
+		], true);
 
 		UI_box.resize(300, 400);
 		UI_box.x = 640 + GRID_SIZE / 2;
 		UI_box.y = 25;
 		UI_box.scrollFactor.set();
 
-		text =
-		"W/S or Mouse Wheel - Change Conductor's strum time
-		\nA/D - Go to the previous/next section
-		\nLeft/Right - Change Snap
-		\nUp/Down - Change Conductor's Strum Time with Snapping
-		\nLeft Bracket / Right Bracket - Change Song Playback Rate (SHIFT to go Faster)
-		\nALT + Left Bracket / Right Bracket - Reset Song Playback Rate
-		\nHold Shift to move 4x faster
-		\nHold Control and click on an arrow to select it
-		\nZ/X - Zoom in/out
-		\n
-		\nEsc - Test your chart inside Chart Editor
-		\nEnter - Play your chart
-		\nQ/E - Decrease/Increase Note Sustain Length
-		\nSpace - Stop/Resume song";
+		var tipTextArray:String = "
+		W/S or Mouse Wheel - Change Conductor's strum time
+		A/D - Go to the previous/next section
+		Left/Right - Change Snap
+		Up/Down - Change Conductor's Strum Time with Snapping
+		Left Bracket / Right Bracket - Change Song Playback Rate (SHIFT to go Faster)
+		ALT + Left Bracket / Right Bracket - Reset Song Playback Rate
+		Hold Shift to move 4x faster
+		Hold Control and click on an arrow to select it
+		Z/X - Zoom in/out
+		Esc - Test your chart inside Chart Editor
+		Enter - Play your chart
+		Q/E - Decrease/Increase Note Sustain Length
+		Space - Stop/Resume song";
 
-		var tipTextArray:Array<String> = text.split('\n');
-		for (i in 0...tipTextArray.length) {
-			var tipText:FlxText = new FlxText(UI_box.x, UI_box.y + UI_box.height + 8, 0, tipTextArray[i], 16);
-			tipText.y += i * 12;
-			tipText.setFormat(Paths.font("vcr.ttf"), 14, FlxColor.WHITE, LEFT/*, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK*/);
-			tipText.scrollFactor.set();
-			add(tipText);
-		}
+		var tipText:FlxText = new FlxText(UI_box.x, UI_box.y + UI_box.height - 10, 0, tipTextArray, 12);
+		tipText.setFormat(Paths.font("vcr.ttf"), 12, FlxColor.WHITE, LEFT);
+		tipText.scrollFactor.set();
+		add(tipText);
 		add(UI_box);
 
 		addSongUI();
@@ -369,7 +361,7 @@ class ChartingState extends MusicBeatState
 		updateGrid();
 		super.create();
 		CustomFadeTransition.nextCamera = FlxG.camera;
-		lime.app.Application.current.window.onDropFile.add(LoadFromFile);// by Redar13
+		lime.app.Application.current.window.onDropFile.add(LoadFromFile); // by Redar13
 	}
 	function LoadFromFile(file:String){
 		var modFolder = file.split("\\");

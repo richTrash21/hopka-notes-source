@@ -43,7 +43,6 @@ class MusicBeatState extends FlxUIState
 		if (oldStep != curStep)
 		{
 			if(curStep > 0) stepHit();
-
 			if(PlayState.SONG != null)
 				(oldStep < curStep) ? updateSection() : rollbackSection();
 		}
@@ -128,17 +127,19 @@ class MusicBeatState extends FlxUIState
 		if(nextState == null) nextState = FlxG.state;
 
 		getStateWithSubState().openSubState(new CustomFadeTransition(transTime, false));
-		if(nextState == FlxG.state)
-			CustomFadeTransition.finishCallback = function() FlxG.resetState();
-		else
-			CustomFadeTransition.finishCallback = function() FlxG.switchState(nextState);
+		CustomFadeTransition.finishCallback = function() nextState == FlxG.state ? FlxG.resetState() : FlxG.switchState(nextState);
 	}
 
 	public static function getState():MusicBeatState
 		return cast (FlxG.state, MusicBeatState);
 
+	public static function getSubState():MusicBeatSubstate
+		return cast (FlxG.state.subState, MusicBeatSubstate);
+
 	public static function getStateWithSubState()
-		return FlxG.state.subState != null ? FlxG.state.subState : FlxG.state;
+		return (FlxG.state.subState != null && Type.getClassName(Type.getClass(FlxG.state.subState)).endsWith('PauseSubState'))
+			? getSubState()
+			: getState();
 
 	public function stepHit():Void
 	{
@@ -178,8 +179,7 @@ class MusicBeatState extends FlxUIState
 
 	function getBeatsOnSection()
 	{
-		var val:Null<Float> = 4;
-		if(PlayState.SONG != null && PlayState.SONG.notes[curSection] != null) val = PlayState.SONG.notes[curSection].sectionBeats;
+		var val:Null<Float> = (PlayState.SONG != null && PlayState.SONG.notes[curSection] != null) ? PlayState.SONG.notes[curSection].sectionBeats : 4;
 		return val == null ? 4 : val;
 	}
 }

@@ -29,11 +29,9 @@ class GraphicsSettingsSubState extends BaseOptionsMenu
 			'antialiasing',
 			'bool');
 		option.onChange = function() { //Changing onChange is only needed if you want to make a special interaction after it changes the value
-			for (sprite in members) {
-				var sprite:FlxSprite = cast sprite;
-				if(sprite != null && (sprite is FlxSprite) && !(sprite is FlxText))
-					sprite.antialiasing = ClientPrefs.data.antialiasing;
-			}
+			for (sprite in members)
+				if(sprite is FlxSprite && sprite != null)
+					cast(sprite, FlxSprite).antialiasing = ClientPrefs.data.antialiasing;
 		}; 
 		addOption(option);
 		antialiasingOption = optionsArray.length-1;

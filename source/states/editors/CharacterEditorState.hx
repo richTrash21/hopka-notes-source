@@ -13,6 +13,7 @@ import flixel.addons.ui.FlxUIInputText;
 import flixel.addons.ui.FlxUINumericStepper;
 import flixel.addons.ui.FlxUIDropDownMenu;
 import flixel.addons.ui.FlxUITabMenu;
+import flixel.math.FlxPoint;
 import flixel.ui.FlxButton;
 import openfl.net.FileReference;
 import openfl.events.Event;
@@ -119,30 +120,26 @@ class CharacterEditorState extends MusicBeatState
 		camFollow.screenCenter();
 		add(camFollow);
 
-		var tipTextArray:Array<String> = "E/Q - Camera Zoom In/Out
-		\nR - Reset Camera Zoom
-		\nJKLI - Move Camera
-		\nW/S - Previous/Next Animation
-		\nSpace - Play Animation
-		\nArrow Keys - Move Character Offset
-		\nT - Reset Current Offset
-		\nHold Shift to Move 10x faster\n".split('\n');
+		var tipTextArray:String = "
+		Tab - Switch HUD visibility
+		E/Q - Camera Zoom In/Out
+		R - Reset Camera Zoom
+		JKLI - Move Camera
+		W/S - Previous/Next Animation
+		Space - Play Animation
+		Arrow Keys - Move Character Offset
+		T - Reset Current Offset
+		Hold Shift to Move 10x faster";
 
-		for (i in 0...tipTextArray.length-1)
-		{
-			var tipText:FlxText = new FlxText(FlxG.width - 320, FlxG.height - 15 - 16 * (tipTextArray.length - i), 300, tipTextArray[i], 12);
-			tipText.cameras = [camHUD];
-			tipText.setFormat(null, 12, FlxColor.WHITE, RIGHT, FlxTextBorderStyle.OUTLINE_FAST, FlxColor.BLACK);
-			tipText.scrollFactor.set();
-			tipText.borderSize = 1;
-			add(tipText);
-		}
+		var tipText:FlxText = new FlxText(FlxG.width - 360, FlxG.height - 330, 340, tipTextArray, 12);
+		tipText.setFormat(null, 12, FlxColor.WHITE, RIGHT, FlxTextBorderStyle.OUTLINE_FAST, FlxColor.BLACK);
+		tipText.cameras = [camHUD];
+		tipText.borderSize = 1;
+		add(tipText);
 
 		FlxG.camera.follow(camFollow);
 
-		var tabs = [{name: 'Settings', label: 'Settings'},];
-
-		UI_box = new FlxUITabMenu(null, tabs, true);
+		UI_box = new FlxUITabMenu(null, [{name: 'Settings', label: 'Settings'}], true);
 		UI_box.cameras = [camMenu];
 
 		UI_box.resize(250, 120);
@@ -150,11 +147,10 @@ class CharacterEditorState extends MusicBeatState
 		UI_box.y = 25;
 		UI_box.scrollFactor.set();
 
-		var tabs = [
+		UI_characterbox = new FlxUITabMenu(null, [
 			{name: 'Character', label: 'Character'},
-			{name: 'Animations', label: 'Animations'},
-		];
-		UI_characterbox = new FlxUITabMenu(null, tabs, true);
+			{name: 'Animations', label: 'Animations'}
+		], true);
 		UI_characterbox.cameras = [camMenu];
 
 		UI_characterbox.resize(350, 250);
@@ -787,9 +783,11 @@ class CharacterEditorState extends MusicBeatState
 	}
 
 	function updatePointerPos() {
-		var x:Float = char.getMidpoint().x + (!char.isPlayer ? 150 + char.cameraPosition[0] : (100 + char.cameraPosition[0]) * -1) - (cameraFollowPointer.height * 0.5);
-		var y:Float = char.getMidpoint().y - (100 - char.cameraPosition[1]) - (cameraFollowPointer.height * 0.5);
+		var charMidpoint:FlxPoint = char.getMidpoint();
+		var x:Float = charMidpoint.x + (!char.isPlayer ? 150 + char.cameraPosition[0] : (100 + char.cameraPosition[0]) * -1) - (cameraFollowPointer.height * 0.5);
+		var y:Float = charMidpoint.y - (100 - char.cameraPosition[1]) - (cameraFollowPointer.height * 0.5);
 		cameraFollowPointer.setPosition(x, y);
+		charMidpoint.put();
 	}
 
 	function findAnimationByName(name:String):AnimArray {
@@ -922,7 +920,17 @@ class CharacterEditorState extends MusicBeatState
 				return;
 			}
 
-			if (FlxG.keys.justPressed.R) FlxG.camera.zoom = 1;
+			if (FlxG.keys.justPressed.TAB) {
+				camHUD.visible = !camHUD.visible;
+				camMenu.visible = !camMenu.visible;
+			}
+
+			if (FlxG.keys.justPressed.R) {
+				var midPoint:FlxPoint = cameraFollowPointer.getGraphicMidpoint();
+				camFollow.setPosition(midPoint.x, midPoint.y);
+				midPoint.put();
+				FlxG.camera.zoom = 1;
+			}
 
 			if (FlxG.keys.pressed.E && FlxG.camera.zoom < 3) {
 				FlxG.camera.zoom += elapsed * FlxG.camera.zoom;

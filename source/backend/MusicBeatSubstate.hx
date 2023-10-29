@@ -4,10 +4,7 @@ import flixel.FlxSubState;
 
 class MusicBeatSubstate extends FlxSubState
 {
-	public function new()
-	{
-		super();
-	}
+	public function new() {super();}
 
 	private var curSection:Int = 0;
 	private var stepsToDo:Int = 0;
@@ -36,16 +33,9 @@ class MusicBeatSubstate extends FlxSubState
 
 		if (oldStep != curStep)
 		{
-			if(curStep > 0)
-				stepHit();
-
+			if(curStep > 0) stepHit();
 			if(PlayState.SONG != null)
-			{
-				if (oldStep < curStep)
-					updateSection();
-				else
-					rollbackSection();
-			}
+				(oldStep < curStep) ? updateSection() : rollbackSection();
 		}
 
 		super.update(elapsed);
@@ -93,7 +83,6 @@ class MusicBeatSubstate extends FlxSubState
 	private function updateCurStep():Void
 	{
 		var lastChange = Conductor.getBPMFromSeconds(Conductor.songPosition);
-
 		var shit = ((Conductor.songPosition - ClientPrefs.data.noteOffset) - lastChange.songTime) / lastChange.stepCrochet;
 		curDecStep = lastChange.stepTime + shit;
 		curStep = lastChange.stepTime + Math.floor(shit);
@@ -101,8 +90,7 @@ class MusicBeatSubstate extends FlxSubState
 
 	public function stepHit():Void
 	{
-		if (curStep % 4 == 0)
-			beatHit();
+		if (curStep % 4 == 0) beatHit();
 	}
 
 	public function beatHit():Void
@@ -117,8 +105,7 @@ class MusicBeatSubstate extends FlxSubState
 	
 	function getBeatsOnSection()
 	{
-		var val:Null<Float> = 4;
-		if(PlayState.SONG != null && PlayState.SONG.notes[curSection] != null) val = PlayState.SONG.notes[curSection].sectionBeats;
+		var val:Null<Float> = (PlayState.SONG != null && PlayState.SONG.notes[curSection] != null) ? PlayState.SONG.notes[curSection].sectionBeats : 4;
 		return val == null ? 4 : val;
 	}
 }

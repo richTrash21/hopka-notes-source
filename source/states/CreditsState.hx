@@ -69,9 +69,7 @@ class CreditsState extends MusicBeatState
 			['kawaisprite',			'kawaisprite',		"Composer of Friday Night Funkin'",								'https://twitter.com/kawaisprite',		'378FC7']
 		];
 		
-		for(i in defaultList) {
-			creditsStuff.push(i);
-		}
+		for(i in defaultList) creditsStuff.push(i);
 	
 		for (i in 0...creditsStuff.length)
 		{
@@ -85,9 +83,7 @@ class CreditsState extends MusicBeatState
 
 			if(isSelectable) {
 				if(creditsStuff[i][5] != null)
-				{
 					Mods.currentModDirectory = creditsStuff[i][5];
-				}
 
 				var str:String = 'credits/missing_icon';
 				if (Paths.image('credits/' + creditsStuff[i][1]) != null) str = 'credits/' + creditsStuff[i][1];
@@ -131,9 +127,7 @@ class CreditsState extends MusicBeatState
 	override function update(elapsed:Float)
 	{
 		if (FlxG.sound.music.volume < 0.7)
-		{
 			FlxG.sound.music.volume += 0.5 * FlxG.elapsed;
-		}
 
 		if(!quitting)
 		{
@@ -163,9 +157,7 @@ class CreditsState extends MusicBeatState
 					var checkNewHold:Int = Math.floor((holdTime - 0.5) * 10);
 
 					if(holdTime > 0.5 && checkNewHold - checkLastHold > 0)
-					{
 						changeSelection((checkNewHold - checkLastHold) * (controls.UI_UP ? -shiftMult : shiftMult));
-					}
 				}
 			}
 
@@ -174,9 +166,7 @@ class CreditsState extends MusicBeatState
 			}
 			if (controls.BACK)
 			{
-				if(colorTween != null) {
-					colorTween.cancel();
-				}
+				if(colorTween != null) colorTween.cancel();
 				FlxG.sound.play(Paths.sound('cancelMenu'));
 				MusicBeatState.switchState(new MainMenuState());
 				quitting = true;
@@ -195,9 +185,7 @@ class CreditsState extends MusicBeatState
 					item.x = FlxMath.lerp(lastX, item.x - 70, lerpVal);
 				}
 				else
-				{
 					item.x = FlxMath.lerp(item.x, 200 + -40 * Math.abs(item.targetY), lerpVal);
-				}
 			}
 		}
 		super.update(elapsed);
@@ -218,14 +206,10 @@ class CreditsState extends MusicBeatState
 		var newColor:FlxColor = CoolUtil.colorFromString(creditsStuff[curSelected][4]);
 		trace('The BG color is: $newColor');
 		if(newColor != intendedColor) {
-			if(colorTween != null) {
-				colorTween.cancel();
-			}
+			if(colorTween != null) colorTween.cancel();
 			intendedColor = newColor;
 			colorTween = FlxTween.color(bg, 1, bg.color, intendedColor, {
-				onComplete: function(twn:FlxTween) {
-					colorTween = null;
-				}
+				onComplete: function(twn:FlxTween) colorTween = null
 			});
 		}
 
@@ -236,12 +220,8 @@ class CreditsState extends MusicBeatState
 			item.targetY = bullShit - curSelected;
 			bullShit++;
 
-			if(!unselectableCheck(bullShit-1)) {
-				item.alpha = 0.6;
-				if (item.targetY == 0) {
-					item.alpha = 1;
-				}
-			}
+			if(!unselectableCheck(bullShit-1))
+				item.alpha = item.targetY == 0 ? 1 : 0.6;
 		}
 
 		descText.text = creditsStuff[curSelected][2];
@@ -275,7 +255,6 @@ class CreditsState extends MusicBeatState
 	}
 	#end
 
-	private function unselectableCheck(num:Int):Bool {
+	private function unselectableCheck(num:Int):Bool
 		return creditsStuff[num].length <= 1;
-	}
 }
