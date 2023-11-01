@@ -8,8 +8,8 @@ class HealthBar extends FlxSpriteGroup
 	public var leftBar:FlxSprite;
 	public var rightBar:FlxSprite;
 	public var bg:FlxSprite;
-	public var valueFunction:Void->Float = function() return 0;
-	public var percent/*(default, set)*/:Float = 0;
+	
+	public var percent(default, set):Float = 0;
 	public var bounds:Dynamic = {min: 0, max: 1};
 	public var leftToRight(default, set):Bool = true;
 	public var barCenter(default, null):Float = 0;
@@ -17,13 +17,21 @@ class HealthBar extends FlxSpriteGroup
 	// you might need to change this if you want to use a custom bar
 	public var barWidth(default, set):Int = 1;
 	public var barHeight(default, set):Int = 1;
-	public var barOffset:FlxPoint = new FlxPoint(3, 3);
+	public var barOffset:FlxPoint = FlxPoint.get(3, 3); // for optimisation purposes
+
+	#if haxe4
+	public var valueFunction:() -> Float;
+	public var updateCallback:(value:Float, percent:Float) -> Void;
+	#else
+	public var valueFunction:Void->Float;
+	public var updateCallback:Float->Float->Void;
+	#end
 
 	public function new(x:Float, y:Float, image:String = 'healthBar', valueFunction:Void->Float = null, boundX:Float = 0, boundY:Float = 1)
 	{
 		super(x, y);
-		
-		if(valueFunction != null) this.valueFunction = valueFunction;
+
+		this.valueFunction = valueFunction != null ? valueFunction : function() return 0;
 		setBounds(boundX, boundY);
 		
 		bg = new FlxSprite(0, 0, Paths.image(image));
@@ -44,12 +52,17 @@ class HealthBar extends FlxSpriteGroup
 		regenerateClips();
 	}
 
-	override function update(elapsed:Float) {
+	override function update(elapsed:Float)
+	{
 		var value:Null<Float> = FlxMath.remapToRange(FlxMath.bound(valueFunction(), bounds.min, bounds.max), bounds.min, bounds.max, 0, 100);
-		var prevPercent:Float = percent;
 		percent = (value != null ? value : 0);
-		updateBar(prevPercent);
 		super.update(elapsed);
+	}
+
+	override public function destroy()
+	{
+		super.destroy();
+		barOffset = flixel.util.FlxDestroyUtil.put(barOffset);
 	}
 
 	public function setBounds(min:Float, max:Float)
@@ -64,62 +77,63 @@ class HealthBar extends FlxSpriteGroup
 		rightBar.color = right;
 	}
 
-	public function updateBar(?prevPercent:Float)
+	public function updateBar()
 	{
 		if(leftBar == null || rightBar == null) return;
 
-		//leftBar.setPosition(bg.x, bg.y);
-		//rightBar.setPosition(bg.x, bg.y);
+		var leftSize:Float = FlxMath.lerp(0, barWidth, (leftToRight ? percent * 0.01 : 1 - percent * 0.01));
 
-		var leftSize:Float = FlxMath.lerp(0, barWidth, leftToRight ? percent / 100 : 1 - percent / 100);
+		var rectRight:FlxRect = rightBar.clipRect;
+		rectRight.width = barWidth - leftSize;
+		rectRight.height = barHeight;
+		rectRight.x = barOffset.x + leftSize;
+		rectRight.y = barOffset.y;
 
-		if(percent != prevPercent)
-		{
-			var rectLeft:FlxRect = leftBar.clipRect;
-			var rectRight:FlxRect = rightBar.clipRect;
+		var rectLeft:FlxRect = leftBar.clipRect;
+		rectLeft.width = leftSize;
+		rectLeft.height = barHeight;
+		rectLeft.x = barOffset.x;
+		rectLeft.y = barOffset.y;
 
-			rectLeft.width = leftSize;
-			rectLeft.height = barHeight;
-			rectLeft.x = barOffset.x;
-			rectLeft.y = barOffset.y;
-
-			rectRight.width = barWidth - leftSize;
-			rectRight.height = barHeight;
-			rectRight.x = barOffset.x + leftSize;
-			rectRight.y = barOffset.y;
-
-			// flixel is retarded
-			leftBar.clipRect = rectLeft;
-			rightBar.clipRect = rectRight;
-		}
+		// flixel is retarded
+		leftBar.clipRect = rectLeft;
+		rightBar.clipRect = rectRight;
 
 		barCenter = leftBar.x + leftSize + barOffset.x;
+
+		if(updateCallback != null)
+		{
+			var val:Null<Float> = valueFunction();
+			updateCallback(val != null ? val : 0, percent);
+		}
 	}
 
-	public function regenerateClips()
+	public function regenerateClips(backInPool:Bool = false)
 	{
 		if(leftBar != null)
 		{
 			leftBar.setGraphicSize(Std.int(bg.width), Std.int(bg.height));
 			leftBar.updateHitbox();
-			leftBar.clipRect = new FlxRect(0, 0, Std.int(bg.width), Std.int(bg.height));
+			if (backInPool) leftBar.clipRect.put();
+			leftBar.clipRect = FlxRect.get(0, 0, Std.int(bg.width), Std.int(bg.height));
 		}
 		if(rightBar != null)
 		{
 			rightBar.setGraphicSize(Std.int(bg.width), Std.int(bg.height));
 			rightBar.updateHitbox();
-			rightBar.clipRect = new FlxRect(0, 0, Std.int(bg.width), Std.int(bg.height));
+			if (backInPool) rightBar.clipRect.put();
+			rightBar.clipRect = FlxRect.get(0, 0, Std.int(bg.width), Std.int(bg.height));
 		}
 		updateBar();
 	}
 
-	/*private function set_percent(value:Float)
+	private function set_percent(value:Float)
 	{
 		var doUpdate:Bool = value != percent;
 		percent = value;
 		if(doUpdate) updateBar();
 		return value;
-	}*/
+	}
 
 	private function set_leftToRight(value:Bool)
 	{
@@ -131,14 +145,25 @@ class HealthBar extends FlxSpriteGroup
 	private function set_barWidth(value:Int)
 	{
 		barWidth = value;
-		regenerateClips();
+		regenerateClips(true);
 		return value;
 	}
 
 	private function set_barHeight(value:Int)
 	{
 		barHeight = value;
-		regenerateClips();
+		regenerateClips(true);
 		return value;
+	}
+
+	override function set_x(value:Float):Float // for dynamic center point update
+	{
+		if (exists && x != value)
+		{
+			transformChildren(xTransform, value - x);
+			if (leftBar != null)
+				barCenter = leftBar.x + FlxMath.lerp(0, barWidth, leftToRight ? percent * 0.01 : 1 - percent * 0.01) + barOffset.x;
+		}
+		return x = value;
 	}
 }

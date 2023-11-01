@@ -106,9 +106,7 @@ class PlayState extends MusicBeatState
 	public var gfMap:Map<String, Character> = new Map<String, Character>();
 	public var variables:Map<String, Dynamic> = new Map<String, Dynamic>();
 	
-	#if HSCRIPT_ALLOWED
-	public var hscriptArray:Array<HScript> = [];
-	#end
+	#if HSCRIPT_ALLOWED public var hscriptArray:Array<HScript> = []; #end
 
 	#if LUA_ALLOWED
 	public var modchartTweens:Map<String, FlxTween> = new Map<String, FlxTween>();
@@ -183,18 +181,18 @@ class PlayState extends MusicBeatState
 	public var combo:Int = 0;
 	public var health(default, set):Float = 1;
 	@:noCompletion function set_health(value:Float):Float {
-		health = FlxMath.bound(value, healthBar.bounds.min, healthBar.bounds.max);
+		health = FlxMath.bound(value, null, healthBar.bounds.max);
 		doDeathCheck();
 		return health;
 	}
 		
 	public var healthBar:HealthBar;
 	public var timeBar:HealthBar;
-	public var healthBarLeftToRight(get, set):Bool;
-	@:noCompletion function get_healthBarLeftToRight():Bool
+	public var healthBarFlip(get, set):Bool;
+	@:noCompletion function get_healthBarFlip():Bool
 		return healthBar.leftToRight;
-	@:noCompletion function set_healthBarLeftToRight(value:Bool):Bool {
-		if(healthBarLeftToRight != value) {
+	@:noCompletion function set_healthBarFlip(value:Bool):Bool {
+		if(healthBarFlip != value) {
 			healthBar.leftToRight = value;
 			healthBar.setColors(healthBar.rightBar.color, healthBar.leftBar.color);
 			iconP1.animation.curAnim.flipX = !value;
@@ -421,18 +419,13 @@ class PlayState extends MusicBeatState
 			for (file in FileSystem.readDirectory(folder))
 			{
 				if(file.toLowerCase().endsWith('.lua')) new FunkinLua(folder + file);
-				if(file.toLowerCase().endsWith('.hx'))  initHScript(folder + file);
+				#if HSCRIPT_ALLOWED if(file.toLowerCase().endsWith('.hx'))  initHScript(folder + file); #end
 			}
 		#end
 
 		// STAGE SCRIPTS
-		#if LUA_ALLOWED
-		startLuasNamed('stages/' + curStage + '.lua');
-		#end
-
-		#if HSCRIPT_ALLOWED
-		startHScriptsNamed('stages/' + curStage + '.hx');
-		#end
+		#if LUA_ALLOWED		startLuasNamed('stages/' + curStage + '.lua'); #end
+		#if HSCRIPT_ALLOWED	startHScriptsNamed('stages/' + curStage + '.hx'); #end
 
 		if (!stageData.hide_girlfriend)
 		{
@@ -480,7 +473,7 @@ class PlayState extends MusicBeatState
 		if(ClientPrefs.data.downScroll) timeTxt.y = FlxG.height - 44;
 		if(ClientPrefs.data.timeBarType == 'Song Name') timeTxt.text = SONG.song;
 
-		timeBar = new HealthBar(0, timeTxt.y + (timeTxt.height * 0.25), 'timeBar', function() return songPercent, 0, 1);
+		timeBar = new HealthBar(0, timeTxt.y + (timeTxt.height * 0.25), 'timeBar', function() return songPercent);
 		timeBar.antialiasing = !isPixelStage;
 		timeBar.scrollFactor.set();
 		timeBar.screenCenter(X);
@@ -552,6 +545,11 @@ class PlayState extends MusicBeatState
 		iconP2.alpha = ClientPrefs.data.healthBarAlpha;
 		add(iconP2);
 
+		healthBar.updateCallback = function(value:Float, percent:Float) {
+			iconP1.animation.curAnim.curFrame = percent < 20 ? 1 : 0;
+			iconP2.animation.curAnim.curFrame = percent > 80 ? 1 : 0;
+		}
+
 		scoreTxt = new FlxText(0, healthBar.y + 40, FlxG.width, "", 20);
 		scoreTxt.setFormat(Paths.font("vcr.ttf"), 20, FlxColor.WHITE, CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
 		scoreTxt.scrollFactor.set();
@@ -608,7 +606,7 @@ class PlayState extends MusicBeatState
 			for (file in FileSystem.readDirectory(folder))
 			{
 				if (file.toLowerCase().endsWith('.lua')) new FunkinLua(folder + file);
-				if (file.toLowerCase().endsWith('.hx'))  initHScript(folder + file);
+				#if HSCRIPT_ALLOWED if (file.toLowerCase().endsWith('.hx'))  initHScript(folder + file); #end
 			}
 		#end
 
@@ -1604,16 +1602,13 @@ class PlayState extends MusicBeatState
 		iconP2.scale.set(mult, mult);
 		iconP2.updateHitbox();
 
-		if(healthBarLeftToRight) {
+		if(healthBarFlip) {
 			iconP1.x = healthBar.barCenter - (150 * iconP1.scale.x) * 0.5 - 52;
 			iconP2.x = healthBar.barCenter + (150 * iconP2.scale.x - 150) * 0.5 - 26;
 		} else {
 			iconP1.x = healthBar.barCenter + (150 * iconP1.scale.x - 150) * 0.5 - 26;
 			iconP2.x = healthBar.barCenter - (150 * iconP2.scale.x) * 0.5 - 52;
 		}
-
-		iconP1.animation.curAnim.curFrame = healthBar.percent < 20 ? 1 : 0;
-		iconP2.animation.curAnim.curFrame = healthBar.percent > 80 ? 1 : 0;
 		
 		if (startedCountdown && !paused) Conductor.songPosition += FlxG.elapsed * 1000 * playbackRate;
 
@@ -1636,10 +1631,6 @@ class PlayState extends MusicBeatState
 			FlxG.camera.zoom = FlxMath.lerp(defaultCamZoom, FlxG.camera.zoom, Math.max(1 - (elapsed * 3.125 * camZoomingDecay * playbackRate), 0));
 			camHUD.zoom = FlxMath.lerp(1, camHUD.zoom, Math.max(1 - (elapsed * 3.125 * camZoomingDecay * playbackRate), 0));
 		}
-
-		FlxG.watch.addQuick("secShit", curSection);
-		FlxG.watch.addQuick("beatShit", curBeat);
-		FlxG.watch.addQuick("stepShit", curStep);
 
 		// RESET = Quick Game Over Screen
 		if (!ClientPrefs.data.noReset && controls.RESET && canReset && !inCutscene && startedCountdown && !endingSong)
@@ -2041,10 +2032,9 @@ class PlayState extends MusicBeatState
 				try
 				{
 					var split:Array<String> = value1.split('.');
-					if(split.length > 1)
-						LuaUtils.setVarInArray(LuaUtils.getPropertyLoop(split), split[split.length-1], value2);
-					else
-						LuaUtils.setVarInArray(this, value1, value2);
+					(split.length > 1)
+						? LuaUtils.setVarInArray(LuaUtils.getPropertyLoop(split), split[split.length-1], value2)
+						: LuaUtils.setVarInArray(this, value1, value2);
 				}
 				catch(e:Dynamic)
 					addTextToDebug('ERROR ("Set Property" Event) - ' + e.message.substr(0, e.message.indexOf('\n')), FlxColor.RED);
@@ -2317,29 +2307,28 @@ class PlayState extends MusicBeatState
 		if (ClientPrefs.data.enableCombo)
 		{
 			var rating:FlxSprite = new FlxSprite(placement - 40 + ClientPrefs.data.comboOffset[0], 0, Paths.image(uiPrefix + daRating.image + uiSuffix));
-			rating.cameras = [camHUD];
-			rating.screenCenter(Y);
-			rating.y -= 60 + ClientPrefs.data.comboOffset[1];
+			rating.screenCenter(Y).y -= 60 + ClientPrefs.data.comboOffset[1];
 			rating.acceleration.y = 550 * playbackRate * playbackRate;
 			rating.velocity.y -= FlxG.random.int(140, 175) * playbackRate;
 			rating.velocity.x -= FlxG.random.int(1, 10) * playbackRate;
 			rating.angularVelocity = rating.velocity.x * FlxG.random.int(1, -1, [0]);
 			rating.visible = (!ClientPrefs.data.hideHud && showRating);
 			rating.antialiasing = antialias;
+			rating.cameras = [camHUD];
 			rating.scrollFactor.set();
 
 			rating.setGraphicSize(Std.int(rating.width * (isPixelStage ? daPixelZoom * 0.85 : 0.7)));
 			rating.updateHitbox();
 
 			var comboSpr:FlxSprite = new FlxSprite(placement + ClientPrefs.data.comboOffset[0], 0, Paths.image(uiPrefix + 'combo' + uiSuffix));
-			comboSpr.cameras = [camHUD];
-			comboSpr.screenCenter(Y);
-			comboSpr.y += 60 - ClientPrefs.data.comboOffset[1];
+			comboSpr.screenCenter(Y).y += 60 - ClientPrefs.data.comboOffset[1];
 			comboSpr.acceleration.y = FlxG.random.int(200, 300) * playbackRate * playbackRate;
 			comboSpr.velocity.y -= FlxG.random.int(140, 160) * playbackRate;
 			comboSpr.velocity.x = FlxG.random.int(1, 10) * playbackRate;
+			comboSpr.angularVelocity = rating.velocity.x * FlxG.random.int(1, -1, [0]);
 			comboSpr.visible = (!ClientPrefs.data.hideHud && showCombo);
 			comboSpr.antialiasing = antialias;
+			comboSpr.cameras = [camHUD];
 			comboSpr.scrollFactor.set();
 
 			comboSpr.setGraphicSize(Std.int(comboSpr.width * (isPixelStage ? daPixelZoom * 0.85 : 0.7)));
@@ -2381,17 +2370,16 @@ class PlayState extends MusicBeatState
 			{
 				var numScore:FlxSprite = new FlxSprite(placement + (45 * daLoop) - 90 + ClientPrefs.data.comboOffset[2])
 					.loadGraphic(Paths.image(uiPrefix + 'num' + uiSuffix), true, isPixelStage ? 10 : 100, isPixelStage ? 12 : 120);
+				numScore.screenCenter(Y).y += 80 - ClientPrefs.data.comboOffset[3];
 				numScore.frame = numScore.frames.frames[i];
 				numScore.cameras = [camHUD];
-				numScore.screenCenter(Y);
-				numScore.y += 80 - ClientPrefs.data.comboOffset[3];
 				numScore.scrollFactor.set();
 
 				numScore.setGraphicSize(Std.int(numScore.width * (isPixelStage ? daPixelZoom * 0.85 : 0.5)));
 				numScore.updateHitbox();
 
-				numScore.offset.x += FlxG.random.int(-2, 2);
-				numScore.offset.y += FlxG.random.int(-2, 2);
+				numScore.offset.x += FlxG.random.int(-1, 1);
+				numScore.offset.y += FlxG.random.int(-1, 1);
 				numScore.acceleration.y = FlxG.random.int(200, 300) * playbackRate * playbackRate;
 				numScore.velocity.y -= FlxG.random.int(140, 160) * playbackRate;
 				numScore.velocity.x = FlxG.random.float(-5, 5) * playbackRate;
@@ -2584,11 +2572,11 @@ class PlayState extends MusicBeatState
 			if (holdArray.contains(true) && !endingSong) {
 				#if ACHIEVEMENTS_ALLOWED
 				var achieve:String = checkForAchievement(['oversinging']);
-				if (achieve != null)
-					startAchievement(achieve);
+				if (achieve != null) startAchievement(achieve);
 				#end
 			}
-			else if (boyfriend.animation.curAnim != null && boyfriend.holdTimer > Conductor.stepCrochet * (0.0011 / FlxG.sound.music.pitch) * boyfriend.singDuration && boyfriend.animation.curAnim.name.startsWith('sing') && !boyfriend.animation.curAnim.name.endsWith('miss'))
+			else if (boyfriend.animation.curAnim != null && boyfriend.holdTimer > Conductor.stepCrochet * (0.0011 / FlxG.sound.music.pitch) * boyfriend.singDuration
+				&& boyfriend.animation.curAnim.name.startsWith('sing') && !boyfriend.animation.curAnim.name.endsWith('miss'))
 				boyfriend.dance();
 		}
 
@@ -2855,6 +2843,7 @@ class PlayState extends MusicBeatState
 		if(curStep == lastStepHit) return;
 
 		lastStepHit = curStep;
+		FlxG.watch.addQuick("stepShit", curStep);
 		setOnScripts('curStep', curStep);
 		callOnScripts('onStepHit');
 	}
@@ -2883,6 +2872,7 @@ class PlayState extends MusicBeatState
 		super.beatHit();
 		lastBeatHit = curBeat;
 
+		FlxG.watch.addQuick("beatShit", curBeat);
 		setOnScripts('curBeat', curBeat);
 		callOnScripts('onBeatHit');
 	}
@@ -2913,6 +2903,7 @@ class PlayState extends MusicBeatState
 		}
 		super.sectionHit();
 		
+		FlxG.watch.addQuick("secShit", curSection);
 		setOnScripts('curSection', curSection);
 		callOnScripts('onSectionHit');
 	}
@@ -2959,7 +2950,6 @@ class PlayState extends MusicBeatState
 		try
 		{
 			var newScript:HScript = new HScript(null, file);
-			//#if (SScript >= "6.1.8")
 			if(newScript.parsingException != null) // only last exeption error now :'(
 			{
 				addTextToDebug('ERROR ON LOADING ($file): ${newScript.parsingException.message.substr(0, newScript.parsingException.message.indexOf('\n'))}', FlxColor.RED);
@@ -2970,17 +2960,6 @@ class PlayState extends MusicBeatState
 				#end
 				return;
 			}
-			/*#else
-			@:privateAccess
-			if(newScript.parsingExceptions != null && newScript.parsingExceptions.length > 0)
-			{
-				@:privateAccess
-				for (e in newScript.parsingExceptions)
-					if(e != null) addTextToDebug('ERROR ON LOADING ($file): ${e.message.substr(0, e.message.indexOf('\n'))}', FlxColor.RED);
-				newScript.destroy();
-				return;
-			}
-			#end*/
 
 			hscriptArray.push(newScript);
 			if(newScript.exists('onCreate'))
@@ -3058,8 +3037,7 @@ class PlayState extends MusicBeatState
 			if(myValue != null && !excludeValues.contains(myValue))
 				returnVal = myValue;
 
-			if(!script.closed) i++;
-			else len--;
+			(!script.closed) ? i++ : len--;
 		}
 		#end
 		return returnVal;
@@ -3074,8 +3052,7 @@ class PlayState extends MusicBeatState
 		excludeValues.push(psychlua.FunkinLua.Function_Continue);
 
 		var len:Int = hscriptArray.length;
-		if (len < 1)
-			return returnVal;
+		if (len < 1) return returnVal;
 		for(i in 0...len)
 		{
 			var script:HScript = hscriptArray[i];
@@ -3231,7 +3208,7 @@ class PlayState extends MusicBeatState
 
 						case 'two_keys':			 unlock = (!usedPractice && keysPressed.length <= 2);
 
-						case 'toastie':				 unlock = (/*ClientPrefs.data.framerate <= 60 &&*/ !ClientPrefs.data.shaders && ClientPrefs.data.lowQuality && !ClientPrefs.data.antialiasing);
+						case 'toastie':				 unlock = (!ClientPrefs.data.shaders && ClientPrefs.data.lowQuality && !ClientPrefs.data.antialiasing);
 
 						case 'debugger':			 unlock = (Paths.formatToSongPath(SONG.song) == 'test' && !usedPractice);
 					}

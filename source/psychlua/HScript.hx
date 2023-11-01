@@ -36,9 +36,7 @@ class HScript extends SScript
 	public var origin:String;
 	override public function new(?parent:FunkinLua, ?file:String)
 	{
-		if (file == null)
-			file = '';
-	
+		if (file == null) file = '';
 		super(file, false, false);
 		parentLua = parent;
 		if (parent != null)
@@ -78,10 +76,7 @@ class HScript extends SScript
 		set('StringTools', StringTools);
 
 		// Functions & Variables
-		set('setVar', function(name:String, value:Dynamic)
-		{
-			PlayState.instance.variables.set(name, value);
-		});
+		set('setVar', function(name:String, value:Dynamic) PlayState.instance.variables.set(name, value));
 		set('getVar', function(name:String)
 		{
 			var result:Dynamic = null;
@@ -110,7 +105,7 @@ class HScript extends SScript
 			#if LUA_ALLOWED
 			for (script in PlayState.instance.luaArray)
 				if(script != null && script.lua != null && !script.closed)
-					Lua_helper.add_callback(script.lua, name, func);
+					script.addCallback(name, func);
 			#end
 			FunkinLua.customFunctions.set(name, func);
 		});
@@ -119,18 +114,13 @@ class HScript extends SScript
 		set('createCallback', function(name:String, func:Dynamic, ?funk:FunkinLua = null)
 		{
 			if(funk == null) funk = parentLua;
-			
 			if(parentLua != null) funk.addLocalCallback(name, func);
 			else FunkinLua.luaTrace('createCallback ($name): 3rd argument is null', false, false, FlxColor.RED);
 		});
 
 		set('addHaxeLibrary', function(libName:String, ?libPackage:String = '') {
 			try {
-				var str:String = '';
-				if(libPackage.length > 0)
-					str = libPackage + '.';
-
-				set(libName, Type.resolveClass(str + libName));
+				set(libName, Type.resolveClass((libPackage.length > 0 ? libPackage + '.' : '') + libName));
 			}
 			catch (e:Dynamic) {
 				var msg:String = e.message.substr(0, e.message.indexOf('\n'));
@@ -192,12 +182,7 @@ class HScript extends SScript
 	}
 
 	public function executeFunction(funcToRun:String = null, funcArgs:Array<Dynamic>):#if (SScript >= "6.1.8") TeaCall #else SCall #end
-	{
-		if (funcToRun == null)
-			return null;
-
-		return call(funcToRun, funcArgs);
-	}
+		return funcToRun != null ? call(funcToRun, funcArgs) : null;
 
 	public static function implement(funk:FunkinLua)
 	{
@@ -207,13 +192,8 @@ class HScript extends SScript
 			#if (SScript >= "3.0.0")
 			initHaxeModuleCode(funk, codeToRun);
 			if(varsToBring != null)
-			{
 				for (key in Reflect.fields(varsToBring))
-				{
-					//trace('Key $key: ' + Reflect.field(varsToBring, key));
 					funk.hscript.set(key, Reflect.field(varsToBring, key));
-				}
-			}
 			retVal = funk.hscript.executeCode(funcToRun, funcArgs);
 			if (retVal != null)
 			{
@@ -252,16 +232,13 @@ class HScript extends SScript
 		// This function is unnecessary because import already exists in SScript as a native feature
 		funk.addLocalCallback("addHaxeLibrary", function(libName:String, ?libPackage:String = '') {
 			var str:String = '';
-			if(libPackage.length > 0)
-				str = libPackage + '.';
-			else if(libName == null)
-				libName = '';
+			if(libPackage.length > 0) str = libPackage + '.';
+			else if(libName == null)  libName = '';
 
 			var c = Type.resolveClass(str + libName);
 
 			#if (SScript >= "3.0.3")
-			if (c != null)
-				SScript.globalVariables[libName] = c;
+			if (c != null) SScript.globalVariables[libName] = c;
 			#end
 
 			#if (SScript >= "3.0.0")
@@ -300,9 +277,7 @@ class HScript extends SScript
 	}
 	#else
 	public function destroy()
-	{
 		active = false;
-	}
 	#end
 }
 
@@ -326,25 +301,15 @@ class CustomFlxColor
 	public static var CYAN(default, null):Int = FlxColor.CYAN;
 
 	public static function fromRGB(Red:Int, Green:Int, Blue:Int, Alpha:Int = 255):Int
-	{
 		return cast FlxColor.fromRGB(Red, Green, Blue, Alpha);
-	}
 	public static function fromRGBFloat(Red:Float, Green:Float, Blue:Float, Alpha:Float = 1):Int
-	{	
 		return cast FlxColor.fromRGBFloat(Red, Green, Blue, Alpha);
-	}
 
 	public static function fromHSB(Hue:Float, Sat:Float, Brt:Float, Alpha:Float = 1):Int
-	{	
 		return cast FlxColor.fromHSB(Hue, Sat, Brt, Alpha);
-	}
 	public static function fromHSL(Hue:Float, Sat:Float, Light:Float, Alpha:Float = 1):Int
-	{	
 		return cast FlxColor.fromHSL(Hue, Sat, Light, Alpha);
-	}
 	public static function fromString(str:String):Int
-	{
 		return cast FlxColor.fromString(str);
-	}
 }
 #end

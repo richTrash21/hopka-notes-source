@@ -505,11 +505,9 @@ class EditorPlayState extends MusicBeatSubstate
 		}
 		for (i in seperatedScore)
 		{
-			var numScore:FlxSprite = new FlxSprite(placement + (45 * daLoop) - 90 + ClientPrefs.data.comboOffset[2]).loadGraphic(Paths.image('num'), true, 100, 120);
+			var numScore:FlxSprite = new FlxSprite(placement + (45 * daLoop) - 90 + ClientPrefs.data.comboOffset[2]).loadGraphic(Paths.image('num'), true,  100, 120);
+			numScore.screenCenter(Y).y += 80 - ClientPrefs.data.comboOffset[3];
 			numScore.frame = numScore.frames.frames[i];
-			numScore.screenCenter(Y);
-			numScore.x = placement + (43 * daLoop) - 90 + ClientPrefs.data.comboOffset[2];
-			numScore.y += 80 - ClientPrefs.data.comboOffset[3];
 			numScore.scrollFactor.set();
 			
 			if (!ClientPrefs.data.comboStacking) lastScore.push(numScore);

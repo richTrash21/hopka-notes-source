@@ -525,10 +525,10 @@ class CharacterEditorState extends MusicBeatState
 			// stolen from redar13 (again) >:3
 			if (animationIndicesInputText.text.contains('...')) {
 				var split:Array<String> = animationIndicesInputText.text.trim().split('...');
-				var from:Int = Std.int(Math.abs(Std.parseInt(split[0])));
-				var to:Int = Std.int(Math.abs(Std.parseInt(split[1])));
+				var from:Int = FlxMath.absInt(Std.parseInt(split[0]));
+				var to:Int = FlxMath.absInt(Std.parseInt(split[1]));
 				for (i in 0...(from > to ? from - to : to - from) + 1)
-					indicesStr.insert(Std.int(Math.abs(i)), Std.string(Math.abs((from > to ? to : from) + i)));
+					indicesStr.insert(FlxMath.absInt(i), Std.string(FlxMath.absInt((from > to ? to : from) + i)));
 				if (from > to) indicesStr.reverse();
 				animationIndicesInputText.text = indicesStr.join(',');
 			} else

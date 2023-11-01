@@ -106,9 +106,11 @@ class Mods
 		#if MODS_ALLOWED
 		if(mods)
 		{
+			var dontLoadGlobalAgain:Array<String> = [];
 			// Global mods first
 			for(mod in Mods.getGlobalMods())
 			{
+				dontLoadGlobalAgain.push(mod);
 				var folder:String = Paths.mods(mod + '/' + fileToFind);
 				if(FileSystem.exists(folder)) foldersToCheck.push(folder);
 			}
@@ -120,8 +122,11 @@ class Mods
 			// And lastly, the loaded mod's folder
 			if(Mods.currentModDirectory != null && Mods.currentModDirectory.length > 0)
 			{
-				var folder:String = Paths.mods(Mods.currentModDirectory + '/' + fileToFind);
-				if(FileSystem.exists(folder)) foldersToCheck.push(folder);
+				var curMod:String = Mods.currentModDirectory;
+				if(!dontLoadGlobalAgain.contains(curMod)) { // IGNORES CURRENT MOD IF IT'S LOADED AS GLOBAL I WANT TO KYS
+					var folder:String = Paths.mods(curMod + '/' + fileToFind);
+					if(FileSystem.exists(folder)) foldersToCheck.push(folder);
+				}
 			}
 		}
 		#end
