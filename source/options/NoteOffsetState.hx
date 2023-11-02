@@ -3,7 +3,7 @@ package options;
 import flixel.math.FlxPoint;
 
 import objects.Character;
-import objects.HealthBar;
+import objects.Bar;
 import flixel.addons.display.shapes.FlxShapeCircle;
 
 import states.stages.StageWeek1 as BackgroundStage;
@@ -25,7 +25,7 @@ class NoteOffsetState extends MusicBeatState
 	var barPercent(default, set):Float = 0;
 	var delayMin:Int = -500;
 	var delayMax:Int = 500;
-	var timeBar:HealthBar;
+	var timeBar:Bar;
 	var timeTxt:FlxText;
 	var beatText:Alphabet;
 	var beatTween:FlxTween;
@@ -131,7 +131,7 @@ class NoteOffsetState extends MusicBeatState
 		barPercent = ClientPrefs.data.noteOffset;
 		updateNoteDelay();
 		
-		timeBar = new HealthBar(0, timeTxt.y + (timeTxt.height / 3), 'healthBar', function() return barPercent, delayMin, delayMax);
+		timeBar = new Bar(0, timeTxt.y + (timeTxt.height / 3), 'healthBar', function() return barPercent, delayMin, delayMax);
 		timeBar.scrollFactor.set();
 		timeBar.screenCenter(X);
 		timeBar.visible = false;
@@ -140,6 +140,8 @@ class NoteOffsetState extends MusicBeatState
 
 		add(timeBar);
 		add(timeTxt);
+
+		timeBar.updateCallback = function(p:Float, v:Float) updateNoteDelay();
 
 		///////////////////////
 
@@ -337,30 +339,20 @@ class NoteOffsetState extends MusicBeatState
 		else
 		{
 			if(controls.UI_LEFT_P)
-			{
 				barPercent = ClientPrefs.data.noteOffset - 1;
-				updateNoteDelay();
-			}
 			else if(controls.UI_RIGHT_P)
-			{
 				barPercent = ClientPrefs.data.noteOffset + 1;
-				updateNoteDelay();
-			}
 
 			if(controls.UI_LEFT || controls.UI_RIGHT) holdTime += elapsed;
 			if(controls.UI_LEFT_R || controls.UI_RIGHT_R) holdTime = 0;
 
 			if(holdTime > 0.5)
-			{
 				barPercent += 100 * addNum * elapsed * (controls.UI_LEFT ? -1 : 1);
-				updateNoteDelay();
-			}
 
 			if(controls.RESET)
 			{
 				holdTime = 0;
 				barPercent = 0;
-				updateNoteDelay();
 			}
 		}
 

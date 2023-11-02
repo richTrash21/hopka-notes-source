@@ -1,15 +1,11 @@
 package objects;
 
-import animateatlas.AtlasFrameMaker;
-
 import flixel.util.FlxSort;
 
 #if MODS_ALLOWED
-import sys.io.File;
 import sys.FileSystem;
 #end
 import openfl.utils.Assets;
-import tjson.TJSON as Json;
 
 typedef CharacterFile = {
 	var animations:Array<AnimArray>;
@@ -41,19 +37,19 @@ typedef AnimArray = {
 
 class Character extends FlxSprite
 {
-	public static var DEFAULT_CHARACTER(default, null):String = 'bf'; //In case a character is missing, it will use BF on its place
+	inline public static var DEFAULT_CHARACTER:String = 'bf'; //In case a character is missing, it will use BF on its place
 
 	public var animOffsets:Map<String, Array<Dynamic>>;
 	public var debugMode:Bool = false;
 
 	public var isPlayer:Bool = false;
-	public var curCharacter:String = DEFAULT_CHARACTER;
+	public var curCharacter:String;
 
 	public var colorTween:FlxTween;
 	public var holdTimer:Float = 0;
 	public var heyTimer:Float = 0;
 	public var specialAnim:Bool = false;
-	public var animationNotes:Array<Dynamic> = [];
+	//public var animationNotes:Array<Dynamic> = [];
 	public var stunned:Bool = false;
 	public var singDuration:Float = 4; //Multiplier of how long a character holds the sing pose
 	public var idleSuffix:String = '';
@@ -65,8 +61,7 @@ class Character extends FlxSprite
 
 	public var positionArray:Array<Float> = [0, 0];
 	public var cameraPosition:Array<Float> = [0, 0];
-
-	public var hasMissAnimations:Bool = false;
+	public var hasMissAnimations(default, null):Bool = false;
 
 	//Used on Character Editor
 	public var imageFile:String = '';
@@ -76,7 +71,7 @@ class Character extends FlxSprite
 	public var originalFlipY:Bool = false;
 	public var healthColorArray:Array<Int> = [255, 0, 0];
 
-	public function new(x:Float, y:Float, ?character:String = 'bf', ?isPlayer:Bool = false)
+	public function new(x:Float, y:Float, ?character:String = DEFAULT_CHARACTER, ?isPlayer:Bool = false)
 	{
 		super(x, y);
 
@@ -97,12 +92,12 @@ class Character extends FlxSprite
 			path = Paths.getPreloadPath('characters/' + DEFAULT_CHARACTER + '.json'); //If a character couldn't be found, change him to BF just to prevent a crash
 
 		#if MODS_ALLOWED
-		var rawJson = File.getContent(path);
+		var rawJson = sys.io.File.getContent(path);
 		#else
 		var rawJson = Assets.getText(path);
 		#end
 
-		var json:CharacterFile = cast Json.parse(rawJson);
+		var json:CharacterFile = cast tjson.TJSON.parse(rawJson);
 		var useAtlas:Bool = false;
 
 		#if MODS_ALLOWED
@@ -113,7 +108,7 @@ class Character extends FlxSprite
 		useAtlas = Assets.exists(Paths.getPath('images/' + json.image + '/Animation.json', TEXT));
 		#end
 
-		frames = !useAtlas ? Paths.getAtlas(json.image) : AtlasFrameMaker.construct(json.image);
+		frames = !useAtlas ? Paths.getAtlas(json.image) : animateatlas.AtlasFrameMaker.construct(json.image);
 
 		imageFile = json.image;
 		if(json.scale != 1) {
@@ -148,7 +143,9 @@ class Character extends FlxSprite
 		originalFlipX = flipX;
 		originalFlipY = flipY;
 
-		hasMissAnimations = (animOffsets.exists('singLEFTmiss') || animOffsets.exists('singDOWNmiss') || animOffsets.exists('singUPmiss') || animOffsets.exists('singRIGHTmiss'));
+		for(name => arr in animOffsets)
+			if(name.startsWith('sing') && name.contains('miss'))
+				hasMissAnimations = true;
 		recalculateDanceIdle();
 		dance();
 
@@ -236,7 +233,7 @@ class Character extends FlxSprite
 			offset.set(daOffset[0], daOffset[1]);
 		} else offset.set(0, 0);
 
-		if (curCharacter.startsWith('gf'))
+		if (curCharacter.startsWith('gf') || danceIdle) // idk
 		{
 			if (AnimName == 'singLEFT')
 				danced = true;
@@ -279,10 +276,10 @@ class Character extends FlxSprite
 	public function generateAnim(Anim:AnimArray) {
 		if(Anim != null) {
 			var animAnim:String = '' + Anim.anim;
-			var animOffsets:Array<Int> = Anim.offsets;
+			var temp = Anim.offsets;
+			var animOffsets:Array<Int> = (temp == null && temp.length <= 1) ? [0, 0] : temp;
 			addAnim(animAnim, '' + Anim.name, Anim.indices, Anim.fps, Anim.loop, Anim.animflip_x, Anim.animflip_y, Anim.loop_point);
-			if(animOffsets != null && animOffsets.length > 1) addOffset(animAnim, animOffsets[0], animOffsets[1]);
-			else addOffset(animAnim);
+			addOffset(animAnim, animOffsets[0], animOffsets[1]);
 		}
 	}
 
@@ -292,10 +289,10 @@ class Character extends FlxSprite
 			animation.addByIndices(Name, Prefix, Indices, "", FrameRate, Looped, FlipX, FlipY);
 		else
 			animation.addByPrefix(Name, Prefix, FrameRate, Looped, FlipX, FlipY);
+
 		var addedAnim:flixel.animation.FlxAnimation = animation.getByName(Name);
-		if (addedAnim != null) {
+		if (addedAnim != null)
 			addedAnim.loopPoint = LoopPoint; // better than -loop anims lmao
-		}
 	}
 
 	public function addOffset(name:String, x:Float = 0, y:Float = 0)

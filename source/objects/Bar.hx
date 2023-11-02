@@ -2,17 +2,24 @@ package objects;
 
 import flixel.math.FlxPoint;
 import flixel.math.FlxRect;
+import flixel.util.FlxDestroyUtil;
 
-class HealthBar extends FlxSpriteGroup
+typedef BarBounds = {min:Float, max:Float}
+
+class Bar extends FlxSpriteGroup
 {
 	public var leftBar:FlxSprite;
 	public var rightBar:FlxSprite;
 	public var bg:FlxSprite;
 	
+	public var bounds:BarBounds = {min: 0, max: 1};
 	public var percent(default, set):Float = 0;
-	public var bounds:Dynamic = {min: 0, max: 1};
 	public var leftToRight(default, set):Bool = true;
+	/**
+	 * DEPRECATED! For backward compability only!!!
+	 **/ 
 	public var barCenter(default, null):Float = 0;
+	public var centerPoint(default, null):FlxPoint = FlxPoint.get();
 
 	// you might need to change this if you want to use a custom bar
 	public var barWidth(default, set):Int = 1;
@@ -27,17 +34,17 @@ class HealthBar extends FlxSpriteGroup
 	public var updateCallback:Float->Float->Void;
 	#end
 
-	public function new(x:Float, y:Float, image:String = 'healthBar', valueFunction:Void->Float = null, boundX:Float = 0, boundY:Float = 1)
+	public function new(x:Float, y:Float, image:String = 'healthBar', valueFunction:Void->Float = null, boundMin:Float = 0, boundMax:Float = 1)
 	{
 		super(x, y);
 
 		this.valueFunction = valueFunction != null ? valueFunction : function() return 0;
-		setBounds(boundX, boundY);
+		setBounds(boundMin, boundMax);
 		
 		bg = new FlxSprite(0, 0, Paths.image(image));
 		bg.antialiasing = ClientPrefs.data.antialiasing;
-		barWidth = Std.int(bg.width - 6);
-		barHeight = Std.int(bg.height - 6);
+		barWidth = Std.int(bg.width - barOffset.x * 2);
+		barHeight = Std.int(bg.height - barOffset.y * 2);
 
 		leftBar = new FlxSprite().makeGraphic(Std.int(bg.width), Std.int(bg.height));
 		leftBar.antialiasing = antialiasing = ClientPrefs.data.antialiasing;
@@ -62,19 +69,20 @@ class HealthBar extends FlxSpriteGroup
 	override public function destroy()
 	{
 		super.destroy();
-		barOffset = flixel.util.FlxDestroyUtil.put(barOffset);
+		barOffset = FlxDestroyUtil.put(barOffset);
+		centerPoint = FlxDestroyUtil.put(centerPoint);
 	}
 
-	public function setBounds(min:Float, max:Float)
+	public function setBounds(min:Float = 0, max:Float = 1)
 	{
 		bounds.min = min;
 		bounds.max = max;
 	}
 
-	public function setColors(left:FlxColor, right:FlxColor)
+	public function setColors(?left:FlxColor, ?right:FlxColor)
 	{
-		leftBar.color = left;
-		rightBar.color = right;
+		if (left != null)  leftBar.color = left;
+		if (right != null) rightBar.color = right;
 	}
 
 	public function updateBar()
@@ -99,7 +107,8 @@ class HealthBar extends FlxSpriteGroup
 		leftBar.clipRect = rectLeft;
 		rightBar.clipRect = rectRight;
 
-		barCenter = leftBar.x + leftSize + barOffset.x;
+		centerPoint.set(leftBar.x + leftSize + barOffset.x, leftBar.y + leftBar.clipRect.height * 0.5 + barOffset.y);
+		barCenter = centerPoint.x;
 
 		if(updateCallback != null)
 		{
@@ -156,14 +165,24 @@ class HealthBar extends FlxSpriteGroup
 		return value;
 	}
 
-	override function set_x(value:Float):Float // for dynamic center point update
+	override function set_x(Value:Float):Float // for dynamic center point update
 	{
-		if (exists && x != value)
+		var prevX:Float = x;
+		super.set_x(Value);
+		if (leftBar != null && exists && prevX != Value)
 		{
-			transformChildren(xTransform, value - x);
-			if (leftBar != null)
-				barCenter = leftBar.x + FlxMath.lerp(0, barWidth, leftToRight ? percent * 0.01 : 1 - percent * 0.01) + barOffset.x;
+			centerPoint.x = leftBar.x + FlxMath.lerp(0, barWidth, leftToRight ? percent * 0.01 : 1 - percent * 0.01) + barOffset.x;
+			barCenter = centerPoint.x;
 		}
-		return x = value;
+		return Value;
+	}
+
+	override function set_y(Value:Float):Float
+	{
+		var prevY:Float = y;
+		super.set_y(Value);
+		if (leftBar != null && exists && prevY != Value)
+			centerPoint.y = leftBar.y + leftBar.clipRect.height * 0.5 + barOffset.y;
+		return Value;
 	}
 }

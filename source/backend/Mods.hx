@@ -3,10 +3,7 @@ package backend;
 #if sys
 import sys.FileSystem;
 import sys.io.File;
-#else
-import lime.utils.Assets;
 #end
-import tjson.TJSON as Json;
 
 typedef ModsList = {
 	enabled:Array<String>,
@@ -18,6 +15,7 @@ class Mods
 {
 	static public var currentModDirectory:String = '';
 	public static var ignoreModFolders:Array<String> = [
+		#if ACHIEVEMENTS_ALLOWED 'achievements', #end
 		'characters',
 		'custom_events',
 		'custom_notetypes',
@@ -31,14 +29,11 @@ class Mods
 		'stages',
 		'weeks',
 		'fonts',
-		'scripts',
-		'achievements'
+		'scripts'
 	];
 
 	private static var globalMods:Array<String> = [];
-
-	inline public static function getGlobalMods()
-		return globalMods;
+	inline public static function getGlobalMods():Array<String> return globalMods;
 
 	inline public static function pushGlobalMods() // prob a better way to do this but idc
 	{
@@ -106,27 +101,23 @@ class Mods
 		#if MODS_ALLOWED
 		if(mods)
 		{
-			var dontLoadGlobalAgain:Array<String> = [];
 			// Global mods first
-			for(mod in Mods.getGlobalMods())
+			for(mod in getGlobalMods())
 			{
-				dontLoadGlobalAgain.push(mod);
 				var folder:String = Paths.mods(mod + '/' + fileToFind);
 				if(FileSystem.exists(folder)) foldersToCheck.push(folder);
 			}
 
 			// Then "PsychEngine/mods/" main folder
 			var folder:String = Paths.mods(fileToFind);
-			if(FileSystem.exists(folder)) foldersToCheck.push(Paths.mods(fileToFind));
+			if(FileSystem.exists(folder)) foldersToCheck.push(folder);
 
 			// And lastly, the loaded mod's folder
-			if(Mods.currentModDirectory != null && Mods.currentModDirectory.length > 0)
+			if(currentModDirectory != null && currentModDirectory.length > 0
+				&& !getGlobalMods().contains(currentModDirectory)) // IGNORES CURRENT MOD IF IT'S LOADED AS GLOBAL I WANT TO KYS
 			{
-				var curMod:String = Mods.currentModDirectory;
-				if(!dontLoadGlobalAgain.contains(curMod)) { // IGNORES CURRENT MOD IF IT'S LOADED AS GLOBAL I WANT TO KYS
-					var folder:String = Paths.mods(curMod + '/' + fileToFind);
-					if(FileSystem.exists(folder)) foldersToCheck.push(folder);
-				}
+				var folder:String = Paths.mods(currentModDirectory + '/' + fileToFind);
+				if(FileSystem.exists(folder)) foldersToCheck.push(folder);
 			}
 		}
 		#end
@@ -136,7 +127,7 @@ class Mods
 	public static function getPack(?folder:String = null):Dynamic
 	{
 		#if MODS_ALLOWED
-		if(folder == null) folder = Mods.currentModDirectory;
+		if(folder == null) folder = currentModDirectory;
 
 		var path = Paths.mods(folder + '/pack.json');
 		if(FileSystem.exists(path)) {
@@ -144,9 +135,9 @@ class Mods
 				#if sys
 				var rawJson:String = File.getContent(path);
 				#else
-				var rawJson:String = Assets.getText(path);
+				var rawJson:String = lime.utils.Assets.getText(path);
 				#end
-				if(rawJson != null && rawJson.length > 0) return Json.parse(rawJson);
+				if(rawJson != null && rawJson.length > 0) return tjson.TJSON.parse(rawJson);
 			} catch(e:Dynamic) {
 				trace(e);
 			}
@@ -224,18 +215,15 @@ class Mods
 
 		File.saveContent('modsList.txt', fileStr);
 		updatedOnState = true;
-		//trace('Saved modsList.txt');
 		#end
 	}
 
 	public static function loadTopMod()
 	{
-		Mods.currentModDirectory = '';
-		
+		currentModDirectory = '';
 		#if MODS_ALLOWED
-		var list:Array<String> = Mods.parseList().enabled;
-		if(list != null && list[0] != null)
-			Mods.currentModDirectory = list[0];
+		var list:Array<String> = parseList().enabled;
+		if(list != null && list[0] != null) currentModDirectory = list[0];
 		#end
 	}
 }

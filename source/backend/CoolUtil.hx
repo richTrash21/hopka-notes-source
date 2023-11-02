@@ -1,11 +1,6 @@
 package backend;
 
-import flixel.util.FlxSave;
-
-#if sys
-import sys.io.File;
-import sys.FileSystem;
-#else
+#if !sys
 import openfl.utils.Assets;
 #end
 
@@ -18,7 +13,7 @@ class CoolUtil
 		return (m / snap);
 	}
 
-	inline public static function capitalize(text:String)
+	inline public static function capitalize(text:String):String
 		return text.charAt(0).toUpperCase() + text.substr(1).toLowerCase();
 
 	inline public static function coolTextFile(path:String):Array<String>
@@ -27,7 +22,7 @@ class CoolUtil
 		#if (sys && MODS_ALLOWED)
 		var formatted:Array<String> = path.split(':'); //prevent "shared:", "preload:" and other library names on file path
 		path = formatted[formatted.length-1];
-		if(FileSystem.exists(path)) daList = File.getContent(path);
+		if(sys.FileSystem.exists(path)) daList = sys.io.File.getContent(path);
 		#else
 		if(Assets.exists(path)) daList = Assets.getText(path);
 		#end
@@ -47,23 +42,17 @@ class CoolUtil
 
 	inline public static function listFromString(string:String):Array<String>
 	{
-		var daList:Array<String> = [];
-		daList = string.trim().split('\n');
-
-		for (i in 0...daList.length)
-			daList[i] = daList[i].trim();
-
+		var daList:Array<String> = string.trim().split('\n');
+		for (i in 0...daList.length) daList[i] = daList[i].trim();
 		return daList;
 	}
 
 	public static function floorDecimal(value:Float, decimals:Int):Float
 	{
-		if(decimals < 1)
-			return Math.floor(value);
+		if(decimals < 1) return Math.floor(value);
 
 		var tempMult:Float = 1;
-		for (i in 0...decimals)
-			tempMult *= 10;
+		for (i in 0...decimals) tempMult *= 10;
 
 		var newValue:Float = Math.floor(value * tempMult);
 		return newValue / tempMult;
@@ -97,11 +86,10 @@ class CoolUtil
 		return maxKey;
 	}
 
-	inline public static function numberArray(max:Int, ?min = 0):Array<Int>
+	inline public static function numberArray(max:Int, ?min:Int = 0):Array<Int>
 	{
 		var dumbArray:Array<Int> = [];
 		for (i in min...max) dumbArray.push(i);
-
 		return dumbArray;
 	}
 
@@ -122,6 +110,6 @@ class CoolUtil
 		@:privateAccess
 		return #if (flixel < "5.0.0") folder #else FlxG.stage.application.meta.get('company')
 			+ '/'
-			+ FlxSave.validate(FlxG.stage.application.meta.get('file')) #end;
+			+ flixel.util.FlxSave.validate(FlxG.stage.application.meta.get('file')) #end;
 	}
 }

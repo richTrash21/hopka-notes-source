@@ -186,8 +186,8 @@ class PlayState extends MusicBeatState
 		return health;
 	}
 		
-	public var healthBar:HealthBar;
-	public var timeBar:HealthBar;
+	public var healthBar:Bar;
+	public var timeBar:Bar;
 	public var healthBarFlip(get, set):Bool;
 	@:noCompletion function get_healthBarFlip():Bool
 		return healthBar.leftToRight;
@@ -473,7 +473,7 @@ class PlayState extends MusicBeatState
 		if(ClientPrefs.data.downScroll) timeTxt.y = FlxG.height - 44;
 		if(ClientPrefs.data.timeBarType == 'Song Name') timeTxt.text = SONG.song;
 
-		timeBar = new HealthBar(0, timeTxt.y + (timeTxt.height * 0.25), 'timeBar', function() return songPercent);
+		timeBar = new Bar(0, timeTxt.y + (timeTxt.height * 0.25), 'timeBar', function() return songPercent);
 		timeBar.antialiasing = !isPixelStage;
 		timeBar.scrollFactor.set();
 		timeBar.screenCenter(X);
@@ -481,6 +481,14 @@ class PlayState extends MusicBeatState
 		timeBar.visible = showTime;
 		add(timeBar);
 		add(timeTxt);
+
+		timeBar.updateCallback = function(value:Float, percent:Float) {
+			if(ClientPrefs.data.timeBarType != 'Song Name' && !paused) {
+				var curTime:Float = songLength * (percent * 0.01);
+				var songCalc:Float = ClientPrefs.data.timeBarType == 'Time Elapsed' ? curTime : songLength - curTime;
+				timeTxt.text = FlxStringUtil.formatTime(FlxMath.bound(Math.floor(songCalc * 0.001), 0), false);
+			}
+		}
 
 		strumLineNotes = new FlxTypedGroup<StrumNote>();
 		add(strumLineNotes);
@@ -523,7 +531,7 @@ class PlayState extends MusicBeatState
 		FlxG.worldBounds.set(0, 0, FlxG.width, FlxG.height);
 		moveCameraSection();
 
-		healthBar = new HealthBar(0, FlxG.height * (!ClientPrefs.data.downScroll ? 0.89 : 0.11), 'healthBar', function() return health, 0, 2);
+		healthBar = new Bar(0, FlxG.height * (!ClientPrefs.data.downScroll ? 0.89 : 0.11), 'healthBar', function() return health, 0, 2);
 		healthBar.antialiasing = !isPixelStage;
 		healthBar.screenCenter(X);
 		healthBar.leftToRight = false;
@@ -1180,7 +1188,7 @@ class PlayState extends MusicBeatState
 
 		#if desktop
 		// Updating Discord Rich Presence (with Time Left)
-		DiscordClient.changePresence(detailsText, SONG.song + " (" + storyDifficultyText + ")", iconP2.getCharacter(), true, songLength);
+		DiscordClient.changePresence(detailsText, SONG.song + " (" + storyDifficultyText + ")", iconP2.char, true, songLength);
 		#end
 		setOnScripts('songLength', songLength);
 		callOnScripts('onSongStart');
@@ -1492,7 +1500,7 @@ class PlayState extends MusicBeatState
 	override public function onFocusLost():Void
 	{
 		#if desktop
-		if (health >= 0 && !paused) DiscordClient.changePresence(detailsPausedText, SONG.song + " (" + storyDifficultyText + ")", iconP2.getCharacter());
+		if (health >= 0 && !paused) DiscordClient.changePresence(detailsPausedText, SONG.song + " (" + storyDifficultyText + ")", iconP2.char);
 		#end
 		if(!ClientPrefs.data.autoPause && startedCountdown && canPause && !paused) {
 			var ret:Dynamic = callOnScripts('onPause', null, true);
@@ -1508,7 +1516,7 @@ class PlayState extends MusicBeatState
 		DiscordClient.changePresence(
 			detailsText,
 			SONG.song + " (" + storyDifficultyText + ")",
-			iconP2.getCharacter(),
+			iconP2.char,
 			cond,
 			(cond) ? songLength - Conductor.songPosition - ClientPrefs.data.noteOffset : null
 		);
@@ -1555,9 +1563,10 @@ class PlayState extends MusicBeatState
 			 *
 			 *	UPD: FLIXEL `5.4.0` ACTUALLY MAKES CAMERA MORE JANKY (it's just sometimes teleport for no fucking reason)!
 			 *	THANKS FLIXEL!!!
+			 *  UPDD: nevermind they fixed it (i think)
 			 */
 			
-			FlxG.camera.followLerp = elapsed * 2.4 * cameraSpeed * playbackRate / (FlxG.updateFramerate / 60) #if (flixel >= "5.4.0") * 16 #end;
+			FlxG.camera.followLerp = elapsed * 2.4 * cameraSpeed * playbackRate #if (flixel < "5.4.0") / #else * #end (FlxG.updateFramerate / 60);
 			#if ACHIEVEMENTS_ALLOWED
 			if(!startingSong && !endingSong && boyfriend.animation.curAnim != null && boyfriend.animation.curAnim.name.startsWith('idle'))
 				boyfriendIdleTime += elapsed;
@@ -1603,11 +1612,11 @@ class PlayState extends MusicBeatState
 		iconP2.updateHitbox();
 
 		if(healthBarFlip) {
-			iconP1.x = healthBar.barCenter - (150 * iconP1.scale.x) * 0.5 - 52;
-			iconP2.x = healthBar.barCenter + (150 * iconP2.scale.x - 150) * 0.5 - 26;
+			iconP1.x = healthBar.centerPoint.x - (150 * iconP1.scale.x) * 0.5 - 52;
+			iconP2.x = healthBar.centerPoint.x + (150 * iconP2.scale.x - 150) * 0.5 - 26;
 		} else {
-			iconP1.x = healthBar.barCenter + (150 * iconP1.scale.x - 150) * 0.5 - 26;
-			iconP2.x = healthBar.barCenter - (150 * iconP2.scale.x) * 0.5 - 52;
+			iconP1.x = healthBar.centerPoint.x + (150 * iconP1.scale.x - 150) * 0.5 - 26;
+			iconP2.x = healthBar.centerPoint.x - (150 * iconP2.scale.x) * 0.5 - 52;
 		}
 		
 		if (startedCountdown && !paused) Conductor.songPosition += FlxG.elapsed * 1000 * playbackRate;
@@ -1620,10 +1629,10 @@ class PlayState extends MusicBeatState
 		else if (!paused && updateTime)
 		{
 			var curTime:Float = Math.max(0, Conductor.songPosition - ClientPrefs.data.noteOffset);
-			var songCalc:Float = ClientPrefs.data.timeBarType == 'Time Elapsed' ? curTime : (songLength - curTime);
-			songPercent = (curTime / songLength);
+			songPercent = curTime / songLength;
+			/*var songCalc:Float = ClientPrefs.data.timeBarType == 'Time Elapsed' ? curTime : songLength - curTime;
 			if(ClientPrefs.data.timeBarType != 'Song Name')
-				timeTxt.text = FlxStringUtil.formatTime(FlxMath.bound(Math.floor(songCalc * 0.001), 0), false);
+				timeTxt.text = FlxStringUtil.formatTime(FlxMath.bound(Math.floor(songCalc * 0.001), 0), false);*/
 		}
 
 		if (camZooming)
@@ -1769,7 +1778,7 @@ class PlayState extends MusicBeatState
 		openSubState(new PauseSubState());
 
 		#if desktop
-		DiscordClient.changePresence(detailsPausedText, SONG.song + " (" + storyDifficultyText + ")", iconP2.getCharacter());
+		DiscordClient.changePresence(detailsPausedText, SONG.song + " (" + storyDifficultyText + ")", iconP2.char);
 		#end
 	}
 
@@ -1827,7 +1836,7 @@ class PlayState extends MusicBeatState
 
 				#if desktop
 				// Game Over doesn't get his own variable because it's only used here
-				DiscordClient.changePresence("Game Over - " + detailsText, SONG.song + " (" + storyDifficultyText + ")", iconP2.getCharacter());
+				DiscordClient.changePresence("Game Over - " + detailsText, SONG.song + " (" + storyDifficultyText + ")", iconP2.char);
 				#end
 				isDead = true;
 				return true;
@@ -2626,15 +2635,12 @@ class PlayState extends MusicBeatState
 		RecalculateRating(true);
 
 		// play character anims
-		var char:Character = boyfriend;
-		if((note != null && note.gfNote) || (SONG.notes[curSection] != null && SONG.notes[curSection].gfSection)) char = gf;
+		var char:Character = ((note != null && note.gfNote) || (SONG.notes[curSection] != null && SONG.notes[curSection].gfSection)) ? gf : boyfriend;
 		
 		if(char != null && char.hasMissAnimations)
 		{
-			var suffix:String = '';
-			if(note != null) suffix = note.animSuffix;
-
-			var animToPlay:String = singAnimations[Std.int(Math.abs(Math.min(singAnimations.length-1, direction)))] + 'miss' + suffix;
+			var suffix:String = note != null ? note.animSuffix : '';
+			var animToPlay:String = singAnimations[direction] + 'miss' + suffix;
 			char.playAnim(animToPlay, true);
 			
 			if(char != gf && combo > 5 && gf != null && gf.animOffsets.exists('sad'))
@@ -2655,14 +2661,10 @@ class PlayState extends MusicBeatState
 			dad.specialAnim = true;
 			dad.heyTimer = 0.6;
 		} else if(!note.noAnimation) {
-			var altAnim:String = note.animSuffix;
+			var altAnim:String = (SONG.notes[curSection] != null && SONG.notes[curSection].altAnim && !SONG.notes[curSection].gfSection) ? '-alt' : note.animSuffix;
 
-			if (SONG.notes[curSection] != null)
-				if (SONG.notes[curSection].altAnim && !SONG.notes[curSection].gfSection) altAnim = '-alt';
-
-			var char:Character = dad;
-			var animToPlay:String = singAnimations[Std.int(Math.abs(Math.min(singAnimations.length-1, note.noteData)))] + altAnim;
-			if(note.gfNote) char = gf;
+			var animToPlay:String = singAnimations[note.noteData] + altAnim;
+			var char:Character = note.gfNote ? gf : dad;
 
 			if(char != null)
 			{
@@ -2730,7 +2732,7 @@ class PlayState extends MusicBeatState
 			health += note.hitHealth * healthGain;
 
 			if(!note.noAnimation) {
-				var animToPlay:String = singAnimations[Std.int(Math.abs(Math.min(singAnimations.length-1, note.noteData)))];
+				var animToPlay:String = singAnimations[note.noteData];
 				var char:Character = boyfriend;
 				var animCheck:String = 'hey';
 				if(note.gfNote)
@@ -2744,12 +2746,10 @@ class PlayState extends MusicBeatState
 					char.playAnim(animToPlay + note.animSuffix, true);
 					char.holdTimer = 0;
 					
-					if(note.noteType == 'Hey!') {
-						if(char.animOffsets.exists(animCheck)) {
-							char.playAnim(animCheck, true);
-							char.specialAnim = true;
-							char.heyTimer = 0.6;
-						}
+					if(note.noteType == 'Hey!' && char.animOffsets.exists(animCheck)) {
+						char.playAnim(animCheck, true);
+						char.specialAnim = true;
+						char.heyTimer = 0.6;
 					}
 				}
 			}
@@ -3138,7 +3138,8 @@ class PlayState extends MusicBeatState
 			if(totalPlayed != 0) //Prevent divide by 0
 			{
 				// Rating Percent
-				ratingPercent = Math.min(1, Math.max(0, totalNotesHit / totalPlayed));
+				//ratingPercent = Math.min(1, Math.max(0, totalNotesHit / totalPlayed));
+				ratingPercent = FlxMath.bound(totalNotesHit / totalPlayed, 0, 1);
 				//trace((totalNotesHit / totalPlayed) + ', Total: ' + totalPlayed + ', notes hit: ' + totalNotesHit);
 
 				// Rating Name
@@ -3163,7 +3164,7 @@ class PlayState extends MusicBeatState
 	{
 		var sicks:Int = ratingsData[0].hits;
 		var goods:Int = ratingsData[1].hits;
-		var bads:Int = ratingsData[2].hits;
+		var bads:Int  = ratingsData[2].hits;
 		var shits:Int = ratingsData[3].hits;
 
 		ratingFC = 'Clear';
