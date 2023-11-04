@@ -4,21 +4,14 @@ import openfl.Lib;
 import openfl.display.FPS;
 import openfl.display.Sprite;
 import openfl.events.Event;
-import openfl.display.StageScaleMode;
-
-import flixel.FlxGame;
 
 import lime.app.Application;
-
-import states.TitleState;
 
 //crash handler stuff
 #if CRASH_HANDLER
 import openfl.events.UncaughtErrorEvent;
-import haxe.CallStack;
-import haxe.io.Path;
 import sys.FileSystem;
-import sys.io.File;
+import haxe.CallStack;
 #end
 
 class Main extends Sprite
@@ -26,7 +19,7 @@ class Main extends Sprite
 	var game = {
 		width: 1280, // WINDOW width
 		height: 720, // WINDOW height
-		initialState: TitleState, // initial game state
+		initialState: states.TitleState, // initial game state
 		zoom: -1.0, // game state bounds
 		framerate: 60, // default framerate
 		skipSplash: true, // if the default flixel splash screen should be skipped
@@ -35,7 +28,7 @@ class Main extends Sprite
 
 	public static var fpsVar:FPS;
 	public static var fpsShadow:FPS;
-	@:noCompletion private static var _focusVolume:Float = 1; // ignore
+	@:noCompletion private static var _focusVolume(default, null):Float = 1; // ignore
 
 	// You can pretty much ignore everything from here on - your code should go in your states.
 
@@ -48,21 +41,27 @@ class Main extends Sprite
 	{
 		super();
 
-		if (stage != null) init();
-		else addEventListener(Event.ADDED_TO_STAGE, init);
+		if (stage != null)
+			init();
+		else
+			addEventListener(Event.ADDED_TO_STAGE, init);
+
 		Application.current.window.onFocusIn.add(volumeOnFocus);
 		Application.current.window.onFocusOut.add(volumeOnFocusLost);
 	}
 
-	private function volumeOnFocus() {
-		// dont ask
+	private function volumeOnFocus() // dont ask
+	{
 		if (ClientPrefs.data.lostFocusDeafen) FlxG.sound.volume = _focusVolume;
 	}
 
-	private static function volumeOnFocusLost() {
-		// dont ask
-		_focusVolume = FlxG.sound.volume;
-		if (ClientPrefs.data.lostFocusDeafen) FlxG.sound.volume *= 0.5;
+	private static function volumeOnFocusLost() // dont ask
+	{
+		if (ClientPrefs.data.lostFocusDeafen)
+		{
+			_focusVolume = FlxG.sound.volume;
+			FlxG.sound.volume *= 0.5;
+		}
 	}
 
 	private function init(?E:Event):Void
@@ -85,10 +84,14 @@ class Main extends Sprite
 			game.height = Math.ceil(stageHeight / game.zoom);
 		}
 	
-		#if LUA_ALLOWED Lua.set_callbacks_function(cpp.Callable.fromStaticFunction(psychlua.CallbackHandler.call)); #end
+		#if LUA_ALLOWED
+		Lua.set_callbacks_function(cpp.Callable.fromStaticFunction(psychlua.CallbackHandler.call));
+		#end
+
 		Controls.instance = new Controls();
 		ClientPrefs.loadDefaultKeys();
-		addChild(new FlxGame(game.width, game.height, game.initialState, #if (flixel < "5.0.0") game.zoom, #end game.framerate, game.framerate, game.skipSplash, game.startFullscreen));
+		addChild(new flixel.FlxGame(game.width, game.height, game.initialState, #if (flixel < "5.0.0") game.zoom, #end
+			game.framerate, game.framerate, game.skipSplash, game.startFullscreen));
 
 		#if !mobile
 		fpsVar = new FPS(10, 3, 0xFFFFFF);
@@ -96,12 +99,15 @@ class Main extends Sprite
 		fpsShadow.shadow = true;
 		addChild(fpsShadow);
 		addChild(fpsVar);
-		Lib.current.stage.align = "tl";
-		Lib.current.stage.scaleMode = StageScaleMode.NO_SCALE;
-		if(fpsVar != null) {
+
+		if(fpsVar != null)
+		{
 			fpsVar.visible = ClientPrefs.data.showFPS;
 			fpsShadow.visible = ClientPrefs.data.showFPS;
 		}
+
+		Lib.current.stage.align = "tl";
+		Lib.current.stage.scaleMode = openfl.display.StageScaleMode.NO_SCALE;
 		#end
 
 		_focusVolume = FlxG.sound.volume;
@@ -127,22 +133,28 @@ class Main extends Sprite
 		#end
 
 		// shader coords fix
-		FlxG.signals.gameResized.add(function (w, h) {
-			if (FlxG.cameras != null) {
-				for (cam in FlxG.cameras.list) {
+		FlxG.signals.gameResized.add(function (w, h)
+		{
+			if (FlxG.cameras != null)
+				for (cam in FlxG.cameras.list)
+					#if (flixel < "5.4.0")
 					@:privateAccess
 					if (cam != null && cam._filters != null)
+					#else
+					if (cam != null && cam.filters != null)
+					#end
 						resetSpriteCache(cam.flashSprite);
-				}
-			}
 
-			if (FlxG.game != null) resetSpriteCache(FlxG.game);
+			if (FlxG.game != null)
+				resetSpriteCache(FlxG.game);
 		});
 	}
 
-	static function resetSpriteCache(sprite:Sprite):Void {
-		@:privateAccess {
-		        sprite.__cacheBitmap = null;
+	static function resetSpriteCache(sprite:Sprite):Void
+	{
+		@:privateAccess
+		{
+				sprite.__cacheBitmap = null;
 			sprite.__cacheBitmapData = null;
 		}
 	}
@@ -179,12 +191,12 @@ class Main extends Sprite
 			/*"\nPlease report this error to the GitHub page: https://github.com/ShadowMario/FNF-PsychEngine\n\n> Crash Handler written by: sqirra-rng"*/;
 
 		if (!FileSystem.exists("./crash/")) FileSystem.createDirectory("./crash/");
-		File.saveContent(path, errMsg + "\n");
+		sys.io.File.saveContent(path, errMsg + "\n");
 
 		Sys.println(errMsg);
-		Sys.println("Crash dump saved in " + Path.normalize(path));
+		Sys.println("Crash dump saved in " + haxe.io.Path.normalize(path));
 
-		lime.app.Application.current.window.alert(errMsg, "Error!");
+		Application.current.window.alert(errMsg, "Error!");
 		DiscordClient.shutdown();
 		Sys.exit(1);
 	}

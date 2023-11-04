@@ -486,7 +486,8 @@ class PlayState extends MusicBeatState
 			if(ClientPrefs.data.timeBarType != 'Song Name' && !paused) {
 				var curTime:Float = songLength * (percent * 0.01);
 				var songCalc:Float = ClientPrefs.data.timeBarType == 'Time Elapsed' ? curTime : songLength - curTime;
-				timeTxt.text = FlxStringUtil.formatTime(FlxMath.bound(Math.floor(songCalc * 0.001), 0), false);
+				var newText:String = FlxStringUtil.formatTime(FlxMath.bound(Math.floor(songCalc * 0.001), 0), false);
+				if(timeTxt.text != newText) timeTxt.text = newText;
 			}
 		}
 
@@ -709,7 +710,7 @@ class PlayState extends MusicBeatState
 		#if LUA_ALLOWED
 		if (!isDead) { // ACTUALLY CAN CAUSES MEMORY LEAK!!!
 			if (luaDebugGroup == null) {
-				trace("can't and debug text - 'luaDebugGroup' is null!!!");
+				trace("can't add debug text - 'luaDebugGroup' is null!!!");
 				return;
 			}
 			var newText:DebugLuaText = luaDebugGroup.recycle(DebugLuaText);
@@ -1515,7 +1516,7 @@ class PlayState extends MusicBeatState
 		#if desktop
 		DiscordClient.changePresence(
 			detailsText,
-			SONG.song + " (" + storyDifficultyText + ")",
+			SONG.song + ' ($storyDifficultyText)',
 			iconP2.char,
 			cond,
 			(cond) ? songLength - Conductor.songPosition - ClientPrefs.data.noteOffset : null
@@ -1564,14 +1565,14 @@ class PlayState extends MusicBeatState
 			 *	UPD: FLIXEL `5.4.0` ACTUALLY MAKES CAMERA MORE JANKY (it's just sometimes teleport for no fucking reason)!
 			 *	THANKS FLIXEL!!!
 			 *  UPDD: nevermind they fixed it (i think)
+			 *  UPDD: no they fucking don't
 			 */
 			
 			FlxG.camera.followLerp = elapsed * 2.4 * cameraSpeed * playbackRate #if (flixel < "5.4.0") / #else * #end (FlxG.updateFramerate / 60);
 			#if ACHIEVEMENTS_ALLOWED
-			if(!startingSong && !endingSong && boyfriend.animation.curAnim != null && boyfriend.animation.curAnim.name.startsWith('idle'))
-				boyfriendIdleTime += elapsed;
-			else
-				boyfriendIdleTime = 0;
+			(!startingSong && !endingSong && boyfriend.animation.curAnim != null && boyfriend.animation.curAnim.name.startsWith('idle'))
+				? boyfriendIdleTime += elapsed
+				: boyfriendIdleTime = 0;
 			#end
 		}
 
@@ -2041,12 +2042,15 @@ class PlayState extends MusicBeatState
 				try
 				{
 					var split:Array<String> = value1.split('.');
-					(split.length > 1)
-						? LuaUtils.setVarInArray(LuaUtils.getPropertyLoop(split), split[split.length-1], value2)
-						: LuaUtils.setVarInArray(this, value1, value2);
+					if(split.length > 1)
+						LuaUtils.setVarInArray(LuaUtils.getPropertyLoop(split), split[split.length-1], value2);
+					else
+						LuaUtils.setVarInArray(this, value1, value2);
 				}
 				catch(e:Dynamic)
+				{
 					addTextToDebug('ERROR ("Set Property" Event) - ' + e.message.substr(0, e.message.indexOf('\n')), FlxColor.RED);
+				}
 			
 			case 'Play Sound':
 				if(flValue2 == null) flValue2 = 1;
@@ -2380,7 +2384,8 @@ class PlayState extends MusicBeatState
 				var numScore:FlxSprite = new FlxSprite(placement + (45 * daLoop) - 90 + ClientPrefs.data.comboOffset[2])
 					.loadGraphic(Paths.image(uiPrefix + 'num' + uiSuffix), true, isPixelStage ? 10 : 100, isPixelStage ? 12 : 120);
 				numScore.screenCenter(Y).y += 80 - ClientPrefs.data.comboOffset[3];
-				numScore.frame = numScore.frames.frames[i];
+				if(numScore.frames != null && numScore.frames.frames[i] != null) //prevents crash
+					numScore.frame = numScore.frames.frames[i];
 				numScore.cameras = [camHUD];
 				numScore.scrollFactor.set();
 

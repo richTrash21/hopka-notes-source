@@ -61,24 +61,6 @@ class FunkinLua {
 		lua = LuaL.newstate();
 		LuaL.openlibs(lua);
 
-		/*try {
-			var result:Dynamic = LuaL.dofile(lua, scriptName);
-			var resultStr:String = Lua.tostring(lua, result);
-			if(resultStr != null && result != 0) {
-				trace(resultStr);
-				#if windows
-				lime.app.Application.current.window.alert(resultStr, 'Error on lua script!');
-				#else
-				luaTrace('$scriptName\n$resultStr', true, false, FlxColor.RED);
-				#end
-				lua = null;
-				return;
-			}
-		} catch(e:Dynamic) {
-			trace(e);
-			return;
-		}*/
-
 		var game:PlayState = PlayState.instance;
 		game.luaArray.push(this);
 

@@ -75,6 +75,7 @@ class NoteSplash extends FlxSprite
 
 		var animNum:Int = FlxG.random.int(1, maxAnims);
 		animation.play('note' + direction + '-' + animNum, true);
+		animation.finishCallback = function(name:String) kill();
 		
 		var minFps:Int = 22;
 		var maxFps:Int = 26;
@@ -162,12 +163,10 @@ class NoteSplash extends FlxSprite
 	}
 
 	static var aliveTime:Float = 0;
-	static var buggedKillTime:Float = 0.5; //automatically kills note splashes if they break to prevent it from flooding your HUD
+	inline static var buggedKillTime:Float = 0.5; //automatically kills note splashes if they break to prevent it from flooding your HUD
 	override function update(elapsed:Float) {
 		aliveTime += elapsed;
-		if((animation.curAnim != null && animation.curAnim.finished) ||
-			(animation.curAnim == null && aliveTime >= buggedKillTime)) kill();
-
+		if(alive && aliveTime >= buggedKillTime) kill();
 		super.update(elapsed);
 	}
 }

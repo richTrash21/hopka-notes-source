@@ -71,10 +71,31 @@ class GameOverSubstate extends MusicBeatSubstate
 		boyfriend.y += boyfriend.positionArray[1];
 		add(boyfriend);
 
-		FlxG.sound.play(Paths.sound(deathSoundName));
-		FlxG.camera.scroll.set();
-		FlxG.camera.target = null;
+		boyfriend.animation.callback = function(Name:String, Frame:Int, FrameID:Int) {
+			if(Name == 'firstDeath' && Frame >= 12 && !isFollowingAlready)
+			{
+				updateCamera = true;
+				isFollowingAlready = true;
+			}
+		}
+		boyfriend.animation.finishCallback = function(Name:String) {
+			if (Name == 'firstDeath')
+			{
+				updateCamera = true;
+				startedDeath = true;
+				FlxG.sound.playMusic(Paths.music(loopSoundName));
+				boyfriend.playAnim('deathLoop');
+			}
+			// in case of missing animations death will continue with music n' shit
+			/*else if(!boyfriend.animation.curAnim.name.startsWith('death') && boyfriend.animation.curAnim.finished)
+			{
+				updateCamera = true;
+				startedDeath = true;
+				FlxG.sound.playMusic(Paths.music(loopSoundName));
+			}*/
+		}
 
+		FlxG.sound.play(Paths.sound(deathSoundName));
 		boyfriend.playAnim('firstDeath');
 
 		var midpoint:FlxPoint = boyfriend.getGraphicMidpoint();
@@ -83,6 +104,7 @@ class GameOverSubstate extends MusicBeatSubstate
 		midpoint.put();
 
 		FlxG.camera.follow(camFollow, LOCKON, 0);
+		FlxG.camera.scroll.set();
 	}
 
 	public var startedDeath:Bool = false;
@@ -110,36 +132,7 @@ class GameOverSubstate extends MusicBeatSubstate
 			game.callOnScripts('onGameOverConfirm', [false]);
 		}
 		
-		if (boyfriend.animation.curAnim != null)
-		{
-			if (boyfriend.animation.curAnim.name == 'firstDeath' && boyfriend.animation.curAnim.finished && startedDeath)
-				boyfriend.playAnim('deathLoop');
-
-			if(boyfriend.animation.curAnim.name == 'firstDeath')
-			{
-				if(boyfriend.animation.curAnim.curFrame >= 12 && !isFollowingAlready)
-				{
-					updateCamera = true;
-					isFollowingAlready = true;
-				}
-
-				if (boyfriend.animation.curAnim.finished)
-				{
-					updateCamera = true;
-					startedDeath = true;
-					FlxG.sound.playMusic(Paths.music(loopSoundName));
-				}
-			}
-			// in case of missing animations death will continue with music n' shit
-			/*else if(!boyfriend.animation.curAnim.name.startsWith('death') && boyfriend.animation.curAnim.finished)
-			{
-				updateCamera = true;
-				startedDeath = true;
-				FlxG.sound.playMusic(Paths.music(loopSoundName));
-			}*/
-		}
-		
-		FlxG.camera.followLerp = updateCamera ? elapsed * 0.6 / (FlxG.updateFramerate / 60) #if (flixel >= "5.4.0") * 16 #end : 0;
+		FlxG.camera.followLerp = updateCamera ? elapsed * 0.6 #if (flixel < "5.4.0") / #else * #end (FlxG.updateFramerate / 60) : 0;
 
 		if (FlxG.sound.music.playing) Conductor.songPosition = FlxG.sound.music.time;
 		game.callOnScripts('onUpdatePost', [elapsed]);

@@ -15,10 +15,9 @@ class Bar extends FlxSpriteGroup
 	public var bounds:BarBounds = {min: 0, max: 1};
 	public var percent(default, set):Float = 0;
 	public var leftToRight(default, set):Bool = true;
-	/**
-	 * DEPRECATED! For backward compability only!!!
-	 **/ 
-	public var barCenter(default, null):Float = 0;
+
+	@:deprecated("`barCenter` is deprecated, use `centerPoint.x` instead!!")
+	public var barCenter(get, never):Float;
 	public var centerPoint(default, null):FlxPoint = FlxPoint.get();
 
 	// you might need to change this if you want to use a custom bar
@@ -89,6 +88,9 @@ class Bar extends FlxSpriteGroup
 	{
 		if(leftBar == null || rightBar == null) return;
 
+		leftBar.setPosition(bg.x, bg.y);
+		rightBar.setPosition(bg.x, bg.y);
+
 		var leftSize:Float = FlxMath.lerp(0, barWidth, (leftToRight ? percent * 0.01 : 1 - percent * 0.01));
 
 		var rectRight:FlxRect = rightBar.clipRect;
@@ -108,7 +110,6 @@ class Bar extends FlxSpriteGroup
 		rightBar.clipRect = rectRight;
 
 		centerPoint.set(leftBar.x + leftSize + barOffset.x, leftBar.y + leftBar.clipRect.height * 0.5 + barOffset.y);
-		barCenter = centerPoint.x;
 
 		if(updateCallback != null)
 		{
@@ -165,15 +166,14 @@ class Bar extends FlxSpriteGroup
 		return value;
 	}
 
+	function get_barCenter():Float return centerPoint.x;
+
 	override function set_x(Value:Float):Float // for dynamic center point update
 	{
 		var prevX:Float = x;
 		super.set_x(Value);
 		if (leftBar != null && exists && prevX != Value)
-		{
 			centerPoint.x = leftBar.x + FlxMath.lerp(0, barWidth, leftToRight ? percent * 0.01 : 1 - percent * 0.01) + barOffset.x;
-			barCenter = centerPoint.x;
-		}
 		return Value;
 	}
 
