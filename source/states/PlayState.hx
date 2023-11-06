@@ -1053,10 +1053,10 @@ class PlayState extends MusicBeatState
 		spr.screenCenter();
 		spr.antialiasing = antialias;
 		insert(members.indexOf(notes), spr);
-		FlxTween.tween(spr, {/*y: spr.y + 100,*/ alpha: 0}, Conductor.crochet * 0.001, {
-			ease: FlxEase.cubeInOut,
-			onComplete: function(twn:FlxTween)
-			{
+
+		FlxTween.num(1, 0, Conductor.crochet * 0.001, {ease: FlxEase.cubeInOut}, function(a:Float) {
+			spr.alpha = a;
+			if (a == 0) {
 				remove(spr);
 				spr.destroy();
 			}
@@ -1173,8 +1173,10 @@ class PlayState extends MusicBeatState
 
 		// Song duration in a float, useful for the time left feature
 		songLength = FlxG.sound.music.length;
-		FlxTween.tween(timeBar, {alpha: 1}, 0.5, {ease: FlxEase.circOut});
-		FlxTween.tween(timeTxt, {alpha: 1}, 0.5, {ease: FlxEase.circOut});
+		FlxTween.num(0, 1, 0.5, {ease: FlxEase.circOut}, function(a:Float) {
+			timeBar.alpha = a;
+			timeTxt.alpha = a;
+		});
 
 		/*if(ClientPrefs.getGameplaySetting('showcase')) {
 			showcaseTxt = new FlxText(30, FlxG.height - 55, 0, "> SHOWCASE", 32);
@@ -1401,8 +1403,7 @@ class PlayState extends MusicBeatState
 			if (!isStoryMode && !skipArrowStartTween)
 			{
 				//babyArrow.y -= 10;
-				babyArrow.alpha = 0;
-				FlxTween.tween(babyArrow, {/*y: babyArrow.y + 10,*/ alpha: targetAlpha}, 1, {ease: FlxEase.circOut, startDelay: 0.5 + (0.2 * i)});
+				FlxTween.num(0, targetAlpha, 1, {ease: FlxEase.circOut, startDelay: 0.5 + (0.2 * i)}, function(a:Float) babyArrow.alpha = a);
 			}
 			else babyArrow.alpha = targetAlpha;
 
@@ -1768,14 +1769,13 @@ class PlayState extends MusicBeatState
 			if (vocals != null) vocals.pause();
 		}
 		if(!cpuControlled)
-		{
 			for (note in playerStrums)
 				if(note.animation.curAnim != null && note.animation.curAnim.name != 'static')
 				{
 					note.playAnim('static');
 					note.resetAnim = 0;
 				}
-		}
+
 		openSubState(new PauseSubState());
 
 		#if desktop
@@ -2381,11 +2381,13 @@ class PlayState extends MusicBeatState
 			var xThing:Float = 0;
 			for (i in seperatedScore)
 			{
+				var res:Array<Int> = [isPixelStage ? 10 : 100, isPixelStage ? 12 : 120];
 				var numScore:FlxSprite = new FlxSprite(placement + (45 * daLoop) - 90 + ClientPrefs.data.comboOffset[2])
-					.loadGraphic(Paths.image(uiPrefix + 'num' + uiSuffix), true, isPixelStage ? 10 : 100, isPixelStage ? 12 : 120);
+					.loadGraphic(Paths.image(uiPrefix + 'num' + uiSuffix), true, res[0], res[1]);
 				numScore.screenCenter(Y).y += 80 - ClientPrefs.data.comboOffset[3];
-				if(numScore.frames != null && numScore.frames.frames[i] != null) //prevents crash
-					numScore.frame = numScore.frames.frames[i];
+				(numScore.frames == null && numScore.frames.frames[i] == null)
+					? numScore.loadGraphic("flixel/images/logo/default.png") //prevents crash
+					: numScore.frame = numScore.frames.frames[i];
 				numScore.cameras = [camHUD];
 				numScore.scrollFactor.set();
 
@@ -2404,24 +2406,29 @@ class PlayState extends MusicBeatState
 				if (!ClientPrefs.data.comboStacking) lastScore.push(numScore);
 				if (showComboNum) insert(members.indexOf(strumLineNotes), numScore);
 
-				FlxTween.tween(numScore, {alpha: 0}, 0.2 / playbackRate, {
-					onComplete: function(tween:FlxTween) numScore.destroy(),
-					startDelay: Conductor.crochet * 0.002 / playbackRate
-				});
+				FlxTween.num(1, 0, 0.2 / playbackRate, {startDelay: Conductor.crochet * 0.002 / playbackRate},
+					function(a:Float) {
+						numScore.alpha = a;
+						if(a == 0) numScore.destroy();
+					}
+				);
 
 				daLoop++;
 				if(numScore.x > xThing) xThing = numScore.x;
 			}
 			comboSpr.x = xThing + 50;
-			FlxTween.tween(rating, {alpha: 0}, 0.2 / playbackRate, {
-				onComplete: function(tween:FlxTween) rating.destroy(),
-				startDelay: Conductor.crochet * 0.001 / playbackRate
-			});
-
-			FlxTween.tween(comboSpr, {alpha: 0}, 0.2 / playbackRate, {
-				onComplete: function(tween:FlxTween) comboSpr.destroy(),
-				startDelay: Conductor.crochet * 0.002 / playbackRate
-			});
+			FlxTween.num(1, 0, 0.2 / playbackRate, {startDelay: Conductor.crochet * 0.001 / playbackRate},
+				function(a:Float) {
+					rating.alpha = a;
+					if(a == 0) rating.destroy();
+				}
+			);
+			FlxTween.num(1, 0, 0.2 / playbackRate, {startDelay: Conductor.crochet * 0.002 / playbackRate},
+				function(a:Float) {
+					comboSpr.alpha = a;
+					if(a == 0) comboSpr.destroy();
+				}
+			);
 		}
 	}
 
@@ -3157,7 +3164,7 @@ class PlayState extends MusicBeatState
 							break;
 						}
 			}
-			fullComboFunction();
+			if(fullComboFunction != null) fullComboFunction();
 		}
 		updateScore(badHit); // score will only update after rating is calculated, if it's a badHit, it shouldn't bounce -Ghost
 		setOnScripts('rating', ratingPercent);

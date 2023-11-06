@@ -62,6 +62,8 @@ class Bar extends FlxSpriteGroup
 	{
 		var value:Null<Float> = FlxMath.remapToRange(FlxMath.bound(valueFunction(), bounds.min, bounds.max), bounds.min, bounds.max, 0, 100);
 		percent = (value != null ? value : 0);
+		//if(rightBar != null) rightBar.setPosition(bg.x, bg.y);
+		//if(leftBar != null) leftBar.setPosition(bg.x, bg.y);
 		super.update(elapsed);
 	}
 
@@ -87,9 +89,6 @@ class Bar extends FlxSpriteGroup
 	public function updateBar()
 	{
 		if(leftBar == null || rightBar == null) return;
-
-		leftBar.setPosition(bg.x, bg.y);
-		rightBar.setPosition(bg.x, bg.y);
 
 		var leftSize:Float = FlxMath.lerp(0, barWidth, (leftToRight ? percent * 0.01 : 1 - percent * 0.01));
 

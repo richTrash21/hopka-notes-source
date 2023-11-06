@@ -697,7 +697,7 @@ class FunkinLua {
 		});
 		addCallback("cameraSetTarget", function(target:String) {
 			game.moveCamera(target);
-			return target == 'dad';
+			return target == 'dad' || target == 'opponent';
 		});
 		addCallback("cameraShake", function(camera:String, intensity:Float, duration:Float)
 			LuaUtils.cameraFromString(camera).shake(intensity, duration)
@@ -819,7 +819,7 @@ class FunkinLua {
 			LuaUtils.resetSpriteTag(tag);
 			var leSprite:ModchartSprite = new ModchartSprite(x, y, (!animated && image != null && image.length > 0) ? Paths.image(image) : null);
 			if(animated) LuaUtils.loadFrames(leSprite, image, spriteType);
-			else leSprite.active = true;
+			//else leSprite.active = true;
 			game.modchartSprites.set(tag, leSprite);
 		});
 		addCallback("makeAnimatedLuaSprite", function(tag:String, ?image:String = null, ?x:Float = 0, ?y:Float = 0, ?spriteType:String = "sparrow") {
@@ -835,10 +835,12 @@ class FunkinLua {
 			var spr:FlxSprite = LuaUtils.getObjectDirectly(obj, false);
 			if(spr != null) spr.makeGraphic(width, height, CoolUtil.colorFromString(color));
 		});
-		addCallback("makeGradient", function(obj:String, width:Int = 256, height:Int = 256, colors:Array<String>, angle:Int = 90, chunkSize:Int = 1) {
+		addCallback("makeGradient", function(obj:String, width:Int = 256, height:Int = 256, colors:Array<String>, angle:Int = 90, chunkSize:Int = 1, interpolate:Bool = false) {
 			var spr:FlxSprite = LuaUtils.getObjectDirectly(obj, false);
-			if(colors == null) colors = ['FFFFFF', '000000'];
-			if(spr != null) spr.loadGraphic(FlxGradient.createGradientFlxSprite(width, height, [for(penis in colors) CoolUtil.colorFromString(penis)]).graphic, chunkSize, angle);
+			if(spr != null) {
+				if(colors == null || colors.length < 2) colors = ['FFFFFF', '000000'];
+				spr.pixels = FlxGradient.createGradientBitmapData(width, height, [for(penis in colors) CoolUtil.colorFromString(penis)], chunkSize, angle, interpolate);
+			}
 		});
 
 		addCallback("addAnimationByPrefix", function(obj:String, name:String, prefix:String, framerate:Int = 24, loop:Bool = true) {

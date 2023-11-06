@@ -185,10 +185,14 @@ class MainMenuState extends MusicBeatState
 					{
 						if (curSelected != spr.ID)
 						{
-							FlxTween.tween(spr, {alpha: 0}, 0.4, {
+							FlxTween.num(1, 0, 0.4, {ease: FlxEase.quadOut}, function(value:Float) {
+								spr.alpha = value;
+								if(value == 0) spr.destroy();
+							});
+							/*FlxTween.tween(spr, {alpha: 0}, 0.4, {
 								ease: FlxEase.quadOut,
 								onComplete: function(twn:FlxTween) spr.kill()
-							});
+							});*/
 						}
 						else
 						{
@@ -226,32 +230,45 @@ class MainMenuState extends MusicBeatState
 				selectedSomethin = true;
 				MusicBeatState.switchState(new MasterEditorMenu());
 			}
+			else if (controls.justPressed('reset')) // garbage begone!!!
+			{
+				FlxG.sound.play(Paths.sound('cancelMenu'));
+				//Paths.clearStoredMemory();
+				Paths.clearUnusedMemory();
+				cpp.vm.Gc.run(true);
+				var massage:FlxText = new FlxText(0, 0, 0, "MEMORY CLEARED!"); // I KNOW THAT I MISSPELLED IT!!!!
+				massage.setFormat("VCR OSD Mono", 24, FlxColor.WHITE, LEFT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
+				massage.setPosition(FlxG.width - massage.width - 5, FlxG.height - massage.height - 5);
+				massage.scrollFactor.set();
+				add(massage);
+				FlxTween.num(1, 0, 0.6, {startDelay: 1}, function(value:Float) {
+					massage.alpha = value;
+					if(value == 0) massage.destroy();
+				});
+			}
 			#end
 		}
-
 		super.update(elapsed);
 	}
 
 	function changeItem(huh:Int = 0)
 	{
 		if (huh != 0) FlxG.sound.play(Paths.sound('scrollMenu'));
-		curSelected += huh;
 
-		if (curSelected >= menuItems.length)
-			curSelected = 0;
-		if (curSelected < 0)
-			curSelected = menuItems.length - 1;
+		curSelected = FlxMath.wrap(curSelected + huh, 0, menuItems.length-1);
 
 		menuItems.forEach(function(spr:FlxSprite)
 		{
-			spr.animation.play('idle');
-			spr.updateHitbox();
-
 			if (spr.ID == curSelected)
 			{
 				spr.animation.play('selected');
 				FlxG.camera.follow(spr, null, 0);
 				spr.centerOffsets();
+			}
+			else
+			{
+				spr.animation.play('idle');
+				spr.updateHitbox();
 			}
 		});
 	}

@@ -57,18 +57,15 @@ class NotesSubState extends MusicBeatSubstate
 
 		var grid:FlxBackdrop = new FlxBackdrop(FlxGridOverlay.createGrid(80, 80, 160, 160, true, 0x33FFFFFF, 0x0));
 		grid.velocity.set(40, 40);
-		grid.alpha = 0;
-		FlxTween.tween(grid, {alpha: 1}, 0.5, {ease: FlxEase.quadOut});
+		FlxTween.num(0, 1, 0.5, {ease: FlxEase.quadOut}, function(a:Float) grid.alpha = a);
 		add(grid);
 
-		modeBG = new FlxSprite(215, 85).makeGraphic(315, 115, FlxColor.BLACK);
-		modeBG.visible = false;
-		modeBG.alpha = 0.4;
+		modeBG = new FlxSprite(215, 85).makeGraphic(315, 115, 0x66000000);
+		//modeBG.visible = false;
 		add(modeBG);
 
-		notesBG = new FlxSprite(140, 190).makeGraphic(480, 125, FlxColor.BLACK);
+		notesBG = new FlxSprite(140, 190).makeGraphic(480, 125, 0x66000000);
 		notesBG.visible = false;
-		notesBG.alpha = 0.4;
 		add(notesBG);
 
 		modeNotes = new FlxTypedGroup<FlxSprite>();
@@ -77,12 +74,8 @@ class NotesSubState extends MusicBeatSubstate
 		myNotes = new FlxTypedGroup<StrumNote>();
 		add(myNotes);
 
-		var bg:FlxSprite = new FlxSprite(720).makeGraphic(FlxG.width - 720, FlxG.height, FlxColor.BLACK);
-		bg.alpha = 0.25;
-		add(bg);
-		var bg:FlxSprite = new FlxSprite(750, 160).makeGraphic(FlxG.width - 780, 540, FlxColor.BLACK);
-		bg.alpha = 0.25;
-		add(bg);
+		add(new FlxSprite(720).makeGraphic(FlxG.width - 720, FlxG.height, 0x40000000));
+		add(new FlxSprite(750, 160).makeGraphic(FlxG.width - 780, 540, 0x40000000));
 		
 		var text:Alphabet = new Alphabet(50, 86, 'CTRL', false);
 		text.alignment = CENTERED;
@@ -164,9 +157,7 @@ class NotesSubState extends MusicBeatSubstate
 	}
 
 	function updateTip()
-	{
 		tipTxt.text = 'Hold ' + (!controls.controllerMode ? 'Shift' : 'Left Shoulder Button') + ' + Press RELOAD to fully reset the selected Note.';
-	}
 
 	var _storedColor:FlxColor;
 	var changingNote:Bool = false;
@@ -234,7 +225,6 @@ class NotesSubState extends MusicBeatSubstate
 			controllerPointer.y = Math.max(0, Math.min(FlxG.height, controllerPointer.y + analogY * 1000 * elapsed));
 		}
 		var controllerPressed:Bool = (controls.controllerMode && controls.ACCEPT);
-		//
 
 		if(FlxG.keys.justPressed.CONTROL)
 		{
@@ -524,11 +514,7 @@ class NotesSubState extends MusicBeatSubstate
 	}
 
 	function changeSelectionMode(change:Int = 0) {
-		curSelectedMode += change;
-		if (curSelectedMode < 0)
-			curSelectedMode = 2;
-		if (curSelectedMode >= 3)
-			curSelectedMode = 0;
+		curSelectedMode = FlxMath.wrap(curSelectedMode + change, 0, 2);
 
 		modeBG.visible = true;
 		notesBG.visible = false;
@@ -536,11 +522,7 @@ class NotesSubState extends MusicBeatSubstate
 		FlxG.sound.play(Paths.sound('scrollMenu'));
 	}
 	function changeSelectionNote(change:Int = 0) {
-		curSelectedNote += change;
-		if (curSelectedNote < 0)
-			curSelectedNote = dataArray.length-1;
-		if (curSelectedNote >= dataArray.length)
-			curSelectedNote = 0;
+		curSelectedNote = FlxMath.wrap(curSelectedNote + change, 0, dataArray.length-1);
 		
 		modeBG.visible = false;
 		notesBG.visible = true;
@@ -599,22 +581,24 @@ class NotesSubState extends MusicBeatSubstate
 		skinNote.antialiasing = ClientPrefs.data.antialiasing;
 		skinNote.setGraphicSize(68);
 		skinNote.updateHitbox();
-		skinNote.animation.add('anim', [0], 24, true);
-		skinNote.animation.play('anim', true);
-		if(!onPixel) skinNote.antialiasing = false;
+		(skinNote.frames == null && skinNote.frames.frames[0] == null)
+			? skinNote.loadGraphic("flixel/images/logo/default.png") //prevents crash
+			: skinNote.frame = skinNote.frames.frames[0];
+		skinNote.antialiasing = onPixel;
 		add(skinNote);
 
-		var res:Int = !onPixel ? 160 : 17;
+		res = !onPixel ? 160 : 17;
 		for (i in 0...3)
 		{
 			var newNote:FlxSprite = new FlxSprite(230 + (100 * i), 100).loadGraphic(Paths.image('noteColorMenu/' + (!onPixel ? 'note' : 'notePixel')), true, res, res);
 			newNote.antialiasing = ClientPrefs.data.antialiasing;
 			newNote.setGraphicSize(85);
 			newNote.updateHitbox();
-			newNote.animation.add('anim', [i], 24, true);
-			newNote.animation.play('anim', true);
+			(newNote.frames == null && newNote.frames.frames[i] == null)
+				? newNote.loadGraphic("flixel/images/logo/default.png") //prevents crash
+				: newNote.frame = newNote.frames.frames[i];
 			newNote.ID = i;
-			if(onPixel) newNote.antialiasing = false;
+			newNote.antialiasing = !onPixel;
 			modeNotes.add(newNote);
 		}
 
@@ -648,8 +632,7 @@ class NotesSubState extends MusicBeatSubstate
 
 	function updateNotes(?instant:Bool = false)
 	{
-		for (note in modeNotes)
-			note.alpha = (curSelectedMode == note.ID) ? 1 : 0.6;
+		for (note in modeNotes) note.alpha = (curSelectedMode == note.ID) ? 1 : 0.6;
 
 		for (note in myNotes)
 		{

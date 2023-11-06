@@ -42,8 +42,7 @@ class BaseOptionsMenu extends MusicBeatSubstate
 
 		var grid:FlxBackdrop = new FlxBackdrop(FlxGridOverlay.createGrid(80, 80, 160, 160, true, 0x33FFFFFF, 0x0));
 		grid.velocity.set(40, 40);
-		grid.alpha = 0;
-		FlxTween.tween(grid, {alpha: 1}, 0.5, {ease: FlxEase.quadOut});
+		FlxTween.num(0, 1, 0.5, {ease: FlxEase.quadOut}, function(a:Float) grid.alpha = a);
 		add(grid);
 
 		// avoids lagspikes while scrolling through menus!
@@ -56,8 +55,7 @@ class BaseOptionsMenu extends MusicBeatSubstate
 		checkboxGroup = new FlxTypedGroup<CheckboxThingie>();
 		add(checkboxGroup);
 
-		descBox = new FlxSprite().makeGraphic(1, 1, FlxColor.BLACK);
-		descBox.alpha = 0.6;
+		descBox = new FlxSprite().makeGraphic(1, 1, 0x99000000);
 		add(descBox);
 
 		var titleText:Alphabet = new Alphabet(75, 45, title, true);
@@ -141,9 +139,9 @@ class BaseOptionsMenu extends MusicBeatSubstate
 					var pressed = (controls.UI_LEFT_P || controls.UI_RIGHT_P);
 					if(holdTime > 0.5 || pressed) {
 						if(pressed) {
-							var add:Dynamic = null;
-							if(curOption.type != 'string')
-								add = controls.UI_LEFT ? -curOption.changeValue : curOption.changeValue;
+							var add:Dynamic = (curOption.type != 'string')
+								? controls.UI_LEFT ? -curOption.changeValue : curOption.changeValue
+								: null;
 
 							switch(curOption.type)
 							{
@@ -165,13 +163,7 @@ class BaseOptionsMenu extends MusicBeatSubstate
 
 								case 'string':
 									var num:Int = curOption.curOption; //lol
-									if(controls.UI_LEFT_P) --num;
-									else num++;
-
-									if (num < 0)
-										num = curOption.options.length - 1;
-									else if(num >= curOption.options.length)
-										num = 0;
+									num = FlxMath.wrap(num + (controls.UI_LEFT_P ? -1 : 1), 0, curOption.options.length-1);
 
 									curOption.curOption = num;
 									curOption.setValue(curOption.options[num]); //lol
@@ -238,18 +230,13 @@ class BaseOptionsMenu extends MusicBeatSubstate
 	
 	function changeSelection(change:Int = 0)
 	{
-		curSelected += change;
-		if (curSelected < 0)
-			curSelected = optionsArray.length - 1;
-		if (curSelected >= optionsArray.length)
-			curSelected = 0;
+		curSelected = FlxMath.wrap(curSelected + change, 0, optionsArray.length-1);
 
 		descText.text = optionsArray[curSelected].description;
 		descText.screenCenter(Y);
 		descText.y += 270;
 
 		var bullShit:Int = 0;
-
 		for (item in grpOptions.members) {
 			item.targetY = bullShit - curSelected;
 			item.alpha = item.targetY == 0 ? 1 : 0.6;
@@ -266,7 +253,5 @@ class BaseOptionsMenu extends MusicBeatSubstate
 		FlxG.sound.play(Paths.sound('scrollMenu'));
 	}
 
-	function reloadCheckboxes() {
-		for (checkbox in checkboxGroup) checkbox.daValue = (optionsArray[checkbox.ID].getValue() == true);
-	}
+	function reloadCheckboxes() for (checkbox in checkboxGroup) checkbox.daValue = (optionsArray[checkbox.ID].getValue() == true);
 }

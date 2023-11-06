@@ -75,8 +75,7 @@ class ControlsSubState extends MusicBeatSubstate
 
 		var grid:FlxBackdrop = new FlxBackdrop(FlxGridOverlay.createGrid(80, 80, 160, 160, true, 0x33FFFFFF, 0x0));
 		grid.velocity.set(40, 40);
-		grid.alpha = 0;
-		FlxTween.tween(grid, {alpha: 1}, 0.5, {ease: FlxEase.quadOut});
+		FlxTween.num(0, 1, 0.5, {ease: FlxEase.quadOut}, function(a:Float) grid.alpha = a);
 		add(grid);
 
 		grpDisplay = new FlxTypedGroup<Alphabet>();
@@ -268,9 +267,10 @@ class ControlsSubState extends MusicBeatSubstate
 
 		if(!binding)
 		{
-			if(FlxG.keys.justPressed.ESCAPE || FlxG.gamepads.anyJustPressed(B))
+			if((FlxG.keys.justPressed.ESCAPE || FlxG.keys.justPressed.BACKSPACE) || FlxG.gamepads.anyJustPressed(B))
 			{
 				close();
+				FlxG.sound.play(Paths.sound('cancelMenu'));
 				return;
 			}
 			if(FlxG.keys.justPressed.CONTROL || FlxG.gamepads.anyJustPressed(LEFT_SHOULDER) || FlxG.gamepads.anyJustPressed(RIGHT_SHOULDER)) swapMode();
@@ -286,8 +286,7 @@ class ControlsSubState extends MusicBeatSubstate
 				if(options[curOptions[curSelected]][1] != defaultKey)
 				{
 					bindingBlack = new FlxSprite().makeGraphic(FlxG.width, FlxG.height, /*FlxColor.BLACK*/ FlxColor.WHITE);
-					bindingBlack.alpha = 0;
-					FlxTween.tween(bindingBlack, {alpha: 0.6}, 0.35, {ease: FlxEase.linear});
+					FlxTween.num(0, 0.6, 0.5, {ease: FlxEase.linear}, function(a:Float) bindingBlack.alpha = a);
 					add(bindingBlack);
 
 					bindingText = new Alphabet(FlxG.width / 2, 160, "Rebinding " + options[curOptions[curSelected]][3], false);
@@ -453,15 +452,10 @@ class ControlsSubState extends MusicBeatSubstate
 		ClientPrefs.reloadVolumeKeys();
 	}
 
-	function updateText(?move:Int = 0)
+	function updateText(move:Int = 0)
 	{
 		if(move != 0)
-		{
-			curSelected += move;
-
-			if (curSelected < 0) curSelected = curOptions.length - 1;
-			else if (curSelected >= curOptions.length) curSelected = 0;
-		}
+			curSelected = FlxMath.wrap(curSelected + move, 0, curOptions.length-1);
 
 		var num:Int = curOptionsValid[curSelected];
 		var addNum:Int = 0;

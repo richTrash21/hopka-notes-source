@@ -35,10 +35,9 @@ class ShaderFunctions
 			}
 
 			var split:Array<String> = obj.split('.');
-			var leObj:FlxSprite = LuaUtils.getObjectDirectly(split[0]);
-			if(split.length > 1) {
-				leObj = LuaUtils.getVarInArray(LuaUtils.getPropertyLoop(split), split[split.length-1]);
-			}
+			var leObj:FlxSprite = (split.length > 1)
+				? LuaUtils.getVarInArray(LuaUtils.getPropertyLoop(split), split[split.length-1])
+				: LuaUtils.getObjectDirectly(split[0]);
 
 			if(leObj != null) {
 				var arr:Array<String> = funk.runtimeShaders.get(shader);
@@ -52,10 +51,9 @@ class ShaderFunctions
 		});
 		addCallback("removeSpriteShader", function(obj:String) {
 			var split:Array<String> = obj.split('.');
-			var leObj:FlxSprite = LuaUtils.getObjectDirectly(split[0]);
-			if(split.length > 1) {
-				leObj = LuaUtils.getVarInArray(LuaUtils.getPropertyLoop(split), split[split.length-1]);
-			}
+			var leObj:FlxSprite = (split.length > 1)
+				? LuaUtils.getVarInArray(LuaUtils.getPropertyLoop(split), split[split.length-1])
+				: LuaUtils.getObjectDirectly(split[0]);
 
 			if(leObj != null) {
 				leObj.shader = null;
@@ -252,11 +250,9 @@ class ShaderFunctions
 				return false;
 			}
 
-			// trace('bitmapdatapath: $bitmapdataPath');
 			var value = Paths.image(bitmapdataPath);
 			if(value != null && value.bitmap != null)
 			{
-				// trace('Found bitmapdata. Width: ${value.bitmap.width} Height: ${value.bitmap.height}');
 				shader.setSampler2D(prop, value.bitmap);
 				return true;
 			}
@@ -274,9 +270,9 @@ class ShaderFunctions
 	public static function getShader(obj:String):FlxRuntimeShader
 	{
 		var split:Array<String> = obj.split('.');
-		var target:FlxSprite = null;
-		if(split.length > 1) target = LuaUtils.getVarInArray(LuaUtils.getPropertyLoop(split), split[split.length-1]);
-		else target = LuaUtils.getObjectDirectly(split[0]);
+		var target:FlxSprite = (split.length > 1)
+			? LuaUtils.getVarInArray(LuaUtils.getPropertyLoop(split), split[split.length-1])
+			: LuaUtils.getObjectDirectly(split[0]);
 
 		if(target == null)
 		{

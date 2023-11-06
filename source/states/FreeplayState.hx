@@ -71,9 +71,8 @@ class FreeplayState extends MusicBeatState
 			{
 				var colors:Array<Int> = song[2];
 				if(colors == null || colors.length < 3)
-				{
 					colors = [146, 113, 253];
-				}
+
 				addSong(song[0], i, song[1], FlxColor.fromRGB(colors[0], colors[1], colors[2]));
 			}
 		}
@@ -148,7 +147,6 @@ class FreeplayState extends MusicBeatState
 		changeSelection();
 
 		var textBG:FlxSprite = new FlxSprite(0, FlxG.height - 26).makeGraphic(FlxG.width, 26, 0x99000000);
-		//textBG.alpha = 0.6;
 		add(textBG);
 
 		#if PRELOAD_ALL
@@ -174,9 +172,7 @@ class FreeplayState extends MusicBeatState
 	}
 
 	public function addSong(songName:String, weekNum:Int, songCharacter:String, color:Int)
-	{
 		songs.push(new SongMetadata(songName, weekNum, songCharacter, color));
-	}
 
 	function weekIsLocked(name:String):Bool {
 		var leWeek:WeekData = WeekData.weeksLoaded.get(name);
@@ -304,10 +300,9 @@ class FreeplayState extends MusicBeatState
 				Mods.currentModDirectory = songs[curSelected].folder;
 				var poop:String = Highscore.formatSong(songs[curSelected].songName.toLowerCase(), curDifficulty);
 				PlayState.SONG = Song.loadFromJson(poop, songs[curSelected].songName.toLowerCase());
-				if (PlayState.SONG.needsVoices)
-					vocals = new FlxSound().loadEmbedded(Paths.voices(PlayState.SONG.song));
-				else
-					vocals = new FlxSound();
+				(PlayState.SONG.needsVoices)
+					? vocals = new FlxSound().loadEmbedded(Paths.voices(PlayState.SONG.song))
+					: vocals = new FlxSound();
 
 				FlxG.sound.list.add(vocals);
 				FlxG.sound.playMusic(Paths.inst(PlayState.SONG.song), 0.7);
@@ -391,12 +386,7 @@ class FreeplayState extends MusicBeatState
 
 	function changeDiff(change:Int = 0)
 	{
-		curDifficulty += change;
-
-		if (curDifficulty < 0)
-			curDifficulty = Difficulty.list.length-1;
-		if (curDifficulty >= Difficulty.list.length)
-			curDifficulty = 0;
+		curDifficulty = FlxMath.wrap(curDifficulty + change, 0, Difficulty.list.length-1);
 
 		#if !switch
 		intendedScore = Highscore.getScore(songs[curSelected].songName, curDifficulty);
@@ -404,10 +394,9 @@ class FreeplayState extends MusicBeatState
 		#end
 
 		lastDifficultyName = Difficulty.getString(curDifficulty);
-		if (Difficulty.list.length > 1)
-			diffText.text = '< ' + lastDifficultyName.toUpperCase() + ' >';
-		else
-			diffText.text = lastDifficultyName.toUpperCase();
+		diffText.text = (Difficulty.list.length > 1) 
+			? '< ${lastDifficultyName.toUpperCase()} >'
+			: lastDifficultyName.toUpperCase();
 
 		positionHighscore();
 		missingText.visible = false;
@@ -420,12 +409,7 @@ class FreeplayState extends MusicBeatState
 		if(playSound) FlxG.sound.play(Paths.sound('scrollMenu'), 0.4);
 
 		var lastList:Array<String> = Difficulty.list;
-		curSelected += change;
-
-		if (curSelected < 0)
-			curSelected = songs.length - 1;
-		if (curSelected >= songs.length)
-			curSelected = 0;
+		curSelected = FlxMath.wrap(curSelected + change, 0, songs.length-1);
 			
 		var newColor:Int = songs[curSelected].color;
 		if(newColor != intendedColor) {
@@ -436,15 +420,10 @@ class FreeplayState extends MusicBeatState
 			});
 		}
 
-		// selector.y = (70 * curSelected) + 30;
+		for (i in 0...iconArray.length)
+			iconArray[i].alpha = i == curSelected ? 1 : 0.6;
 
 		var bullShit:Int = 0;
-
-		for (i in 0...iconArray.length)
-			iconArray[i].alpha = 0.6;
-
-		iconArray[curSelected].alpha = 1;
-
 		for (item in grpSongs.members)
 		{
 			bullShit++;
@@ -471,9 +450,7 @@ class FreeplayState extends MusicBeatState
 	}
 
 	inline private function _updateSongLastDifficulty()
-	{
 		songs[curSelected].lastDifficulty = Difficulty.getString(curDifficulty);
-	}
 
 	private function positionHighscore() {
 		scoreText.x = FlxG.width - scoreText.width - 6;

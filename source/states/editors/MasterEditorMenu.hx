@@ -16,13 +16,14 @@ class MasterEditorMenu extends MusicBeatState
 		'Menu Character Editor',
 		'Dialogue Editor',
 		'Dialogue Portrait Editor',
-		'Note Splash Debug'
+		'Note Splash Debug',
+		'Mods Menu' //do not ask
 	];
 	private var grpTexts:FlxTypedGroup<Alphabet>;
 	private var directories:Array<String> = [null];
 
-	private var curSelected = 0;
-	private var curDirectory = 0;
+	private var curSelected:Int = 0;
+	private var curDirectory:Int = 0;
 	private var directoryTxt:FlxText;
 
 	override function create()
@@ -51,8 +52,7 @@ class MasterEditorMenu extends MusicBeatState
 		}
 		
 		#if MODS_ALLOWED
-		var textBG:FlxSprite = new FlxSprite(0, FlxG.height - 42).makeGraphic(FlxG.width, 42, 0xFF000000);
-		textBG.alpha = 0.6;
+		var textBG:FlxSprite = new FlxSprite(0, FlxG.height - 42).makeGraphic(FlxG.width, 42, 0x99000000);
 		add(textBG);
 
 		directoryTxt = new FlxText(textBG.x, textBG.y + 4, FlxG.width, '', 32);
@@ -100,13 +100,23 @@ class MasterEditorMenu extends MusicBeatState
 					LoadingState.loadAndSwitchState(new DialogueCharacterEditorState(), false);
 				case 'Note Splash Debug':
 					LoadingState.loadAndSwitchState(new NoteSplashDebugState());
+				case 'Mods Menu':
+					MusicBeatState.switchState(new ModsMenuState());
 			}
-			FlxG.sound.music.volume = 0;
+			if(options[curSelected] != 'Mods Menu') FlxG.sound.music.volume = 0;
 			#if PRELOAD_ALL
 			FreeplayState.destroyFreeplayVocals();
 			#end
 		}
-		
+		super.update(elapsed);
+	}
+
+	function changeSelection(change:Int = 0)
+	{
+		if(change != 0) FlxG.sound.play(Paths.sound('scrollMenu'), 0.4);
+
+		curSelected = FlxMath.wrap(curSelected + change, 0, options.length-1);
+
 		var bullShit:Int = 0;
 		for (item in grpTexts.members)
 		{
@@ -114,31 +124,14 @@ class MasterEditorMenu extends MusicBeatState
 			bullShit++;
 			item.alpha = item.targetY == 0 ? 1 : 0.6;
 		}
-		super.update(elapsed);
-	}
-
-	function changeSelection(change:Int = 0)
-	{
-		FlxG.sound.play(Paths.sound('scrollMenu'), 0.4);
-
-		curSelected += change;
-
-		if (curSelected < 0)
-			curSelected = options.length - 1;
-		if (curSelected >= options.length)
-			curSelected = 0;
 	}
 
 	#if MODS_ALLOWED
 	function changeDirectory(change:Int = 0)
 	{
 		if(change != 0) FlxG.sound.play(Paths.sound('scrollMenu'), 0.4);
-		curDirectory += change;
 
-		if(curDirectory < 0)
-			curDirectory = directories.length - 1;
-		if(curDirectory >= directories.length)
-			curDirectory = 0;
+		curDirectory = FlxMath.wrap(curDirectory + change, 0, directories.length-1);
 	
 		WeekData.setDirectoryFromWeek();
 		if(directories[curDirectory] == null || directories[curDirectory].length < 1)
@@ -146,7 +139,7 @@ class MasterEditorMenu extends MusicBeatState
 		else
 		{
 			Mods.currentModDirectory = directories[curDirectory];
-			directoryTxt.text = '< Loaded Mod Directory: ' + Mods.currentModDirectory + ' >';
+			directoryTxt.text = '< Loaded Mod Directory: ${Mods.currentModDirectory} >';
 		}
 		directoryTxt.text = directoryTxt.text.toUpperCase();
 	}

@@ -102,17 +102,13 @@ class CreditsState extends MusicBeatState
 		}
 		
 		descBox = new AttachedSprite();
-		descBox.makeGraphic(1, 1, FlxColor.BLACK);
-		descBox.xAdd = -10;
-		descBox.yAdd = -10;
-		descBox.alphaMult = 0.6;
-		descBox.alpha = 0.6;
+		descBox.makeGraphic(1, 1, 0x99000000);
+		descBox.xAdd = descBox.yAdd = -10;
 		add(descBox);
 
 		descText = new FlxText(50, FlxG.height + offsetThing - 25, 1180, "", 32);
-		descText.setFormat(Paths.font("vcr.ttf"), 32, FlxColor.WHITE, CENTER/*, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK*/);
+		descText.setFormat(Paths.font("vcr.ttf"), 32, FlxColor.WHITE, CENTER);
 		descText.scrollFactor.set();
-		//descText.borderSize = 2.4;
 		descBox.sprTracker = descText;
 		add(descText);
 
@@ -136,15 +132,12 @@ class CreditsState extends MusicBeatState
 				var shiftMult:Int = 1;
 				if(FlxG.keys.pressed.SHIFT) shiftMult = 3;
 
-				var upP = controls.UI_UP_P;
-				var downP = controls.UI_DOWN_P;
-
-				if (upP)
+				if (controls.UI_UP_P)
 				{
 					changeSelection(-shiftMult);
 					holdTime = 0;
 				}
-				if (downP)
+				if (controls.UI_DOWN_P)
 				{
 					changeSelection(shiftMult);
 					holdTime = 0;
@@ -195,13 +188,8 @@ class CreditsState extends MusicBeatState
 	function changeSelection(change:Int = 0)
 	{
 		FlxG.sound.play(Paths.sound('scrollMenu'), 0.4);
-		do {
-			curSelected += change;
-			if (curSelected < 0)
-				curSelected = creditsStuff.length - 1;
-			if (curSelected >= creditsStuff.length)
-				curSelected = 0;
-		} while(unselectableCheck(curSelected));
+		do curSelected = FlxMath.wrap(curSelected + change, 0, creditsStuff.length-1)
+		while(unselectableCheck(curSelected));
 
 		var newColor:FlxColor = CoolUtil.colorFromString(creditsStuff[curSelected][4]);
 		trace('The BG color is: $newColor');
@@ -214,7 +202,6 @@ class CreditsState extends MusicBeatState
 		}
 
 		var bullShit:Int = 0;
-
 		for (item in grpOptions.members)
 		{
 			item.targetY = bullShit - curSelected;
