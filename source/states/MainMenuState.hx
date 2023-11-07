@@ -232,19 +232,20 @@ class MainMenuState extends MusicBeatState
 			}
 			else if (controls.justPressed('reset')) // garbage begone!!!
 			{
-				FlxG.sound.play(Paths.sound('cancelMenu'));
-				//Paths.clearStoredMemory();
-				Paths.clearUnusedMemory();
-				cpp.vm.Gc.run(true);
 				var massage:FlxText = new FlxText(0, 0, 0, "MEMORY CLEARED!"); // I KNOW THAT I MISSPELLED IT!!!!
 				massage.setFormat("VCR OSD Mono", 24, FlxColor.WHITE, LEFT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
 				massage.setPosition(FlxG.width - massage.width - 5, FlxG.height - massage.height - 5);
 				massage.scrollFactor.set();
 				add(massage);
-				FlxTween.num(1, 0, 0.6, {startDelay: 1}, function(value:Float) {
+				FlxTween.num(1, 0, 0.4, {startDelay: 0.8}, function(value:Float) {
 					massage.alpha = value;
 					if(value == 0) massage.destroy();
 				});
+
+				FlxG.sound.play(Paths.sound('cancelMenu'));
+				Paths.clearUnusedMemory();
+				cpp.vm.Gc.run(true);
+				trace('cleared garbage lmao');
 			}
 			#end
 		}

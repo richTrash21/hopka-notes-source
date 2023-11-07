@@ -1,12 +1,9 @@
 package states.editors;
 
-import animateatlas.AtlasFrameMaker;
-
+import flixel.input.mouse.FlxMouseEventManager;
 import flixel.FlxObject;
-import flixel.graphics.FlxGraphic;
 
 import flixel.animation.FlxAnimation;
-import flixel.system.debug.interaction.tools.Pointer.GraphicCursorCross;
 import flixel.addons.ui.FlxUI;
 import flixel.addons.ui.FlxUICheckBox;
 import flixel.addons.ui.FlxUIInputText;
@@ -18,7 +15,6 @@ import flixel.ui.FlxButton;
 import openfl.net.FileReference;
 import openfl.events.Event;
 import openfl.events.IOErrorEvent;
-import lime.system.Clipboard;
 import tjson.TJSON as Json;
 
 import objects.Character;
@@ -34,7 +30,6 @@ class CharacterEditorState extends MusicBeatState
 	var char:Character;
 	var ghostChar:Character;
 	var textAnim:FlxText;
-	var bgLayer:FlxTypedGroup<FlxSprite>;
 	var charLayer:FlxTypedGroup<Character>;
 	var dumbTexts:FlxTypedGroup<FlxText>;
 	var curAnim:Int = 0;
@@ -62,6 +57,11 @@ class CharacterEditorState extends MusicBeatState
 	var cameraFollowPointer:FlxSprite;
 	var healthBar:Bar;
 
+	var bg:BGSprite;
+	var stageFront:BGSprite;
+
+	var mouseManager:FlxMouseEventManager;
+
 	override function create()
 	{
 		FlxG.sound.playMusic(Paths.music(Paths.formatToSongPath(ClientPrefs.data.pauseMusic)), 0.4);
@@ -78,12 +78,22 @@ class CharacterEditorState extends MusicBeatState
 		FlxG.cameras.add(camMenu, false);
 		FlxG.cameras.setDefaultDrawTarget(camEditor, true);
 
-		bgLayer = new FlxTypedGroup<FlxSprite>();
-		add(bgLayer);
+		// fuck pixel bg nobody used it anyway
+		var prevLevel:String = Paths.currentLevel;
+		Paths.setCurrentLevel('week1');
+		bg = new BGSprite('stageback', -600 + OFFSET_X, -300, 0.9, 0.9);
+		add(bg);
+
+		stageFront = new BGSprite('stagefront', -650 + OFFSET_X, 500);
+		stageFront.setGraphicSize(Std.int(stageFront.width * 1.1));
+		stageFront.updateHitbox();
+		add(stageFront);
+		Paths.setCurrentLevel(prevLevel);
+
 		charLayer = new FlxTypedGroup<Character>();
 		add(charLayer);
 
-		cameraFollowPointer = new FlxSprite(0, 0, FlxGraphic.fromClass(GraphicCursorCross));
+		cameraFollowPointer = new FlxSprite(0, 0, flixel.graphics.FlxGraphic.fromClass(flixel.system.debug.interaction.tools.Pointer.GraphicCursorCross));
 		cameraFollowPointer.setGraphicSize(40, 40);
 		cameraFollowPointer.updateHitbox();
 		add(cameraFollowPointer);
@@ -91,16 +101,26 @@ class CharacterEditorState extends MusicBeatState
 		loadChar(!daAnim.startsWith('bf'), false);
 
 		healthBar = new Bar(30, FlxG.height - 75);
-		healthBar.scrollFactor.set();
+		//healthBar.scrollFactor.set();
 		add(healthBar);
 		healthBar.cameras = [camHUD];
 		
 		if(ClientPrefs.data.cacheOnGPU) Paths.clearUnusedMemory();
 
 		leHealthIcon = new HealthIcon(char.healthIcon, false, false);
+		//leHealthIcon.scrollFactor.set(1, 1);
 		leHealthIcon.y = FlxG.height - 150;
 		add(leHealthIcon);
 		leHealthIcon.cameras = [camHUD];
+
+		mouseManager = new FlxMouseEventManager();
+		mouseManager.add(leHealthIcon, function(icon:HealthIcon) {
+			var anim = icon.animation.curAnim;
+			anim.curFrame = FlxMath.wrap(anim.curFrame + 1, 0, anim.numFrames-1);
+			icon.scale.set(0.975, 0.975);
+		}, function(icon:HealthIcon) icon.scale.set(1, 1));
+		add(mouseManager);
+		//mouseManager.cameras = [camHUD];
 
 		dumbTexts = new FlxTypedGroup<FlxText>();
 		add(dumbTexts);
@@ -109,8 +129,7 @@ class CharacterEditorState extends MusicBeatState
 		textAnim = new FlxText(300, 16);
 		textAnim.setFormat(Paths.font("vcr.ttf"), 32, FlxColor.WHITE, RIGHT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
 		textAnim.borderSize = 1;
-		//textAnim.size = 32;
-		textAnim.scrollFactor.set();
+		//textAnim.scrollFactor.set();
 		textAnim.cameras = [camHUD];
 		add(textAnim);
 
@@ -145,7 +164,7 @@ class CharacterEditorState extends MusicBeatState
 		UI_box.resize(250, 120);
 		UI_box.x = FlxG.width - 275;
 		UI_box.y = 25;
-		UI_box.scrollFactor.set();
+		//UI_box.scrollFactor.set();
 
 		UI_characterbox = new FlxUITabMenu(null, [
 			{name: 'Character', label: 'Character'},
@@ -156,7 +175,7 @@ class CharacterEditorState extends MusicBeatState
 		UI_characterbox.resize(350, 250);
 		UI_characterbox.x = UI_box.x - 100;
 		UI_characterbox.y = UI_box.y + UI_box.height;
-		UI_characterbox.scrollFactor.set();
+		//UI_characterbox.scrollFactor.set();
 		add(UI_characterbox);
 		add(UI_box);
 
@@ -173,111 +192,79 @@ class CharacterEditorState extends MusicBeatState
 		super.create();
 	}
 
-	var onPixelBG:Bool = false;
 	var OFFSET_X:Float = 300;
 	function reloadBGs() {
-		bgLayer.forEachAlive(function(spr:FlxSprite) spr.destroy());
-		bgLayer.clear();
-
-		var playerXDifference = 0;
-		if(char.isPlayer) playerXDifference = 670;
-
-		Paths.setCurrentLevel('week1');
-		var bg:BGSprite = new BGSprite('stageback', -600 + OFFSET_X - playerXDifference, -300, 0.9, 0.9);
-		bgLayer.add(bg);
-
-		var stageFront:BGSprite = new BGSprite('stagefront', -650 + OFFSET_X - playerXDifference, 500);
-		stageFront.setGraphicSize(Std.int(stageFront.width * 1.1));
-		stageFront.updateHitbox();
-		bgLayer.add(stageFront);
+		var playerXDifference = char.isPlayer ? 670 : 0;
+		bg.x = -600 + OFFSET_X - playerXDifference;
+		stageFront.x = -650 + OFFSET_X - playerXDifference;
 	}
 
-	var TemplateCharacter:String = '{
+	final TemplateCharacter:String = '{
 			"animations": [
 				{
-					"loop": false,
-					"offsets": [
-						0,
-						0
-					],
-					"fps": 24,
 					"anim": "idle",
-					"indices": [],
 					"name": "Dad idle dance",
+					"loop": false,
+					"loop_point": 0,
+					"offsets": [0, 0],
+					"fps": 24,
+					"indices": [],
 					"animflip_x": false,
 					"animflip_y": false
 				},
 				{
-					"offsets": [
-						0,
-						0
-					],
-					"indices": [],
-					"fps": 24,
 					"anim": "singLEFT",
-					"loop": false,
 					"name": "Dad Sing Note LEFT",
+					"loop": false,
+					"loop_point": 0,
+					"offsets": [0, 0],
+					"fps": 24,
+					"indices": [],
 					"animflip_x": false,
 					"animflip_y": false
 				},
 				{
-					"offsets": [
-						0,
-						0
-					],
-					"indices": [],
-					"fps": 24,
 					"anim": "singDOWN",
-					"loop": false,
 					"name": "Dad Sing Note DOWN",
+					"loop": false,
+					"loop_point": 0,
+					"offsets": [0, 0],
+					"fps": 24,
+					"indices": [],
 					"animflip_x": false,
 					"animflip_y": false
 				},
 				{
-					"offsets": [
-						0,
-						0
-					],
-					"indices": [],
-					"fps": 24,
 					"anim": "singUP",
-					"loop": false,
 					"name": "Dad Sing Note UP",
+					"loop": false,
+					"loop_point": 0,
+					"offsets": [0, 0],
+					"fps": 24,
+					"indices": [],
 					"animflip_x": false,
 					"animflip_y": false
 				},
 				{
-					"offsets": [
-						0,
-						0
-					],
-					"indices": [],
-					"fps": 24,
 					"anim": "singRIGHT",
-					"loop": false,
 					"name": "Dad Sing Note RIGHT",
+					"loop": false,
+					"loop_point": 0,
+					"offsets": [0, 0],
+					"fps": 24,
+					"indices": [],
 					"animflip_x": false,
 					"animflip_y": false
 				}
 			],
 			"no_antialiasing": false,
 			"image": "characters/DADDY_DEAREST",
-			"position": [
-				0,
-				0
-			],
+			"healthbar_colors": [161, 161, 161],
 			"healthicon": "face",
+			"camera_position": [0, 0],
+			"position": [0, 0],
 			"flip_x": false,
 			"flip_y": false,
-			"healthbar_colors": [
-				161,
-				161,
-				161
-			],
-			"camera_position": [
-				0,
-				0
-			],
 			"sing_duration": 6.1,
 			"scale": 1
 		}';
@@ -319,6 +306,7 @@ class CharacterEditorState extends MusicBeatState
 		{
 			var parsedJson:CharacterFile = cast Json.parse(TemplateCharacter);
 			var characters:Array<Character> = [char, ghostChar];
+			var isPlayer:Bool = char.isPlayer;
 			for (character in characters)
 			{
 				character.animOffsets.clear();
@@ -338,6 +326,9 @@ class CharacterEditorState extends MusicBeatState
 				character.healthIcon = parsedJson.healthicon;
 				character.healthColorArray = parsedJson.healthbar_colors;
 				character.setPosition(character.positionArray[0] + OFFSET_X + 100, character.positionArray[1]);
+
+				character.flipX = isPlayer;
+				character.flipY = false;
 			}
 
 			reloadCharacterImage();
@@ -698,17 +689,17 @@ class CharacterEditorState extends MusicBeatState
 
 	function reloadCharacterImage() {
 		var lastAnim:String = char.animation.curAnim != null ?  char.animation.curAnim.name: '';
-		if(Paths.fileExists('images/' + char.imageFile + '/Animation.json', TEXT))
-			char.frames = AtlasFrameMaker.construct(char.imageFile);
-		else
-			char.frames = Paths.getAtlas(char.imageFile);
+		char.frames = (Paths.fileExists('images/' + char.imageFile + '/Animation.json', TEXT))
+			? animateatlas.AtlasFrameMaker.construct(char.imageFile)
+			: Paths.getAtlas(char.imageFile);
 
 		if(char.animationsArray != null && char.animationsArray.length > 0) {
 			for (anim in char.animationsArray) char.generateAnim(anim);
 		} else char.addAnim('idle', 'BF idle dance', null, 24, false);
 
-		if(lastAnim != '')	char.playAnim(lastAnim, true);
-		else				char.dance();
+		(lastAnim != '')
+			? char.playAnim(lastAnim, true)
+			: char.dance();
 
 		ghostDropDown.selectedLabel = '';
 		reloadGhost();
@@ -716,8 +707,6 @@ class CharacterEditorState extends MusicBeatState
 
 	function genBoyOffsets():Void
 	{
-		var daLoop:Int = 0;
-
 		var i:Int = dumbTexts.members.length-1;
 		while(i >= 0) {
 			var memb:FlxText = dumbTexts.members[i];
@@ -730,23 +719,25 @@ class CharacterEditorState extends MusicBeatState
 		}
 		dumbTexts.clear();
 
+		var daLoop:Int = 0;
+		var offset:Float = Main.fpsVar.visible ? 34 : 20;
 		for (anim => offsets in char.animOffsets)
 		{
-			var text:FlxText = new FlxText(10, 32 + (18 * daLoop), 0, anim + ": " + offsets, 16);
+			var text:FlxText = new FlxText(10, offset + (18 * daLoop), 0, anim + ": " + offsets, 16);
 			text.setFormat(null, 16, FlxColor.WHITE, CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
-			text.scrollFactor.set();
+			//text.scrollFactor.set();
 			text.borderSize = 1;
 			dumbTexts.add(text);
 			text.cameras = [camHUD];
-
 			daLoop++;
 		}
 
 		textAnim.visible = true;
 		if(dumbTexts.length < 1) {
 			var text:FlxText = new FlxText(10, 38, 0, "ERROR! No animations found.", 15);
-			text.scrollFactor.set();
+			//text.scrollFactor.set();
 			text.borderSize = 1;
+			text.cameras = [camHUD];
 			dumbTexts.add(text);
 			textAnim.visible = false;
 		}
@@ -920,10 +911,8 @@ class CharacterEditorState extends MusicBeatState
 				return;
 			}
 
-			if (FlxG.keys.justPressed.TAB) {
-				camHUD.visible = !camHUD.visible;
-				camMenu.visible = !camMenu.visible;
-			}
+			if (FlxG.keys.justPressed.TAB)
+				camMenu.visible = camHUD.visible = !camHUD.visible;
 
 			if (FlxG.keys.justPressed.R) {
 				var midPoint:FlxPoint = cameraFollowPointer.getGraphicMidpoint();
@@ -975,8 +964,6 @@ class CharacterEditorState extends MusicBeatState
 				}
 
 				var controlArray:Array<Bool> = [FlxG.keys.justPressed.LEFT, FlxG.keys.justPressed.RIGHT, FlxG.keys.justPressed.UP, FlxG.keys.justPressed.DOWN];
-
-
 
 				for (i in 0...controlArray.length) {
 					if(controlArray[i]) {
@@ -1067,7 +1054,7 @@ class CharacterEditorState extends MusicBeatState
 		if(prefix.toLowerCase().endsWith('v')) //probably copy paste attempt
 			prefix = prefix.substring(0, prefix.length-1);
 
-		var text:String = prefix + Clipboard.text.replace('\n', '');
+		var text:String = prefix + lime.system.Clipboard.text.replace('\n', '');
 		return text;
 	}
 }

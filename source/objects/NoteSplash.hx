@@ -28,7 +28,7 @@ class NoteSplash extends FlxSprite
 		shader = rgbShader.shader;
 		precacheConfig(skin);
 		_configLoaded = skin;
-		scrollFactor.set();
+		//scrollFactor.set();
 	}
 
 	override function destroy()

@@ -2,7 +2,6 @@ package objects;
 
 import flixel.math.FlxPoint;
 import flixel.math.FlxRect;
-import flixel.util.FlxDestroyUtil;
 
 typedef BarBounds = {min:Float, max:Float}
 
@@ -69,9 +68,9 @@ class Bar extends FlxSpriteGroup
 
 	override public function destroy()
 	{
+		barOffset.put();
+		centerPoint.put();
 		super.destroy();
-		barOffset = FlxDestroyUtil.put(barOffset);
-		centerPoint = FlxDestroyUtil.put(centerPoint);
 	}
 
 	public function setBounds(min:Float = 0, max:Float = 1)

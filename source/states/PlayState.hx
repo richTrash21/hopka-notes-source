@@ -465,7 +465,7 @@ class PlayState extends MusicBeatState
 		var showTime:Bool = (ClientPrefs.data.timeBarType != 'Disabled');
 		timeTxt = new FlxText(/*STRUM_X + (FlxG.width * 0.5) - 248*/ 0, 19, 400, "", 32);
 		timeTxt.setFormat(Paths.font("vcr.ttf"), 32, FlxColor.WHITE, CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
-		timeTxt.scrollFactor.set();
+		//timeTxt.scrollFactor.set();
 		timeTxt.screenCenter(X);
 		timeTxt.alpha = 0;
 		timeTxt.borderSize = 2;
@@ -475,7 +475,7 @@ class PlayState extends MusicBeatState
 
 		timeBar = new Bar(0, timeTxt.y + (timeTxt.height * 0.25), 'timeBar', function() return songPercent);
 		timeBar.antialiasing = !isPixelStage;
-		timeBar.scrollFactor.set();
+		//timeBar.scrollFactor.set();
 		timeBar.screenCenter(X);
 		timeBar.alpha = 0;
 		timeBar.visible = showTime;
@@ -536,7 +536,7 @@ class PlayState extends MusicBeatState
 		healthBar.antialiasing = !isPixelStage;
 		healthBar.screenCenter(X);
 		healthBar.leftToRight = false;
-		healthBar.scrollFactor.set();
+		//healthBar.scrollFactor.set();
 		healthBar.visible = !ClientPrefs.data.hideHud;
 		healthBar.alpha = ClientPrefs.data.healthBarAlpha;
 		reloadHealthBarColors();
@@ -561,14 +561,14 @@ class PlayState extends MusicBeatState
 
 		scoreTxt = new FlxText(0, healthBar.y + 40, FlxG.width, "", 20);
 		scoreTxt.setFormat(Paths.font("vcr.ttf"), 20, FlxColor.WHITE, CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
-		scoreTxt.scrollFactor.set();
+		//scoreTxt.scrollFactor.set();
 		scoreTxt.borderSize = 1.25;
 		scoreTxt.visible = !ClientPrefs.data.hideHud;
 		add(scoreTxt);
 
 		botplayTxt = new FlxText(0, timeBar.y + 55, FlxG.width - 800, "PUSSY", 32);
 		botplayTxt.setFormat(Paths.font("vcr.ttf"), 32, FlxColor.WHITE, CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
-		botplayTxt.scrollFactor.set();
+		//botplayTxt.scrollFactor.set();
 		botplayTxt.borderSize = 1.25;
 		botplayTxt.visible = cpuControlled;
 		botplayTxt.screenCenter(X);
@@ -910,7 +910,7 @@ class PlayState extends MusicBeatState
 			precacheList.set('dialogue', 'sound');
 			precacheList.set('dialogueClose', 'sound');
 			psychDialogue = new DialogueBoxPsych(dialogueFile, song);
-			psychDialogue.scrollFactor.set();
+			//psychDialogue.scrollFactor.set();
 			psychDialogue.finishThing = function() {
 				psychDialogue = null;
 				endingSong ? endSong() : startCountdown();
@@ -1044,7 +1044,7 @@ class PlayState extends MusicBeatState
 	{
 		var spr:FlxSprite = new FlxSprite(0, 0, Paths.image(image));
 		spr.cameras = [camHUD];
-		spr.scrollFactor.set();
+		//spr.scrollFactor.set();
 
 		if (isPixelStage) {
 			spr.setGraphicSize(Std.int(spr.width * daPixelZoom));
@@ -1263,7 +1263,7 @@ class PlayState extends MusicBeatState
 				swagNote.noteType = songNotes[3];
 				if(!Std.isOfType(songNotes[3], String)) swagNote.noteType = ChartingState.noteTypeList[songNotes[3]]; //Backward compatibility + compatibility with Week 7 charts
 
-				swagNote.scrollFactor.set();
+				//swagNote.scrollFactor.set();
 
 				var susLength:Float = swagNote.sustainLength;
 
@@ -1280,7 +1280,7 @@ class PlayState extends MusicBeatState
 						sustainNote.mustPress = gottaHitNote;
 						sustainNote.gfNote = (section.gfSection && (songNotes[1]<4));
 						sustainNote.noteType = swagNote.noteType;
-						sustainNote.scrollFactor.set();
+						//sustainNote.scrollFactor.set();
 						swagNote.tail.push(sustainNote);
 						sustainNote.parent = swagNote;
 						unspawnNotes.push(sustainNote);
@@ -2042,10 +2042,9 @@ class PlayState extends MusicBeatState
 				try
 				{
 					var split:Array<String> = value1.split('.');
-					if(split.length > 1)
-						LuaUtils.setVarInArray(LuaUtils.getPropertyLoop(split), split[split.length-1], value2);
-					else
-						LuaUtils.setVarInArray(this, value1, value2);
+					(split.length > 1)
+						? LuaUtils.setVarInArray(LuaUtils.getPropertyLoop(split), split[split.length-1], value2)
+						: LuaUtils.setVarInArray(this, value1, value2);
 				}
 				catch(e:Dynamic)
 				{
@@ -2328,7 +2327,7 @@ class PlayState extends MusicBeatState
 			rating.visible = (!ClientPrefs.data.hideHud && showRating);
 			rating.antialiasing = antialias;
 			rating.cameras = [camHUD];
-			rating.scrollFactor.set();
+			//rating.scrollFactor.set();
 
 			rating.setGraphicSize(Std.int(rating.width * (isPixelStage ? daPixelZoom * 0.85 : 0.7)));
 			rating.updateHitbox();
@@ -2342,7 +2341,7 @@ class PlayState extends MusicBeatState
 			comboSpr.visible = (!ClientPrefs.data.hideHud && showCombo);
 			comboSpr.antialiasing = antialias;
 			comboSpr.cameras = [camHUD];
-			comboSpr.scrollFactor.set();
+			//comboSpr.scrollFactor.set();
 
 			comboSpr.setGraphicSize(Std.int(comboSpr.width * (isPixelStage ? daPixelZoom * 0.85 : 0.7)));
 			comboSpr.updateHitbox();
@@ -2379,9 +2378,9 @@ class PlayState extends MusicBeatState
 
 			var daLoop:Int = 0;
 			var xThing:Float = 0;
+			var res:Array<Int> = [isPixelStage ? 10 : 100, isPixelStage ? 12 : 120];
 			for (i in seperatedScore)
 			{
-				var res:Array<Int> = [isPixelStage ? 10 : 100, isPixelStage ? 12 : 120];
 				var numScore:FlxSprite = new FlxSprite(placement + (45 * daLoop) - 90 + ClientPrefs.data.comboOffset[2])
 					.loadGraphic(Paths.image(uiPrefix + 'num' + uiSuffix), true, res[0], res[1]);
 				numScore.screenCenter(Y).y += 80 - ClientPrefs.data.comboOffset[3];
@@ -2389,7 +2388,7 @@ class PlayState extends MusicBeatState
 					? numScore.loadGraphic("flixel/images/logo/default.png") //prevents crash
 					: numScore.frame = numScore.frames.frames[i];
 				numScore.cameras = [camHUD];
-				numScore.scrollFactor.set();
+				//numScore.scrollFactor.set();
 
 				numScore.setGraphicSize(Std.int(numScore.width * (isPixelStage ? daPixelZoom * 0.85 : 0.5)));
 				numScore.updateHitbox();
