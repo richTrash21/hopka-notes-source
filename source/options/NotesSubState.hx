@@ -109,9 +109,8 @@ class NotesSubState extends MusicBeatSubstate
 		colorWheel.updateHitbox();
 		add(colorWheel);
 
-		colorWheelSelector = new FlxShapeCircle(0, 0, 8, {thickness: 0}, FlxColor.WHITE);
+		colorWheelSelector = new FlxShapeCircle(0, 0, 8, {thickness: 0}, 0x99FFFFFF);
 		colorWheelSelector.offset.set(8, 8);
-		colorWheelSelector.alpha = 0.6;
 		add(colorWheelSelector);
 
 		var txtX = 980;
@@ -145,10 +144,9 @@ class NotesSubState extends MusicBeatSubstate
 		add(tipTxt);
 		updateTip();
 
-		controllerPointer = new FlxShapeCircle(0, 0, 20, {thickness: 0}, FlxColor.WHITE);
+		controllerPointer = new FlxShapeCircle(0, 0, 20, {thickness: 0}, 0x99FFFFFF);
 		controllerPointer.offset.set(20, 20);
 		controllerPointer.screenCenter();
-		controllerPointer.alpha = 0.6;
 		add(controllerPointer);
 		
 		FlxG.mouse.visible = !controls.controllerMode;

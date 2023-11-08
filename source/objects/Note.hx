@@ -3,7 +3,6 @@ package objects;
 // If you want to make a custom note type, you should search for:
 // "function set_noteType"
 
-import backend.NoteTypesConfig;
 import shaders.RGBPalette;
 import objects.StrumNote;
 
@@ -188,7 +187,7 @@ class Note extends FlxSprite
 				case 'GF Sing':
 					gfNote = true;
 			}
-			if (value != null && value.length > 1) NoteTypesConfig.applyNoteTypeData(this, value);
+			if (value != null && value.length > 1) backend.NoteTypesConfig.applyNoteTypeData(this, value);
 			if (hitsound != 'hitsound' && ClientPrefs.data.hitsoundVolume > 0) Paths.sound(hitsound); //precache new sound for being idiot-proof
 			noteType = value;
 		}

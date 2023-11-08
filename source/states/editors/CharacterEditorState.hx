@@ -1,5 +1,6 @@
 package states.editors;
 
+import flixel.util.FlxStringUtil;
 import flixel.input.mouse.FlxMouseEventManager;
 import flixel.FlxObject;
 
@@ -511,37 +512,32 @@ class CharacterEditorState extends MusicBeatState
 		});
 
 		var addUpdateButton:FlxButton = new FlxButton(70, animationIndicesInputText.y + 30, "Add/Update", function() {
+			var str:String = animationIndicesInputText.text.trim();
 			var indices:Array<Int> = [];
-			var indicesStr:Array<String> = [];
 			// stolen from redar13 (again) >:3
-			if (animationIndicesInputText.text.contains('...')) {
-				var split:Array<String> = animationIndicesInputText.text.trim().split('...');
+			if (str.contains('...')) {
+				var split:Array<String> = str.split('...');
 				var from:Int = FlxMath.absInt(Std.parseInt(split[0]));
 				var to:Int = FlxMath.absInt(Std.parseInt(split[1]));
-				for (i in 0...(from > to ? from - to : to - from) + 1)
-					indicesStr.insert(FlxMath.absInt(i), Std.string(FlxMath.absInt((from > to ? to : from) + i)));
-				if (from > to) indicesStr.reverse();
-				animationIndicesInputText.text = indicesStr.join(',');
-			} else
-				indicesStr = animationIndicesInputText.text.trim().split(',');
+				var reverse:Bool = from > to;
 
-			if(indicesStr.length > 1) {
-				for (i in 0...indicesStr.length) {
-					@:optional var index:Int = Std.parseInt(indicesStr[i]);
-					if(!Math.isNaN(index) && index > -1) indices.push(index);
-				}
-			}
+				for (i in 0...(reverse ? from - to : to - from) + 1)
+					indices.push((reverse ? to : from) + i);
+
+				if (reverse) indices.reverse();
+				animationIndicesInputText.text = indices.join(',');
+			} else
+				indices = str.length > 0 ? FlxStringUtil.toIntArray(str) : [];
 
 			var lastAnim:String = char.animationsArray[curAnim] != null ? char.animationsArray[curAnim].anim : '';
 			var lastOffsets:Array<Int> = [0, 0];
-			for (anim in char.animationsArray) {
+			for (anim in char.animationsArray)
 				if(animationInputText.text == anim.anim) {
 					lastOffsets = anim.offsets;
 					if(char.animation.getByName(animationInputText.text) != null)
 						char.animation.remove(animationInputText.text);
 					char.animationsArray.remove(anim);
 				}
-			}
 
 			var newAnim:AnimArray = {
 				anim: animationInputText.text,
@@ -562,7 +558,7 @@ class CharacterEditorState extends MusicBeatState
 				if(leAnim != null && leAnim.frames.length > 0)
 					char.playAnim(lastAnim, true);
 				else
-					for(i in 0...char.animationsArray.length) {
+					for(i in 0...char.animationsArray.length)
 						if(char.animationsArray[i] != null) {
 							leAnim = char.animation.getByName(char.animationsArray[i].anim);
 							if(leAnim != null && leAnim.frames.length > 0) {
@@ -571,7 +567,6 @@ class CharacterEditorState extends MusicBeatState
 								break;
 							}
 						}
-					}
 			}
 
 			reloadAnimationDropDown();
@@ -882,12 +877,16 @@ class CharacterEditorState extends MusicBeatState
 	override function update(elapsed:Float)
 	{
 		if(char.animationsArray[curAnim] != null) {
-			textAnim.text = char.animationsArray[curAnim].anim;
-			var curAnim:FlxAnimation = char.animation.getByName(textAnim.text);
-			if(curAnim == null || curAnim.frames.length < 1) textAnim.text += ' (ERROR!)';
-			else if(textAnim.text.endsWith('-loop')) textAnim.text += ' (-loop is DEPRECATED!)';
-		} else
-			textAnim.text = '';
+			var txt:String = char.animationsArray[curAnim].anim;
+			var curAnim:FlxAnimation = char.animation.getByName(txt);
+			if(curAnim == null || curAnim.frames.length < 1)
+				txt += ' (ERROR!)';
+			else if(txt.endsWith('-loop'))
+				txt += ' (-loop is DEPRECATED!)';
+
+			textAnim.text = txt;
+		}
+		else textAnim.text = '';
 
 		var inputTexts:Array<FlxUIInputText> = [animationInputText, imageInputText, healthIconInputText, animationNameInputText, animationIndicesInputText];
 		for (i in 0...inputTexts.length) {

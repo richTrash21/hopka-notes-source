@@ -249,7 +249,8 @@ class Character extends FlxSprite
 
 	public var danceEveryNumBeats:Int = 2;
 	private var settingCharacterUp:Bool = true;
-	public function recalculateDanceIdle() {
+	public function recalculateDanceIdle()
+	{
 		var lastDanceIdle:Bool = danceIdle;
 		danceIdle = (animation.getByName('danceLeft' + idleSuffix) != null && animation.getByName('danceRight' + idleSuffix) != null);
 
@@ -262,7 +263,8 @@ class Character extends FlxSprite
 	}
 
 	//creates a copy of this character🤯😱
-	public function copy():Character {
+	public function copy():Character
+	{
 		var faker:Character = new Character(x, y, curCharacter, isPlayer);
 		faker.debugMode = debugMode;
 		return faker;
@@ -273,8 +275,10 @@ class Character extends FlxSprite
 	 * btw stolen from redar13 :3
 	 * https://i.imgur.com/P7MDx2C.png
 	 */
-	public function generateAnim(Anim:AnimArray) {
-		if(Anim != null) {
+	public function generateAnim(Anim:AnimArray)
+	{
+		if(Anim != null)
+		{
 			var animAnim:String = '' + Anim.anim;
 			var temp = Anim.offsets;
 			var animOffsets:Array<Int> = (temp == null && temp.length <= 1) ? [0, 0] : temp;
@@ -284,7 +288,9 @@ class Character extends FlxSprite
 	}
 
 	//quick n' easy animation setup
-	public function addAnim(Name:String, Prefix:String, ?Indices:Array<Int>, FrameRate:Int = 24, Looped:Bool = true, FlipX:Bool = false, FlipY:Bool = false, LoopPoint:Int = 0) {
+	public function addAnim(Name:String, Prefix:String, ?Indices:Array<Int>, FrameRate:Int = 24, Looped:Bool = true,FlipX:Bool = false, FlipY:Bool = false,
+			LoopPoint:Int = 0)
+	{
 		if (Indices != null && Indices.length > 0)
 			animation.addByIndices(Name, Prefix, Indices, "", FrameRate, Looped, FlipX, FlipY);
 		else

@@ -1,12 +1,14 @@
 package backend;
 
-import flixel.addons.ui.FlxUIState;
 import flixel.addons.transition.FlxTransitionableState;
+import flixel.util.FlxStringUtil;
 import flixel.FlxState;
 
-class MusicBeatState extends FlxUIState
+class MusicBeatState extends flixel.addons.ui.FlxUIState
 {
-	public static var transTime:Float = 0.45;
+	// TRANS RIGHTS!!!!
+	static final transTime:Float = 0.45; // uniform transition time
+	static final substatesToTrans:Array<String> = ['PauseSubState', 'CustomSubstate']; // substates that transition can land onto
 
 	private var curSection:Int = 0;
 	private var stepsToDo:Int = 0;
@@ -137,7 +139,7 @@ class MusicBeatState extends FlxUIState
 		return cast (FlxG.state.subState, MusicBeatSubstate);
 
 	public static function getStateWithSubState()
-		return (FlxG.state.subState != null && Type.getClassName(Type.getClass(FlxG.state.subState)).endsWith('PauseSubState'))
+		return (FlxG.state.subState != null && substatesToTrans.contains(FlxStringUtil.getClassName(FlxG.state.subState, true)))
 			? getSubState()
 			: getState();
 

@@ -38,7 +38,6 @@ class NoteTypesConfig
 				property: arr,
 				value: _interpretValue(line.substr(sep + 1).trim())
 			}
-			//trace('pushing $newProp');
 			parsed.push(newProp);
 		}
 		noteTypesData.set(name, parsed);
@@ -73,10 +72,9 @@ class NoteTypesConfig
 				}
 
 				for (i in 0...split.length-1)
-				{
 					if(i < split.length-1)
 						obj = _propCheckArray(obj, split[i]);
-				}
+
 				_propCheckArray(obj, split[split.length-1], true, line.value);
 			} catch(e) trace(e);
 		}
@@ -98,30 +96,22 @@ class NoteTypesConfig
 		}
 		else if(setProp)
 		{
-			//trace('setProp: $slice');
 			Reflect.setProperty(obj, slice, valueToSet);
 			return valueToSet;
 		}
-		//trace('getting prop: $slice');
 		return Reflect.getProperty(obj, slice);
 	}
 
 	private static function _interpretValue(value:String):Any
 	{
 		if(value.charAt(0) == "'" || value.charAt(0) == '"')
-		{
-			//is a string
-			return value.substring(1, value.length-1);
-		}
+			return value.substring(1, value.length-1); //is a string
 		
 		switch(value)
 		{
-			case "true":
-				return true;
-			case "false":
-				return false;
-			case "null":
-				return null;
+			case "true":	return true;
+			case "false":	return false;
+			case "null":	return null;
 		}
 
 		if(value.contains('.')) return Std.parseFloat(value);

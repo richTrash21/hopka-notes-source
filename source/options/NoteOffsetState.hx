@@ -419,13 +419,11 @@ class NoteOffsetState extends MusicBeatState
 
 	function repositionCombo()
 	{
-		rating.screenCenter();
 		rating.x = placement - 40 + ClientPrefs.data.comboOffset[0];
-		rating.y -= 60 + ClientPrefs.data.comboOffset[1];
+		rating.screenCenter(Y).y -= 60 + ClientPrefs.data.comboOffset[1];
 
-		comboNums.screenCenter();
 		comboNums.x = placement - 90 + ClientPrefs.data.comboOffset[2];
-		comboNums.y += 80 - ClientPrefs.data.comboOffset[3];
+		comboNums.screenCenter(Y).y += 80 - ClientPrefs.data.comboOffset[3];
 		reloadTexts();
 	}
 

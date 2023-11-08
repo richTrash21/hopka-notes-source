@@ -236,6 +236,7 @@ class MainMenuState extends MusicBeatState
 				massage.setFormat("VCR OSD Mono", 24, FlxColor.WHITE, LEFT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
 				massage.setPosition(FlxG.width - massage.width - 5, FlxG.height - massage.height - 5);
 				massage.scrollFactor.set();
+				massage.borderSize = 1.5;
 				add(massage);
 				FlxTween.num(1, 0, 0.4, {startDelay: 0.8}, function(value:Float) {
 					massage.alpha = value;

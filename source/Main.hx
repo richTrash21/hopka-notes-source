@@ -52,14 +52,15 @@ class Main extends Sprite
 
 	private function volumeOnFocus() // dont ask
 	{
-		if (ClientPrefs.data.lostFocusDeafen) FlxG.sound.volume = Math.round(_focusVolume);
+		if (ClientPrefs.data.lostFocusDeafen)
+			FlxG.sound.volume = _focusVolume;
 	}
 
 	private static function volumeOnFocusLost() // dont ask
 	{
 		if (ClientPrefs.data.lostFocusDeafen)
 		{
-			_focusVolume = FlxG.sound.volume;
+			_focusVolume = FlxMath.roundDecimal(FlxG.sound.volume, 1);
 			FlxG.sound.volume *= 0.5;
 		}
 	}
