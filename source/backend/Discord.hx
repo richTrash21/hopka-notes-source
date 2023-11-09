@@ -1,8 +1,6 @@
 package backend;
 
-import Sys.sleep;
 import discord_rpc.DiscordRpc;
-import lime.app.Application;
 
 class DiscordClient
 {
@@ -35,7 +33,7 @@ class DiscordClient
 		while (localID == clientID)
 		{
 			DiscordRpc.process();
-			sleep(2);
+			Sys.sleep(2);
 			//trace('Discord Client Update $localID');
 		}
 
@@ -56,21 +54,15 @@ class DiscordClient
 	{
 		if (!isInitialized && ClientPrefs.data.discordRPC) {
 			initialize();
-			Application.current.window.onClose.add(function() {
-				shutdown();
-			});
+			lime.app.Application.current.window.onClose.add(shutdown);
 		}
 	}
 
 	public static function shutdown()
-	{
 		DiscordRpc.shutdown();
-	}
-	
+
 	static function onReady()
-	{
 		DiscordRpc.presence(_options);
-	}
 
 	private static function set_clientID(newID:String)
 	{
@@ -88,14 +80,10 @@ class DiscordClient
 	}
 
 	static function onError(_code:Int, _message:String)
-	{
 		trace('Error! $_code : $_message');
-	}
 
 	static function onDisconnected(_code:Int, _message:String)
-	{
 		trace('Disconnected! $_code : $_message');
-	}
 
 	public static function initialize()
 	{

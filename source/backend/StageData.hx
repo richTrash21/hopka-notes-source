@@ -6,8 +6,6 @@ import sys.FileSystem;
 #else
 import openfl.utils.Assets;
 #end
-import tjson.TJSON as Json;
-import backend.Song;
 
 typedef StageFile = {
 	var directory:String;
@@ -48,7 +46,7 @@ class StageData {
 	}
 
 	public static var forceNextDirectory:String = null;
-	public static function loadDirectory(SONG:SwagSong) {
+	public static function loadDirectory(SONG:backend.Song.SwagSong) {
 		var stage:String = '';
 		if(SONG.stage != null)
 			stage = SONG.stage;
@@ -81,7 +79,7 @@ class StageData {
 		{
 			return null;
 		}
-		return cast Json.parse(rawJson);
+		return cast tjson.TJSON.parse(rawJson);
 	}
 
 	// LMFAOOOOOOOOOOOOOOOOOO GET BUTCHERED!!!!!!!!!!!!

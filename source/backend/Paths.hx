@@ -4,10 +4,8 @@ import flixel.graphics.frames.FlxAtlasFrames;
 import flixel.graphics.FlxGraphic;
 
 import openfl.display.BitmapData;
-import openfl.display3D.textures.RectangleTexture;
 import openfl.utils.AssetType;
 import openfl.utils.Assets as OpenFlAssets;
-import openfl.system.System;
 
 import lime.utils.Assets;
 import flash.media.Sound;
@@ -23,8 +21,8 @@ import backend.Mods;
 
 class Paths
 {
-	inline public static var SOUND_EXT = #if web "mp3" #else "ogg" #end;
-	inline public static var VIDEO_EXT = "mp4";
+	public static final SOUND_EXT = #if web "mp3" #else "ogg" #end;
+	public static final VIDEO_EXT = "mp4";
 
 	public static function excludeAsset(key:String) if (!dumpExclusions.contains(key)) dumpExclusions.push(key);
 
@@ -57,7 +55,7 @@ class Paths
 		}
 
 		// run the garbage collector for good measure lmfao
-		System.gc();
+		openfl.system.System.gc();
 	}
 
 	// define the locally tracked assets
@@ -224,7 +222,7 @@ class Paths
 			localTrackedAssets.push(file);
 			if (allowGPU && ClientPrefs.data.cacheOnGPU)
 			{
-				var texture:RectangleTexture = FlxG.stage.context3D.createRectangleTexture(bitmap.width, bitmap.height, BGRA, true);
+				var texture:openfl.display3D.textures.RectangleTexture = FlxG.stage.context3D.createRectangleTexture(bitmap.width, bitmap.height, BGRA, true);
 				texture.uploadFromBitmapData(bitmap);
 				bitmap.image.data = null;
 				bitmap.dispose();

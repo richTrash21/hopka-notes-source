@@ -1,94 +1,52 @@
 package backend;
 
-import flixel.input.keyboard.FlxKey;
 import flixel.input.gamepad.FlxGamepad;
-import flixel.input.gamepad.FlxGamepadInputID;
 
 class InputFormatter {
-	public static function getKeyName(key:FlxKey):String {
+	public static function getKeyName(key:flixel.input.keyboard.FlxKey):String {
 		switch (key) {
-			case BACKSPACE:
-				return "BckSpc";
-			case CONTROL:
-				return "Ctrl";
-			case ALT:
-				return "Alt";
-			case CAPSLOCK:
-				return "Caps";
-			case PAGEUP:
-				return "PgUp";
-			case PAGEDOWN:
-				return "PgDown";
-			case ZERO:
-				return "0";
-			case ONE:
-				return "1";
-			case TWO:
-				return "2";
-			case THREE:
-				return "3";
-			case FOUR:
-				return "4";
-			case FIVE:
-				return "5";
-			case SIX:
-				return "6";
-			case SEVEN:
-				return "7";
-			case EIGHT:
-				return "8";
-			case NINE:
-				return "9";
-			case NUMPADZERO:
-				return "#0";
-			case NUMPADONE:
-				return "#1";
-			case NUMPADTWO:
-				return "#2";
-			case NUMPADTHREE:
-				return "#3";
-			case NUMPADFOUR:
-				return "#4";
-			case NUMPADFIVE:
-				return "#5";
-			case NUMPADSIX:
-				return "#6";
-			case NUMPADSEVEN:
-				return "#7";
-			case NUMPADEIGHT:
-				return "#8";
-			case NUMPADNINE:
-				return "#9";
-			case NUMPADMULTIPLY:
-				return "#*";
-			case NUMPADPLUS:
-				return "#+";
-			case NUMPADMINUS:
-				return "#-";
-			case NUMPADPERIOD:
-				return "#.";
-			case SEMICOLON:
-				return ";";
-			case COMMA:
-				return ",";
-			case PERIOD:
-				return ".";
-			//case SLASH:
-			//	return "/";
-			case GRAVEACCENT:
-				return "`";
-			case LBRACKET:
-				return "[";
-			//case BACKSLASH:
-			//	return "\\";
-			case RBRACKET:
-				return "]";
-			case QUOTE:
-				return "'";
-			case PRINTSCREEN:
-				return "PrtScrn";
-			case NONE:
-				return '---';
+			case BACKSPACE:			return "BckSpc";
+			case CONTROL:			return "Ctrl";
+			case ALT:				return "Alt";
+			case CAPSLOCK:			return "Caps";
+			case PAGEUP:			return "PgUp";
+			case PAGEDOWN:			return "PgDown";
+			case ZERO:				return "0";
+			case ONE:				return "1";
+			case TWO:				return "2";
+			case THREE:				return "3";
+			case FOUR:				return "4";
+			case FIVE:				return "5";
+			case SIX:				return "6";
+			case SEVEN:				return "7";
+			case EIGHT:				return "8";
+			case NINE:				return "9";
+			case NUMPADZERO:		return "#0";
+			case NUMPADONE:			return "#1";
+			case NUMPADTWO:			return "#2";
+			case NUMPADTHREE:		return "#3";
+			case NUMPADFOUR:		return "#4";
+			case NUMPADFIVE:		return "#5";
+			case NUMPADSIX:			return "#6";
+			case NUMPADSEVEN:		return "#7";
+			case NUMPADEIGHT:		return "#8";
+			case NUMPADNINE:		return "#9";
+			case NUMPADMULTIPLY:	return "#*";
+			case NUMPADPLUS:		return "#+";
+			case NUMPADMINUS:		return "#-";
+			case NUMPADPERIOD:		return "#.";
+			case SEMICOLON:			return ";";
+			case COMMA:				return ",";
+			case PERIOD:			return ".";
+//			case SLASH:				return "/";
+			case GRAVEACCENT:		return "`";
+			case LBRACKET:			return "[";
+//			case BACKSLASH:			return "\\";
+			case RBRACKET:			return "]";
+			case QUOTE:				return "'";
+			case PRINTSCREEN:		return "PrtScrn";
+			case NONE:				return '---';
+
 			default:
 				var label:String = Std.string(key);
 				if(label.toLowerCase() == 'null') return '---';
@@ -99,22 +57,19 @@ class InputFormatter {
 		}
 	}
 
-	public static function getGamepadName(key:FlxGamepadInputID)
+	public static function getGamepadName(key:flixel.input.gamepad.FlxGamepadInputID)
 	{
-		var gamepad:FlxGamepad = FlxG.gamepads.firstActive;
+		var gamepad:flixel.input.gamepad.FlxGamepad = FlxG.gamepads.firstActive;
 		var model:FlxGamepadModel = gamepad != null ? gamepad.detectedModel : UNKNOWN;
 
 		switch(key)
 		{
 			// Analogs
-			case LEFT_STICK_DIGITAL_LEFT:
-				return "Left";
-			case LEFT_STICK_DIGITAL_RIGHT:
-				return "Right";
-			case LEFT_STICK_DIGITAL_UP:
-				return "Up";
-			case LEFT_STICK_DIGITAL_DOWN:
-				return "Down";
+			case LEFT_STICK_DIGITAL_LEFT:	return "Left";
+			case LEFT_STICK_DIGITAL_RIGHT:	return "Right";
+			case LEFT_STICK_DIGITAL_UP:		return "Up";
+			case LEFT_STICK_DIGITAL_DOWN:	return "Down";
+
 			case LEFT_STICK_CLICK:
 				switch (model) {
 					case PS4: return "L3";
@@ -122,14 +77,11 @@ class InputFormatter {
 					default: return "Analog Click";
 				}
 
-			case RIGHT_STICK_DIGITAL_LEFT:
-				return "C. Left";
-			case RIGHT_STICK_DIGITAL_RIGHT:
-				return "C. Right";
-			case RIGHT_STICK_DIGITAL_UP:
-				return "C. Up";
-			case RIGHT_STICK_DIGITAL_DOWN:
-				return "C. Down";
+			case RIGHT_STICK_DIGITAL_LEFT:	return "C. Left";
+			case RIGHT_STICK_DIGITAL_RIGHT:	return "C. Right";
+			case RIGHT_STICK_DIGITAL_UP:	return "C. Up";
+			case RIGHT_STICK_DIGITAL_DOWN:	return "C. Down";
+
 			case RIGHT_STICK_CLICK:
 				switch (model) {
 					case PS4: return "R3";
@@ -138,14 +90,10 @@ class InputFormatter {
 				}
 
 			// Directional
-			case DPAD_LEFT:
-				return "D. Left";
-			case DPAD_RIGHT:
-				return "D. Right";
-			case DPAD_UP:
-				return "D. Up";
-			case DPAD_DOWN:
-				return "D. Down";
+			case DPAD_LEFT:		return "D. Left";
+			case DPAD_RIGHT:	return "D. Right";
+			case DPAD_UP:		return "D. Up";
+			case DPAD_DOWN:		return "D. Down";
 
 			// Top buttons
 			case LEFT_SHOULDER:
@@ -211,8 +159,7 @@ class InputFormatter {
 					default: return "Start";
 				}
 
-			case NONE:
-				return '---';
+			case NONE:	return '---';
 
 			default:
 				var label:String = Std.string(key);

@@ -24,6 +24,6 @@ class ModchartSprite extends FlxSprite
 		}
 	}
 
-	public function addOffset(name:String, x:Float, y:Float)
+	inline public function addOffset(name:String, x:Float, y:Float)
 		animOffsets.set(name, [x, y]);
 }

@@ -11,11 +11,13 @@ class CustomSubstate extends MusicBeatSubstate
 	{
 		#if LUA_ALLOWED
 		var lua = funk.lua;
-		Lua_helper.add_callback(lua, "openCustomSubstate", openCustomSubstate);
-		Lua_helper.add_callback(lua, "closeCustomSubstate", closeCustomSubstate);
-		Lua_helper.add_callback(lua, "insertToCustomSubstate", insertToCustomSubstate);
+		addCallback(lua, "openCustomSubstate", openCustomSubstate);
+		addCallback(lua, "closeCustomSubstate", closeCustomSubstate);
+		addCallback(lua, "insertToCustomSubstate", insertToCustomSubstate);
 		#end
 	}
+
+	inline static function addCallback(l:State, name:String, func:Dynamic) Lua_helper.add_callback(l, name, func);
 	
 	public static function openCustomSubstate(name:String, ?pauseGame:Bool = false)
 	{
@@ -25,10 +27,13 @@ class CustomSubstate extends MusicBeatSubstate
 			PlayState.instance.persistentUpdate = false;
 			PlayState.instance.persistentDraw = true;
 			PlayState.instance.paused = true;
-			if(FlxG.sound.music != null) {
+			FlxTween.globalManager.forEach(function(tween:FlxTween) tween.active = false); //so pause tweens wont stop
+			FlxTimer.globalManager.forEach(function(timer:FlxTimer) timer.active = false);
+			FlxG.sound.pause();
+			/*if(FlxG.sound.music != null) {
 				FlxG.sound.music.pause();
 				PlayState.instance.vocals.pause();
-			}
+			}*/
 		}
 		PlayState.instance.openSubState(new CustomSubstate(name));
 		PlayState.instance.setOnHScript('customSubstate', instance);
@@ -94,5 +99,6 @@ class CustomSubstate extends MusicBeatSubstate
 		PlayState.instance.setOnHScript('customSubstate', null);
 		PlayState.instance.setOnHScript('customSubstateName', name);
 		super.destroy();
+		instance = null;
 	}
 }

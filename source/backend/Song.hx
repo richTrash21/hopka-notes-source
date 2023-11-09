@@ -1,15 +1,10 @@
 package backend;
 
-import tjson.TJSON as Json;
-
 #if sys
 import sys.io.File;
-import sys.FileSystem;
-#else
-import lime.utils.Assets;
 #end
 
-import backend.Section;
+import backend.Section.SwagSection;
 
 typedef SwagSong =
 {
@@ -104,7 +99,7 @@ class Song
 		var formattedSong:String = Paths.formatToSongPath(jsonInput);
 		#if MODS_ALLOWED
 		var moddyFile:String = Paths.modsJson(formattedFolder + '/' + formattedSong);
-		if(FileSystem.exists(moddyFile)) {
+		if(sys.FileSystem.exists(moddyFile)) {
 			rawJson = File.getContent(moddyFile).trim();
 		}
 		#end
@@ -113,7 +108,7 @@ class Song
 			#if sys
 			rawJson = File.getContent(Paths.json(formattedFolder + '/' + formattedSong)).trim();
 			#else
-			rawJson = Assets.getText(Paths.json(formattedFolder + '/' + formattedSong)).trim();
+			rawJson = lime.utils.Assets.getText(Paths.json(formattedFolder + '/' + formattedSong)).trim();
 			#end
 		}
 
@@ -146,7 +141,5 @@ class Song
 	}
 
 	public static function parseJSONshit(rawJson:String):SwagSong
-	{
-		return cast Json.parse(rawJson).song;
-	}
+		return cast tjson.TJSON.parse(rawJson).song;
 }

@@ -579,9 +579,9 @@ class NotesSubState extends MusicBeatSubstate
 		skinNote.antialiasing = ClientPrefs.data.antialiasing;
 		skinNote.setGraphicSize(68);
 		skinNote.updateHitbox();
-		(skinNote.frames == null && skinNote.frames.frames[0] == null)
-			? skinNote.loadGraphic("flixel/images/logo/default.png") //prevents crash
-			: skinNote.frame = skinNote.frames.frames[0];
+		(skinNote.frames != null && skinNote.frames.frames[0] != null)
+			? skinNote.frame = skinNote.frames.frames[0]
+			: skinNote.loadGraphic("flixel/images/logo/default.png"); //prevents crash
 		skinNote.antialiasing = onPixel;
 		add(skinNote);
 
@@ -592,9 +592,9 @@ class NotesSubState extends MusicBeatSubstate
 			newNote.antialiasing = ClientPrefs.data.antialiasing;
 			newNote.setGraphicSize(85);
 			newNote.updateHitbox();
-			(newNote.frames == null && newNote.frames.frames[i] == null)
-				? newNote.loadGraphic("flixel/images/logo/default.png") //prevents crash
-				: newNote.frame = newNote.frames.frames[i];
+			(newNote.frames != null && newNote.frames.frames[i] != null)
+				? newNote.frame = newNote.frames.frames[i]
+				: newNote.loadGraphic("flixel/images/logo/default.png"); //prevents crash
 			newNote.ID = i;
 			newNote.antialiasing = !onPixel;
 			modeNotes.add(newNote);

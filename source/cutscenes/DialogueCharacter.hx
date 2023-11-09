@@ -1,12 +1,7 @@
 package cutscenes;
 
-import tjson.TJSON as Json;
-
 #if sys
 import sys.FileSystem;
-import sys.io.File;
-#else
-import lime.utils.Assets;
 #end
 
 typedef DialogueAnimArray = {
@@ -29,9 +24,9 @@ typedef DialogueCharacterFile = {
 
 class DialogueCharacter extends FlxSprite
 {
-	private static var IDLE_SUFFIX:String = '-IDLE';
-	public static var DEFAULT_CHARACTER:String = 'bf';
-	public static var DEFAULT_SCALE:Float = 0.7;
+	private static final IDLE_SUFFIX:String = '-IDLE';
+	public static final DEFAULT_CHARACTER:String = 'bf';
+	public static final DEFAULT_SCALE:Float = 0.7;
 
 	public var jsonFile:DialogueCharacterFile = null;
 	public var dialogueAnimations:Map<String, DialogueAnimArray> = new Map<String, DialogueAnimArray>();
@@ -69,14 +64,14 @@ class DialogueCharacter extends FlxSprite
 		if(!FileSystem.exists(path)) {
 			path = Paths.getPreloadPath('images/dialogue/' + DEFAULT_CHARACTER + '.json');
 		}
-		rawJson = File.getContent(path);
+		rawJson = sys.io.File.getContent(path);
 
 		#else
 		var path:String = Paths.getPreloadPath(characterPath);
-		rawJson = Assets.getText(path);
+		rawJson = lime.utils.Assets.getText(path);
 		#end
 		
-		jsonFile = cast Json.parse(rawJson);
+		jsonFile = cast tjson.TJSON.parse(rawJson);
 	}
 
 	public function reloadAnimations() {

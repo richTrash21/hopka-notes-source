@@ -1284,7 +1284,7 @@ class FunkinLua {
 		#end
 	}
 
-	public function addCallback(name:String, func:Dynamic) Lua_helper.add_callback(lua, name, func); //lazy
+	inline public function addCallback(name:String, func:Dynamic) Lua_helper.add_callback(lua, name, func); //lazy
 
 	//main
 	public var lastCalledFunction:String = '';

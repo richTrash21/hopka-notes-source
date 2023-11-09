@@ -1,7 +1,5 @@
 package backend;
 
-import backend.ClientPrefs;
-
 class Rating
 {
 	public var name:String = '';
@@ -18,11 +16,7 @@ class Rating
 		this.image = name;
 		this.hitWindow = 0;
 
-		var window:String = name + 'Window';
-		try
-		{
-			this.hitWindow = Reflect.field(ClientPrefs.data, window);
-		}
+		try { this.hitWindow = Reflect.field(backend.ClientPrefs.data, name + 'Window'); }
 		catch(e) FlxG.log.error(e);
 	}
 
@@ -30,23 +24,23 @@ class Rating
 	{
 		var ratingsData:Array<Rating> = [new Rating('sick')]; //highest rating goes first
 
-		var rating:Rating = new Rating('good');
-		rating.ratingMod = 0.67;
-		rating.score = 200;
-		rating.noteSplash = false;
-		ratingsData.push(rating);
+		var good:Rating = new Rating('good');
+		good.ratingMod = 0.67;
+		good.score = 200;
+		good.noteSplash = false;
+		ratingsData.push(good);
 
-		var rating:Rating = new Rating('bad');
-		rating.ratingMod = 0.34;
-		rating.score = 100;
-		rating.noteSplash = false;
-		ratingsData.push(rating);
+		var bad:Rating = new Rating('bad');
+		bad.ratingMod = 0.34;
+		bad.score = 100;
+		bad.noteSplash = false;
+		ratingsData.push(bad);
 
-		var rating:Rating = new Rating('shit');
-		rating.ratingMod = 0;
-		rating.score = 50;
-		rating.noteSplash = false;
-		ratingsData.push(rating);
+		var shit:Rating = new Rating('shit');
+		shit.ratingMod = 0;
+		shit.score = 50;
+		shit.noteSplash = false;
+		ratingsData.push(shit);
 		return ratingsData;
 	}
 }

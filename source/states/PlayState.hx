@@ -86,16 +86,16 @@ class PlayState extends MusicBeatState
 	public static var STRUM_X_MIDDLESCROLL = -278;
 
 	public static var ratingStuff:Array<Dynamic> = [
-		['You Suck!', 0.2],	// From 0% to 19%
-		['Shit', 0.4],		// From 20% to 39%
-		['Bad', 0.5],		// From 40% to 49%
-		['Bruh', 0.6],		// From 50% to 59%
-		['Meh', 0.69],		// From 60% to 68%
-		['Nice', 0.7],		// 69% :trollface:
-		['Good', 0.8],		// From 70% to 79%
-		['Great', 0.9],		// From 80% to 89%
-		['Sick!', 1],		// From 90% to 99%
-		['Perfect!!', 1]	// The value on this one isn't used actually, since Perfect is always "1"
+		['You Suck!', 0.2],		// From 0% to 19%
+		['Shit',	  0.4],		// From 20% to 39%
+		['Bad', 	  0.5],		// From 40% to 49%
+		['Bruh',	  0.6],		// From 50% to 59%
+		['Meh', 	  0.69],	// From 60% to 68%
+		['Nice',	  0.7],		// 69% :trollface:
+		['Good',	  0.8],		// From 70% to 79%
+		['Great', 	  0.9],		// From 80% to 89%
+		['Sick!', 	  1],		// From 90% to 99%
+		['Perfect!!', 1]		// The value on this one isn't used actually, since Perfect is always "1"
 	];
 
 	//event variables
@@ -117,12 +117,31 @@ class PlayState extends MusicBeatState
 	public var modchartSaves:Map<String, FlxSave> = new Map<String, FlxSave>();
 	#end
 
-	public var BF_X:Float = 770;
-	public var BF_Y:Float = 100;
-	public var DAD_X:Float = 100;
-	public var DAD_Y:Float = 100;
-	public var GF_X:Float = 400;
-	public var GF_Y:Float = 130;
+	public var BF_POS:FlxPoint	= FlxPoint.get(770, 100);
+	public var DAD_POS:FlxPoint	= FlxPoint.get(100, 100);
+	public var GF_POS:FlxPoint	= FlxPoint.get(400, 130);
+
+	// DEPRECATED!!!
+	/*extern*/ public var BF_X(get, set):Float;
+	/*extern*/ public var BF_Y(get, set):Float;
+	/*extern*/ public var DAD_X(get, set):Float;
+	/*extern*/ public var DAD_Y(get, set):Float;
+	/*extern*/ public var GF_X(get, set):Float;
+	/*extern*/ public var GF_Y(get, set):Float;
+
+	inline function get_BF_X():Float	return BF_POS.x;
+	inline function get_BF_Y():Float	return BF_POS.y;
+	inline function get_DAD_X():Float	return DAD_POS.x;
+	inline function get_DAD_Y():Float	return DAD_POS.y;
+	inline function get_GF_X():Float	return GF_POS.x;
+	inline function get_GF_Y():Float	return GF_POS.y;
+
+	inline function set_BF_X(v:Float):Float		return BF_POS.x  = v;
+	inline function set_BF_Y(v:Float):Float		return BF_POS.y  = v;
+	inline function set_DAD_X(v:Float):Float	return DAD_POS.x = v;
+	inline function set_DAD_Y(v:Float):Float	return DAD_POS.y = v;
+	inline function set_GF_X(v:Float):Float		return GF_POS.x  = v;
+	inline function set_GF_Y(v:Float):Float		return GF_POS.y  = v;
 
 	public var songSpeedTween:FlxTween;
 	public var songSpeed(default, set):Float = 1;
@@ -142,7 +161,7 @@ class PlayState extends MusicBeatState
 	public var uiPrefix:String = '';
 	public var uiSuffix:String = '';
 
-	@:noCompletion static function get_isPixelStage():Bool
+	@:noCompletion inline static function get_isPixelStage():Bool
 		return stageUI == "pixel";
 
 	public static var SONG:SwagSong = null;
@@ -151,7 +170,7 @@ class PlayState extends MusicBeatState
 	public static var storyPlaylist:Array<String> = [];
 	public static var storyDifficulty:Int = 1;
 
-	public static var spawnTime:Float = 2000;
+	static final spawnTime:Float = 2000;
 
 	public var inst:FlxSound;
 	public var vocals:FlxSound;
@@ -192,7 +211,7 @@ class PlayState extends MusicBeatState
 	public var healthBar:Bar;
 	public var timeBar:Bar;
 	public var healthBarFlip(get, set):Bool;
-	@:noCompletion function get_healthBarFlip():Bool
+	@:noCompletion inline function get_healthBarFlip():Bool
 		return healthBar.leftToRight;
 	@:noCompletion function set_healthBarFlip(value:Bool):Bool {
 		if(healthBarFlip != value) {
@@ -254,9 +273,40 @@ class PlayState extends MusicBeatState
 	public var skipCountdown:Bool = false;
 	var songLength:Float = 0;
 
-	public var boyfriendCameraOffset:Array<Float> = null;
-	public var opponentCameraOffset:Array<Float> = null;
-	public var girlfriendCameraOffset:Array<Float> = null;
+	// i have no fucking idea why i made this - richTrash21
+	public var bfCamOffset:FlxPoint = null;
+	public var dadCamOffset:FlxPoint = null;
+	public var gfCamOffset:FlxPoint = null;
+
+	// DEPRECATED!!!
+	/*extern*/ public var boyfriendCameraOffset(get, set):Array<Float>;
+	/*extern*/ public var opponentCameraOffset(get, set):Array<Float>;
+	/*extern*/ public var girlfriendCameraOffset(get, set):Array<Float>;
+
+	inline function get_boyfriendCameraOffset():Array<Float>
+		return bfCamOffset != null ? [bfCamOffset.x, bfCamOffset.y] : null;
+
+	inline function get_opponentCameraOffset():Array<Float>
+		return dadCamOffset != null ? [dadCamOffset.x, dadCamOffset.y] : null;
+
+	inline function get_girlfriendCameraOffset():Array<Float>
+		return gfCamOffset != null ? [gfCamOffset.x, gfCamOffset.y] : null;
+
+	inline function set_boyfriendCameraOffset(a:Array<Float>):Array<Float> {
+		if (a != null)
+			bfCamOffset != null ? bfCamOffset.set(a[0], a[1]) : bfCamOffset = FlxPoint.get(a[0], a[1]);
+		return a;
+	}
+	inline function set_opponentCameraOffset(a:Array<Float>):Array<Float> {
+		if (a != null)
+			dadCamOffset != null ? dadCamOffset.set(a[0], a[1]) : dadCamOffset = FlxPoint.get(a[0], a[1]);
+		return a;
+	}
+	inline function set_girlfriendCameraOffset(a:Array<Float>):Array<Float> {
+		if (a != null)
+			gfCamOffset != null ? gfCamOffset.set(a[0], a[1]) : gfCamOffset = FlxPoint.get(a[0], a[1]);
+		return a;
+	}
 
 	#if desktop
 	// Discord RPC variables
@@ -286,8 +336,8 @@ class PlayState extends MusicBeatState
 	#end
 
 	// Less laggy controls
-	private static var keysArray(default, never):Array<String> = ['note_left', 'note_down', 'note_up', 'note_right'];
-	private static var singAnimations(default, never):Array<String> = ['singLEFT', 'singDOWN', 'singUP', 'singRIGHT'];
+	private static final keysArray:Array<String> = ['note_left', 'note_down', 'note_up', 'note_right'];
+	private static final singAnimations:Array<String> = ['singLEFT', 'singDOWN', 'singUP', 'singRIGHT'];
 
 	public var precacheList:Map<String, String> = new Map<String, String>();
 	public var songName:String;
@@ -370,32 +420,29 @@ class PlayState extends MusicBeatState
 			uiPrefix = '${stageUI}UI/';
 		}
 
-		BF_X = stageData.boyfriend[0];
-		BF_Y = stageData.boyfriend[1];
-		GF_X = stageData.girlfriend[0];
-		GF_Y = stageData.girlfriend[1];
-		DAD_X = stageData.opponent[0];
-		DAD_Y = stageData.opponent[1];
+		BF_POS.set(stageData.boyfriend[0],  stageData.boyfriend[1]);
+		GF_POS.set(stageData.girlfriend[0], stageData.girlfriend[1]);
+		DAD_POS.set(stageData.opponent[0],  stageData.opponent[1]);
 
 		if(stageData.camera_speed != null)
 			cameraSpeed = stageData.camera_speed;
 
-		boyfriendCameraOffset = stageData.camera_boyfriend;
-		if(boyfriendCameraOffset == null) //Fucks sake should have done it since the start :rolling_eyes:
-			boyfriendCameraOffset = [0, 0];
+		bfCamOffset = (stageData.camera_boyfriend == null) //Fucks sake should have done it since the start :rolling_eyes:
+			? FlxPoint.get(0, 0)
+			: FlxPoint.get(stageData.camera_boyfriend[0], stageData.camera_boyfriend[1]);
 
-		opponentCameraOffset = stageData.camera_opponent;
-		if(opponentCameraOffset == null)
-			opponentCameraOffset = [0, 0];
+		dadCamOffset = (stageData.camera_opponent == null)
+			? FlxPoint.get(0, 0)
+			: FlxPoint.get(stageData.camera_opponent[0], stageData.camera_opponent[1]);
 
-		girlfriendCameraOffset = stageData.camera_girlfriend;
-		if(girlfriendCameraOffset == null)
-			girlfriendCameraOffset = [0, 0];
+		gfCamOffset = (stageData.camera_girlfriend == null)
+			? FlxPoint.get(0, 0)
+			: FlxPoint.get(stageData.camera_girlfriend[0], stageData.camera_girlfriend[1]);
 
 		boyfriendGroup = new FlxSpriteGroup(BF_X, BF_Y);
 		dadGroup = new FlxSpriteGroup(DAD_X, DAD_Y);
 		gfGroup = new FlxSpriteGroup(GF_X, GF_Y);
-		gfGroup.scrollFactor.set(0.95, 0.95); // fixed gf paralax lmao
+		//gfGroup.scrollFactor.set(0.95, 0.95); // fixed gf paralax lmao
 
 		switch (curStage) //lol
 		{
@@ -435,7 +482,6 @@ class PlayState extends MusicBeatState
 			if(SONG.gfVersion == null || SONG.gfVersion.length < 1) SONG.gfVersion = 'gf'; //Fix for the Chart Editor
 			gf = new Character(0, 0, SONG.gfVersion);
 			startCharacterPos(gf);
-			//gf.scrollFactor.set(0.95, 0.95);
 			gfGroup.add(gf);
 			startCharacterScripts(gf.curCharacter);
 		}
@@ -577,9 +623,9 @@ class PlayState extends MusicBeatState
 		if(ClientPrefs.data.downScroll) botplayTxt.y = timeBar.y - 78;
 		
 		scoreGroup.cameras	=	strumLineNotes.cameras	=	grpNoteSplashes.cameras	=
-		notes.cameras			=	healthBar.cameras		=	iconP1.cameras			=
-		iconP2.cameras			=	scoreTxt.cameras 		=	botplayTxt.cameras		=
-		timeBar.cameras			=	timeTxt.cameras			=	[camHUD];	// i love haxe <3
+		notes.cameras		=	healthBar.cameras		=	iconP1.cameras			=
+		iconP2.cameras		=	scoreTxt.cameras 		=	botplayTxt.cameras		=
+		timeBar.cameras		=	timeTxt.cameras			=	[camHUD];	// i love haxe <3
 
 		startingSong = true;
 		
@@ -750,7 +796,6 @@ class PlayState extends MusicBeatState
 			case 2:
 				if(gf != null && !gfMap.exists(newCharacter)) {
 					var newGf:Character = new Character(0, 0, newCharacter);
-					//newGf.scrollFactor.set(0.95, 0.95);
 					gfMap.set(newCharacter, newGf);
 					gfGroup.add(newGf);
 					startCharacterPos(newGf);
@@ -829,7 +874,6 @@ class PlayState extends MusicBeatState
 	function startCharacterPos(char:Character, ?gfCheck:Bool = false) {
 		if(gfCheck && char.curCharacter.startsWith('gf')) { //IF DAD IS GIRLFRIEND, HE GOES TO HER POSITION
 			char.setPosition(GF_X, GF_Y);
-			//char.scrollFactor.set(0.95, 0.95);
 			char.danceEveryNumBeats = 2;
 		}
 		char.x += char.positionArray[0];
@@ -984,7 +1028,7 @@ class PlayState extends MusicBeatState
 			var swagCounter:Int = 0;
 			var tick:Countdown = THREE;
 			var antialias:Bool = (ClientPrefs.data.antialiasing && !isPixelStage);
-			var countSound:FlxSound;
+			var countSound:FlxSound = null;
 
 			startTimer = new FlxTimer().start(Conductor.crochet * 0.001 / playbackRate, function(tmr:FlxTimer)
 			{
@@ -1712,7 +1756,7 @@ class PlayState extends MusicBeatState
 				FlxG.sound.music.onComplete();
 			}
 			if (FlxG.keys.justPressed.TWO) { //Go 10 seconds into the future :O
-				setSongTime(Conductor.songPosition + (FlxG.keys.pressed.SHIFT ? 20000 : 10000));
+				setSongTime(Conductor.songPosition + (FlxG.keys.pressed.SHIFT ? 20000 : 10000) * playbackRate);
 				clearNotesBefore(Conductor.songPosition);
 				if(Conductor.songPosition > FlxG.sound.music.length) finishSong();
 			}
@@ -1743,11 +1787,11 @@ class PlayState extends MusicBeatState
 		FlxTimer.globalManager.forEach(function(timer:FlxTimer) timer.active = false);
 		FlxG.sound.pause();
 
-		if(FlxG.sound.music != null)
+		/*if(FlxG.sound.music != null)
 		{
 			FlxG.sound.music.pause();
 			if (vocals != null) vocals.pause();
-		}
+		}*/
 		if(!cpuControlled)
 			for (note in playerStrums)
 				if(note.animation.curAnim != null && note.animation.curAnim.name != 'static')
@@ -2061,18 +2105,18 @@ class PlayState extends MusicBeatState
 		{
 			case 'dad' | 'opponent':
 				charMidpoint = dad.getMidpoint();
-				charMidpoint.x += 150 + dad.cameraPosition[0] + opponentCameraOffset[0];
-				charMidpoint.y += -100 + dad.cameraPosition[1] + opponentCameraOffset[1];
+				charMidpoint.x += 150 + dad.cameraPosition[0] + dadCamOffset.x;
+				charMidpoint.y += -100 + dad.cameraPosition[1] + dadCamOffset.y;
 
 			case 'gf' | 'girlfriend':
 				charMidpoint = gf.getMidpoint();
-				charMidpoint.x += gf.cameraPosition[0] + girlfriendCameraOffset[0];
-				charMidpoint.y += gf.cameraPosition[1] + girlfriendCameraOffset[1];
+				charMidpoint.x += gf.cameraPosition[0] + gfCamOffset.x;
+				charMidpoint.y += gf.cameraPosition[1] + gfCamOffset.y;
 
 			default: // boyfriend/invalid character
 				charMidpoint = boyfriend.getMidpoint();
-				charMidpoint.x += -100 - boyfriend.cameraPosition[0] + boyfriendCameraOffset[0];
-				charMidpoint.y += -100 + boyfriend.cameraPosition[1] + boyfriendCameraOffset[1];
+				charMidpoint.x += -100 - boyfriend.cameraPosition[0] + bfCamOffset.x;
+				charMidpoint.y += -100 + boyfriend.cameraPosition[1] + bfCamOffset.y;
 		}
 		camFollow.setPosition(charMidpoint.x, charMidpoint.y);
 		callOnScripts('onMoveCamera', [char]);
@@ -2248,15 +2292,13 @@ class PlayState extends MusicBeatState
 	public var totalPlayed:Int = 0;
 	public var totalNotesHit:Float = 0.0;
 
-	public var showCombo:Bool = false;
+	public var showCombo:Bool	 = false;
 	public var showComboNum:Bool = true;
-	public var showRating:Bool = true;
+	public var showRating:Bool	 = true;
 
 	var lastRating:FlxSprite;			  // stores the last judgement object
 	var lastCombo:FlxSprite;			  // stores the last combo sprite object
 	var lastScore:Array<FlxSprite> = [];  // stores the last combo score objects in an array
-
-	var scoreTweens:Array<FlxTween> = [];
 
 	private function cachePopUpScore()
 	{
@@ -2264,23 +2306,30 @@ class PlayState extends MusicBeatState
 		{
 			for (rat in ratingsData) Paths.image(uiPrefix + rat.image + uiSuffix);
 			Paths.image(uiPrefix + 'num' + uiSuffix);
+
+			// preloading first group objects (please work please work please work please work please work)
+			// UPD: IT DOESN'T WAAAAAAAAAAAHHHH😭😭😭
+			// https://preview.redd.it/7nskgql0k1w91.png?width=960&crop=smart&auto=webp&s=84099357cf2f7d30075e6c9989b15ef81bda9037
+			var rating:FlxSprite = new FlxSprite(0, 0, Paths.image(uiPrefix + 'sick'  + uiSuffix));
+			var combo:FlxSprite  = new FlxSprite(0, 0, Paths.image(uiPrefix + 'combo' + uiSuffix));
+			var score:FlxSprite  = new FlxSprite(0, 0, Paths.image(uiPrefix + 'num'   + uiSuffix));
+			rating.alpha = combo.alpha = score.alpha = 0.000001;
+			scoreGroup.add(rating);
+			scoreGroup.add(combo);
+			scoreGroup.add(score);
 		}
 	}
 
 	private function popUpScore(note:Note = null):Void
 	{
 		//tryna do MS based judgment due to popular demand
-		var daRating:Rating = Conductor.judgeNote(ratingsData, Math.abs(note.strumTime - Conductor.songPosition + ClientPrefs.data.ratingOffset) / playbackRate);
-
-		var antialias:Bool = isPixelStage ? false : ClientPrefs.data.antialiasing;
-		var placement:Float = FlxG.width * 0.35;
-		var score:Int = 350;
+		var daRating:Rating = Conductor.judgeNote(ratingsData, Math.abs(note.strumTime - Conductor.songPosition + ClientPrefs.data.ratingOffset) / playbackRate);		
+		var score:Int = daRating.score;
 
 		totalNotesHit += daRating.ratingMod;
 		note.ratingMod = daRating.ratingMod;
 		if(!note.ratingDisabled) daRating.hits++;
 		note.rating = daRating.name;
-		score = daRating.score;
 
 		if(daRating.noteSplash && !note.noteSplashData.disabled)
 			spawnNoteSplashOnNote(note);
@@ -2298,106 +2347,104 @@ class PlayState extends MusicBeatState
 		// доволен??🙄🙄
 		if (ClientPrefs.data.enableCombo)
 		{
-			if (!ClientPrefs.data.comboStacking) {
-				scoreGroup.forEachAlive(function(spr:FlxSprite) spr.kill());
-				lastScore = [];
-				if (scoreTweens != null)
-					while (scoreTweens.length > 0) {
-						var twn:FlxTween = scoreTweens[0];
-						twn.cancel();
-						scoreTweens.remove(twn);
-					}
+			final placement:Float = FlxG.width * 0.35;
+			var antialias:Bool	  = ClientPrefs.data.antialiasing;
+			var scaleMult:Float	  = 0.7;
+			var numRes:Array<Int> = [100, 120];
+			var numScale:Float	  = 0.5;
+			if (isPixelStage)
+			{
+				antialias = false;
+				scaleMult = daPixelZoom * 0.85;
+				numRes	  = [10, 12];
+				numScale  = daPixelZoom * 0.85;
 			}
 
-			var scaleMult:Float = isPixelStage ? daPixelZoom * 0.85 : 0.7;
+			var noStacking:Bool = !ClientPrefs.data.comboStacking;
+			if (noStacking) {
+				scoreGroup.forEachAlive(function(spr:FlxSprite) {
+					FlxTween.cancelTweensOf(spr);
+					spr.kill();
+				});
+				lastScore = [];
+			}
+
 			var rating:FlxSprite = scoreGroup.remove(scoreGroup.recycle(FlxSprite), true).loadGraphic(Paths.image(uiPrefix + daRating.image + uiSuffix));
 			rating.x = placement - 40 + ClientPrefs.data.comboOffset[0];
-			rating.screenCenter(Y).y -= 30 + ClientPrefs.data.comboOffset[1];
+			rating.screenCenter(Y).y -= 60 + ClientPrefs.data.comboOffset[1];
 			rating.setGraphicSize(Std.int(rating.width * scaleMult));
 			rating.updateHitbox();
 
+			rating.alpha = 1;
 			rating.angle = 0;
 			rating.acceleration.y = 550 * playbackRate * playbackRate;
 			rating.velocity.set(-FlxG.random.int(1, 10) * playbackRate, -FlxG.random.int(140, 175) * playbackRate);
 			rating.angularVelocity = rating.velocity.x * FlxG.random.int(1, -1, [0]);
-
 			rating.visible = (!ClientPrefs.data.hideHud && showRating);
 			rating.antialiasing = antialias;
 
-
 			var comboSpr:FlxSprite = scoreGroup.remove(scoreGroup.recycle(FlxSprite), true).loadGraphic(Paths.image(uiPrefix + 'combo' + uiSuffix));
 			comboSpr.x = placement + ClientPrefs.data.comboOffset[0];
-			comboSpr.screenCenter(Y).y += 90 - ClientPrefs.data.comboOffset[1];
+			comboSpr.screenCenter(Y).y += 60 - ClientPrefs.data.comboOffset[1];
 			comboSpr.setGraphicSize(Std.int(comboSpr.width * scaleMult));
 			comboSpr.updateHitbox();
 
+			comboSpr.alpha = 1;
 			comboSpr.angle = 0;
 			comboSpr.acceleration.y = FlxG.random.int(200, 300) * playbackRate * playbackRate;
 			comboSpr.velocity.set(FlxG.random.int(1, 10) * playbackRate, -FlxG.random.int(140, 160) * playbackRate);
 			comboSpr.angularVelocity = rating.velocity.x * FlxG.random.int(1, -1, [0]);
-
 			comboSpr.visible = (!ClientPrefs.data.hideHud && showCombo);
 			comboSpr.antialiasing = antialias;
 
 			if (showRating)	scoreGroup.add(rating);
 			if (showCombo)	scoreGroup.add(comboSpr);
+			if (noStacking) {
+				lastRating = rating;
+				lastCombo = comboSpr;
+			}
 
-			var seperatedScore:Array<Int> = [];
-			for(i in 0...(combo > 999 ? 4 : 3))
-				seperatedScore.push(Math.floor(combo / Math.pow(10, i)) % 10);
+			var seperatedScore:Array<Int> = [for(i in 0...(combo > 999 ? 4 : 3)) Math.floor(combo / Math.pow(10, i)) % 10];
 			seperatedScore.reverse();
 
 			var daLoop:Int = 0;
 			var xThing:Float = 0;
-			var res:Array<Dynamic> = isPixelStage ? [10, 12, daPixelZoom * 0.85] : [100, 120, 0.5];
 			for (i in seperatedScore)
 			{
 				var numScore:FlxSprite = scoreGroup.remove(scoreGroup.recycle(FlxSprite), true);
-				numScore.loadGraphic(Paths.image(uiPrefix + 'num' + uiSuffix), true, res[0], res[1]);
-				numScore.x = placement + (45 * daLoop) - 120 + ClientPrefs.data.comboOffset[2];
-				numScore.screenCenter(Y).y += 90 - ClientPrefs.data.comboOffset[3];
-				(numScore.frames == null && numScore.frames.frames[i] == null)
-					? numScore.loadGraphic("flixel/images/logo/default.png") //prevents crash
-					: numScore.frame = numScore.frames.frames[i];
-				numScore.setGraphicSize(Std.int(numScore.width * res[2]));
+				numScore.loadGraphic(Paths.image(uiPrefix + 'num' + uiSuffix), true, numRes[0], numRes[1]);
+				numScore.x = placement + (45 * daLoop) - 90 + ClientPrefs.data.comboOffset[2];
+				numScore.screenCenter(Y).y += 80 - ClientPrefs.data.comboOffset[3];
+				(numScore.frames != null && numScore.frames.frames[i] != null)
+					? numScore.frame = numScore.frames.frames[i]
+					: numScore.loadGraphic("flixel/images/logo/default.png"); //prevents crash
+				numScore.setGraphicSize(Std.int(numScore.width * numScale));
 				numScore.updateHitbox();
 
+				numScore.alpha = 1;
 				numScore.angle = 0;
-				numScore.offset.set(FlxG.random.int(-1, 1), FlxG.random.int(-1, 1));
+				numScore.offset.x += FlxG.random.int(-1, 1);
+				numScore.offset.y += FlxG.random.int(-1, 1);
 				numScore.acceleration.y = FlxG.random.int(200, 300) * playbackRate * playbackRate;
 				numScore.velocity.set(FlxG.random.float(-5, 5) * playbackRate, -FlxG.random.int(140, 160) * playbackRate);
 				numScore.angularVelocity = -numScore.velocity.x;
-
 				numScore.visible = !ClientPrefs.data.hideHud;
 				numScore.antialiasing = antialias;
+
 				if (showComboNum) scoreGroup.add(numScore);
+				if (noStacking)   lastScore.push(numScore);
 
-				var numTween:FlxTween = FlxTween.num(1, 0, 0.2 / playbackRate, {startDelay: Conductor.crochet * 0.002 / playbackRate,
-					onComplete: function(t:FlxTween) numScore.kill()}, function(a:Float) numScore.alpha = a);
+				FlxTween.tween(numScore, {alpha: 0}, 0.2 / playbackRate, {startDelay: Conductor.crochet * 0.002 / playbackRate,
+					onComplete: function(t:FlxTween) numScore.kill()});
 
-				if (!ClientPrefs.data.comboStacking) {
-					lastScore.push(numScore);
-					scoreTweens.push(numTween);
-				}
-
-				daLoop++;
 				if(numScore.x > xThing) xThing = numScore.x;
+				daLoop++;
 			}
 			comboSpr.x = xThing + 50;
-
-			var ratTween:FlxTween = FlxTween.num(1, 0, 0.2 / playbackRate, {startDelay: Conductor.crochet * 0.001 / playbackRate,
-				onComplete: function(t:FlxTween) rating.kill()}, function(a:Float) rating.alpha = a);
-
-			var combTween:FlxTween = FlxTween.num(1, 0, 0.2 / playbackRate, {startDelay: Conductor.crochet * 0.002 / playbackRate,
-				onComplete: function(t:FlxTween) comboSpr.kill()}, function(a:Float) comboSpr.alpha = a);
-
-			if (!ClientPrefs.data.comboStacking)
-			{
-				lastRating = rating;
-				lastCombo = comboSpr;
-				scoreTweens.push(ratTween);
-				scoreTweens.push(combTween);
-			}
+			FlxTween.tween(rating, {alpha: 0}, 0.2 / playbackRate, {startDelay: Conductor.crochet * 0.001 / playbackRate,
+				onComplete: function(tween:FlxTween) rating.kill()});
+			FlxTween.tween(comboSpr, {alpha: 0}, 0.2 / playbackRate, {startDelay: Conductor.crochet * 0.002 / playbackRate,
+				onComplete: function(tween:FlxTween) comboSpr.kill()});
 		}
 	}
 
@@ -2766,19 +2813,39 @@ class PlayState extends MusicBeatState
 		grpNoteSplashes.add(grpNoteSplashes.remove(grpNoteSplashes.recycle(NoteSplash))).setupNoteSplash(x, y, data, note);
 
 	override function destroy() {
-		if (CustomSubstate.instance != null) CustomSubstate.instance.destroy();
+		BF_POS.put();
+		GF_POS.put();
+		DAD_POS.put();
+
+		bfCamOffset.put();
+		dadCamOffset.put();
+		gfCamOffset.put();
+		
+		//FlxG.camera.pixelPerfectRender = false;
+		//camHUD.pixelPerfectRender = false;
+		FlxG.stage.removeEventListener(KeyboardEvent.KEY_DOWN, onKeyPress);
+		FlxG.stage.removeEventListener(KeyboardEvent.KEY_UP, onKeyRelease);
+		FlxAnimationController.globalSpeed = 1;
+		FlxG.sound.music.pitch = 1;
+		Note.globalRgbShaders = [];
+		backend.NoteTypesConfig.clearNoteTypesData();
+
+		// properly destroys custom substates now, finally!!!
+		super.destroy();
+
 		#if LUA_ALLOWED
-		for (i in 0...luaArray.length) {
+		while (luaArray.length > 0) {
 			var lua:FunkinLua = luaArray[0];
 			lua.call('onDestroy', []);
 			lua.stop();
 		}
-		luaArray = [];
 		FunkinLua.customFunctions.clear();
 		#end
 
 		#if HSCRIPT_ALLOWED
-		for (script in hscriptArray)
+		while (hscriptArray.length > 0) {
+			var script:HScript = hscriptArray[0];
+			hscriptArray.remove(script);
 			if(script != null)
 			{
 				script.call('onDestroy');
@@ -2788,20 +2855,9 @@ class PlayState extends MusicBeatState
 				script.destroy();
 				#end
 			}
-
-		while (hscriptArray.length > 0) hscriptArray.pop();
+		}
 		#end
-
-		//FlxG.camera.pixelPerfectRender = false;
-		//camHUD.pixelPerfectRender = false;
-		FlxG.stage.removeEventListener(KeyboardEvent.KEY_DOWN, onKeyPress);
-		FlxG.stage.removeEventListener(KeyboardEvent.KEY_UP, onKeyRelease);
-		FlxAnimationController.globalSpeed = 1;
-		FlxG.sound.music.pitch = 1;
-		Note.globalRgbShaders = [];
-		backend.NoteTypesConfig.clearNoteTypesData();
 		instance = null;
-		super.destroy();
 	}
 
 	public static function cancelMusicFadeTween() {
@@ -2923,7 +2979,7 @@ class PlayState extends MusicBeatState
 		return false;
 	}
 
-	public function initHScript(file:String)
+	inline public function initHScript(file:String)
 	{
 		try
 		{

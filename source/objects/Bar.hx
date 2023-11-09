@@ -15,7 +15,7 @@ class Bar extends FlxSpriteGroup
 	public var percent(default, set):Float = 0;
 	public var leftToRight(default, set):Bool = true;
 
-	@:deprecated("`barCenter` is deprecated, use `centerPoint.x` instead!!")
+	// DEPRECATED!!!
 	public var barCenter(get, never):Float;
 	public var centerPoint(default, null):FlxPoint = FlxPoint.get();
 

@@ -137,17 +137,14 @@ class ClientPrefs {
 	public static function resetKeys(controller:Null<Bool> = null) //Null = both, False = Keyboard, True = Controller
 	{
 		if(controller != true)
-		{
 			for (key in keyBinds.keys())
 				if(defaultKeys.exists(key))
 					keyBinds.set(key, defaultKeys.get(key).copy());
-		}
+
 		if(controller != false)
-		{
 			for (button in gamepadBinds.keys())
 				if(defaultButtons.exists(button))
 					gamepadBinds.set(button, defaultButtons.get(button).copy());
-		}
 	}
 
 	public static function clearInvalidKeys(key:String) {
@@ -252,17 +249,8 @@ class ClientPrefs {
 	}
 
 	public static function toggleVolumeKeys(turnOn:Bool) {
-		if(turnOn)
-		{
-			FlxG.sound.muteKeys = TitleState.muteKeys;
-			FlxG.sound.volumeDownKeys = TitleState.volumeDownKeys;
-			FlxG.sound.volumeUpKeys = TitleState.volumeUpKeys;
-		}
-		else
-		{
-			FlxG.sound.muteKeys = [];
-			FlxG.sound.volumeDownKeys = [];
-			FlxG.sound.volumeUpKeys = [];
-		}
+		FlxG.sound.volumeDownKeys = turnOn ? TitleState.volumeDownKeys	: [];
+		FlxG.sound.volumeUpKeys	  = turnOn ? TitleState.volumeUpKeys	: [];
+		FlxG.sound.muteKeys 	  = turnOn ? TitleState.muteKeys		: [];
 	}
 }

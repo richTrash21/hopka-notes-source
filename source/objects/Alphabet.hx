@@ -26,8 +26,8 @@ class Alphabet extends FlxSpriteGroup
 	public var scaleY(default, set):Float = 1;
 	public var rows:Int = 0;
 
-	public var distancePerItem:FlxPoint = new FlxPoint(20, 120);
-	public var startPosition:FlxPoint = new FlxPoint(0, 0); //for the calculations
+	public var distancePerItem:FlxPoint = FlxPoint.get(20, 120);
+	public var startPosition:FlxPoint = FlxPoint.get(0, 0); //for the calculations
 
 	public function new(x:Float, y:Float, text:String = "", ?bold:Bool = true)
 	{
@@ -166,6 +166,12 @@ class Alphabet extends FlxSpriteGroup
 		super.update(elapsed);
 	}
 
+	override function destroy() {
+		distancePerItem.put();
+		startPosition.put();
+		super.destroy();
+	}
+
 	public function snapToPosition()
 	{
 		if (isMenuItem)
@@ -175,7 +181,7 @@ class Alphabet extends FlxSpriteGroup
 		}
 	}
 
-	private static var Y_PER_ROW:Float = 85;
+	private static final Y_PER_ROW:Float = 85;
 
 	private function createLetters(newText:String)
 	{

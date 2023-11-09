@@ -70,10 +70,10 @@ class Note extends FlxSprite
 	public var lateHitMult:Float = 1;
 	public var lowPriority:Bool = false;
 
-	public static var SUSTAIN_SIZE:Int = 44;
+	public static final SUSTAIN_SIZE:Int = 44;
 	public static var swagWidth:Float = 160 * 0.7;
 	public static var colArray:Array<String> = ['purple', 'blue', 'green', 'red'];
-	public static var defaultNoteSkin(default, never):String = 'noteSkins/NOTE_assets';
+	public static final defaultNoteSkin:String = 'noteSkins/NOTE_assets';
 
 	// better pixel note handeling
 	public static var isPixelNote:Bool = false;

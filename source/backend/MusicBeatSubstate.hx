@@ -1,8 +1,6 @@
 package backend;
 
-import flixel.FlxSubState;
-
-class MusicBeatSubstate extends FlxSubState
+class MusicBeatSubstate extends flixel.FlxSubState
 {
 	public function new() {super();}
 
@@ -24,7 +22,6 @@ class MusicBeatSubstate extends FlxSubState
 
 	override function update(elapsed:Float)
 	{
-		//everyStep();
 		if(!persistentUpdate) MusicBeatState.timePassedOnState += elapsed;
 		var oldStep:Int = curStep;
 
@@ -88,20 +85,9 @@ class MusicBeatSubstate extends FlxSubState
 		curStep = lastChange.stepTime + Math.floor(shit);
 	}
 
-	public function stepHit():Void
-	{
-		if (curStep % 4 == 0) beatHit();
-	}
-
-	public function beatHit():Void
-	{
-		//do literally nothing dumbass
-	}
-	
-	public function sectionHit():Void
-	{
-		//yep, you guessed it, nothing again, dumbass
-	}
+	public function stepHit():Void { if (curStep % 4 == 0) beatHit(); }
+	public function beatHit():Void { /* do literally nothing dumbass */ }
+	public function sectionHit():Void { /* yep, you guessed it, nothing again, dumbass */ }
 	
 	function getBeatsOnSection()
 	{

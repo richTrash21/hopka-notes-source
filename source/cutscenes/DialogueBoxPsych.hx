@@ -30,9 +30,9 @@ typedef DialogueLine = {
 // TO DO: Clean code? Maybe? idk
 class DialogueBoxPsych extends FlxSpriteGroup
 {
-	public static var DEFAULT_TEXT_X = 175;
-	public static var DEFAULT_TEXT_Y = 460;
-	public static var LONG_TEXT_ADD = 24;
+	public static final DEFAULT_TEXT_X = 175;
+	public static final DEFAULT_TEXT_Y = 460;
+	public static final LONG_TEXT_ADD = 24;
 	var scrollSpeed = 4000;
 
 	var dialogue:TypedAlphabet;

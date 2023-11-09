@@ -37,7 +37,7 @@ typedef AnimArray = {
 
 class Character extends FlxSprite
 {
-	inline public static var DEFAULT_CHARACTER:String = 'bf'; //In case a character is missing, it will use BF on its place
+	inline public static final DEFAULT_CHARACTER:String = 'bf'; //In case a character is missing, it will use BF on its place
 
 	public var animOffsets:Map<String, Array<Dynamic>>;
 	public var debugMode:Bool = false;

@@ -65,10 +65,7 @@ class CutsceneHandler extends FlxBasic
 		}
 	}
 
-	public function push(spr:FlxSprite)
-	{
-		objects.push(spr);
-	}
+	public function push(spr:FlxSprite) objects.push(spr);
 
 	public function timer(time:Float, func:Void->Void)
 	{
@@ -77,7 +74,5 @@ class CutsceneHandler extends FlxBasic
 	}
 
 	function sortByTime(Obj1:Array<Dynamic>, Obj2:Array<Dynamic>):Int
-	{
 		return FlxSort.byValues(FlxSort.ASCENDING, Obj1[0], Obj2[0]);
-	}
 }
