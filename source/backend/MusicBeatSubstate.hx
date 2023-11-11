@@ -2,7 +2,7 @@ package backend;
 
 class MusicBeatSubstate extends flixel.FlxSubState
 {
-	public function new() {super();}
+	public function new(BGColor:FlxColor = FlxColor.TRANSPARENT) {super(BGColor);}
 
 	private var curSection:Int = 0;
 	private var stepsToDo:Int = 0;

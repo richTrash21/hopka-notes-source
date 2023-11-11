@@ -22,12 +22,12 @@ class MusicBeatState extends flixel.addons.ui.FlxUIState
 	private function get_controls():Controls return Controls.instance;
 
 	override function create() {
-		var skip:Bool = FlxTransitionableState.skipNextTransOut;
 		#if MODS_ALLOWED Mods.updatedOnState = false; #end
 
 		super.create();
 
-		if(!skip) openSubState(new CustomFadeTransition(transTime, true));
+		if(!FlxTransitionableState.skipNextTransOut)
+			openSubState(new CustomFadeTransition(transTime, true));
 
 		FlxTransitionableState.skipNextTransOut = false;
 		timePassedOnState = 0;

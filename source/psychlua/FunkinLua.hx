@@ -129,7 +129,7 @@ class FunkinLua {
 		// Gameplay settings
 		set('healthGainMult', game.healthGain);
 		set('healthLossMult', game.healthLoss);
-		set('playbackRate', game.playbackRate);
+		#if FLX_PITCH set('playbackRate', game.playbackRate); #end
 		set('instakillOnMiss', game.instakillOnMiss);
 		set('botPlay', game.cpuControlled);
 		set('practice', game.practiceMode);
@@ -1229,6 +1229,7 @@ class FunkinLua {
 			}
 		});
 
+		#if FLX_PITCH
 		addCallback("getSoundPitch", function(tag:String)
 			return (tag != null && tag.length > 0 && game.modchartSounds.exists(tag)) ? game.modchartSounds.get(tag).pitch : 0
 		);
@@ -1243,6 +1244,7 @@ class FunkinLua {
 				}
 			}
 		});
+		#end
 
 		addCallback("debugPrint", function(text:Dynamic = '', color:String = 'WHITE') PlayState.instance.addTextToDebug(text, CoolUtil.colorFromString(color)));
 		

@@ -157,7 +157,7 @@ class NoteSplash extends FlxSprite
 
 	function addAnimAndCheck(name:String, anim:String, ?framerate:Int = 24, ?loop:Bool = false)
 	{
-		if (!frames.framesHash.exists(anim + '0000')) return false;
+		if (!#if (flixel < "5.4.0") frames.framesHash.exists(anim + '0000') #else frames.exists(anim + '0000') #end) return false;
 		animation.addByPrefix(name, anim, framerate, loop);
 		return true;
 	}

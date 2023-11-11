@@ -39,7 +39,7 @@ class GameOverSubstate extends MusicBeatSubstate
 			if(!PlayState.instance.boyfriendMap.exists(characterName))
 				PlayState.instance.addCharacterToList(characterName, 0);
 			Paths.sound(deathSoundName);
-			Paths.sound(loopSoundName);
+			Paths.music(loopSoundName);
 			Paths.sound(endSoundName);
 		}
 	}

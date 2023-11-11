@@ -80,7 +80,8 @@ class TitleState extends MusicBeatState
 		#end
 		Mods.loadTopMod();
 
-		FlxG.fixedTimestep = false;
+		// назад нельзя... (блять нахуй я референс на ту фурри хуйню от феникса здесь оставил аааа пмгите)
+		#if (flixel < "5.4.0") FlxG.fixedTimestep = false; #end
 		FlxG.game.focusLostFramerate = 60;
 		FlxG.keys.preventDefaultKeys = [TAB];
 

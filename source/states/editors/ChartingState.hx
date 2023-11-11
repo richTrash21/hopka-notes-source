@@ -353,7 +353,7 @@ class ChartingState extends MusicBeatState
 	var optimizeJsonBox:FlxUICheckBox;
 	var UI_songTitle:FlxUIInputText;
 	var stageDropDown:FlxUIDropDownMenu;
-	var sliderRate:FlxUISlider;
+	#if FLX_PITCH var sliderRate:FlxUISlider; #end
 	function addSongUI():Void
 	{
 		UI_songTitle = new FlxUIInputText(10, 10, 70, _song.song, 8);
@@ -1144,7 +1144,7 @@ class ChartingState extends MusicBeatState
 		voicesVolume.name = 'voices_volume';
 		blockPressWhileTypingOnStepper.push(voicesVolume);
 		
-		#if !html5
+		#if FLX_PITCH
 		sliderRate = new FlxUISlider(this, 'playbackSpeed', 120, 120, 0.5, 3, 150, null, 5, FlxColor.WHITE, FlxColor.BLACK);
 		sliderRate.nameLabel.text = 'Playback Rate';
 		tab_group_chart.add(sliderRate);
@@ -1442,7 +1442,7 @@ class ChartingState extends MusicBeatState
 		{
 			switch (sender)
 			{
-				case 'playbackSpeed': playbackSpeed = Std.int(sliderRate.value);
+				case 'playbackSpeed': playbackSpeed = #if FLX_PITCH Std.int(sliderRate.value) #else 1.0 #end;
 			}
 		}
 	}
@@ -1834,6 +1834,7 @@ class ChartingState extends MusicBeatState
 			strumLineNotes.members[i].alpha = FlxG.sound.music.playing ? 1 : 0.35;
 		}
 
+		#if FLX_PITCH
 		// PLAYBACK SPEED CONTROLS //
 		var holdingShift = FlxG.keys.pressed.SHIFT;
 		var holdingLB = FlxG.keys.pressed.LBRACKET;
@@ -1847,6 +1848,7 @@ class ChartingState extends MusicBeatState
 
 		FlxG.sound.music.pitch = playbackSpeed;
 		vocals.pitch = playbackSpeed;
+		#end
 
 		bpmTxt.text =
 		Std.string(FlxMath.roundDecimal(Conductor.songPosition / 1000, 2)) + " / " + Std.string(FlxMath.roundDecimal(FlxG.sound.music.length / 1000, 2)) +

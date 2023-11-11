@@ -363,7 +363,7 @@ class Note extends FlxSprite
 	function loadNoteAnims() {
 		if (isSustainNote)
 		{
-			if (frames.framesHash.exists('pruple end hold0000')) // this fixes some retarded typo from the original note .FLA
+			if (#if (flixel < "5.4.0") frames.framesHash.exists('pruple end hold0000') #else frames.exists('pruple end hold0000') #end) // this fixes some retarded typo from the original note .FLA
 				animation.addByPrefix('purpleholdend', 'pruple end hold', 24, true);
 			animation.addByPrefix(colArray[noteData] + 'holdend', colArray[noteData] + ' hold end', 24, true);
 			animation.addByPrefix(colArray[noteData] + 'hold', colArray[noteData] + ' hold piece', 24, true);

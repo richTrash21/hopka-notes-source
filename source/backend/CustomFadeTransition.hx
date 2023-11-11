@@ -1,66 +1,39 @@
 package backend;
 
-class CustomFadeTransition extends MusicBeatSubstate {
+class CustomFadeTransition extends flixel.FlxSubState
+{
+	static final colors:Array<Int> = [0x0, FlxColor.BLACK, FlxColor.BLACK];
 	public static var finishCallback:Void->Void;
-	private var leTween:FlxTween = null;
 	public static var nextCamera:FlxCamera;
-	var isTransIn:Bool = false;
-	var transBlack:FlxSprite;
-	var transGradient:FlxSprite;
 
-	public function new(duration:Float, isTransIn:Bool) {
+	public function new(duration:Float, isTransIn:Bool)
+	{
 		super();
 
-		this.isTransIn = isTransIn;
-		var zoom:Float = FlxMath.bound(FlxG.camera.zoom, 0.05, 1);
-		var width:Int = Std.int(FlxG.width / zoom);
-		var height:Int = Std.int(FlxG.height / zoom);
-		transGradient = flixel.util.FlxGradient.createGradientFlxSprite(1, height, (isTransIn ? [0x0, FlxColor.BLACK] : [FlxColor.BLACK, 0x0]));
+		if (duration <= 0) {
+			finish(isTransIn);	// dont bother creating shit
+			return;				// actually nvmd it soflocks you lmao
+		}
+
+		final zoom:Float = FlxMath.bound(FlxG.camera.zoom, 0.05, 1);
+		final width:Int  = Std.int(FlxG.width / zoom);
+		final height:Int = Std.int(FlxG.height / zoom);
+		final realColors = colors.copy();
+		if (!isTransIn) realColors.reverse();
+
+		final transGradient:FlxSprite = flixel.util.FlxGradient.createGradientFlxSprite(1, height * 2, realColors);
+		transGradient.setPosition(-(width - FlxG.width) * 0.5, isTransIn ? -height : -height * 2);
+		transGradient.scrollFactor.set();
 		transGradient.scale.x = width;
 		transGradient.updateHitbox();
-		transGradient.scrollFactor.set();
 		add(transGradient);
 
-		transBlack = new FlxSprite().makeGraphic(1, height + 400, FlxColor.BLACK);
-		transBlack.scale.x = width;
-		transBlack.updateHitbox();
-		transBlack.scrollFactor.set();
-		add(transBlack);
-
-		transGradient.x -= (width - FlxG.width) / 2;
-		transBlack.x = transGradient.x;
-
-		if(isTransIn) {
-			transGradient.y = transBlack.y - transBlack.height;
-			FlxTween.tween(transGradient, {y: transGradient.height + 50}, duration, {
-				onComplete: function(twn:FlxTween) close(),
-				ease: FlxEase.linear});
-		} else {
-			transGradient.y = -transGradient.height;
-			transBlack.y = transGradient.y - transBlack.height + 50;
-			leTween = FlxTween.tween(transGradient, {y: transGradient.height + 50}, duration, {
-				onComplete: function(twn:FlxTween) if(finishCallback != null) finishCallback(),
-				ease: FlxEase.linear});
-		}
-
-		if(nextCamera != null) {
-			transBlack.cameras = [FlxG.cameras.list[FlxG.cameras.list.length - 1]];
-			transGradient.cameras = [FlxG.cameras.list[FlxG.cameras.list.length - 1]];
-		}
+		// actually uses nextCamera now WOW!!!!
+		transGradient.cameras = [nextCamera == null ? FlxG.cameras.list[FlxG.cameras.list.length - 1] : nextCamera];
 		nextCamera = null;
+
+		FlxTween.tween(transGradient, {y: isTransIn ? height : 0}, duration, {onComplete: function(t:FlxTween) finish(isTransIn)});
 	}
 
-	override function update(elapsed:Float) {
-		transBlack.y = transGradient.y + (isTransIn ? transGradient.height : -transBlack.height);
-		super.update(elapsed);
-		transBlack.y = transGradient.y + (isTransIn ? transGradient.height : -transBlack.height);
-	}
-
-	override function destroy() {
-		if(leTween != null) {
-			finishCallback();
-			leTween.cancel();
-		}
-		super.destroy();
-	}
+	inline private function finish(transIn:Bool) transIn ? close() : if(finishCallback != null) finishCallback();
 }

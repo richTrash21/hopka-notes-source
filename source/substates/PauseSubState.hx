@@ -46,10 +46,9 @@ class PauseSubState extends MusicBeatSubstate
 		}
 		menuItems = menuItemsOG;
 
-		for (i in 0...Difficulty.list.length) {
-			var diff:String = Difficulty.getString(i);
-			difficultyChoices.push(diff);
-		}
+		for (i in 0...Difficulty.list.length)
+			difficultyChoices.push(Difficulty.getString(i));
+
 		difficultyChoices.push('BACK');
 
 		pauseMusic = new FlxSound();
@@ -58,57 +57,42 @@ class PauseSubState extends MusicBeatSubstate
 		else if (songName != 'None')
 			pauseMusic.loadEmbedded(Paths.music(Paths.formatToSongPath(ClientPrefs.data.pauseMusic)), true, true);
 		pauseMusic.volume = 0;
-		pauseMusic.play(false, FlxG.random.int(0, Std.int(pauseMusic.length / 2)));
+		pauseMusic.play(false, FlxG.random.int(0, Std.int(pauseMusic.length * 0.5)));
 
 		FlxG.sound.list.add(pauseMusic);
 
 		var bg:FlxSprite = new FlxSprite().makeGraphic(FlxG.width, FlxG.height, 0x99000000);
 		bg.alpha = 0;
-		//bg.scrollFactor.set();
 		add(bg);
 
 		var levelInfo:FlxText = new FlxText(20, 15, 0, PlayState.SONG.song, 32);
-		//levelInfo.scrollFactor.set();
 		levelInfo.setFormat(Paths.font("vcr.ttf"), 32);
-		levelInfo.updateHitbox();
+		levelInfo.x = FlxG.width - levelInfo.width - 20;
 		add(levelInfo);
 
-		var levelDifficulty:FlxText = new FlxText(20, 15 + 32, 0, Difficulty.getString().toUpperCase(), 32);
-		//levelDifficulty.scrollFactor.set();
+		var levelDifficulty:FlxText = new FlxText(20, 47, 0, Difficulty.getString().toUpperCase(), 32);
 		levelDifficulty.setFormat(Paths.font('vcr.ttf'), 32);
-		levelDifficulty.updateHitbox();
+		levelDifficulty.x = FlxG.width - levelDifficulty.width - 20;
 		add(levelDifficulty);
 
-		var blueballedTxt:FlxText = new FlxText(20, 15 + 64, 0, "Blueballed: " + PlayState.deathCounter, 32);
-		//blueballedTxt.scrollFactor.set();
+		var blueballedTxt:FlxText = new FlxText(20, 79, 0, "Blueballed: " + PlayState.deathCounter, 32);
 		blueballedTxt.setFormat(Paths.font('vcr.ttf'), 32);
-		blueballedTxt.updateHitbox();
+		blueballedTxt.x = FlxG.width - blueballedTxt.width - 20;
 		add(blueballedTxt);
 
-		practiceText = new FlxText(20, 15 + 101, 0, "PRACTICE MODE", 32);
-		//practiceText.scrollFactor.set();
+		practiceText = new FlxText(0, 116, 0, "PRACTICE MODE", 32);
 		practiceText.setFormat(Paths.font('vcr.ttf'), 32);
-		practiceText.x = FlxG.width - (practiceText.width + 20);
-		practiceText.updateHitbox();
+		practiceText.x = FlxG.width - practiceText.width - 20;
 		practiceText.visible = PlayState.instance.practiceMode;
 		add(practiceText);
 
-		var chartingText:FlxText = new FlxText(20, 15 + 101, 0, "CHARTING MODE", 32);
-		//chartingText.scrollFactor.set();
+		var chartingText:FlxText = new FlxText(0, 0, 0, "CHARTING MODE", 32);
 		chartingText.setFormat(Paths.font('vcr.ttf'), 32);
-		chartingText.x = FlxG.width - (chartingText.width + 20);
-		chartingText.y = FlxG.height - (chartingText.height + 20);
-		chartingText.updateHitbox();
+		chartingText.setPosition(FlxG.width - chartingText.width - 20, FlxG.height - chartingText.height - 20);
 		chartingText.visible = PlayState.chartingMode;
 		add(chartingText);
 
-		blueballedTxt.alpha = 0;
-		levelDifficulty.alpha = 0;
-		levelInfo.alpha = 0;
-
-		levelInfo.x = FlxG.width - (levelInfo.width + 20);
-		levelDifficulty.x = FlxG.width - (levelDifficulty.width + 20);
-		blueballedTxt.x = FlxG.width - (blueballedTxt.width + 20);
+		blueballedTxt.alpha = levelDifficulty.alpha = levelInfo.alpha = 0;
 
 		FlxTween.num(0, 1, 0.4, {ease: FlxEase.quartInOut}, function(a:Float) bg.alpha = a);
 		FlxTween.tween(levelInfo, {alpha: 1, y: 20}, 0.4, {ease: FlxEase.quartInOut, startDelay: 0.3});
@@ -124,7 +108,6 @@ class PauseSubState extends MusicBeatSubstate
 		
 		missingText = new FlxText(50, 0, FlxG.width - 100, '', 24);
 		missingText.setFormat(Paths.font("vcr.ttf"), 24, FlxColor.WHITE, CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
-		//missingText.scrollFactor.set();
 		missingText.visible = false;
 		add(missingText);
 
@@ -260,8 +243,9 @@ class PauseSubState extends MusicBeatSubstate
 					MusicBeatState.switchState(new OptionsState());
 					if(ClientPrefs.data.pauseMusic != 'None')
 					{
-						FlxG.sound.playMusic(Paths.music(Paths.formatToSongPath(ClientPrefs.data.pauseMusic)), pauseMusic.volume);
-						FlxTween.tween(FlxG.sound.music, {volume: 1}, 0.8);
+						@:privateAccess
+						FlxG.sound.playMusic(pauseMusic._sound, pauseMusic.volume);
+						FlxG.sound.music.fadeIn(0.8, pauseMusic.volume, 1);
 						FlxG.sound.music.time = pauseMusic.time;
 					}
 					OptionsState.onPlayState = true;
