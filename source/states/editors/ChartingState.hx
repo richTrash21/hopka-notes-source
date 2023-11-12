@@ -303,7 +303,7 @@ class ChartingState extends MusicBeatState
 		Left Bracket / Right Bracket - Change Song Playback Rate (SHIFT to go Faster)
 		ALT + Left Bracket / Right Bracket - Reset Song Playback Rate
 		Hold Shift to move 4x faster
-		Hold Control and click on an arrow to select it
+		Right click on an arrow to select it
 		Z/X - Zoom in/out
 		Esc - Test your chart inside Chart Editor
 		Enter - Play your chart
@@ -1530,9 +1530,7 @@ class ChartingState extends MusicBeatState
 				{
 					if (FlxG.mouse.overlaps(note))
 					{
-						if (FlxG.keys.pressed.CONTROL)
-							selectNote(note);
-						else if (FlxG.keys.pressed.ALT)
+						if (FlxG.keys.pressed.ALT)
 						{
 							selectNote(note);
 							curSelectedNote[3] = curNoteTypes[currentType];
@@ -1554,6 +1552,15 @@ class ChartingState extends MusicBeatState
 					addNote();
 				}
 			}
+		}
+		/* https://github.com/ShadowMario/FNF-PsychEngine/pull/13549 */
+		else if (FlxG.mouse.justPressedRight)
+		{
+			if (FlxG.mouse.overlaps(curRenderedNotes))
+				curRenderedNotes.forEachAlive(function(note:Note) 
+					if (FlxG.mouse.overlaps(note))
+						selectNote(note)
+				);
 		}
 
 		var blockInput:Bool = false;

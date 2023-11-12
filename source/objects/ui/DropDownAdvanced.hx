@@ -12,6 +12,9 @@ import flixel.FlxG;
 	The differences are the following:
 	* Support to scrolling up/down with mouse wheel or arrow keys
 	* The default drop direction is "Down" instead of "Automatic"
+
+	Made an extencion of FlxUIDropDownMenu cause why does it need to override original class????
+	Also because this: https://github.com/ShadowMario/FNF-PsychEngine/pull/13586
 **/
 class DropDownAdvanced extends FlxUIDropDownMenu
 {
@@ -43,9 +46,11 @@ class DropDownAdvanced extends FlxUIDropDownMenu
 		{
 			if (button != null)
 			{
-				// Hides buttons that goes before the current scroll (le stupid way)
 				if (list.indexOf(button) < currentScroll)
+				{
+					// Hides buttons that goes before the current scroll
 					button.y = -99999;
+				}
 				else
 				{
 					button.y = offset;
@@ -60,7 +65,7 @@ class DropDownAdvanced extends FlxUIDropDownMenu
 		super.update(elapsed);
 
 		#if FLX_MOUSE
-		if (dropPanel.visible && canScroll && list.length > 1)
+		if (canScroll && dropPanel.visible && list.length > 1)
 		{
 			var wheel:Int = FlxG.mouse.wheel;
 			if (wheel > 0 || FlxG.keys.justPressed.UP)

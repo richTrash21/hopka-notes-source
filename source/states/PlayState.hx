@@ -409,7 +409,7 @@ class PlayState extends MusicBeatState
 		defaultCamZoom = stageData.defaultZoom;
 
 		stageUI = (stageData.isPixelStage) ? "pixel" : "normal";
-		if (stageData.stageUI != null && stageData.stageUI.trim().length > 0)
+		if (stageData.stageUI?.trim().length > 0)
 			stageUI = stageData.stageUI;
 
 		if (stageUI != "normal")
@@ -423,8 +423,7 @@ class PlayState extends MusicBeatState
 		GF_POS.set(stageData.girlfriend[0], stageData.girlfriend[1]);
 		DAD_POS.set(stageData.opponent[0],  stageData.opponent[1]);
 
-		if(stageData.camera_speed != null)
-			cameraSpeed = stageData.camera_speed;
+		cameraSpeed = stageData.camera_speed ?? 1;
 
 		bfCamOffset = (stageData.camera_boyfriend == null) //Fucks sake should have done it since the start :rolling_eyes:
 			? FlxPoint.get(0, 0)
@@ -1035,11 +1034,11 @@ class PlayState extends MusicBeatState
 
 			startTimer = new FlxTimer().start(Conductor.crochet * 0.001 / playbackRate, function(tmr:FlxTimer)
 			{
-				if (gf != null && tmr.loopsLeft % Math.round(gfSpeed * gf.danceEveryNumBeats) == 0 && gf.animation.curAnim != null && !gf.animation.curAnim.name.startsWith("sing") && !gf.stunned)
+				if (gf != null && tmr.loopsLeft % Math.round(gfSpeed * gf.danceEveryNumBeats) == 0 && !gf.animation.curAnim?.name.startsWith("sing") && !gf.stunned)
 					gf.dance();
-				if (tmr.loopsLeft % boyfriend.danceEveryNumBeats == 0 && boyfriend.animation.curAnim != null && !boyfriend.animation.curAnim.name.startsWith('sing') && !boyfriend.stunned)
+				if (tmr.loopsLeft % boyfriend.danceEveryNumBeats == 0 && !boyfriend.animation.curAnim?.name.startsWith('sing') && !boyfriend.stunned)
 					boyfriend.dance();
-				if (tmr.loopsLeft % dad.danceEveryNumBeats == 0 && dad.animation.curAnim != null && !dad.animation.curAnim.name.startsWith('sing') && !dad.stunned)
+				if (tmr.loopsLeft % dad.danceEveryNumBeats == 0 && !dad.animation.curAnim?.name.startsWith('sing') && !dad.stunned)
 					dad.dance();
 
 				switch (swagCounter)
@@ -1144,7 +1143,7 @@ class PlayState extends MusicBeatState
 	}
 
 	/** from https://github.com/ShadowMario/FNF-PsychEngine/pull/13586 **/
-	// too lazy to switch to the experemental branch + gutarhero sustains suck, change my mine - richTrash21
+	// too lazy to switch to the experemental branch + gutarhero sustains suck, change my mind - richTrash21
 
 	// fun fact: Dynamic Functions can be overriden by just doing this
 	// `updateScore = function(miss:Bool = false) { ... }
@@ -1439,7 +1438,6 @@ class PlayState extends MusicBeatState
 		};
 		eventNotes.push(subEvent);
 		eventPushed(subEvent);
-		//callOnScripts('onEventPushed', [subEvent.event, subEvent.value1 != null ? subEvent.value1 : '', subEvent.value2 != null ? subEvent.value2 : '', subEvent.strumTime]);
 		callOnScripts('onEventPushed', [subEvent.event, subEvent.value1 ?? '', subEvent.value2 ?? '', subEvent.strumTime]);
 	}
 
@@ -1496,7 +1494,7 @@ class PlayState extends MusicBeatState
 
 			final chars:Array<Character> = [boyfriend, gf, dad];
 			for (char in chars)
-				if(char != null && char.colorTween != null)
+				if(char?.colorTween != null)
 					char.colorTween.active = false;
 
 			#if LUA_ALLOWED
@@ -1532,7 +1530,7 @@ class PlayState extends MusicBeatState
 			
 			final chars:Array<Character> = [boyfriend, gf, dad];
 			for (char in chars)
-				if(char != null && char.colorTween != null)
+				if(char?.colorTween != null)
 					char.colorTween.active = true;
 
 			#if LUA_ALLOWED
@@ -1547,7 +1545,7 @@ class PlayState extends MusicBeatState
 
 			paused = false;
 			callOnScripts('onResume');
-			resetRPC(startTimer != null && startTimer.finished);
+			resetRPC(startTimer?.finished);
 		}
 
 		super.closeSubState();
@@ -1630,7 +1628,7 @@ class PlayState extends MusicBeatState
 			 */
 			FlxG.camera.followLerp = elapsed * 2.4 * cameraSpeed * playbackRate #if (flixel < "5.4.0") / #else * #end (FlxG.updateFramerate / 60);
 			#if ACHIEVEMENTS_ALLOWED
-			(!startingSong && !endingSong && boyfriend.animation.curAnim != null && boyfriend.animation.curAnim.name.startsWith('idle'))
+			(!startingSong && !endingSong && boyfriend.animation.curAnim?.name.startsWith('idle'))
 				? boyfriendIdleTime += elapsed
 				: boyfriendIdleTime = 0;
 			#end
@@ -1641,7 +1639,7 @@ class PlayState extends MusicBeatState
 		setOnScripts('curDecStep', curDecStep);
 		setOnScripts('curDecBeat', curDecBeat);
 
-		if(botplayTxt != null && botplayTxt.visible) {
+		if(botplayTxt?.visible) {
 			botplaySine += 180 * elapsed;
 			botplayTxt.alpha = 1 - Math.sin((Math.PI * botplaySine) / 180);
 			//if(showcaseTxt != null) showcaseTxt.alpha = 1 - Math.sin((Math.PI * botplaySine) / 180);
@@ -1728,8 +1726,8 @@ class PlayState extends MusicBeatState
 			{
 				if(!cpuControlled)
 					keysCheck();
-				else if(boyfriend.animation.curAnim != null && boyfriend.holdTimer > Conductor.stepCrochet * (0.0011 #if FLX_PITCH / FlxG.sound.music.pitch #end)
-					* boyfriend.singDuration && boyfriend.animation.curAnim.name.startsWith('sing') && !boyfriend.animation.curAnim.name.endsWith('miss'))
+				else if(boyfriend.holdTimer > Conductor.stepCrochet * (0.0011 #if FLX_PITCH / FlxG.sound.music.pitch #end) * boyfriend.singDuration
+					&& boyfriend.animation.curAnim?.name.startsWith('sing') && !boyfriend.animation.curAnim?.name.endsWith('miss'))
 					boyfriend.dance();
 
 				if(notes.length > 0)
@@ -1826,7 +1824,7 @@ class PlayState extends MusicBeatState
 		}*/
 		if(!cpuControlled)
 			for (note in playerStrums)
-				if(note.animation.curAnim != null && note.animation.curAnim.name != 'static')
+				if(note.animation.curAnim?.name != 'static')
 				{
 					note.playAnim('static');
 					note.resetAnim = 0;
@@ -1906,7 +1904,6 @@ class PlayState extends MusicBeatState
 		while(eventNotes.length > 0) {
 			var event:EventNote = eventNotes[0];
 			if(Conductor.songPosition < event.strumTime) return;
-			//triggerEvent(event.event, event.value1 != null ? event.value1 : '', event.value2 != null ? event.value2 : '', event.strumTime);
 			triggerEvent(event.event, event.value1 ?? '', event.value2 ?? '', event.strumTime);
 			eventNotes.shift();
 		}
@@ -2449,7 +2446,7 @@ class PlayState extends MusicBeatState
 				numScore.loadGraphic(Paths.image(uiPrefix + 'num' + uiSuffix), true, numRes[0], numRes[1]);
 				numScore.x = placement + (45 * daLoop) - 90 + ClientPrefs.data.comboOffset[2];
 				numScore.screenCenter(Y).y += 80 - ClientPrefs.data.comboOffset[3];
-				(numScore.frames != null && numScore.frames.frames[i] != null)
+				(numScore.frames?.frames[i] != null)
 					? numScore.frame = numScore.frames.frames[i]
 					: numScore.loadGraphic("flixel/images/logo/default.png"); //prevents crash
 				numScore.setGraphicSize(Std.int(numScore.width * numScale));
@@ -2556,7 +2553,7 @@ class PlayState extends MusicBeatState
 			}
 
 			var spr:StrumNote = playerStrums.members[key];
-			if(strumsBlocked[key] != true && spr != null && spr.animation.curAnim.name != 'confirm')
+			if(strumsBlocked[key] != true && spr?.animation.curAnim.name != 'confirm')
 			{
 				spr.playAnim('pressed');
 				spr.resetAnim = 0;
@@ -2646,8 +2643,8 @@ class PlayState extends MusicBeatState
 				if (achieve != null) startAchievement(achieve);
 				#end
 			}
-			else if (boyfriend.animation.curAnim != null && boyfriend.holdTimer > Conductor.stepCrochet * (0.0011 #if FLX_PITCH / FlxG.sound.music.pitch #end)
-				* boyfriend.singDuration && boyfriend.animation.curAnim.name.startsWith('sing') && !boyfriend.animation.curAnim.name.endsWith('miss'))
+			else if (boyfriend.holdTimer > Conductor.stepCrochet * (0.0011 #if FLX_PITCH / FlxG.sound.music.pitch #end)
+				* boyfriend.singDuration && boyfriend.animation.curAnim?.name.startsWith('sing') && !boyfriend.animation.curAnim?.name.endsWith('miss'))
 				boyfriend.dance();
 		}
 
@@ -2697,15 +2694,15 @@ class PlayState extends MusicBeatState
 		RecalculateRating(true);
 
 		// play character anims
-		var char:Character = ((note != null && note.gfNote) || (SONG.notes[curSection] != null && SONG.notes[curSection].gfSection)) ? gf : boyfriend;
+		var char:Character = (note?.gfNote || SONG.notes[curSection]?.gfSection) ? gf : boyfriend;
 		
-		if(char != null && char.hasMissAnimations)
+		if(char?.hasMissAnimations && !note?.noMissAnimation)
 		{
 			var suffix:String = note != null ? note.animSuffix : '';
 			var animToPlay:String = singAnimations[direction] + 'miss' + suffix;
 			char.playAnim(animToPlay, true);
 			
-			if(char != gf && combo > 5 && gf != null && gf.animOffsets.exists('sad'))
+			if(char != gf && combo > 5 && gf?.animOffsets.exists('sad'))
 			{
 				gf.playAnim('sad');
 				gf.specialAnim = true;
@@ -2723,7 +2720,7 @@ class PlayState extends MusicBeatState
 			dad.specialAnim = true;
 			dad.heyTimer = 0.6;
 		} else if(!note.noAnimation) {
-			var altAnim:String = (SONG.notes[curSection] != null && SONG.notes[curSection].altAnim && !SONG.notes[curSection].gfSection) ? '-alt' : note.animSuffix;
+			var altAnim:String = (SONG.notes[curSection]?.altAnim && !SONG.notes[curSection]?.gfSection) ? '-alt' : note.animSuffix;
 
 			var animToPlay:String = singAnimations[note.noteData] + altAnim;
 			var char:Character = note.gfNote ? gf : dad;
@@ -2930,11 +2927,11 @@ class PlayState extends MusicBeatState
 		iconP1.updateHitbox();
 		iconP2.updateHitbox();
 
-		if (gf != null && curBeat % Math.round(gfSpeed * gf.danceEveryNumBeats) == 0 && gf.animation.curAnim != null && !gf.animation.curAnim.name.startsWith("sing") && !gf.stunned)
+		if (gf != null && curBeat % Math.round(gfSpeed * gf.danceEveryNumBeats) == 0 && !gf.animation.curAnim?.name.startsWith("sing") && !gf.stunned)
 			gf.dance();
-		if (curBeat % boyfriend.danceEveryNumBeats == 0 && boyfriend.animation.curAnim != null && !boyfriend.animation.curAnim.name.startsWith('sing') && !boyfriend.stunned)
+		if (curBeat % boyfriend.danceEveryNumBeats == 0 && !boyfriend.animation.curAnim?.name.startsWith('sing') && !boyfriend.stunned)
 			boyfriend.dance();
-		if (curBeat % dad.danceEveryNumBeats == 0 && dad.animation.curAnim != null && !dad.animation.curAnim.name.startsWith('sing') && !dad.stunned)
+		if (curBeat % dad.danceEveryNumBeats == 0 && !dad.animation.curAnim?.name.startsWith('sing') && !dad.stunned)
 			dad.dance();
 
 		super.beatHit();
@@ -3309,7 +3306,7 @@ class PlayState extends MusicBeatState
 		}
 
 		var foldersToCheck:Array<String> = [Paths.mods('shaders/')];
-		if(Mods.currentModDirectory != null && Mods.currentModDirectory.length > 0)
+		if(Mods.currentModDirectory?.length > 0)
 			foldersToCheck.insert(0, Paths.mods(Mods.currentModDirectory + '/shaders/'));
 
 		for(mod in Mods.getGlobalMods())
