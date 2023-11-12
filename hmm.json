@@ -41,11 +41,6 @@
       "version": null
     },
     {
-      "name": "hxjsonast",
-      "type": "haxelib",
-      "version": null
-    },
-    {
       "name": "hxvlc",
       "type": "git",
       "dir": null,
@@ -53,9 +48,11 @@
       "url": "https://github.com/MAJigsaw77/hxvlc"
     },
     {
-      "name": "SScript",
-      "type": "haxelib",
-      "version": null
+      "name": "hscript-improved",
+      "type": "git",
+      "dir": null,
+      "ref": "master",
+      "url": "https://www.github.com/FNF-CNE-Devs/hscript-improved"
     },
     {
       "name": "hxcpp-debug-server",

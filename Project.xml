@@ -36,7 +36,7 @@
 	<window width="1280" height="720" fps="" background="#000000" hardware="true" vsync="false" />
 
 	<!--HTML5-specific-->
-	<window if="html5" resizable="true" />
+	<window if="html5" resizable="true"/>
 
 	<!--Desktop-specific-->
 	<window if="desktop" orientation="landscape" fullscreen="false" resizable="true" vsync="false"/>
@@ -58,15 +58,15 @@
 	<!-- __________________________ Game Assets & Etc. __________________________ -->
 	
 	<!-- Turn on Crash Handler -->
-	<define name="CRASH_HANDLER" if="desktop release" />
+	<define name="CRASH_HANDLER"		if="desktop release" />
 
 	<!-- Preload Assets -->
-	<define name="PRELOAD_ALL"	  unless="web" />
-	<define name="NO_PRELOAD_ALL" unless="PRELOAD_ALL"/>
+	<define name="PRELOAD_ALL"			unless="web" />
+	<define name="NO_PRELOAD_ALL"		unless="PRELOAD_ALL"/>
 
 	<assets path="assets/fonts" />
-	<assets path="assets/preload" rename="assets" exclude="*.ogg" if="web"/>
-	<assets path="assets/preload" rename="assets" exclude="*.mp3" unless="web"/>
+	<assets path="assets/preload"		rename="assets"			exclude="*.ogg" if="web"/>
+	<assets path="assets/preload"		rename="assets"			exclude="*.mp3" unless="web"/>
 
 	<!-- DONT ENABLE THIS -->
 	<define name="CHECK_FOR_UPDATES" if="desktop officialBuild"/>
@@ -94,9 +94,9 @@
 	<assets path="assets/week_assets"   library="week_assets"   rename="assets" exclude="*.mp3" unless="web"/>
 	
 	<section if="MODS_ALLOWED">
-		<assets path='example_mods' rename='mods' embed='false'/>
+		<assets path='example_mods'		rename='mods' embed='false'/>
 	</section>
-	<assets path='art/readme.txt' rename='do NOT readme.txt' />
+	<assets path='art/readme.txt'		rename='do NOT readme.txt' />
 
 	<!-- _______________________________ Libraries ______________________________ -->
 
@@ -105,11 +105,12 @@
 	<haxelib name="flixel-addons" />
 
 	<!--Psych stuff needed-->
-	<haxelib name="linc_luajit"	if="LUA_ALLOWED"/>
-	<haxelib name="SScript"		if="HSCRIPT_ALLOWED"/>
-	<!--<haxelib name="hxCodec"		if="VIDEOS_ALLOWED"/>-->
-	<haxelib name="hxvlc"		if="VIDEOS_ALLOWED"/>
-	<haxelib name="discord_rpc"	if="desktop"/>
+	<haxelib name="linc_luajit"			if="LUA_ALLOWED"/>
+	<!--<haxelib name="hscript-improved"	if="HSCRIPT_ALLOWED"/>-->
+	<haxelib name="SScript"				if="HSCRIPT_ALLOWED"/>
+	<!--<haxelib name="hxCodec"				if="VIDEOS_ALLOWED"/>-->
+	<haxelib name="hxvlc"				if="VIDEOS_ALLOWED"/>
+	<haxelib name="discord_rpc"			if="desktop"/>
 	<haxelib name="tjson" />
 	<haxedef name="openflPos" />
 	<haxedef name="hscriptPos" />

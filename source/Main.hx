@@ -54,23 +54,24 @@ class Main extends Sprite
 
 	private function volumeOnFocus() // dont ask
 	{
-		if (ClientPrefs.data.lostFocusDeafen)
+		if (ClientPrefs.data.lostFocusDeafen && !FlxG.sound.muted)
 			FlxG.sound.volume = _focusVolume;
 	}
 
 	private static function volumeOnFocusLost() // dont ask
 	{
-		if (ClientPrefs.data.lostFocusDeafen)
+		if (ClientPrefs.data.lostFocusDeafen && !FlxG.sound.muted)
 		{
-			_focusVolume = FlxMath.roundDecimal(FlxG.sound.volume, 1);
+			_focusVolume = Math.round(FlxG.sound.volume * 10) / 10;
 			FlxG.sound.volume *= 0.5;
 		}
 	}
 
 	private function init(?E:Event):Void
 	{
-		if (hasEventListener(Event.ADDED_TO_STAGE))
-			removeEventListener(Event.ADDED_TO_STAGE, init);
+		var event:String = Event.ADDED_TO_STAGE;
+		if (hasEventListener(event))
+			removeEventListener(event, init);
 
 		setupGame();
 	}
@@ -105,8 +106,7 @@ class Main extends Sprite
 
 		if(fpsVar != null)
 		{
-			fpsVar.visible = ClientPrefs.data.showFPS;
-			fpsShadow.visible = ClientPrefs.data.showFPS;
+			fpsVar.visible = fpsShadow.visible = ClientPrefs.data.showFPS;
 		}
 
 		Lib.current.stage.align = "tl";
@@ -114,7 +114,7 @@ class Main extends Sprite
 		#end
 
 		_focusVolume = FlxG.sound.volume;
-		#if debug
+		#if debug // это рофлс
 		FlxG.game.soundTray.volumeUpSound = 'assets/sounds/metal';
 		FlxG.game.soundTray.volumeDownSound = 'assets/sounds/lego';
 		#else
@@ -140,6 +140,7 @@ class Main extends Sprite
 		{
 			if (FlxG.cameras != null)
 				for (cam in FlxG.cameras.list)
+				{
 					#if (flixel < "5.4.0")
 					@:privateAccess
 					if (cam != null && cam._filters != null)
@@ -147,9 +148,11 @@ class Main extends Sprite
 					if (cam != null && cam.filters != null)
 					#end
 						resetSpriteCache(cam.flashSprite);
+				}
 
-			if (FlxG.game != null)
-				resetSpriteCache(FlxG.game);
+			var _game = FlxG.game;
+			if (_game != null)
+				resetSpriteCache(_game);
 		});
 	}
 

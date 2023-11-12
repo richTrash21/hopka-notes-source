@@ -82,20 +82,20 @@ import tea.SScript;
 
 class PlayState extends MusicBeatState
 {
-	public static var STRUM_X = 42;
-	public static var STRUM_X_MIDDLESCROLL = -278;
+	public static var STRUM_X:Float = 42;
+	public static var STRUM_X_MIDDLESCROLL:Float = -278;
 
 	public static var ratingStuff:Array<Dynamic> = [
-		['You Suck!', 0.2],		// From 0% to 19%
-		['Shit',	  0.4],		// From 20% to 39%
-		['Bad', 	  0.5],		// From 40% to 49%
-		['Bruh',	  0.6],		// From 50% to 59%
-		['Meh', 	  0.69],	// From 60% to 68%
-		['Nice',	  0.7],		// 69% :trollface:
-		['Good',	  0.8],		// From 70% to 79%
-		['Great', 	  0.9],		// From 80% to 89%
-		['Sick!', 	  1],		// From 90% to 99%
-		['Perfect!!', 1]		// The value on this one isn't used actually, since Perfect is always "1"
+		['You Suck!', 0.2],	  // From 0% to 19%
+		['Shit',	  0.4],	  // From 20% to 39%
+		['Bad', 	  0.5],	  // From 40% to 49%
+		['Bruh',	  0.6],	  // From 50% to 59%
+		['Meh', 	  0.69],  // From 60% to 68%
+		['Nice',	  0.7],	  // 69% :trollface:
+		['Good',	  0.8],	  // From 70% to 79%
+		['Great', 	  0.9],	  // From 80% to 89%
+		['Sick!', 	  1],	  // From 90% to 99%
+		['Perfect!!', 1]	  // The value on this one isn't used actually, since Perfect is always "1"
 	];
 
 	//event variables
@@ -162,7 +162,7 @@ class PlayState extends MusicBeatState
 	public var uiSuffix:String = '';
 
 	@:noCompletion inline static function get_isPixelStage():Bool
-		return stageUI == "pixel";
+		return stageUI == "pixel" || stageUI.endsWith("-pixel");
 
 	public static var SONG:SwagSong = null;
 	public static var isStoryMode:Bool = false;
@@ -222,7 +222,6 @@ class PlayState extends MusicBeatState
 		}
 		return value;
 	}
-	var songPercent:Float = 0;
 
 	public var ratingsData:Array<Rating> = Rating.loadDefault();
 
@@ -262,7 +261,7 @@ class PlayState extends MusicBeatState
 	public static var seenCutscene:Bool = false;
 	public static var deathCounter:Int = 0;
 
-	public var defaultCamZoom:Float = 1.05;
+	public var defaultCamZoom:Float;
 
 	// how big to stretch the pixel art assets
 	public static var daPixelZoom:Float = 6;
@@ -270,7 +269,9 @@ class PlayState extends MusicBeatState
 	public var playingVideo:Bool = false;
 	public var inCutscene:Bool = false;
 	public var skipCountdown:Bool = false;
-	var songLength:Float = 0;
+
+	var songLength(default, null):Float = 0;
+	var songPercent(default, null):Float = 0;
 
 	// i have no fucking idea why i made this - richTrash21
 	public var bfCamOffset:FlxPoint = null;
@@ -339,7 +340,7 @@ class PlayState extends MusicBeatState
 	private static final singAnimations:Array<String> = ['singLEFT', 'singDOWN', 'singUP', 'singRIGHT'];
 
 	public var precacheList:Map<String, String> = new Map<String, String>();
-	public var songName:String;
+	public var songName(default, null):String;
 
 	// Callbacks for stages
 	public var startCallback:Void->Void = null;
@@ -728,7 +729,7 @@ class PlayState extends MusicBeatState
 		#if FLX_PITCH
 		if(generatedMusic)
 		{
-			if (SONG.needsVoices) vocals.pitch = value;
+			/*if (SONG.needsVoices)*/ vocals.pitch = value;
 			FlxG.sound.music.pitch = value;
 
 			var ratio:Float = playbackRate / value; //funny word huh
@@ -1168,8 +1169,7 @@ class PlayState extends MusicBeatState
 		if(ClientPrefs.data.scoreZoom && !miss && !cpuControlled && !startingSong)
 		{
 			if(scoreTxtTween != null) scoreTxtTween.cancel();
-			scoreTxt.scale.x = 1.075;
-			scoreTxt.scale.y = 1.075;
+			scoreTxt.scale.set(1.075, 1.075);
 			scoreTxtTween = FlxTween.tween(scoreTxt.scale, {x: 1, y: 1}, 0.2, {
 				onComplete: function(twn:FlxTween) scoreTxtTween = null
 			});
@@ -1198,17 +1198,17 @@ class PlayState extends MusicBeatState
 	{
 		if(time < 0) time = 0;
 
-		FlxG.sound.music.pause();
-		if (SONG.needsVoices) vocals.pause();
+		//FlxG.sound.music.pause();
 
 		FlxG.sound.music.time = time;
-		#if FLX_PITCH FlxG.sound.music.pitch = playbackRate; #end
-		FlxG.sound.music.play();
+		//#if FLX_PITCH FlxG.sound.music.pitch = playbackRate; #end
+		//FlxG.sound.music.play();
 
 		if (SONG.needsVoices && Conductor.songPosition <= vocals.length)
 		{
+			vocals.pause();
 			vocals.time = time;
-			#if FLX_PITCH vocals.pitch = playbackRate; #end
+			//#if FLX_PITCH vocals.pitch = playbackRate; #end
 			vocals.play();
 		}
 		Conductor.songPosition = time;
@@ -1239,7 +1239,7 @@ class PlayState extends MusicBeatState
 
 		if (paused) {
 			FlxG.sound.music.pause();
-			if (SONG.needsVoices) vocals.pause();
+			/*if (SONG.needsVoices)*/ vocals.pause();
 		}
 
 		// Song duration in a float, useful for the time left feature
@@ -1439,7 +1439,8 @@ class PlayState extends MusicBeatState
 		};
 		eventNotes.push(subEvent);
 		eventPushed(subEvent);
-		callOnScripts('onEventPushed', [subEvent.event, subEvent.value1 != null ? subEvent.value1 : '', subEvent.value2 != null ? subEvent.value2 : '', subEvent.strumTime]);
+		//callOnScripts('onEventPushed', [subEvent.event, subEvent.value1 != null ? subEvent.value1 : '', subEvent.value2 != null ? subEvent.value2 : '', subEvent.strumTime]);
+		callOnScripts('onEventPushed', [subEvent.event, subEvent.value1 ?? '', subEvent.value2 ?? '', subEvent.strumTime]);
 	}
 
 	public var skipArrowStartTween:Bool = false; //for lua
@@ -1486,7 +1487,7 @@ class PlayState extends MusicBeatState
 			if (FlxG.sound.music != null)
 			{
 				FlxG.sound.music.pause();
-				if(vocals != null) vocals.pause();
+				/*if(vocals != null)*/ vocals.pause();
 			}
 
 			if(startTimer != null && !startTimer.finished)	  startTimer.active = false;
@@ -1588,14 +1589,14 @@ class PlayState extends MusicBeatState
 	{
 		if(finishTimer != null || vocals == null) return;
 
-		FlxG.sound.music.play();
-		#if FLX_PITCH FlxG.sound.music.pitch = playbackRate; #end
+		//FlxG.sound.music.play();
+		//#if FLX_PITCH FlxG.sound.music.pitch = playbackRate; #end
 		Conductor.songPosition = FlxG.sound.music.time;
 		if (Conductor.songPosition <= vocals.length)
 		{
 			vocals.pause();
 			vocals.time = Conductor.songPosition;
-			#if FLX_PITCH vocals.pitch = playbackRate; #end
+			//#if FLX_PITCH vocals.pitch = playbackRate; #end
 			vocals.play();
 		}
 	}
@@ -1627,7 +1628,6 @@ class PlayState extends MusicBeatState
 			 *  UPDD: no they fucking don't
 			 *  UPDDD: nvmd its just me being big ass dumbo
 			 */
-			
 			FlxG.camera.followLerp = elapsed * 2.4 * cameraSpeed * playbackRate #if (flixel < "5.4.0") / #else * #end (FlxG.updateFramerate / 60);
 			#if ACHIEVEMENTS_ALLOWED
 			(!startingSong && !endingSong && boyfriend.animation.curAnim != null && boyfriend.animation.curAnim.name.startsWith('idle'))
@@ -1878,7 +1878,7 @@ class PlayState extends MusicBeatState
 
 				paused = true;
 
-				if(vocals != null) vocals.stop();
+				/*if(vocals != null)*/ vocals.stop();
 				FlxG.sound.music.stop();
 
 				persistentUpdate = false;
@@ -1904,8 +1904,10 @@ class PlayState extends MusicBeatState
 
 	public function checkEventNote() {
 		while(eventNotes.length > 0) {
-			if(Conductor.songPosition < eventNotes[0].strumTime) return;
-			triggerEvent(eventNotes[0].event, eventNotes[0].value1 != null ? eventNotes[0].value1 : '', eventNotes[0].value2 != null ? eventNotes[0].value2 : '', eventNotes[0].strumTime);
+			var event:EventNote = eventNotes[0];
+			if(Conductor.songPosition < event.strumTime) return;
+			//triggerEvent(event.event, event.value1 != null ? event.value1 : '', event.value2 != null ? event.value2 : '', event.strumTime);
+			triggerEvent(event.event, event.value1 ?? '', event.value2 ?? '', event.strumTime);
 			eventNotes.shift();
 		}
 	}
@@ -2160,10 +2162,10 @@ class PlayState extends MusicBeatState
 		updateTime = false;
 		FlxG.sound.music.volume = 0;
 		FlxG.sound.music.pause();
-		if(vocals != null) {
+		//if(vocals != null) {
 			vocals.pause();
 			vocals.volume = 0;
-		}
+		//}
 		(ClientPrefs.data.noteOffset <= 0 || ignoreNoteOffset)
 			? endCallback()
 			: finishTimer = new FlxTimer().start(ClientPrefs.data.noteOffset * 0.001, function(tmr:FlxTimer) endCallback());
@@ -2709,7 +2711,7 @@ class PlayState extends MusicBeatState
 				gf.specialAnim = true;
 			}
 		}
-		if (vocals != null) vocals.volume = 0;
+		/*if (vocals != null)*/ vocals.volume = 0;
 	}
 
 	function opponentNoteHit(note:Note):Void
@@ -2733,7 +2735,7 @@ class PlayState extends MusicBeatState
 			}
 		}
 
-		if (vocals != null) vocals.volume = 1;
+		/*if (vocals != null)*/ vocals.volume = 1;
 
 		strumPlayAnim(true, note.noteData, Conductor.stepCrochet * 1.25 * 0.001 / playbackRate);
 		note.hitByOpponent = true;
@@ -2820,7 +2822,7 @@ class PlayState extends MusicBeatState
 				if(spr != null) spr.playAnim('confirm', true);
 			}
 			else strumPlayAnim(false, note.noteData, Conductor.stepCrochet * 1.25 * 0.001 / playbackRate);
-			if (vocals != null) vocals.volume = 1;
+			/*if (vocals != null)*/ vocals.volume = 1;
 			
 			var result:Dynamic = callOnLuas('goodNoteHit', [notes.members.indexOf(note), note.noteData, note.noteType, note.isSustainNote]);
 			if(result != FunkinLua.Function_Stop && result != FunkinLua.Function_StopHScript && result != FunkinLua.Function_StopAll) callOnHScript('goodNoteHit', [note]);

@@ -81,9 +81,7 @@ class TitleState extends MusicBeatState
 		Mods.loadTopMod();
 
 		// назад нельзя... (блять нахуй я референс на ту фурри хуйню от феникса здесь оставил аааа пмгите)
-		#if (flixel < "5.4.0") FlxG.fixedTimestep = false; #end
-		FlxG.game.focusLostFramerate = 60;
-		FlxG.keys.preventDefaultKeys = [TAB];
+		//#if (flixel < "5.4.0") FlxG.fixedTimestep = false; #end
 
 		curWacky = FlxG.random.getObject(getIntroTextShit());
 
@@ -92,6 +90,10 @@ class TitleState extends MusicBeatState
 		FlxG.save.bind('funkin', CoolUtil.getSavePath());
 
 		ClientPrefs.loadPrefs();
+
+		FlxG.fixedTimestep = ClientPrefs.data.fixedTimestep;
+		FlxG.game.focusLostFramerate = 60;
+		FlxG.keys.preventDefaultKeys = [TAB];
 
 		#if CHECK_FOR_UPDATES
 		if(ClientPrefs.data.checkForUpdates && !closedState) {

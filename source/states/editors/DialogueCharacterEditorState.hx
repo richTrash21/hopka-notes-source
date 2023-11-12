@@ -18,6 +18,8 @@ import sys.io.File;
 #end
 
 import objects.TypedAlphabet;
+import objects.ui.DropDownAdvanced;
+import objects.ui.UIInputTextAdvanced;
 
 import cutscenes.DialogueBoxPsych;
 import cutscenes.DialogueCharacter;
@@ -218,15 +220,15 @@ class DialogueCharacterEditorState extends MusicBeatState
 
 	var curSelectedAnim:String;
 	var animationArray:Array<String> = [];
-	var animationDropDown:FlxUIDropDownMenu;
-	var animationInputText:FlxUIInputText;
-	var loopInputText:FlxUIInputText;
-	var idleInputText:FlxUIInputText;
+	var animationDropDown:DropDownAdvanced;
+	var animationInputText:UIInputTextAdvanced;
+	var loopInputText:UIInputTextAdvanced;
+	var idleInputText:UIInputTextAdvanced;
 	function addAnimationsUI() {
 		var tab_group = new FlxUI(null, UI_mainbox);
 		tab_group.name = "Animations";
 
-		animationDropDown = new FlxUIDropDownMenu(10, 30, FlxUIDropDownMenu.makeStrIdLabelArray([''], true), function(animation:String) {
+		animationDropDown = new DropDownAdvanced(10, 30, FlxUIDropDownMenu.makeStrIdLabelArray([''], true), function(animation:String) {
 			var anim:String = animationArray[Std.parseInt(animation)];
 			if(character.dialogueAnimations.exists(anim)) {
 				ghostLoop.playAnim(anim);
@@ -243,11 +245,11 @@ class DialogueCharacterEditorState extends MusicBeatState
 			}
 		});
 		
-		animationInputText = new FlxUIInputText(15, 85, 80, '', 8);
+		animationInputText = new UIInputTextAdvanced(15, 85, 80, '', 8);
 		blockPressWhileTypingOn.push(animationInputText);
-		loopInputText = new FlxUIInputText(animationInputText.x, animationInputText.y + 35, 150, '', 8);
+		loopInputText = new UIInputTextAdvanced(animationInputText.x, animationInputText.y + 35, 150, '', 8);
 		blockPressWhileTypingOn.push(loopInputText);
-		idleInputText = new FlxUIInputText(loopInputText.x, loopInputText.y + 40, 150, '', 8);
+		idleInputText = new UIInputTextAdvanced(loopInputText.x, loopInputText.y + 40, 150, '', 8);
 		blockPressWhileTypingOn.push(idleInputText);
 		
 		var addUpdateButton:FlxButton = new FlxButton(10, idleInputText.y + 30, "Add/Update", function() {
@@ -339,16 +341,16 @@ class DialogueCharacterEditorState extends MusicBeatState
 		animationDropDown.setData(FlxUIDropDownMenu.makeStrIdLabelArray(animationArray, true));
 	}
 
-	var imageInputText:FlxUIInputText;
+	var imageInputText:UIInputTextAdvanced;
 	var scaleStepper:FlxUINumericStepper;
 	var xStepper:FlxUINumericStepper;
 	var yStepper:FlxUINumericStepper;
-	var blockPressWhileTypingOn:Array<FlxUIInputText> = [];
+	var blockPressWhileTypingOn:Array<UIInputTextAdvanced> = [];
 	function addCharacterUI() {
 		var tab_group = new FlxUI(null, UI_mainbox);
 		tab_group.name = "Character";
 
-		imageInputText = new FlxUIInputText(10, 30, 80, character.jsonFile.image, 8);
+		imageInputText = new UIInputTextAdvanced(10, 30, 80, character.jsonFile.image, 8);
 		blockPressWhileTypingOn.push(imageInputText);
 		xStepper = new FlxUINumericStepper(imageInputText.x, imageInputText.y + 50, 10, character.jsonFile.position[0], -2000, 2000, 0);
 		yStepper = new FlxUINumericStepper(imageInputText.x + 80, xStepper.y, 10, character.jsonFile.position[1], -2000, 2000, 0);
@@ -461,7 +463,7 @@ class DialogueCharacterEditorState extends MusicBeatState
 	}
 
 	override function getEvent(id:String, sender:Dynamic, data:Dynamic, ?params:Array<Dynamic>) {
-		if(id == FlxUIInputText.CHANGE_EVENT && sender == imageInputText) {
+		if(id == UIInputTextAdvanced.CHANGE_EVENT && sender == imageInputText) {
 			character.jsonFile.image = imageInputText.text;
 		} else if(id == FlxUINumericStepper.CHANGE_EVENT && (sender is FlxUINumericStepper)) {
 			if(sender == scaleStepper) {

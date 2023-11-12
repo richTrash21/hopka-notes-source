@@ -15,6 +15,7 @@ import tjson.TJSON as Json;
 import sys.io.File;
 #end
 
+import objects.ui.UIInputTextAdvanced;
 import objects.MenuCharacter;
 
 class MenuCharacterEditorState extends MusicBeatState
@@ -71,7 +72,7 @@ class MenuCharacterEditorState extends MusicBeatState
 
 	var UI_typebox:FlxUITabMenu;
 	var UI_mainbox:FlxUITabMenu;
-	var blockPressWhileTypingOn:Array<FlxUIInputText> = [];
+	var blockPressWhileTypingOn:Array<UIInputTextAdvanced> = [];
 	function addEditorBox() {
 		UI_typebox = new FlxUITabMenu(null, [
 			{name: 'Character Type', label: 'Character Type'}
@@ -139,20 +140,20 @@ class MenuCharacterEditorState extends MusicBeatState
 		UI_typebox.addGroup(tab_group);
 	}
 
-	var imageInputText:FlxUIInputText;
-	var idleInputText:FlxUIInputText;
-	var confirmInputText:FlxUIInputText;
+	var imageInputText:UIInputTextAdvanced;
+	var idleInputText:UIInputTextAdvanced;
+	var confirmInputText:UIInputTextAdvanced;
 	var scaleStepper:FlxUINumericStepper;
 	var flipXCheckbox:FlxUICheckBox;
 	function addCharacterUI() {
 		var tab_group = new FlxUI(null, UI_mainbox);
 		tab_group.name = "Character";
 		
-		imageInputText = new FlxUIInputText(10, 20, 80, characterFile.image, 8);
+		imageInputText = new UIInputTextAdvanced(10, 20, 80, characterFile.image, 8);
 		blockPressWhileTypingOn.push(imageInputText);
-		idleInputText = new FlxUIInputText(10, imageInputText.y + 35, 100, characterFile.idle_anim, 8);
+		idleInputText = new UIInputTextAdvanced(10, imageInputText.y + 35, 100, characterFile.idle_anim, 8);
 		blockPressWhileTypingOn.push(idleInputText);
-		confirmInputText = new FlxUIInputText(10, idleInputText.y + 35, 100, characterFile.confirm_anim, 8);
+		confirmInputText = new UIInputTextAdvanced(10, idleInputText.y + 35, 100, characterFile.confirm_anim, 8);
 		blockPressWhileTypingOn.push(confirmInputText);
 
 		flipXCheckbox = new FlxUICheckBox(10, confirmInputText.y + 30, null, null, "Flip X", 100);
@@ -225,7 +226,7 @@ class MenuCharacterEditorState extends MusicBeatState
 	}
 
 	override function getEvent(id:String, sender:Dynamic, data:Dynamic, ?params:Array<Dynamic>) {
-		if(id == FlxUIInputText.CHANGE_EVENT && (sender is FlxUIInputText)) {
+		if(id == UIInputTextAdvanced.CHANGE_EVENT && (sender is UIInputTextAdvanced)) {
 			if(sender == imageInputText) {
 				characterFile.image = imageInputText.text;
 			} else if(sender == idleInputText) {

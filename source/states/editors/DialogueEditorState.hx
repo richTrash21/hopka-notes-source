@@ -16,6 +16,7 @@ import sys.io.File;
 #end
 
 import objects.TypedAlphabet;
+import objects.ui.UIInputTextAdvanced;
 
 import cutscenes.DialogueBoxPsych;
 import cutscenes.DialogueCharacter;
@@ -108,16 +109,16 @@ class DialogueEditorState extends MusicBeatState
 		add(UI_box);
 	}
 
-	var characterInputText:FlxUIInputText;
-	var lineInputText:FlxUIInputText;
+	var characterInputText:UIInputTextAdvanced;
+	var lineInputText:UIInputTextAdvanced;
 	var angryCheckbox:FlxUICheckBox;
 	var speedStepper:FlxUINumericStepper;
-	var soundInputText:FlxUIInputText;
+	var soundInputText:UIInputTextAdvanced;
 	function addDialogueLineUI() {
 		var tab_group = new FlxUI(null, UI_box);
 		tab_group.name = "Dialogue Line";
 
-		characterInputText = new FlxUIInputText(10, 20, 80, DialogueCharacter.DEFAULT_CHARACTER, 8);
+		characterInputText = new UIInputTextAdvanced(10, 20, 80, DialogueCharacter.DEFAULT_CHARACTER, 8);
 		blockPressWhileTypingOn.push(characterInputText);
 
 		speedStepper = new FlxUINumericStepper(10, characterInputText.y + 40, 0.005, 0.05, 0, 0.5, 3);
@@ -129,10 +130,10 @@ class DialogueEditorState extends MusicBeatState
 			dialogueFile.dialogue[curSelected].boxState = (angryCheckbox.checked ? 'angry' : 'normal');
 		};
 
-		soundInputText = new FlxUIInputText(10, speedStepper.y + 40, 150, '', 8);
+		soundInputText = new UIInputTextAdvanced(10, speedStepper.y + 40, 150, '', 8);
 		blockPressWhileTypingOn.push(soundInputText);
 		
-		lineInputText = new FlxUIInputText(10, soundInputText.y + 35, 200, DEFAULT_TEXT, 8);
+		lineInputText = new UIInputTextAdvanced(10, soundInputText.y + 35, 200, DEFAULT_TEXT, 8);
 		blockPressWhileTypingOn.push(lineInputText);
 
 		var loadButton:FlxButton = new FlxButton(20, lineInputText.y + 25, "Load Dialogue", function() {
@@ -248,7 +249,7 @@ class DialogueEditorState extends MusicBeatState
 	}
 
 	override function getEvent(id:String, sender:Dynamic, data:Dynamic, ?params:Array<Dynamic>) {
-		if(id == FlxUIInputText.CHANGE_EVENT && (sender is FlxUIInputText)) {
+		if(id == UIInputTextAdvanced.CHANGE_EVENT && (sender is UIInputTextAdvanced)) {
 			if (sender == characterInputText)
 			{
 				character.reloadCharacterJson(characterInputText.text);
@@ -294,7 +295,7 @@ class DialogueEditorState extends MusicBeatState
 
 	var curSelected:Int = 0;
 	var curAnim:Int = 0;
-	var blockPressWhileTypingOn:Array<FlxUIInputText> = [];
+	var blockPressWhileTypingOn:Array<UIInputTextAdvanced> = [];
 	var transitioning:Bool = false;
 	override function update(elapsed:Float) {
 		if(transitioning) {

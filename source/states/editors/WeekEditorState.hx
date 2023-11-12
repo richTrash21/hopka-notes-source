@@ -22,6 +22,7 @@ import sys.io.File;
 import sys.FileSystem;
 #end
 
+import objects.ui.UIInputTextAdvanced;
 import objects.HealthIcon;
 import objects.MenuCharacter;
 import objects.MenuItem;
@@ -112,7 +113,7 @@ class WeekEditorState extends MusicBeatState
 	}
 
 	var UI_box:FlxUITabMenu;
-	var blockPressWhileTypingOn:Array<FlxUIInputText> = [];
+	var blockPressWhileTypingOn:Array<UIInputTextAdvanced> = [];
 	function addEditorBox() {
 		UI_box = new FlxUITabMenu(null, [
 			{name: 'Week', label: 'Week'},
@@ -143,15 +144,15 @@ class WeekEditorState extends MusicBeatState
 		add(saveWeekButton);
 	}
 
-	var songsInputText:FlxUIInputText;
-	var backgroundInputText:FlxUIInputText;
-	var displayNameInputText:FlxUIInputText;
-	var weekNameInputText:FlxUIInputText;
-	var weekFileInputText:FlxUIInputText;
+	var songsInputText:UIInputTextAdvanced;
+	var backgroundInputText:UIInputTextAdvanced;
+	var displayNameInputText:UIInputTextAdvanced;
+	var weekNameInputText:UIInputTextAdvanced;
+	var weekFileInputText:UIInputTextAdvanced;
 	
-	var opponentInputText:FlxUIInputText;
-	var boyfriendInputText:FlxUIInputText;
-	var girlfriendInputText:FlxUIInputText;
+	var opponentInputText:UIInputTextAdvanced;
+	var boyfriendInputText:UIInputTextAdvanced;
+	var girlfriendInputText:UIInputTextAdvanced;
 
 	var hideCheckbox:FlxUICheckBox;
 
@@ -161,27 +162,27 @@ class WeekEditorState extends MusicBeatState
 		var tab_group = new FlxUI(null, UI_box);
 		tab_group.name = "Week";
 		
-		songsInputText = new FlxUIInputText(10, 30, 200, '', 8);
+		songsInputText = new UIInputTextAdvanced(10, 30, 200, '', 8);
 		blockPressWhileTypingOn.push(songsInputText);
 
-		opponentInputText = new FlxUIInputText(10, songsInputText.y + 40, 70, '', 8);
+		opponentInputText = new UIInputTextAdvanced(10, songsInputText.y + 40, 70, '', 8);
 		blockPressWhileTypingOn.push(opponentInputText);
-		boyfriendInputText = new FlxUIInputText(opponentInputText.x + 75, opponentInputText.y, 70, '', 8);
+		boyfriendInputText = new UIInputTextAdvanced(opponentInputText.x + 75, opponentInputText.y, 70, '', 8);
 		blockPressWhileTypingOn.push(boyfriendInputText);
-		girlfriendInputText = new FlxUIInputText(boyfriendInputText.x + 75, opponentInputText.y, 70, '', 8);
+		girlfriendInputText = new UIInputTextAdvanced(boyfriendInputText.x + 75, opponentInputText.y, 70, '', 8);
 		blockPressWhileTypingOn.push(girlfriendInputText);
 
-		backgroundInputText = new FlxUIInputText(10, opponentInputText.y + 40, 120, '', 8);
+		backgroundInputText = new UIInputTextAdvanced(10, opponentInputText.y + 40, 120, '', 8);
 		blockPressWhileTypingOn.push(backgroundInputText);
 		
 
-		displayNameInputText = new FlxUIInputText(10, backgroundInputText.y + 60, 200, '', 8);
+		displayNameInputText = new UIInputTextAdvanced(10, backgroundInputText.y + 60, 200, '', 8);
 		blockPressWhileTypingOn.push(backgroundInputText);
 
-		weekNameInputText = new FlxUIInputText(10, displayNameInputText.y + 60, 150, '', 8);
+		weekNameInputText = new UIInputTextAdvanced(10, displayNameInputText.y + 60, 150, '', 8);
 		blockPressWhileTypingOn.push(weekNameInputText);
 
-		weekFileInputText = new FlxUIInputText(10, weekNameInputText.y + 40, 100, '', 8);
+		weekFileInputText = new UIInputTextAdvanced(10, weekNameInputText.y + 40, 100, '', 8);
 		blockPressWhileTypingOn.push(weekFileInputText);
 		reloadWeekThing();
 
@@ -208,8 +209,8 @@ class WeekEditorState extends MusicBeatState
 		UI_box.addGroup(tab_group);
 	}
 
-	var weekBeforeInputText:FlxUIInputText;
-	var difficultiesInputText:FlxUIInputText;
+	var weekBeforeInputText:UIInputTextAdvanced;
+	var difficultiesInputText:UIInputTextAdvanced;
 	var lockedCheckbox:FlxUICheckBox;
 	var hiddenUntilUnlockCheckbox:FlxUICheckBox;
 
@@ -229,10 +230,10 @@ class WeekEditorState extends MusicBeatState
 		hiddenUntilUnlockCheckbox.callback = function() weekFile.hiddenUntilUnlocked = hiddenUntilUnlockCheckbox.checked;
 		hiddenUntilUnlockCheckbox.alpha = 0.4;
 
-		weekBeforeInputText = new FlxUIInputText(10, hiddenUntilUnlockCheckbox.y + 55, 100, '', 8);
+		weekBeforeInputText = new UIInputTextAdvanced(10, hiddenUntilUnlockCheckbox.y + 55, 100, '', 8);
 		blockPressWhileTypingOn.push(weekBeforeInputText);
 
-		difficultiesInputText = new FlxUIInputText(10, weekBeforeInputText.y + 60, 200, '', 8);
+		difficultiesInputText = new UIInputTextAdvanced(10, weekBeforeInputText.y + 60, 200, '', 8);
 		blockPressWhileTypingOn.push(difficultiesInputText);
 		
 		tab_group.add(new FlxText(weekBeforeInputText.x, weekBeforeInputText.y - 28, 0, 'Week File name of the Week you have\nto finish for Unlocking:'));
@@ -342,7 +343,7 @@ class WeekEditorState extends MusicBeatState
 	}
 	
 	override function getEvent(id:String, sender:Dynamic, data:Dynamic, ?params:Array<Dynamic>) {
-		if(id == FlxUIInputText.CHANGE_EVENT && (sender is FlxUIInputText)) {
+		if(id == UIInputTextAdvanced.CHANGE_EVENT && (sender is UIInputTextAdvanced)) {
 			if(sender == weekFileInputText) {
 				weekFileName = weekFileInputText.text.trim();
 				reloadWeekThing();
@@ -593,7 +594,7 @@ class WeekEditorFreeplayState extends MusicBeatState
 	}
 	
 	var UI_box:FlxUITabMenu;
-	var blockPressWhileTypingOn:Array<FlxUIInputText> = [];
+	var blockPressWhileTypingOn:Array<UIInputTextAdvanced> = [];
 	function addEditorBox() {
 		UI_box = new FlxUITabMenu(null, [{name: 'Freeplay', label: 'Freeplay'}], true);
 		UI_box.resize(250, 200);
@@ -625,7 +626,7 @@ class WeekEditorFreeplayState extends MusicBeatState
 	}
 	
 	override function getEvent(id:String, sender:Dynamic, data:Dynamic, ?params:Array<Dynamic>) {
-		if(id == FlxUIInputText.CHANGE_EVENT && (sender is FlxUIInputText)) {
+		if(id == UIInputTextAdvanced.CHANGE_EVENT && (sender is UIInputTextAdvanced)) {
 			weekFile.songs[curSelected][1] = iconInputText.text;
 			iconArray[curSelected].changeIcon(iconInputText.text);
 		} else if(id == FlxUINumericStepper.CHANGE_EVENT && (sender is FlxUINumericStepper)) {
@@ -638,7 +639,7 @@ class WeekEditorFreeplayState extends MusicBeatState
 	var bgColorStepperR:FlxUINumericStepper;
 	var bgColorStepperG:FlxUINumericStepper;
 	var bgColorStepperB:FlxUINumericStepper;
-	var iconInputText:FlxUIInputText;
+	var iconInputText:UIInputTextAdvanced;
 	function addFreeplayUI() {
 		var tab_group = new FlxUI(null, UI_box);
 		tab_group.name = "Freeplay";
@@ -672,7 +673,7 @@ class WeekEditorFreeplayState extends MusicBeatState
 			}
 		});
 
-		iconInputText = new FlxUIInputText(10, bgColorStepperR.y + 70, 100, '', 8);
+		iconInputText = new UIInputTextAdvanced(10, bgColorStepperR.y + 70, 100, '', 8);
 
 		var hideFreeplayCheckbox:FlxUICheckBox = new FlxUICheckBox(10, iconInputText.y + 30, null, null, "Hide Week from Freeplay?", 100);
 		hideFreeplayCheckbox.checked = weekFile.hideFreeplay;

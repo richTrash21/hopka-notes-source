@@ -300,35 +300,16 @@ class CustomFlxColor
 	public static var MAGENTA(default, null):Int = FlxColor.MAGENTA;
 	public static var CYAN(default, null):Int = FlxColor.CYAN;
 
-	public static function fromInt(Value:Int):Int
-		return cast FlxColor.fromInt(Value);
 	public static function fromRGB(Red:Int, Green:Int, Blue:Int, Alpha:Int = 255):Int
 		return cast FlxColor.fromRGB(Red, Green, Blue, Alpha);
 	public static function fromRGBFloat(Red:Float, Green:Float, Blue:Float, Alpha:Float = 1):Int
 		return cast FlxColor.fromRGBFloat(Red, Green, Blue, Alpha);
 
-	public static function fromCMYK(Cyan:Float, Magenta:Float, Yellow:Float, Black:Float, Alpha:Float = 1):Int
-		return cast FlxColor.fromHSB(Cyan, Magenta, Yellow, Alpha);
 	public static function fromHSB(Hue:Float, Sat:Float, Brt:Float, Alpha:Float = 1):Int
 		return cast FlxColor.fromHSB(Hue, Sat, Brt, Alpha);
 	public static function fromHSL(Hue:Float, Sat:Float, Light:Float, Alpha:Float = 1):Int
 		return cast FlxColor.fromHSL(Hue, Sat, Light, Alpha);
 	public static function fromString(str:String):Int
 		return cast FlxColor.fromString(str);
-
-	public static function interpolate(Color1:Int, Color2:Int, Factor:Float = 0.5):Int
-		return cast FlxColor.interpolate(FlxColor.fromInt(Color1), FlxColor.fromInt(Color2), Factor);
-
-	public static function multiply(lhs:Int, rhs:Int):Int
-		return cast FlxColor.multiply(FlxColor.fromInt(lhs), FlxColor.fromInt(rhs));
-	public static function add(lhs:Int, rhs:Int):Int
-		return cast FlxColor.add(FlxColor.fromInt(lhs), FlxColor.fromInt(rhs));
-	public static function subtract(lhs:Int, rhs:Int):Int
-		return cast FlxColor.subtract(FlxColor.fromInt(lhs), FlxColor.fromInt(rhs));
-
-	/*public function getDarkened(Factor:Float = 0.2):Int
-		return cast FlxColor.getDarkened(Factor);
-	public function getLightened(Factor:Float = 0.2):Int
-		return cast FlxColor.getLightened(Factor);*/
 }
 #end

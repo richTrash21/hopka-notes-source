@@ -49,7 +49,7 @@ class Difficulty
 		list = diffs.copy();
 
 	inline public static function getString(num:Null<Int> = null):String
-		return list[num == null ? PlayState.storyDifficulty : num];
+		return list[num ?? PlayState.storyDifficulty];	//[num == null ? PlayState.storyDifficulty : num]
 
 	inline public static function getDefault():String
 		return defaultDifficulty;

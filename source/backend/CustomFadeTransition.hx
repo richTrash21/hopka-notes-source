@@ -29,7 +29,7 @@ class CustomFadeTransition extends flixel.FlxSubState
 		add(transGradient);
 
 		// actually uses nextCamera now WOW!!!!
-		transGradient.cameras = [nextCamera == null ? FlxG.cameras.list[FlxG.cameras.list.length - 1] : nextCamera];
+		transGradient.cameras = [nextCamera ?? FlxG.cameras.list[FlxG.cameras.list.length - 1]]; //[nextCamera == null ? FlxG.cameras.list[FlxG.cameras.list.length - 1] : nextCamera]
 		nextCamera = null;
 
 		FlxTween.tween(transGradient, {y: isTransIn ? height : 0}, duration, {onComplete: function(t:FlxTween) finish(isTransIn)});

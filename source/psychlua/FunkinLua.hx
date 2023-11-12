@@ -1221,10 +1221,10 @@ class FunkinLua {
 			if(tag != null && tag.length > 0 && game.modchartSounds.exists(tag)) {
 				var theSound:FlxSound = game.modchartSounds.get(tag);
 				if(theSound != null) {
-					var wasResumed:Bool = theSound.playing;
-					theSound.pause();
+					//var wasResumed:Bool = theSound.playing;
+					//theSound.pause();
 					theSound.time = value;
-					if(wasResumed) theSound.play();
+					//if(wasResumed) theSound.play();
 				}
 			}
 		});
@@ -1237,10 +1237,10 @@ class FunkinLua {
 			if(tag != null && tag.length > 0 && game.modchartSounds.exists(tag)) {
 				var theSound:FlxSound = game.modchartSounds.get(tag);
 				if(theSound != null) {
-					var wasResumed:Bool = theSound.playing;
-					if (doPause) theSound.pause();
+					//var wasResumed:Bool = theSound.playing;
+					//if (doPause) theSound.pause();
 					theSound.pitch = value;
-					if (doPause && wasResumed) theSound.play();
+					//if (doPause && wasResumed) theSound.play();
 				}
 			}
 		});
