@@ -193,7 +193,7 @@ class PauseSubState extends MusicBeatSubstate
 			switch (daSelected)
 			{
 				case "Resume":
-					close();
+					fadeAndClose();
 
 				case 'Change Difficulty':
 					menuItems = difficultyChoices;
@@ -225,7 +225,7 @@ class PauseSubState extends MusicBeatSubstate
 							PlayState.instance.clearNotesBefore(curTime);
 							PlayState.instance.setSongTime(curTime);
 						}
-						close();
+						fadeAndClose();
 					}
 
 				case 'End Song':
@@ -266,6 +266,21 @@ class PauseSubState extends MusicBeatSubstate
 					FlxG.camera.followLerp = 0;
 			}
 		}
+	}
+
+	function fadeAndClose()
+	{
+		var needToClose:Bool = true; // so close() gets called once
+		forEach(function(obj:flixel.FlxBasic)
+			if (obj is FlxSprite && obj != null)
+				FlxTween.tween(obj, {alpha: 0}, 0.1, {onComplete: function(t:FlxTween)
+					if(needToClose)
+					{
+						needToClose = false;
+						close();
+					}
+				}));
+		pauseMusic.fadeOut(0.1);
 	}
 
 	function deleteSkipTimeText()

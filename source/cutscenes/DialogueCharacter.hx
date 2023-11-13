@@ -71,7 +71,7 @@ class DialogueCharacter extends FlxSprite
 		rawJson = lime.utils.Assets.getText(path);
 		#end
 		
-		jsonFile = cast tjson.TJSON.parse(rawJson);
+		jsonFile = cast haxe.Json.parse(rawJson);
 	}
 
 	public function reloadAnimations() {

@@ -1122,10 +1122,10 @@ class FunkinLua {
 			}
 			return false;
 		});
-		addCallback("startVideo", function(videoFile:String, antialias:Bool = true) {
+		addCallback("startVideo", function(videoFile:String, subtitles:Bool = false, antialias:Bool = true) {
 			#if VIDEOS_ALLOWED
 			if(FileSystem.exists(Paths.video(videoFile))) {
-				game.startVideo(videoFile, antialias);
+				game.startVideo(videoFile, subtitles, antialias);
 				return true;
 			} else {
 				luaTrace('startVideo: Video file not found: ' + videoFile, false, false, FlxColor.RED);

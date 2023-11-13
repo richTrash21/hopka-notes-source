@@ -16,7 +16,7 @@ import flixel.ui.FlxButton;
 import openfl.net.FileReference;
 import openfl.events.Event;
 import openfl.events.IOErrorEvent;
-import tjson.TJSON as Json;
+import haxe.Json;
 
 import objects.ui.UIInputTextAdvanced;
 import objects.ui.DropDownAdvanced;

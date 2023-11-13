@@ -137,7 +137,7 @@ class Mods
 				#else
 				var rawJson:String = lime.utils.Assets.getText(path);
 				#end
-				if(rawJson != null && rawJson.length > 0) return tjson.TJSON.parse(rawJson);
+				if(rawJson != null && rawJson.length > 0) return haxe.Json.parse(rawJson);
 			} catch(e:Dynamic) {
 				trace(e);
 			}

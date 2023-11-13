@@ -97,7 +97,7 @@ class Character extends FlxSprite
 		var rawJson = Assets.getText(path);
 		#end
 
-		var json:CharacterFile = cast tjson.TJSON.parse(rawJson);
+		var json:CharacterFile = cast haxe.Json.parse(rawJson);
 		var useAtlas:Bool = false;
 
 		#if MODS_ALLOWED

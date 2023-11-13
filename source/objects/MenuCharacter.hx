@@ -6,7 +6,7 @@ import sys.FileSystem;
 #else
 import openfl.utils.Assets;
 #end
-import tjson.TJSON as Json;
+import haxe.Json;
 
 typedef MenuCharacterFile = {
 	var image:String;

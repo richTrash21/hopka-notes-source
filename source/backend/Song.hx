@@ -141,5 +141,5 @@ class Song
 	}
 
 	public static function parseJSONshit(rawJson:String):SwagSong
-		return cast tjson.TJSON.parse(rawJson).song;
+		return cast haxe.Json.parse(rawJson).song;
 }

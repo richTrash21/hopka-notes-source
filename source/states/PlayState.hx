@@ -56,12 +56,12 @@ import sys.io.File;
 #end
 
 #if VIDEOS_ALLOWED 
-import hxvlc.flixel.FlxVideo as VideoHandler;
-/*#if (hxCodec >= "3.0.0")
+//import hxvlc.flixel.FlxVideo as VideoHandler;
+#if (hxCodec >= "3.0.0")
 import hxcodec.flixel.FlxVideo as VideoHandler;
 #elseif (hxCodec >= "2.6.1") import hxcodec.VideoHandler;
 #elseif (hxCodec == "2.6.0") import VideoHandler;
-#else import vlc.MP4Handler as VideoHandler; #end*/
+#else import vlc.MP4Handler as VideoHandler; #end
 #end
 
 import objects.Note;
@@ -883,7 +883,7 @@ class PlayState extends MusicBeatState
 	}
 
 	private var video:VideoHandler = null;
-	public function startVideo(name:String, antialias:Bool = true)
+	public function startVideo(name:String, subtitles:Bool = false, antialias:Bool = true) // TODO: actual subtitles
 	{
 		#if VIDEOS_ALLOWED
 			inCutscene = true;
@@ -901,10 +901,10 @@ class PlayState extends MusicBeatState
 			}
 
 			playingVideo = true;
-			if(video == null) video = new VideoHandler(antialias);
-			video.play(filepath);
-			video.onEndReached.add(endVideo, true);
-			/*#if (hxCodec >= "3.0.0")
+			video = new VideoHandler(/*antialias*/);
+			//video.play(filepath);
+			//video.onEndReached.add(endVideo);
+			#if (hxCodec >= "3.0.0")
 				// Recent versions
 				video.play(filepath);
 				video.onEndReached.add(endVideo, true);
@@ -912,7 +912,7 @@ class PlayState extends MusicBeatState
 				// Older versions
 				video.playVideo(filepath);
 				video.finishCallback = endVideo;
-			#end*/
+			#end
 		#else
 			FlxG.log.warn('Platform not supported!');
 			startAndEnd();
@@ -920,16 +920,16 @@ class PlayState extends MusicBeatState
 		#end
 	}
 
-	function endVideo():Void
+	function endVideo()
 	{
 		#if VIDEOS_ALLOWED
 		playingVideo = false;
 		video.stop();
-		video.dispose();
-		//#if (hxCodec >= "3.0.0") video.dispose(); #end
+		//video.dispose();
+		#if (hxCodec >= "3.0.0") video.dispose(); #end
 		startAndEnd();
 		video = null;
-		return;
+		//return;
 		#end
 	}
 
@@ -1652,9 +1652,9 @@ class PlayState extends MusicBeatState
 
 		//idk how it will behave on an older versions sooooo...
 		//UPD: using hxvlc from now on (idfk whats the difference)
-		//#if (hxCodec >= "3.0.0")
+		#if (hxCodec >= "3.0.0")
 		if (playingVideo && (controls.PAUSE || controls.ACCEPT)) endVideo();
-		//#end
+		#end
 
 		// :trollface:
 		#if !RELESE_BUILD_FR

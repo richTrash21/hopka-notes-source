@@ -7,7 +7,7 @@ import flixel.addons.transition.FlxTransitionableState;
 import flixel.graphics.frames.FlxFrame;
 import flixel.group.FlxGroup;
 import flixel.input.gamepad.FlxGamepad;
-import tjson.TJSON as Json;
+import haxe.Json;
 
 import shaders.ColorSwap;
 

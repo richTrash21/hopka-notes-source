@@ -79,7 +79,7 @@ class StageData {
 		{
 			return null;
 		}
-		return cast tjson.TJSON.parse(rawJson);
+		return cast haxe.Json.parse(rawJson);
 	}
 
 	// LMFAOOOOOOOOOOOOOOOOOO GET BUTCHERED!!!!!!!!!!!!
