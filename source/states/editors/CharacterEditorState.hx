@@ -7,7 +7,6 @@ import flixel.FlxObject;
 import flixel.animation.FlxAnimation;
 import flixel.addons.ui.FlxUI;
 import flixel.addons.ui.FlxUICheckBox;
-import flixel.addons.ui.FlxUIInputText;
 import flixel.addons.ui.FlxUINumericStepper;
 import flixel.addons.ui.FlxUIDropDownMenu;
 import flixel.addons.ui.FlxUITabMenu;
@@ -24,12 +23,15 @@ import objects.Character;
 import objects.HealthIcon;
 import objects.Bar;
 
+import backend.MusicBeatUIState;
+
 #if MODS_ALLOWED
 import sys.FileSystem;
 #end
 
-class CharacterEditorState extends MusicBeatState
+class CharacterEditorState extends backend.MusicBeatUIState
 {
+	#if !RELESE_BUILD_FR
 	var char:Character;
 	var ghostChar:Character;
 	var textAnim:FlxText;
@@ -130,7 +132,7 @@ class CharacterEditorState extends MusicBeatState
 		dumbTexts.cameras = [camHUD];
 
 		textAnim = new FlxText(300, 16);
-		textAnim.setFormat(Paths.font("vcr.ttf"), 32, FlxColor.WHITE, RIGHT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
+		textAnim.setFormat(Paths.font("vcr.ttf"), 32, FlxColor.WHITE, LEFT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
 		textAnim.borderSize = 1;
 		//textAnim.scrollFactor.set();
 		textAnim.cameras = [camHUD];
@@ -167,7 +169,7 @@ class CharacterEditorState extends MusicBeatState
 		UI_box.resize(250, 120);
 		UI_box.x = FlxG.width - 275;
 		UI_box.y = 25;
-		//UI_box.scrollFactor.set();
+		UI_box.scrollFactor.set();
 
 		UI_characterbox = new FlxUITabMenu(null, [
 			{name: 'Character', label: 'Character'},
@@ -178,7 +180,7 @@ class CharacterEditorState extends MusicBeatState
 		UI_characterbox.resize(350, 250);
 		UI_characterbox.x = UI_box.x - 100;
 		UI_characterbox.y = UI_box.y + UI_box.height;
-		//UI_characterbox.scrollFactor.set();
+		UI_characterbox.scrollFactor.set();
 		add(UI_characterbox);
 		add(UI_box);
 
@@ -879,14 +881,15 @@ class CharacterEditorState extends MusicBeatState
 	override function update(elapsed:Float)
 	{
 		if(char.animationsArray[curAnim] != null) {
-			var txt:String = char.animationsArray[curAnim].anim;
-			var curAnim:FlxAnimation = char.animation.getByName(txt);
+			var txtAnim:String = char.animationsArray[curAnim].anim;
+			final curAnim:FlxAnimation = char.animation.getByName(txtAnim);
 			if(curAnim == null || curAnim.frames.length < 1)
-				txt += ' (ERROR!)';
-			else if(txt.endsWith('-loop'))
-				txt += ' (-loop is DEPRECATED!)';
-
-			textAnim.text = txt;
+				txtAnim += ' (ERROR!)';
+			else if(txtAnim.endsWith('-loop'))
+				txtAnim += ' (-loop is DEPRECATED!)';
+			
+			final txtFrame:String = curAnim != null ? '[${curAnim.curFrame}/${curAnim.numFrames-1}]' : 'null';
+			textAnim.text = txtAnim + '\nCurrent Frame: $txtFrame';
 		}
 		else textAnim.text = '';
 
@@ -903,9 +906,9 @@ class CharacterEditorState extends MusicBeatState
 		if(!charDropDown.dropPanel.visible) {
 			if (FlxG.keys.justPressed.ESCAPE) {
 				if(goToPlayState) {
-					MusicBeatState.switchState(new PlayState());
+					MusicBeatUIState.switchState(new PlayState());
 				} else {
-					MusicBeatState.switchState(new states.editors.MasterEditorMenu());
+					MusicBeatUIState.switchState(new states.editors.MasterEditorMenu());
 					FlxG.sound.playMusic(Paths.music('freakyMenu'));
 				}
 				FlxG.mouse.visible = false;
@@ -922,35 +925,65 @@ class CharacterEditorState extends MusicBeatState
 				FlxG.camera.zoom = 1;
 			}
 
-			if (FlxG.keys.pressed.E && FlxG.camera.zoom < 3) {
-				FlxG.camera.zoom += elapsed * FlxG.camera.zoom;
-				if(FlxG.camera.zoom > 3) FlxG.camera.zoom = 3;
-			}
-			if (FlxG.keys.pressed.Q && FlxG.camera.zoom > 0.1) {
-				FlxG.camera.zoom -= elapsed * FlxG.camera.zoom;
-				if(FlxG.camera.zoom < 0.1) FlxG.camera.zoom = 0.1;
+			// camera control
+			final _I:Bool = FlxG.keys.pressed.I;
+			final _J:Bool = FlxG.keys.pressed.J;
+			final _K:Bool = FlxG.keys.pressed.K;
+			final _L:Bool = FlxG.keys.pressed.L;
+
+			// camera zoom control
+			final _E:Bool = FlxG.keys.pressed.E;
+			final _Q:Bool = FlxG.keys.pressed.Q;
+
+			// animation scrolling
+			final _W:Bool = FlxG.keys.justPressed.W;
+			final _S:Bool = FlxG.keys.justPressed.S;
+
+			// frame scrolling
+			final _Z:Bool = FlxG.keys.justPressed.Z;
+			final _X:Bool = FlxG.keys.justPressed.X;
+			final _SHIFT:Bool = FlxG.keys.pressed.SHIFT; // etc
+
+			if (_E || _Q)
+			{
+				var add:Float = FlxG.camera.zoom;
+				if(_E)		add *= elapsed;
+				else if(_Q)	add *= -elapsed;
+				FlxG.camera.zoom = FlxMath.bound(FlxG.camera.zoom + add, 0.1, 3);
 			}
 
-			if (FlxG.keys.pressed.I || FlxG.keys.pressed.J || FlxG.keys.pressed.K || FlxG.keys.pressed.L)
+			if (_I || _J || _K || _L)
 			{
 				var addToCam:Float = 500 * elapsed;
-				if (FlxG.keys.pressed.SHIFT) addToCam *= 4;
+				if (_SHIFT) addToCam *= 4;
 
-				if (FlxG.keys.pressed.I)		camFollow.y -= addToCam;
-				else if (FlxG.keys.pressed.K)	camFollow.y += addToCam;
+				if (_I)			camFollow.y -= addToCam;
+				else if (_K)	camFollow.y += addToCam;
+				if (_J)			camFollow.x -= addToCam;
+				else if (_L)	camFollow.x += addToCam;
+			}
 
-				if (FlxG.keys.pressed.J)		camFollow.x -= addToCam;
-				else if (FlxG.keys.pressed.L)	camFollow.x += addToCam;
+			final _curAnim = char.animation.curAnim;
+			final _curAnimGHOST = ghostChar.animation.curAnim;
+			if ((_Z || _X) && _curAnim != null) // like in flash!!! :D
+			{
+				_curAnim.stop();
+				var add:Int = 0;
+				if(_Z)		add--;
+				else if(_X)	add++;
+				_curAnim.curFrame = Std.int(FlxMath.bound(_curAnim.curFrame + add, 0, _curAnim.numFrames-1));
+				if(#if (haxe > "4.2.5") _curAnimGHOST?.name #else _curAnimGHOST != null && _curAnimGHOST.name #end == _curAnim.name)
+					_curAnimGHOST.curFrame = _curAnim.curFrame;
 			}
 
 			if(char.animationsArray.length > 0) {
-				if (FlxG.keys.justPressed.W) curAnim -= 1;
-				if (FlxG.keys.justPressed.S) curAnim += 1;
+				if (_W) curAnim--;
+				if (_S) curAnim++;
 
 				if (curAnim < 0) curAnim = char.animationsArray.length - 1;
 				if (curAnim >= char.animationsArray.length) curAnim = 0;
 
-				if (FlxG.keys.justPressed.S || FlxG.keys.justPressed.W || FlxG.keys.justPressed.SPACE)
+				if (_S || _W || FlxG.keys.justPressed.SPACE)
 				{
 					char.playAnim(char.animationsArray[curAnim].anim, true);
 					genBoyOffsets();
@@ -968,7 +1001,7 @@ class CharacterEditorState extends MusicBeatState
 
 				for (i in 0...controlArray.length) {
 					if(controlArray[i]) {
-						var multiplier = FlxG.keys.pressed.SHIFT ? 10 : 1;
+						var multiplier = _SHIFT ? 10 : 1;
 						var arrayVal = i > 1 ? 1 : 0;
 						var negaMult:Int = i % 2 == 1 ? -1 : 1;
 						char.animationsArray[curAnim].offsets[arrayVal] += negaMult * multiplier;
@@ -977,8 +1010,8 @@ class CharacterEditorState extends MusicBeatState
 						ghostChar.addOffset(char.animationsArray[curAnim].anim, char.animationsArray[curAnim].offsets[0], char.animationsArray[curAnim].offsets[1]);
 
 						char.playAnim(char.animationsArray[curAnim].anim, false);
-						if(ghostChar.animation.curAnim != null && char.animation.curAnim != null && char.animation.curAnim.name == ghostChar.animation.curAnim.name)
-							ghostChar.playAnim(char.animation.curAnim.name, false);
+						if(_curAnimGHOST != null && _curAnim != null && _curAnim.name == _curAnimGHOST.name)
+							ghostChar.playAnim(_curAnim.name, false);
 						genBoyOffsets();
 					}
 				}
@@ -1058,4 +1091,5 @@ class CharacterEditorState extends MusicBeatState
 		var text:String = prefix + lime.system.Clipboard.text.replace('\n', '');
 		return text;
 	}
+	#end
 }

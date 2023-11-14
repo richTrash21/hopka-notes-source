@@ -13,8 +13,9 @@ class StrumNote extends FlxSprite
 	private var player:Int;
 
 	// better pixel note handeling
-	public static var isPixelNote:Bool = false;
-	public static var pixelScale:Float = 6;
+	public var isPixelNote:Bool = false;
+	public var pixelScale:Float = 6;
+	public static final defaultNoteSkin:String = Note.defaultNoteSkin;
 	
 	public var texture(default, set):String = null;
 	private function set_texture(value:String):String {
@@ -29,14 +30,13 @@ class StrumNote extends FlxSprite
 	public function new(x:Float, y:Float, leData:Int, player:Int) {
 		isPixelNote = PlayState.isPixelStage;
 		pixelScale = PlayState.daPixelZoom;
+		final _song = PlayState.SONG;
 
 		rgbShader = new RGBShaderReference(this, Note.initializeGlobalRGBShader(leData));
 		rgbShader.enabled = false;
-		if(PlayState.SONG != null && PlayState.SONG.disableNoteRGB) useRGBShader = false;
+		if(_song != null && _song.disableNoteRGB) useRGBShader = false;
 		
-		var arr:Array<FlxColor> = ClientPrefs.data.arrowRGB[leData];
-		if(isPixelNote) arr = ClientPrefs.data.arrowRGBPixel[leData];
-		
+		final arr:Array<FlxColor> = isPixelNote ? ClientPrefs.data.arrowRGBPixel[leData] : ClientPrefs.data.arrowRGB[leData];
 		if(leData <= arr.length)
 		{
 			@:bypassAccessor
@@ -52,9 +52,10 @@ class StrumNote extends FlxSprite
 		this.noteData = leData;
 		super(x, y);
 
-		var skin:String = null;
-		if(PlayState.SONG != null && PlayState.SONG.arrowSkin != null && PlayState.SONG.arrowSkin.length > 1) skin = PlayState.SONG.arrowSkin;
-		else skin = Note.defaultNoteSkin;
+		var skin:String = (#if (haxe > "4.2.5") _song?.arrowSkin != null && _song?.arrowSkin.length
+			#else _song != null && _song.arrowSkin != null && _song.arrowSkin.length #end > 1)
+			? _song.arrowSkin
+			: defaultNoteSkin;
 
 		var customSkin:String = skin + Note.getNoteSkinPostfix();
 		if(Paths.fileExists('images/$customSkin.png', IMAGE)) skin = customSkin;
@@ -65,12 +66,11 @@ class StrumNote extends FlxSprite
 
 	public function reloadNote()
 	{
-		var lastAnim:String = null;
-		if(animation.curAnim != null) lastAnim = animation.curAnim.name;
+		final lastAnim:String = #if (haxe > "4.2.5") animation.curAnim?.name #else animation.curAnim != null ? animation.curAnim.name : null #end;
 
 		if(isPixelNote)
 		{
-			var graphic = Paths.image('pixelUI/' + (Paths.fileExists('images/pixelUI/$texture.png', IMAGE) ? texture : Note.defaultNoteSkin));
+			final graphic = Paths.image('pixelUI/' + (Paths.fileExists('images/pixelUI/$texture.png', IMAGE) ? texture : defaultNoteSkin));
 			loadGraphic(graphic, true, Math.floor(graphic.width / 4), Math.floor(graphic.height / 5));
 
 			antialiasing = false;
@@ -102,7 +102,7 @@ class StrumNote extends FlxSprite
 		}
 		else
 		{
-			frames = Paths.getSparrowAtlas(Paths.fileExists('images/$texture.png', IMAGE) ? texture : Note.defaultNoteSkin);
+			frames = Paths.getSparrowAtlas(Paths.fileExists('images/$texture.png', IMAGE) ? texture : defaultNoteSkin);
 			animation.addByPrefix('green', 'arrowUP');
 			animation.addByPrefix('blue', 'arrowDOWN');
 			animation.addByPrefix('purple', 'arrowLEFT');

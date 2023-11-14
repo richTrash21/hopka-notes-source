@@ -40,6 +40,7 @@ import objects.ui.DropDownAdvanced;
 
 import substates.Prompt;
 
+import backend.MusicBeatUIState;
 
 #if sys
 import flash.media.Sound;
@@ -50,8 +51,9 @@ import sys.io.File;
 @:access(flixel.sound.FlxSound._sound)
 @:access(openfl.media.Sound.__buffer)
 
-class ChartingState extends MusicBeatState
+class ChartingState extends MusicBeatUIState
 {
+	#if !RELESE_BUILD_FR
 	public static var noteTypeList:Array<String> = //Used for backwards compatibility with 0.1 - 0.3.2 charts, though, you should add your hardcoded custom note types here too.
 	[
 		'',
@@ -389,7 +391,7 @@ class ChartingState extends MusicBeatState
 		var loadAutosaveBtn:FlxButton = new FlxButton(reloadSongJson.x, reloadSongJson.y + 30, 'Load Autosave', function()
 		{
 			PlayState.SONG = Song.parseJSONshit(FlxG.save.data.autosave);
-			MusicBeatState.resetState();
+			MusicBeatUIState.resetState();
 		});
 
 		var loadEventJson:FlxButton = new FlxButton(loadAutosaveBtn.x, loadAutosaveBtn.y + 30, 'Load Events', function()
@@ -1617,7 +1619,7 @@ class ChartingState extends MusicBeatState
 
 				//if(_song.stage == null) _song.stage = stageDropDown.selectedLabel;
 				StageData.loadDirectory(_song);
-				LoadingState.loadAndSwitchState(new PlayState());
+				LoadingState.loadAndSwitchStateFromEditor(new PlayState());
 			}
 
 			if(curSelectedNote != null && curSelectedNote[1] > -1) {
@@ -1630,7 +1632,7 @@ class ChartingState extends MusicBeatState
 				// Protect against lost data when quickly leaving the chart editor.
 				autosaveSong();
 				PlayState.chartingMode = false;
-				MusicBeatState.switchState(new states.editors.MasterEditorMenu());
+				MusicBeatUIState.switchState(new states.editors.MasterEditorMenu());
 				FlxG.sound.playMusic(Paths.music('freakyMenu'));
 				FlxG.mouse.visible = false;
 				return;
@@ -2833,7 +2835,7 @@ class ChartingState extends MusicBeatState
 				var diff:String = Difficulty.getString();
 				PlayState.SONG = Song.loadFromJson(song.toLowerCase() + ((diff != null && diff != Difficulty.getDefault()) ? "-" + diff : ""), song.toLowerCase());
 			}
-			MusicBeatState.resetState();
+			MusicBeatUIState.resetState();
 		} catch(e) {
 			trace('ERROR! $e');
 
@@ -2969,4 +2971,5 @@ class AttachedFlxText extends FlxText
 			alpha = sprTracker.alpha;
 		}
 	}
+	#end
 }

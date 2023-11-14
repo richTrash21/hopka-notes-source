@@ -1,8 +1,6 @@
 package shaders;
 
 // STOLEN FROM HAXEFLIXEL DEMO LOL
-import flixel.system.FlxAssets.FlxShader;
-
 enum WiggleEffectType
 {
 	DREAMY;
@@ -64,7 +62,7 @@ class WiggleEffect
 	}
 }
 
-class WiggleShader extends FlxShader
+class WiggleShader extends flixel.system.FlxAssets.FlxShader
 {
 	@:glFragmentSource('
 		#pragma header
@@ -131,8 +129,5 @@ class WiggleShader extends FlxShader
 			vec2 uv = sineWave(openfl_TextureCoordv);
 			gl_FragColor = texture2D(bitmap, uv);
 		}')
-	public function new()
-	{
-		super();
-	}
+	public function new() { super(); }
 }

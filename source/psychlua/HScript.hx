@@ -308,7 +308,7 @@ class CustomFlxColor
 		return cast FlxColor.fromRGBFloat(Red, Green, Blue, Alpha);
 
 	public static function fromCMYK(Cyan:Float, Magenta:Float, Yellow:Float, Black:Float, Alpha:Float = 1):Int
-		return cast FlxColor.fromHSB(Cyan, Magenta, Yellow, Alpha);
+		return cast FlxColor.fromCMYK(Cyan, Magenta, Yellow, Alpha);
 	public static function fromHSB(Hue:Float, Sat:Float, Brt:Float, Alpha:Float = 1):Int
 		return cast FlxColor.fromHSB(Hue, Sat, Brt, Alpha);
 	public static function fromHSL(Hue:Float, Sat:Float, Light:Float, Alpha:Float = 1):Int

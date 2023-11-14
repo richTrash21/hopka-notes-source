@@ -24,8 +24,11 @@ import objects.ui.UIInputTextAdvanced;
 import cutscenes.DialogueBoxPsych;
 import cutscenes.DialogueCharacter;
 
-class DialogueCharacterEditorState extends MusicBeatState
+import backend.MusicBeatUIState;
+
+class DialogueCharacterEditorState extends MusicBeatUIState
 {
+	#if !RELESE_BUILD_FR
 	var box:FlxSprite;
 	var daText:TypedAlphabet = null;
 
@@ -655,7 +658,7 @@ class DialogueCharacterEditorState extends MusicBeatState
 			}
 
 			if(FlxG.keys.justPressed.ESCAPE) {
-				MusicBeatState.switchState(new states.editors.MasterEditorMenu());
+				MusicBeatUIState.switchState(new states.editors.MasterEditorMenu());
 				FlxG.sound.playMusic(Paths.music('freakyMenu'), 1);
 				transitioning = true;
 			}
@@ -798,4 +801,5 @@ class DialogueCharacterEditorState extends MusicBeatState
 		var text:String = prefix + Clipboard.text.replace('\n', '');
 		return text;
 	}
+	#end
 }

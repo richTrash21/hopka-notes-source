@@ -1,18 +1,15 @@
 package shaders;
 
-import openfl.display.ShaderParameter;
-
 typedef BlendModeShader =
 {
-	var uBlendColor:ShaderParameter<Float>;
+	var uBlendColor:openfl.display.ShaderParameter<Float>;
 }
 
 class BlendModeEffect
 {
 	public var shader(default, null):BlendModeShader;
 
-	@:isVar
-	public var color(default, set):FlxColor;
+	@:isVar public var color(default, set):FlxColor;
 
 	public function new(shader:BlendModeShader, color:FlxColor):Void
 	{

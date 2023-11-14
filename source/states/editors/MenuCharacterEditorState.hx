@@ -18,8 +18,11 @@ import sys.io.File;
 import objects.ui.UIInputTextAdvanced;
 import objects.MenuCharacter;
 
-class MenuCharacterEditorState extends MusicBeatState
+import backend.MusicBeatUIState;
+
+class MenuCharacterEditorState extends MusicBeatUIState
 {
+	#if !RELESE_BUILD_FR
 	var grpWeekCharacters:FlxTypedGroup<MenuCharacter>;
 	var characterFile:MenuCharacterFile = null;
 	var txtOffsets:FlxText;
@@ -257,7 +260,7 @@ class MenuCharacterEditorState extends MusicBeatState
 		if(!blockInput) {
 			ClientPrefs.toggleVolumeKeys(true);
 			if(FlxG.keys.justPressed.ESCAPE) {
-				MusicBeatState.switchState(new states.editors.MasterEditorMenu());
+				MusicBeatUIState.switchState(new states.editors.MasterEditorMenu());
 				FlxG.sound.playMusic(Paths.music('freakyMenu'));
 			}
 
@@ -417,4 +420,5 @@ class MenuCharacterEditorState extends MusicBeatState
 		_file = null;
 		FlxG.log.error("Problem saving file");
 	}
+	#end
 }

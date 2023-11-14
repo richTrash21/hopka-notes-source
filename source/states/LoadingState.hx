@@ -137,6 +137,9 @@ class LoadingState extends MusicBeatState
 	
 	inline static public function loadAndSwitchState(target:FlxState, stopMusic = false)
 		MusicBeatState.switchState(getNextState(target, stopMusic));
+
+	inline static public function loadAndSwitchStateFromEditor(target:FlxState, stopMusic = false)
+		backend.MusicBeatUIState.switchState(getNextState(target, stopMusic));
 	
 	static function getNextState(target:FlxState, stopMusic = false):FlxState
 	{

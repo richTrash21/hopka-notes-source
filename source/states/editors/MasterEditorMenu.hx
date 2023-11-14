@@ -9,6 +9,7 @@ import states.FreeplayState;
 
 class MasterEditorMenu extends MusicBeatState
 {
+	#if !RELESE_BUILD_FR
 	var options:Array<String> = [
 		'Chart Editor',
 		'Character Editor',
@@ -143,5 +144,6 @@ class MasterEditorMenu extends MusicBeatState
 		}
 		directoryTxt.text = directoryTxt.text.toUpperCase();
 	}
+	#end
 	#end
 }

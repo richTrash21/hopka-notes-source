@@ -1,7 +1,5 @@
 package shaders;
 
-import flixel.system.FlxAssets.FlxShader;
-
 class RGBPalette {
 	public var shader(default, null):RGBPaletteShader = new RGBPaletteShader();
 	public var r(default, set):FlxColor;
@@ -115,7 +113,7 @@ class RGBShaderReference
 	}
 }
 
-class RGBPaletteShader extends FlxShader {
+class RGBPaletteShader extends flixel.system.FlxAssets.FlxShader {
 	@:glFragmentHeader('
 		#pragma header
 		
@@ -153,8 +151,5 @@ class RGBPaletteShader extends FlxShader {
 			gl_FragColor = flixel_texture2DCustom(bitmap, openfl_TextureCoordv);
 		}')
 
-	public function new()
-	{
-		super();
-	}
+	public function new() { super(); }
 }

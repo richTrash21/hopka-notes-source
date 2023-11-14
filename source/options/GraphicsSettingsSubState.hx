@@ -25,10 +25,8 @@ class GraphicsSettingsSubState extends BaseOptionsMenu
 			'If unchecked, disables anti-aliasing, increases performance\nat the cost of sharper visuals.',
 			'antialiasing',
 			'bool');
-		option.onChange = function() //Changing onChange is only needed if you want to make a special interaction after it changes the value
-			for (sprite in members)
-				if(sprite is FlxSprite && sprite != null)
-					cast(sprite, FlxSprite).antialiasing = ClientPrefs.data.antialiasing;
+		//Changing onChange is only needed if you want to make a special interaction after it changes the value
+		option.onChange = function() forEachOfType(FlxSprite, function(sprite:FlxSprite) sprite.antialiasing = ClientPrefs.data.antialiasing, true);
 		addOption(option);
 		antialiasingOption = optionsArray.length-1;
 

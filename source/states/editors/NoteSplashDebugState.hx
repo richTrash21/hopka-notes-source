@@ -6,8 +6,11 @@ import objects.NoteSplash;
 import flixel.addons.ui.FlxInputText;
 import flixel.addons.ui.FlxUINumericStepper;
 
-class NoteSplashDebugState extends MusicBeatState
+import backend.MusicBeatUIState;
+
+class NoteSplashDebugState extends MusicBeatUIState
 {
+	#if !RELESE_BUILD_FR
 	var config:NoteSplashConfig;
 	var forceFrame:Int = -1;
 	var curSelected:Int = 0;
@@ -136,7 +139,7 @@ class NoteSplashDebugState extends MusicBeatState
 		var notTyping:Bool = !nameInputText.hasFocus;
 		if(controls.BACK && notTyping)
 		{
-			MusicBeatState.switchState(new MasterEditorMenu());
+			MusicBeatUIState.switchState(new MasterEditorMenu());
 			FlxG.sound.playMusic(Paths.music('freakyMenu'));
 			FlxG.mouse.visible = false;
 		}
@@ -408,4 +411,5 @@ class NoteSplashDebugState extends MusicBeatState
 		spr.animation.addByPrefix(name, anim, framerate, loop);
 		return spr.animation.getByName(name) != null;
 	}
+	#end
 }

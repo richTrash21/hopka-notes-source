@@ -1,7 +1,7 @@
 package objects;
 
 import shaders.RGBPalette;
-import flixel.system.FlxAssets.FlxShader;
+import shaders.PixelSplashShader.PixelSplashShaderRef;
 
 typedef NoteSplashConfig = {
 	anim:String,
@@ -22,7 +22,10 @@ class NoteSplash extends FlxSprite
 	public function new(x:Float = 0, y:Float = 0) {
 		super(x, y);
 
-		var skin:String = (PlayState.SONG.splashSkin != null && PlayState.SONG.splashSkin.length > 0) ? PlayState.SONG.splashSkin : defaultNoteSplash + getSplashSkinPostfix();
+		final songSkin = PlayState.SONG.splashSkin;
+		final skin:String = (#if (haxe > "4.2.5") songSkin?.length #else songSkin != null && songSkin.length #end > 0)
+			? songSkin
+			: defaultNoteSplash + getSplashSkinPostfix();
 		
 		rgbShader = new PixelSplashShaderRef();
 		shader = rgbShader.shader;
@@ -43,8 +46,11 @@ class NoteSplash extends FlxSprite
 		aliveTime = 0;
 
 		var texture:String = null;
-		if(note != null && note.noteSplashData.texture != null) texture = note.noteSplashData.texture;
-		else if(PlayState.SONG.splashSkin != null && PlayState.SONG.splashSkin.length > 0) texture = PlayState.SONG.splashSkin;
+		final songSkin = PlayState.SONG.splashSkin;
+		if(#if (haxe > "4.2.5") note?.noteSplashData.texture #else note != null && note.noteSplashData.texture #end != null)
+			texture = note.noteSplashData.texture;
+		else if(#if (haxe > "4.2.5") songSkin?.length #else songSkin != null && songSkin.length #end > 0)
+			texture = songSkin;
 		else texture = defaultNoteSplash + getSplashSkinPostfix();
 		
 		var config:NoteSplashConfig = _textureLoaded != texture ? loadAnims(texture) : precacheConfig(_configLoaded);
@@ -53,9 +59,8 @@ class NoteSplash extends FlxSprite
 		if((note == null || note.noteSplashData.useRGBShader) && (PlayState.SONG == null || !PlayState.SONG.disableNoteRGB))
 		{
 			// If Note RGB is enabled:
-			if(note != null && !note.noteSplashData.useGlobalShader)
+			if(#if (haxe > "4.2.5") !note?.noteSplashData.useGlobalShader #else note != null && !note.noteSplashData.useGlobalShader #end)
 			{
-				
 				if(note.noteSplashData.r != -1) note.rgbShader.r = note.noteSplashData.r;
 				if(note.noteSplashData.g != -1) note.rgbShader.g = note.noteSplashData.g;
 				if(note.noteSplashData.b != -1) note.rgbShader.b = note.noteSplashData.b;
@@ -64,7 +69,7 @@ class NoteSplash extends FlxSprite
 			else tempShader = Note.globalRgbShaders[direction];
 		}
 
-		alpha = note != null ? note.noteSplashData.a : ClientPrefs.data.splashAlpha;
+		alpha = #if (haxe > "4.2.5") note?.noteSplashData.a ?? #else note != null ? note.noteSplashData.a : #end ClientPrefs.data.splashAlpha;
 		rgbShader.copyValues(tempShader);
 
 		if(note != null) antialiasing = note.noteSplashData.antialiasing;
@@ -163,84 +168,10 @@ class NoteSplash extends FlxSprite
 	}
 
 	static var aliveTime:Float = 0;
-	inline static var buggedKillTime:Float = 0.5; //automatically kills note splashes if they break to prevent it from flooding your HUD
+	static final buggedKillTime:Float = 0.5; //automatically kills note splashes if they break to prevent it from flooding your HUD
 	override function update(elapsed:Float) {
 		aliveTime += elapsed;
 		if(alive && aliveTime >= buggedKillTime) kill();
 		super.update(elapsed);
 	}
-}
-
-class PixelSplashShaderRef {
-	public var shader:PixelSplashShader = new PixelSplashShader();
-
-	public function copyValues(tempShader:RGBPalette)
-	{
-		if(tempShader != null)
-		{
-			for (i in 0...3)
-			{
-				shader.r.value[i] = tempShader.shader.r.value[i];
-				shader.g.value[i] = tempShader.shader.g.value[i];
-				shader.b.value[i] = tempShader.shader.b.value[i];
-			}
-			shader.mult.value[0] = tempShader.shader.mult.value[0];
-		}
-		else shader.mult.value[0] = 0.0;
-	}
-
-	public function new()
-	{
-		shader.r.value = [0, 0, 0];
-		shader.g.value = [0, 0, 0];
-		shader.b.value = [0, 0, 0];
-		shader.mult.value = [1];
-
-		var pixel:Float = PlayState.isPixelStage ? PlayState.daPixelZoom : 1;
-		shader.uBlocksize.value = [pixel, pixel];
-	}
-}
-
-class PixelSplashShader extends FlxShader
-{
-	@:glFragmentHeader('
-		#pragma header
-		
-		uniform vec3 r;
-		uniform vec3 g;
-		uniform vec3 b;
-		uniform float mult;
-		uniform vec2 uBlocksize;
-
-		vec4 flixel_texture2DCustom(sampler2D bitmap, vec2 coord) {
-			vec2 blocks = openfl_TextureSize / uBlocksize;
-			vec4 color = flixel_texture2D(bitmap, floor(coord * blocks) / blocks);
-			if (!hasTransform) {
-				return color;
-			}
-
-			if(color.a == 0.0 || mult == 0.0) {
-				return color * openfl_Alphav;
-			}
-
-			vec4 newColor = color;
-			newColor.rgb = min(color.r * r + color.g * g + color.b * b, vec3(1.0));
-			newColor.a = color.a;
-			
-			color = mix(color, newColor, mult);
-			
-			if(color.a > 0.0) {
-				return vec4(color.rgb, color.a);
-			}
-			return vec4(0.0, 0.0, 0.0, 0.0);
-		}')
-
-	@:glFragmentSource('
-		#pragma header
-
-		void main() {
-			gl_FragColor = flixel_texture2DCustom(bitmap, openfl_TextureCoordv);
-		}')
-
-	public function new() { super(); }
 }

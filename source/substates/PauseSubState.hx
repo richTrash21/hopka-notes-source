@@ -270,17 +270,9 @@ class PauseSubState extends MusicBeatSubstate
 
 	function fadeAndClose()
 	{
-		var needToClose:Bool = true; // so close() gets called once
-		forEach(function(obj:flixel.FlxBasic)
-			if (obj is FlxSprite && obj != null)
-				FlxTween.tween(obj, {alpha: 0}, 0.1, {onComplete: function(t:FlxTween)
-					if(needToClose)
-					{
-						needToClose = false;
-						close();
-					}
-				}));
-		pauseMusic.fadeOut(0.1);
+		forEachOfType(FlxSprite, function(obj:FlxSprite)
+			FlxTween.tween(obj, {alpha: 0}, 0.1, {ease: FlxEase.quartInOut}), true);
+		pauseMusic.fadeOut(0.1, 0, function(_) close());
 	}
 
 	function deleteSkipTimeText()

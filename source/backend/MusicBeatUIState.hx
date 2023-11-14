@@ -4,11 +4,16 @@ import flixel.addons.transition.FlxTransitionableState;
 import flixel.util.FlxStringUtil;
 import flixel.FlxState;
 
-class MusicBeatState extends FlxTransitionableState
+import backend.MusicBeatState;
+
+/**
+	An exact copy of MusicBeatState, but extending FlxUIState (whitch was originaly a MusicBeatState thing lmao)
+ **/
+class MusicBeatUIState extends flixel.addons.ui.FlxUIState
 {
 	// TRANS RIGHTS!!!!
-	public static final transTime:Float = 0.45; // uniform transition time
-	public static final substatesToTrans:Array<String> = ['PauseSubState', 'CustomSubstate']; // substates that transition can land onto
+	static final transTime:Float = MusicBeatState.transTime; // uniform transition time
+	static final substatesToTrans:Array<String> = MusicBeatState.substatesToTrans; // substates that transition can land onto
 
 	private var curSection:Int = 0;
 	private var stepsToDo:Int = 0;
@@ -42,16 +47,9 @@ class MusicBeatState extends FlxTransitionableState
 		updateCurStep();
 		updateBeat();
 
-		if (oldStep != curStep)
-		{
-			if(curStep > 0) stepHit();
-			if(PlayState.SONG != null)
-				(oldStep < curStep) ? updateSection() : rollbackSection();
-		}
+		if (oldStep != curStep && curStep > 0) stepHit();
 
 		if(FlxG.save.data != null) FlxG.save.data.fullscreen = FlxG.fullscreen;
-		
-		stagesFunc(function(stage:BaseStage) stage.update(elapsed));
 
 		super.update(elapsed);
 	}
@@ -75,16 +73,6 @@ class MusicBeatState extends FlxTransitionableState
 		var lastSection:Int = curSection;
 		curSection = 0;
 		stepsToDo = 0;
-		for (i in 0...PlayState.SONG.notes.length)
-		{
-			if (PlayState.SONG.notes[i] != null)
-			{
-				stepsToDo += Math.round(getBeatsOnSection() * 4);
-				if(stepsToDo > curStep) break;
-				
-				curSection++;
-			}
-		}
 
 		if(curSection > lastSection) sectionHit();
 	}
@@ -132,8 +120,8 @@ class MusicBeatState extends FlxTransitionableState
 		CustomFadeTransition.finishCallback = function() nextState == FlxG.state ? FlxG.resetState() : FlxG.switchState(nextState);
 	}
 
-	public static function getState():MusicBeatState
-		return cast (FlxG.state, MusicBeatState);
+	public static function getState():MusicBeatUIState
+		return cast (FlxG.state, MusicBeatUIState);
 
 	public static function getSubState():MusicBeatSubstate
 		return cast (FlxG.state.subState, MusicBeatSubstate);
@@ -143,45 +131,13 @@ class MusicBeatState extends FlxTransitionableState
 			? getSubState()
 			: getState();
 
-	public function stepHit():Void
-	{
-		stagesFunc(function(stage:BaseStage) {
-			stage.curStep = curStep;
-			stage.curDecStep = curDecStep;
-			stage.stepHit();
-		});
-
-		if (curStep % 4 == 0) beatHit();
-	}
-
-	public var stages:Array<BaseStage> = [];
-	public function beatHit():Void
-	{
-		stagesFunc(function(stage:BaseStage) {
-			stage.curBeat = curBeat;
-			stage.curDecBeat = curDecBeat;
-			stage.beatHit();
-		});
-	}
-
-	public function sectionHit():Void
-	{
-		stagesFunc(function(stage:BaseStage) {
-			stage.curSection = curSection;
-			stage.sectionHit();
-		});
-	}
-
-	function stagesFunc(func:BaseStage->Void)
-	{
-		for (stage in stages)
-			if(stage != null && stage.exists && stage.active)
-				func(stage);
-	}
+	public function stepHit():Void { if (curStep % 4 == 0) beatHit(); }
+	public function beatHit():Void {}
+	public function sectionHit():Void {}
 
 	function getBeatsOnSection()
 	{
-		var val:Null<Float> = (PlayState.SONG != null && PlayState.SONG.notes[curSection] != null) ? PlayState.SONG.notes[curSection].sectionBeats : 4;
+		var val:Null<Float> = 4;
 		return val == null ? 4 : val;
 	}
 }

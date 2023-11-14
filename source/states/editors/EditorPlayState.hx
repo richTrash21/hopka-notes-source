@@ -13,6 +13,7 @@ import openfl.events.KeyboardEvent;
 
 class EditorPlayState extends MusicBeatSubstate
 {
+	#if !RELESE_BUILD_FR
 	// Borrowed from original PlayState
 	var finishTimer:FlxTimer = null;
 	var noteKillOffset:Float = 350;
@@ -809,4 +810,5 @@ class EditorPlayState extends MusicBeatSubstate
 		}
 		else if (songMisses < 10) ratingFC = 'SDCB';
 	}
+	#end
 }

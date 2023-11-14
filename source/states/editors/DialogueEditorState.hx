@@ -21,8 +21,11 @@ import objects.ui.UIInputTextAdvanced;
 import cutscenes.DialogueBoxPsych;
 import cutscenes.DialogueCharacter;
 
-class DialogueEditorState extends MusicBeatState
+import backend.MusicBeatUIState;
+
+class DialogueEditorState extends MusicBeatUIState
 {
+	#if !RELESE_BUILD_FR
 	var character:DialogueCharacter;
 	var box:FlxSprite;
 	var daText:TypedAlphabet;
@@ -337,7 +340,7 @@ class DialogueEditorState extends MusicBeatState
 				reloadText(false);
 			}
 			if(FlxG.keys.justPressed.ESCAPE) {
-				MusicBeatState.switchState(new states.editors.MasterEditorMenu());
+				MusicBeatUIState.switchState(new states.editors.MasterEditorMenu());
 				FlxG.sound.playMusic(Paths.music('freakyMenu'), 1);
 				transitioning = true;
 			}
@@ -541,4 +544,5 @@ class DialogueEditorState extends MusicBeatState
 		_file = null;
 		FlxG.log.error("Problem saving file");
 	}
+	#end
 }

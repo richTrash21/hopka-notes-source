@@ -9,6 +9,8 @@ import openfl.events.Event;
 
 import lime.app.Application;
 
+import flixel.FlxGame;
+
 //crash handler stuff
 #if CRASH_HANDLER
 import openfl.events.UncaughtErrorEvent;
@@ -94,8 +96,9 @@ class Main extends Sprite
 
 		Controls.instance = new Controls();
 		ClientPrefs.loadDefaultKeys();
-		addChild(new flixel.FlxGame(game.width, game.height, game.initialState, #if (flixel < "5.0.0") game.zoom, #end
-			game.framerate, game.framerate, game.skipSplash, game.startFullscreen));
+		var _game:FlxGame = new FlxGame(game.width, game.height, game.initialState, #if (flixel < "5.0.0") game.zoom, #end
+										game.framerate, game.framerate, game.skipSplash, game.startFullscreen);
+		addChild(_game);
 
 		#if !mobile
 		fpsVar = new FPSCounter(10, 3, 0xFFFFFF);
