@@ -3,6 +3,7 @@ package objects.ui;
 import lime.system.Clipboard;
 
 import flixel.addons.ui.FlxInputText;
+import flixel.math.FlxPoint;
 
 class InputTextAdvanced extends FlxInputText
 {
@@ -14,7 +15,70 @@ class InputTextAdvanced extends FlxInputText
 	public static inline var COPY_ACTION:String		 = "copy"; // text copy
 	public static inline var CUT_ACTION:String		 = "cut"; // text copy
 
-	override function onKeyDown(e:flash.events.KeyboardEvent)
+	override function update(elapsed:Float)
+	{
+		//super.update(elapsed);
+		FlxSpriteUpdate(elapsed);
+
+		#if FLX_MOUSE
+		// Set focus and caretIndex as a response to mouse press
+		if (FlxG.mouse.justPressed)
+		{
+			var hadFocus:Bool = hasFocus;
+			if (mouseOverlapping())
+			{
+				caretIndex = getCaretIndex();
+				hasFocus = true;
+				if (!hadFocus && focusGained != null)
+					focusGained();
+			}
+			else
+			{
+				hasFocus = false;
+				if (hadFocus && focusLost != null)
+					focusLost();
+			}
+		}
+		#end
+	}
+
+	function mouseOverlapping()
+	{
+		var mousePoint:FlxPoint = FlxG.mouse.getScreenPosition(camera);
+		var objPoint:FlxPoint = this.getScreenPosition(null, camera);
+		var ret:Bool = FlxMath.pointInCoordinates(mousePoint.x, mousePoint.y, objPoint.x, objPoint.y, this.width, this.height);
+		mousePoint.put();
+		objPoint.put();
+		return ret;
+	}
+
+	// added these to skip super.update() since it will fuck everything up
+	private function FlxSpriteUpdate(elapsed:Float)
+	{
+		FlxObjectUpdate(elapsed);
+		updateAnimation(elapsed);
+	}
+
+	private function FlxObjectUpdate(elapsed:Float)
+	{
+		#if FLX_DEBUG
+		// this just increments FlxBasic.activeCount, no need to waste a function call on release
+		@:privateAccess flixel.FlxBasic.activeCount++;
+		#end
+
+		last.set(x, y);
+
+		if (path != null && path.active)
+			path.update(elapsed);
+
+		if (moves)
+			updateMotion(elapsed);
+
+		wasTouching = touching;
+		touching = flixel.util.FlxDirectionFlags.NONE;
+	}
+
+	override private function onKeyDown(e:flash.events.KeyboardEvent)
 	{
 		if (hasFocus)
 		{

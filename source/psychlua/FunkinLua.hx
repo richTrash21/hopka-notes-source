@@ -36,11 +36,11 @@ import psychlua.HScript;
 import psychlua.ModchartSprite;
 
 class FunkinLua {
-	public static var Function_Stop(default, never):Dynamic = "##PSYCHLUA_FUNCTIONSTOP";
-	public static var Function_Continue(default, never):Dynamic = "##PSYCHLUA_FUNCTIONCONTINUE";
-	public static var Function_StopLua(default, never):Dynamic = "##PSYCHLUA_FUNCTIONSTOPLUA";
-	public static var Function_StopHScript(default, never):Dynamic = "##PSYCHLUA_FUNCTIONSTOPHSCRIPT";
-	public static var Function_StopAll(default, never):Dynamic = "##PSYCHLUA_FUNCTIONSTOPALL";
+	public static final Function_Stop:Dynamic = "##PSYCHLUA_FUNCTIONSTOP";
+	public static final Function_Continue:Dynamic = "##PSYCHLUA_FUNCTIONCONTINUE";
+	public static final Function_StopLua:Dynamic = "##PSYCHLUA_FUNCTIONSTOPLUA";
+	public static final Function_StopHScript:Dynamic = "##PSYCHLUA_FUNCTIONSTOPHSCRIPT";
+	public static final Function_StopAll:Dynamic = "##PSYCHLUA_FUNCTIONSTOPALL";
 
 	#if LUA_ALLOWED
 	public var lua:State = null;

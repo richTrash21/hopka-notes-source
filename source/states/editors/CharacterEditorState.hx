@@ -90,7 +90,7 @@ class CharacterEditorState extends backend.MusicBeatUIState
 		add(bg);
 
 		stageFront = new BGSprite('stagefront', -650 + OFFSET_X, 500);
-		stageFront.setGraphicSize(Std.int(stageFront.width * 1.1));
+		stageFront.setGraphicSize(Math.floor(stageFront.width * 1.1));
 		stageFront.updateHitbox();
 		add(stageFront);
 		Paths.setCurrentLevel(prevLevel);
@@ -122,8 +122,8 @@ class CharacterEditorState extends backend.MusicBeatUIState
 		mouseManager.add(leHealthIcon, function(icon:HealthIcon) {
 			var anim = icon.animation.curAnim;
 			anim.curFrame = FlxMath.wrap(anim.curFrame + 1, 0, anim.numFrames-1);
-			icon.scale.set(0.975, 0.975);
-		}, function(icon:HealthIcon) icon.scale.set(1, 1));
+			icon.scale.set(0.975 * icon.baseScale, 0.975 * icon.baseScale);
+		}, function(icon:HealthIcon) icon.scale.set(icon.baseScale, icon.baseScale));
 		add(mouseManager);
 		//mouseManager.cameras = [camHUD];
 
@@ -633,9 +633,9 @@ class CharacterEditorState extends backend.MusicBeatUIState
 			{
 				reloadCharacterImage();
 				char.jsonScale = sender.value;
-				char.setGraphicSize(Std.int(char.width * char.jsonScale));
+				char.setGraphicSize(Math.floor(char.width * char.jsonScale));
 				char.updateHitbox();
-				ghostChar.setGraphicSize(Std.int(ghostChar.width * char.jsonScale));
+				ghostChar.setGraphicSize(Math.floor(ghostChar.width * char.jsonScale));
 				ghostChar.updateHitbox();
 				reloadGhost();
 				updatePointerPos();
@@ -925,65 +925,47 @@ class CharacterEditorState extends backend.MusicBeatUIState
 				FlxG.camera.zoom = 1;
 			}
 
-			// camera control
-			final _I:Bool = FlxG.keys.pressed.I;
-			final _J:Bool = FlxG.keys.pressed.J;
-			final _K:Bool = FlxG.keys.pressed.K;
-			final _L:Bool = FlxG.keys.pressed.L;
-
-			// camera zoom control
-			final _E:Bool = FlxG.keys.pressed.E;
-			final _Q:Bool = FlxG.keys.pressed.Q;
-
-			// animation scrolling
-			final _W:Bool = FlxG.keys.justPressed.W;
-			final _S:Bool = FlxG.keys.justPressed.S;
-
-			// frame scrolling
-			final _Z:Bool = FlxG.keys.justPressed.Z;
-			final _X:Bool = FlxG.keys.justPressed.X;
-			final _SHIFT:Bool = FlxG.keys.pressed.SHIFT; // etc
-
-			if (_E || _Q)
+			if (FlxG.keys.pressed.E || FlxG.keys.pressed.Q)
 			{
 				var add:Float = FlxG.camera.zoom;
-				if(_E)		add *= elapsed;
-				else if(_Q)	add *= -elapsed;
+					 if	 (FlxG.keys.pressed.E)	add *= elapsed;
+				else if	 (FlxG.keys.pressed.Q)	add *= -elapsed;
 				FlxG.camera.zoom = FlxMath.bound(FlxG.camera.zoom + add, 0.1, 3);
 			}
 
-			if (_I || _J || _K || _L)
+			if (FlxG.keys.pressed.I || FlxG.keys.pressed.J || FlxG.keys.pressed.K || FlxG.keys.pressed.L)
 			{
 				var addToCam:Float = 500 * elapsed;
-				if (_SHIFT) addToCam *= 4;
+				if (FlxG.keys.justPressed.SHIFT) addToCam *= 4;
 
-				if (_I)			camFollow.y -= addToCam;
-				else if (_K)	camFollow.y += addToCam;
-				if (_J)			camFollow.x -= addToCam;
-				else if (_L)	camFollow.x += addToCam;
+					 if	 (FlxG.keys.pressed.I)	camFollow.y -= addToCam;
+				else if	 (FlxG.keys.pressed.K)	camFollow.y += addToCam;
+					 if	 (FlxG.keys.pressed.J)	camFollow.x -= addToCam;
+				else if	 (FlxG.keys.pressed.L)	camFollow.x += addToCam;
 			}
 
-			final _curAnim = char.animation.curAnim;
-			final _curAnimGHOST = ghostChar.animation.curAnim;
-			if ((_Z || _X) && _curAnim != null) // like in flash!!! :D
+			final _animName = char.animationsArray[curAnim].anim;
+			final _curAnim = char.animation.getByName(_animName);
+			final _curAnimGHOST = char.animation.getByName(_animName);
+			if ((FlxG.keys.justPressed.Z || FlxG.keys.justPressed.X) && _curAnim != null) // like in flash!!! :D
 			{
-				_curAnim.stop();
+				if (!_curAnim.paused) _curAnim.pause();
 				var add:Int = 0;
-				if(_Z)		add--;
-				else if(_X)	add++;
+					 if	 (FlxG.keys.justPressed.Z)	add--;
+				else if	 (FlxG.keys.justPressed.X)	add++;
 				_curAnim.curFrame = Std.int(FlxMath.bound(_curAnim.curFrame + add, 0, _curAnim.numFrames-1));
-				if(#if (haxe > "4.2.5") _curAnimGHOST?.name #else _curAnimGHOST != null && _curAnimGHOST.name #end == _curAnim.name)
+				if(ghostChar.visible && #if (haxe > "4.2.5") _curAnimGHOST?.name #else _curAnimGHOST != null && _curAnimGHOST.name #end == _curAnim.name)
 					_curAnimGHOST.curFrame = _curAnim.curFrame;
 			}
 
 			if(char.animationsArray.length > 0) {
-				if (_W) curAnim--;
-				if (_S) curAnim++;
+				if (FlxG.keys.justPressed.W) curAnim--;
+				if (FlxG.keys.justPressed.S) curAnim++;
 
 				if (curAnim < 0) curAnim = char.animationsArray.length - 1;
 				if (curAnim >= char.animationsArray.length) curAnim = 0;
 
-				if (_S || _W || FlxG.keys.justPressed.SPACE)
+				if (FlxG.keys.justPressed.S || FlxG.keys.justPressed.W || FlxG.keys.justPressed.SPACE)
 				{
 					char.playAnim(char.animationsArray[curAnim].anim, true);
 					genBoyOffsets();
@@ -1001,7 +983,7 @@ class CharacterEditorState extends backend.MusicBeatUIState
 
 				for (i in 0...controlArray.length) {
 					if(controlArray[i]) {
-						var multiplier = _SHIFT ? 10 : 1;
+						var multiplier = FlxG.keys.justPressed.SHIFT ? 10 : 1;
 						var arrayVal = i > 1 ? 1 : 0;
 						var negaMult:Int = i % 2 == 1 ? -1 : 1;
 						char.animationsArray[curAnim].offsets[arrayVal] += negaMult * multiplier;
@@ -1010,7 +992,8 @@ class CharacterEditorState extends backend.MusicBeatUIState
 						ghostChar.addOffset(char.animationsArray[curAnim].anim, char.animationsArray[curAnim].offsets[0], char.animationsArray[curAnim].offsets[1]);
 
 						char.playAnim(char.animationsArray[curAnim].anim, false);
-						if(_curAnimGHOST != null && _curAnim != null && _curAnim.name == _curAnimGHOST.name)
+						if(#if (haxe > "4.2.5") _curAnim?.name == _curAnimGHOST?.name
+							#else _curAnimGHOST != null && _curAnim != null && _curAnim.name == _curAnimGHOST.name #end)
 							ghostChar.playAnim(_curAnim.name, false);
 						genBoyOffsets();
 					}

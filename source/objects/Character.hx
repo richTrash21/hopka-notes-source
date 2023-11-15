@@ -79,7 +79,7 @@ class Character extends FlxSprite
 		curCharacter = character;
 		this.isPlayer = isPlayer;
 
-		var characterPath:String = 'characters/' + curCharacter + '.json';
+		var characterPath:String = 'characters/$curCharacter.json';
 		#if MODS_ALLOWED
 		var path:String = Paths.modFolders(characterPath);
 		if(!FileSystem.exists(path)) path = Paths.getPreloadPath(characterPath);
@@ -89,13 +89,9 @@ class Character extends FlxSprite
 		var path:String = Paths.getPreloadPath(characterPath);
 		if(!Assets.exists(path))
 		#end
-			path = Paths.getPreloadPath('characters/' + DEFAULT_CHARACTER + '.json'); //If a character couldn't be found, change him to BF just to prevent a crash
+			path = Paths.getPreloadPath('characters/$DEFAULT_CHARACTER.json'); //If a character couldn't be found, change him to BF just to prevent a crash
 
-		#if MODS_ALLOWED
-		var rawJson = sys.io.File.getContent(path);
-		#else
-		var rawJson = Assets.getText(path);
-		#end
+		var rawJson = #if MODS_ALLOWED sys.io.File.getContent(path) #else Assets.getText(path) #end;
 
 		var json:CharacterFile = cast haxe.Json.parse(rawJson);
 		var useAtlas:Bool = false;
@@ -111,9 +107,10 @@ class Character extends FlxSprite
 		frames = !useAtlas ? Paths.getAtlas(json.image) : animateatlas.AtlasFrameMaker.construct(json.image);
 
 		imageFile = json.image;
-		if(json.scale != 1) {
+		if(json.scale != 1)
+		{
 			jsonScale = json.scale;
-			setGraphicSize(Std.int(width * jsonScale));
+			setGraphicSize(Math.floor(width * jsonScale));
 			updateHitbox();
 		}
 

@@ -1146,8 +1146,8 @@ class PlayState extends MusicBeatState
 		for (char in charList)
 			if (char != null)
 			{
-				var calc:Int = reference % (char == gf ? Math.round(gfSpeed * char.danceEveryNumBeats) : char.danceEveryNumBeats);
-				if (calc == 0 && #if (haxe > "4.2.5") !char.animation.curAnim?.name.startsWith("sing")
+				var doDance:Bool = reference % (char == gf ? Math.round(gfSpeed * char.danceEveryNumBeats) : char.danceEveryNumBeats) == 0;
+				if (doDance && #if (haxe > "4.2.5") !char.animation.curAnim?.name.startsWith("sing")
 					#else char.animation.curAnim != null && char.animation.curAnim.name.startsWith("sing") #end && !char.stunned)
 					char.dance(force);
 			}
@@ -1219,7 +1219,7 @@ class PlayState extends MusicBeatState
 			vocals.pause();
 			vocals.time = time;
 			//#if FLX_PITCH vocals.pitch = playbackRate; #end
-			vocals.play();
+			if (!startingSong) vocals.play();
 		}
 		Conductor.songPosition = time;
 	}
@@ -1621,7 +1621,8 @@ class PlayState extends MusicBeatState
 		callOnScripts('onUpdate', [elapsed]);
 
 		//FlxG.camera.followLerp = 0;
-		if(!inCutscene && !paused) {
+		if(!inCutscene && !paused)
+		{
 			/**
 			 *	--[ idk, just wanted to write smth out of my frustration atm - `richTrash21` ]--
 			 *
@@ -1652,19 +1653,22 @@ class PlayState extends MusicBeatState
 		setOnScripts('curDecStep', curDecStep);
 		setOnScripts('curDecBeat', curDecBeat);
 
-		if(#if (haxe > "4.2.5") botplayTxt?.visible #else botplayTxt != null && botplayTxt.visible #end) {
+		if(#if (haxe > "4.2.5") botplayTxt?.visible #else botplayTxt != null && botplayTxt.visible #end)
+		{
 			botplaySine += 180 * elapsed;
 			botplayTxt.alpha = 1 - Math.sin((Math.PI * botplaySine) / 180);
 			//if(showcaseTxt != null) showcaseTxt.alpha = 1 - Math.sin((Math.PI * botplaySine) / 180);
 		}
 
-		if (controls.PAUSE && startedCountdown && canPause) {
+		if (controls.PAUSE && startedCountdown && canPause)
+		{
 			var ret:Dynamic = callOnScripts('onPause', null, true);
 			if (ret != FunkinLua.Function_Stop) openPauseMenu();
 		}
 
 		//idk how it will behave on an older versions sooooo...
 		//UPD: using hxvlc from now on (idfk whats the difference)
+		//UPDD: nvmd back to hxcodec lmao
 		#if (hxCodec >= "3.0.0")
 		if (playingVideo && (controls.PAUSE || controls.ACCEPT)) endVideo();
 		#end
@@ -1675,20 +1679,25 @@ class PlayState extends MusicBeatState
 		if (controls.justPressed('debug_2') && !endingSong && !inCutscene) openCharacterEditor();
 		#end
 
-		var mult:Float = FlxMath.lerp(1, iconP1.scale.x, Math.max(1 - (elapsed * 9 * playbackRate), 0));
+		var mult:Float = FlxMath.lerp(iconP1.baseScale, iconP1.scale.x, Math.max(1 - (9 * elapsed * playbackRate), 0));
 		iconP1.scale.set(mult, mult);
 		iconP1.updateHitbox();
 
-		mult = FlxMath.lerp(1, iconP2.scale.x, Math.max(1 - (elapsed * 9 * playbackRate), 0));
+		mult = FlxMath.lerp(iconP2.baseScale, iconP2.scale.x, Math.max(1 - (9 * elapsed * playbackRate), 0));
 		iconP2.scale.set(mult, mult);
 		iconP2.updateHitbox();
 
-		if(healthBarFlip) {
-			iconP1.x = healthBar.centerPoint.x - (150 * iconP1.scale.x) * 0.5 - 52;
-			iconP2.x = healthBar.centerPoint.x + (150 * iconP2.scale.x - 150) * 0.5 - 26;
-		} else {
-			iconP1.x = healthBar.centerPoint.x + (150 * iconP1.scale.x - 150) * 0.5 - 26;
-			iconP2.x = healthBar.centerPoint.x - (150 * iconP2.scale.x) * 0.5 - 52;
+		var P1_frameWidth = iconP1.frameWidth > iconP1.frameHeight ? iconP1.frameWidth * 0.5 : iconP1.frameWidth;
+		var P2_frameWidth = iconP2.frameWidth > iconP2.frameHeight ? iconP2.frameWidth * 0.5 : iconP2.frameWidth;
+		if (healthBarFlip)
+		{
+			iconP1.x = healthBar.centerPoint.x - (P1_frameWidth * iconP1.scale.x) * 0.5 - 52;
+			iconP2.x = healthBar.centerPoint.x + (P2_frameWidth * iconP2.scale.x - P2_frameWidth * iconP2.baseScale) * 0.5 - 26;
+		}
+		else
+		{
+			iconP1.x = healthBar.centerPoint.x + (P1_frameWidth * iconP1.scale.x - P1_frameWidth * iconP1.baseScale) * 0.5 - 26;
+			iconP2.x = healthBar.centerPoint.x - (P2_frameWidth * iconP2.scale.x) * 0.5 - 52;
 		}
 		
 		if (startedCountdown && !paused) Conductor.songPosition += FlxG.elapsed * 1000 * playbackRate;
@@ -2945,8 +2954,8 @@ class PlayState extends MusicBeatState
 
 		if (generatedMusic) notes.sort(FlxSort.byY, ClientPrefs.data.downScroll ? FlxSort.ASCENDING : FlxSort.DESCENDING);
 
-		iconP1.scale.set(1.2, 1.2);
-		iconP2.scale.set(1.2, 1.2);
+		iconP1.scale.set(1.2 * iconP1.baseScale, 1.2 * iconP1.baseScale);
+		iconP2.scale.set(1.2 * iconP2.baseScale, 1.2 * iconP2.baseScale);
 
 		iconP1.updateHitbox();
 		iconP2.updateHitbox();

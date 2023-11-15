@@ -24,15 +24,10 @@ class Bar extends FlxSpriteGroup
 	public var barHeight(default, set):Int = 1;
 	public var barOffset:FlxPoint = FlxPoint.get(3, 3); // for optimisation purposes
 
-	#if haxe4
 	public var valueFunction:() -> Float;
 	public var updateCallback:(value:Float, percent:Float) -> Void;
-	#else
-	public var valueFunction:Void->Float;
-	public var updateCallback:Float->Float->Void;
-	#end
 
-	public function new(x:Float, y:Float, image:String = 'healthBar', valueFunction:Void->Float = null, boundMin:Float = 0, boundMax:Float = 1)
+	public function new(x:Float, y:Float, image:String = 'healthBar', valueFunction:()->Float = null, boundMin:Float = 0, boundMax:Float = 1)
 	{
 		super(x, y);
 

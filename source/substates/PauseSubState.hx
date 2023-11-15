@@ -193,7 +193,7 @@ class PauseSubState extends MusicBeatSubstate
 			switch (daSelected)
 			{
 				case "Resume":
-					fadeAndClose();
+					exitPause();
 
 				case 'Change Difficulty':
 					menuItems = difficultyChoices;
@@ -225,12 +225,12 @@ class PauseSubState extends MusicBeatSubstate
 							PlayState.instance.clearNotesBefore(curTime);
 							PlayState.instance.setSongTime(curTime);
 						}
-						fadeAndClose();
+						exitPause();
 					}
 
 				case 'End Song':
 					CustomFadeTransition.nextCamera = FlxG.camera;
-					close();
+					exitPause();
 					PlayState.instance.notes.clear();
 					PlayState.instance.unspawnNotes = [];
 					PlayState.instance.finishSong(true);
@@ -268,11 +268,16 @@ class PauseSubState extends MusicBeatSubstate
 		}
 	}
 
-	function fadeAndClose()
+	public var closing:Bool = false;
+	dynamic public function exitPause():Void
 	{
-		forEachOfType(FlxSprite, function(obj:FlxSprite)
-			FlxTween.tween(obj, {alpha: 0}, 0.1, {ease: FlxEase.quartInOut}), true);
-		pauseMusic.fadeOut(0.1, 0, function(_) close());
+		if (!closing) // doesn't need to close the thing twice
+		{
+			forEachOfType(FlxSprite, function(obj:FlxSprite)
+				FlxTween.tween(obj, {alpha: 0}, 0.1, {ease: FlxEase.quartInOut}), true);
+			pauseMusic.fadeOut(0.1, 0, function(_) close());
+			closing = true;
+		}
 	}
 
 	function deleteSkipTimeText()
