@@ -26,7 +26,9 @@ class GraphicsSettingsSubState extends BaseOptionsMenu
 			'antialiasing',
 			'bool');
 		//Changing onChange is only needed if you want to make a special interaction after it changes the value
-		option.onChange = function() forEachOfType(FlxSprite, function(sprite:FlxSprite) sprite.antialiasing = ClientPrefs.data.antialiasing, true);
+		option.onChange = function()
+			for (_leState in [this, _parentState])
+				_leState.forEachOfType(FlxSprite, function(sprite:FlxSprite) sprite.antialiasing = ClientPrefs.data.antialiasing, true);
 		addOption(option);
 		antialiasingOption = optionsArray.length-1;
 
@@ -57,7 +59,8 @@ class GraphicsSettingsSubState extends BaseOptionsMenu
 		option.minValue = 60;
 		option.maxValue = 360;
 		option.displayFormat = '%v FPS';
-		option.onChange = function() {
+		option.onChange = function()
+		{
 			if(ClientPrefs.data.framerate > FlxG.drawFramerate)
 			{
 				FlxG.updateFramerate = ClientPrefs.data.framerate;
@@ -68,7 +71,7 @@ class GraphicsSettingsSubState extends BaseOptionsMenu
 				FlxG.drawFramerate = ClientPrefs.data.framerate;
 				FlxG.updateFramerate = ClientPrefs.data.framerate;
 			}
-		};
+		}
 		addOption(option);
 		#end
 

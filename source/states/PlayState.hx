@@ -101,20 +101,20 @@ class PlayState extends MusicBeatState
 	//event variables
 	private var isCameraOnForcedPos:Bool = false;
 
-	public var boyfriendMap:Map<String, Character> = new Map<String, Character>();
-	public var dadMap:Map<String, Character> = new Map<String, Character>();
-	public var gfMap:Map<String, Character> = new Map<String, Character>();
-	public var variables:Map<String, Dynamic> = new Map<String, Dynamic>();
+	public var boyfriendMap:Map<String, Character> = [];
+	public var dadMap:Map<String, Character> = [];
+	public var gfMap:Map<String, Character> = [];
+	public var variables:Map<String, Dynamic> = [];
 	
 	#if HSCRIPT_ALLOWED public var hscriptArray:Array<HScript> = []; #end
 
 	#if LUA_ALLOWED
-	public var modchartTweens:Map<String, FlxTween> = new Map<String, FlxTween>();
-	public var modchartSprites:Map<String, ModchartSprite> = new Map<String, ModchartSprite>();
-	public var modchartTimers:Map<String, FlxTimer> = new Map<String, FlxTimer>();
-	public var modchartSounds:Map<String, FlxSound> = new Map<String, FlxSound>();
-	public var modchartTexts:Map<String, FlxText> = new Map<String, FlxText>();
-	public var modchartSaves:Map<String, FlxSave> = new Map<String, FlxSave>();
+	public var modchartTweens:Map<String, FlxTween> = [];
+	public var modchartSprites:Map<String, ModchartSprite> = [];
+	public var modchartTimers:Map<String, FlxTimer> = [];
+	public var modchartSounds:Map<String, FlxSound> = [];
+	public var modchartTexts:Map<String, FlxText> = [];
+	public var modchartSaves:Map<String, FlxSave> = [];
 	#end
 
 	public var BF_POS:FlxPoint	= FlxPoint.get(770, 100);
@@ -1247,7 +1247,8 @@ class PlayState extends MusicBeatState
 		if (startOnTime > 0) setSongTime(startOnTime - 500);
 		startOnTime = 0;
 
-		if (paused) {
+		if (paused)
+		{
 			FlxG.sound.music.pause();
 			/*if (SONG.needsVoices)*/ vocals.pause();
 		}
@@ -1293,7 +1294,8 @@ class PlayState extends MusicBeatState
 		curSong = songData.song;
 
 		vocals = new FlxSound();
-		if (songData.needsVoices) {
+		if (songData.needsVoices)
+		{
 			vocals.loadEmbedded(Paths.voices(songData.song));
 			#if FLX_PITCH vocals.pitch = playbackRate; #end
 		}
@@ -1392,7 +1394,8 @@ class PlayState extends MusicBeatState
 	}
 
 	// called only once per different event (Used for precaching)
-	function eventPushed(event:EventNote) {
+	function eventPushed(event:EventNote)
+	{
 		eventPushedUnique(event);
 		if(eventsPushed.contains(event.event)) return;
 
@@ -1401,11 +1404,13 @@ class PlayState extends MusicBeatState
 	}
 
 	// called by every event with the same name
-	function eventPushedUnique(event:EventNote) {
+	function eventPushedUnique(event:EventNote)
+	{
 		switch(event.event) {
 			case "Change Character":
 				var charType:Int = 0;
-				switch(event.value1.toLowerCase()) {
+				switch(event.value1.toLowerCase())
+				{
 					case 'gf' | 'girlfriend' | '1': charType = 2;
 					case 'dad' | 'opponent' | '0':  charType = 1;
 					default:
@@ -1424,12 +1429,14 @@ class PlayState extends MusicBeatState
 		stagesFunc(function(stage:BaseStage) stage.eventPushedUnique(event));
 	}
 
-	function eventEarlyTrigger(event:EventNote):Float {
+	function eventEarlyTrigger(event:EventNote):Float
+	{
 		var ret:Null<Float> = callOnScripts('eventEarlyTrigger', [event.event, event.value1, event.value2, event.strumTime], true, [], [0]);
 		if(ret != null && ret != 0 && ret != FunkinLua.Function_Continue)
 			return ret;
 
-		switch(event.event) {
+		switch(event.event)
+		{
 			case 'Kill Henchmen': //Better timing so that the kill sound matches the beat intended
 				return 280; //Plays 280ms before the actual position
 		}
@@ -1573,7 +1580,8 @@ class PlayState extends MusicBeatState
 		#if desktop
 		if (health >= 0 && !paused) DiscordClient.changePresence(detailsPausedText, SONG.song + " (" + storyDifficultyText + ")", iconP2.char);
 		#end
-		if(!FlxG.autoPause && startedCountdown && canPause && !paused) {
+		if(!FlxG.autoPause && startedCountdown && canPause && !paused)
+		{
 			var ret:Dynamic = callOnScripts('onPause', null, true);
 			if(ret != FunkinLua.Function_Stop) openPauseMenu(); // idk
 		}
@@ -1687,6 +1695,7 @@ class PlayState extends MusicBeatState
 		iconP2.scale.set(mult, mult);
 		iconP2.updateHitbox();
 
+		// frameWidth > frameHeight = icon have two frames
 		var P1_frameWidth = iconP1.frameWidth > iconP1.frameHeight ? iconP1.frameWidth * 0.5 : iconP1.frameWidth;
 		var P2_frameWidth = iconP2.frameWidth > iconP2.frameHeight ? iconP2.frameWidth * 0.5 : iconP2.frameWidth;
 		if (healthBarFlip)
@@ -1803,17 +1812,21 @@ class PlayState extends MusicBeatState
 		}
 
 		#if (debug || !RELESE_BUILD_FR)
-		if(!endingSong && !startingSong) {
-			if (FlxG.keys.justPressed.ONE) {
+		if(!endingSong && !startingSong)
+		{
+			if (FlxG.keys.justPressed.ONE)
+			{
 				KillNotes();
 				FlxG.sound.music.onComplete();
 			}
-			if (FlxG.keys.justPressed.TWO) { //Go 10 seconds into the future :O
+			if (FlxG.keys.justPressed.TWO) //Go 10 seconds into the future :O
+			{
 				setSongTime(Conductor.songPosition + (FlxG.keys.pressed.SHIFT ? 20000 : 10000) * playbackRate);
 				clearNotesBefore(Conductor.songPosition);
 				if(Conductor.songPosition > FlxG.sound.music.length) finishSong();
 			}
-			if ((FlxG.keys.pressed.SHIFT && FlxG.keys.justPressed.B) || FlxG.keys.justPressed.THREE) { // quick botplay for testing shit
+			if ((FlxG.keys.pressed.SHIFT && FlxG.keys.justPressed.B) || FlxG.keys.justPressed.THREE) // quick botplay for testing shit
+			{
 				cpuControlled = !cpuControlled;
 				changedDifficulty = false;
 			}

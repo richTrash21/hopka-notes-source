@@ -151,6 +151,7 @@ class CharacterEditorState extends backend.MusicBeatUIState
 		JKLI - Move Camera
 		W/S - Previous/Next Animation
 		Space - Play Animation
+		Z/X - Previous/Next Animation Frame
 		Arrow Keys - Move Character Offset
 		T - Reset Current Offset
 		Hold Shift to Move 10x faster";
@@ -936,7 +937,7 @@ class CharacterEditorState extends backend.MusicBeatUIState
 			if (FlxG.keys.pressed.I || FlxG.keys.pressed.J || FlxG.keys.pressed.K || FlxG.keys.pressed.L)
 			{
 				var addToCam:Float = 500 * elapsed;
-				if (FlxG.keys.justPressed.SHIFT) addToCam *= 4;
+				if (FlxG.keys.pressed.SHIFT) addToCam *= 4;
 
 					 if	 (FlxG.keys.pressed.I)	camFollow.y -= addToCam;
 				else if	 (FlxG.keys.pressed.K)	camFollow.y += addToCam;
@@ -944,7 +945,8 @@ class CharacterEditorState extends backend.MusicBeatUIState
 				else if	 (FlxG.keys.pressed.L)	camFollow.x += addToCam;
 			}
 
-			final _animName = char.animationsArray[curAnim].anim;
+			final _animName = #if (haxe > "4.2.5") char.animationsArray[curAnim]?.anim
+				#else char.animationsArray[curAnim] != null ? char.animationsArray[curAnim]?.anim : null #end;
 			final _curAnim = char.animation.getByName(_animName);
 			final _curAnimGHOST = char.animation.getByName(_animName);
 			if ((FlxG.keys.justPressed.Z || FlxG.keys.justPressed.X) && _curAnim != null) // like in flash!!! :D

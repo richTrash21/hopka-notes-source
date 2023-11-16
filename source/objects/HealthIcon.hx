@@ -2,7 +2,12 @@ package objects;
 
 import #if MODS_ALLOWED sys.FileSystem #else openfl.utils.Assets #end;
 
-typedef HealthIconConfig = {scale:Float, offset:Array<Float>, antialias:Bool}
+typedef HealthIconConfig = {
+	?scale:Float,
+	?offset:Array<Float>,
+	?antialias:Bool,
+	?flip_x:Bool
+}
 
 class HealthIcon extends FlxSprite
 {
@@ -44,9 +49,7 @@ class HealthIcon extends FlxSprite
 				flip = animation.curAnim.flipX;
 			}
 
-			var name = Paths.fileExists('images/icons/$char.png', IMAGE)
-				? 'icons/$char'
-				: 'icons/icon-$char'; // Older versions of psych engine's support
+			var name = Paths.fileExists('images/icons/$char.png', IMAGE) ? 'icons/$char' : 'icons/icon-$char'; // Older versions of psych engine's support
 			if(!Paths.fileExists('images/$name.png', IMAGE))
 			{
 				name = 'icons/icon-face'; // Prevents crash from missing icon
@@ -63,44 +66,42 @@ class HealthIcon extends FlxSprite
 				animation.add(char, twoFrames ? [0, 1] : [0], 0, false, flip);
 			animation.play(char, false, false, prevFrame);
 			this.char = char;
-			setConfig(char);
+			loadConfig(char);
 		}
 	}
 
-	public static final defaultConfig:HealthIconConfig = {scale: 1, offset: [0, 0], antialias: true}; // for icons that don't have config
-	private var configMap:Map<String, HealthIconConfig> = []; // for recycling of old jsons
+	// for icons that don't have config
+	private static final defaultConfig:HealthIconConfig = {scale: 1, offset: [0, 0], antialias: true, flip_x: false};
 
-	private function setConfig(char:String)
+	private function loadConfig(char:String)
 	{
-		var json:HealthIconConfig = null;
-		if (configMap.exists(char)) json = configMap.get(char);
-		else
+		var json:HealthIconConfig = defaultConfig; // so if json couldn't be found default would be used instead
+		var iconPath:String = 'images/icons/$char.json';
+		#if MODS_ALLOWED
+		var path:String = Paths.modFolders(iconPath);
+		if (!FileSystem.exists(path)) path = Paths.getPreloadPath(iconPath);
+		if (FileSystem.exists(path))
+		#else
+		var path:String = Paths.getPreloadPath(iconPath);
+		if (Assets.exists(path))
+		#end
 		{
-			var rawJson:String;
-			var iconPath:String = 'images/icons/$char.json';
-			#if MODS_ALLOWED
-			var path:String = Paths.modFolders(iconPath);
-			if(!FileSystem.exists(path)) path = Paths.getPreloadPath(iconPath);
-
-			if(!FileSystem.exists(path))
-			#else
-			var path:String = Paths.getPreloadPath(iconPath);
-			if(!Assets.exists(path))
-			#end
-				rawJson = null; // no config = default config
-			else
-				rawJson = #if MODS_ALLOWED sys.io.File.getContent(path) #else Assets.getText(path) #end;
-
-			json = rawJson != null ? cast haxe.Json.parse(rawJson) : defaultConfig;
-			configMap.set(char, json);
+			var rawJson:String = #if MODS_ALLOWED sys.io.File.getContent(path) #else Assets.getText(path) #end;
+			json = cast haxe.Json.parse(rawJson);
 		}
 
 		// seems messy but should work just fiiine (not sure if it's optimised tho but idc its 2:30AM and im still up)
-		baseScale		= #if (haxe > "4.2.5") json?.scale ?? #else json != null ? json.scale : #end 1;
-		iconOffsets[0] += #if (haxe > "4.2.5") json?.offset[0] ?? #else json != null ? json.offset[0] : #end 0;
-		iconOffsets[1] += #if (haxe > "4.2.5") json?.offset[1] ?? #else json != null ? json.offset[1] : #end 0;
-		antialiasing	= char.endsWith('-pixel') ? false : (ClientPrefs.data.antialiasing &&
-							#if (haxe > "4.2.5") (json?.antialias ?? true) #else (json != null && json.antialias) #end) == true;
+		flipX		 = #if (haxe > "4.2.5") json.flip_x ?? #else json.flip_x != null ? json.flip_x : #end false;
+		baseScale	 = #if (haxe > "4.2.5") json.scale ?? #else json.scale != null ? json.scale : #end 1;
+
+		var _antialias:Bool = (ClientPrefs.data.antialiasing ? #if (haxe > "4.2.5") json.antialias ?? true #else (json.antialias != null && json.antialias) #end : false);
+		antialiasing = char.endsWith('-pixel') ? false : _antialias;
+
+		if (json.offset != null && json.offset.length > 1)
+		{
+			iconOffsets[0] += json.offset[0];
+			iconOffsets[1] += json.offset[1];
+		}
 	}
 
 	override function updateHitbox()

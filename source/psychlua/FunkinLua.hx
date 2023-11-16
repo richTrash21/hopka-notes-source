@@ -897,6 +897,16 @@ class FunkinLua {
 			}
 			return false;
 		});
+		addCallback("setOffset", function(obj:String, ?x:Float, ?y:Float) {
+			var obj:Dynamic = LuaUtils.getObjectDirectly(obj, false);
+			if(obj != null)
+			{
+				if(x != null) obj.offset.x = x;
+				if(y != null) obj.offset.y = y;
+				return (x != null || y != null);
+			}
+			return false;
+		});
 
 		addCallback("setScrollFactor", function(obj:String, scrollX:Float, scrollY:Float) {
 			var luaObj:FlxSprite = game.getLuaObject(obj,false);
@@ -927,10 +937,9 @@ class FunkinLua {
 			}
 
 			var split:Array<String> = obj.split('.');
-			var poop:FlxSprite = LuaUtils.getObjectDirectly(split[0]);
-			if(split.length > 1) {
-				poop = LuaUtils.getVarInArray(LuaUtils.getPropertyLoop(split), split[split.length-1]);
-			}
+			var poop:FlxSprite = (split.length > 1)
+				? LuaUtils.getVarInArray(LuaUtils.getPropertyLoop(split), split[split.length-1])
+				: LuaUtils.getObjectDirectly(split[0]);
 
 			if(poop != null) {
 				poop.setGraphicSize(x, y);
@@ -948,10 +957,9 @@ class FunkinLua {
 			}
 
 			var split:Array<String> = obj.split('.');
-			var poop:FlxSprite = LuaUtils.getObjectDirectly(split[0]);
-			if(split.length > 1) {
-				poop = LuaUtils.getVarInArray(LuaUtils.getPropertyLoop(split), split[split.length-1]);
-			}
+			var poop:FlxSprite = (split.length > 1)
+				? LuaUtils.getVarInArray(LuaUtils.getPropertyLoop(split), split[split.length-1])
+				: LuaUtils.getObjectDirectly(split[0]);
 
 			if(poop != null) {
 				poop.scale.set(x, y);
