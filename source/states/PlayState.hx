@@ -2079,11 +2079,13 @@ class PlayState extends MusicBeatState
 						if(boyfriend.curCharacter != value2) {
 							if(!boyfriendMap.exists(value2)) addCharacterToList(value2, charType);
 
+							charList.remove(boyfriend);
 							var lastAlpha:Float = boyfriend.alpha;
 							boyfriend.alpha = 0.00001;
 							boyfriend = boyfriendMap.get(value2);
 							boyfriend.alpha = lastAlpha;
 							iconP1.changeIcon(boyfriend.healthIcon);
+							charList.push(boyfriend);
 						}
 						setOnScripts('boyfriendName', boyfriend.curCharacter);
 
@@ -2091,6 +2093,7 @@ class PlayState extends MusicBeatState
 						if(dad.curCharacter != value2) {
 							if(!dadMap.exists(value2)) addCharacterToList(value2, charType);
 
+							charList.remove(dad);
 							var wasGf:Bool = dad.curCharacter.startsWith('gf-') || dad.curCharacter == 'gf';
 							var lastAlpha:Float = dad.alpha;
 							dad.alpha = 0.00001;
@@ -2098,6 +2101,7 @@ class PlayState extends MusicBeatState
 							if(gf != null) gf.visible = wasGf;
 							dad.alpha = lastAlpha;
 							iconP2.changeIcon(dad.healthIcon);
+							charList.push(dad);
 						}
 						setOnScripts('dadName', dad.curCharacter);
 
@@ -2108,10 +2112,12 @@ class PlayState extends MusicBeatState
 							{
 								if(!gfMap.exists(value2)) addCharacterToList(value2, charType);
 
+								charList.remove(gf);
 								var lastAlpha:Float = gf.alpha;
 								gf.alpha = 0.00001;
 								gf = gfMap.get(value2);
 								gf.alpha = lastAlpha;
+								charList.push(gf);
 							}
 							setOnScripts('gfName', gf.curCharacter);
 						}
