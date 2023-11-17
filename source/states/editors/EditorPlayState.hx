@@ -419,7 +419,7 @@ class EditorPlayState extends MusicBeatSubstate
 	private function cachePopUpScore()
 	{
 		for (rating in ratingsData) Paths.image(rating.image);
-		Paths.image('num');
+		for (i in 0...10) Paths.image('num$i');
 	}
 
 	private function popUpScore(note:Note = null):Void
@@ -428,8 +428,8 @@ class EditorPlayState extends MusicBeatSubstate
 
 		vocals.volume = 1;
 		var placement:Float = FlxG.width * 0.35;
-
 		var score:Int = 350;
+		var antialias:Bool = ClientPrefs.data.antialiasing;
 
 		//tryna do MS based judgment due to popular demand
 		var daRating:Rating = Conductor.judgeNote(ratingsData, noteDiff / playbackRate);
@@ -458,6 +458,7 @@ class EditorPlayState extends MusicBeatSubstate
 		rating.velocity.x -= FlxG.random.int(1, 10) * playbackRate;
 		rating.angularVelocity = rating.velocity.x * FlxG.random.int(1, -1, [0]);
 		rating.visible = (!ClientPrefs.data.hideHud && showRating);
+		rating.antialiasing = antialias;
 		rating.scrollFactor.set();
 
 		rating.setGraphicSize(Std.int(rating.width * 0.7));
@@ -470,6 +471,7 @@ class EditorPlayState extends MusicBeatSubstate
 		comboSpr.velocity.y -= FlxG.random.int(140, 160) * playbackRate;
 		comboSpr.velocity.x = FlxG.random.int(1, 10) * playbackRate;
 		comboSpr.visible = (!ClientPrefs.data.hideHud && showCombo);
+		comboSpr.antialiasing = antialias;
 		comboSpr.scrollFactor.set();
 
 		comboSpr.setGraphicSize(Std.int(comboSpr.width * 0.7));
@@ -507,9 +509,9 @@ class EditorPlayState extends MusicBeatSubstate
 		}
 		for (i in seperatedScore)
 		{
-			var numScore:FlxSprite = new FlxSprite(placement + (45 * daLoop) - 90 + ClientPrefs.data.comboOffset[2]).loadGraphic(Paths.image('num'), true,  100, 120);
+			var numScore:FlxSprite = new FlxSprite(placement + (45 * daLoop) - 90 + ClientPrefs.data.comboOffset[2]).loadGraphic(Paths.image('num$i'));
 			numScore.screenCenter(Y).y += 80 - ClientPrefs.data.comboOffset[3];
-			numScore.frame = numScore.frames.frames[i];
+			//numScore.frame = numScore.frames.frames[i];
 			numScore.scrollFactor.set();
 			
 			if (!ClientPrefs.data.comboStacking) lastScore.push(numScore);
@@ -524,6 +526,7 @@ class EditorPlayState extends MusicBeatSubstate
 			numScore.velocity.x = FlxG.random.float(-5, 5) * playbackRate;
 			numScore.angularVelocity = -numScore.velocity.x;
 			numScore.visible = !ClientPrefs.data.hideHud;
+			numScore.antialiasing = antialias;
 
 			if(showComboNum) insert(members.indexOf(strumLineNotes), numScore);
 

@@ -1,7 +1,6 @@
 package psychlua;
 
 import flixel.FlxBasic;
-import objects.Character;
 import psychlua.FunkinLua;
 import psychlua.CustomSubstate;
 
@@ -64,7 +63,7 @@ class HScript extends SScript
 		set('Paths', Paths);
 		set('Conductor', Conductor);
 		set('ClientPrefs', ClientPrefs);
-		set('Character', Character);
+		set('Character', objects.Character);
 		set('Alphabet', Alphabet);
 		set('Note', objects.Note);
 		set('CustomSubstate', CustomSubstate);

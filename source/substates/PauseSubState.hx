@@ -58,7 +58,7 @@ class PauseSubState extends MusicBeatSubstate
 			pauseMusic.loadEmbedded(Paths.music(Paths.formatToSongPath(ClientPrefs.data.pauseMusic)), true, true);
 		pauseMusic.volume = 0;
 		pauseMusic.play(false, FlxG.random.int(0, Std.int(pauseMusic.length * 0.5)));
-
+		pauseMusic.fadeIn(40, 0, 0.5, function(_) pauseMusic.fadeTween = null);
 		FlxG.sound.list.add(pauseMusic);
 
 		var bg:FlxSprite = new FlxSprite().makeGraphic(FlxG.width, FlxG.height, 0x99000000);
@@ -120,7 +120,7 @@ class PauseSubState extends MusicBeatSubstate
 	override function update(elapsed:Float)
 	{
 		cantUnpause -= elapsed;
-		if (pauseMusic.volume < 0.5) pauseMusic.volume += 0.01 * elapsed;
+		//if (pauseMusic.volume < 0.5) pauseMusic.volume += 0.01 * elapsed;
 
 		super.update(elapsed);
 		updateSkipTextStuff();
@@ -247,10 +247,13 @@ class PauseSubState extends MusicBeatSubstate
 						FlxG.sound.playMusic(pauseMusic._sound, pauseMusic.volume);
 						FlxG.sound.music.fadeIn(0.8, pauseMusic.volume, 1);
 						FlxG.sound.music.time = pauseMusic.time;
+						if(pauseMusic.fadeTween != null) pauseMusic.fadeTween.cancel();
+						pauseMusic.stop();
 					}
 					OptionsState.onPlayState = true;
 
 				case "Exit to menu":
+					if(pauseMusic.fadeTween != null) pauseMusic.fadeTween.cancel();
 					pauseMusic.stop();
 					#if desktop DiscordClient.resetClientID(); #end
 					PlayState.seenCutscene = false;
@@ -275,6 +278,7 @@ class PauseSubState extends MusicBeatSubstate
 		{
 			forEachOfType(FlxSprite, function(obj:FlxSprite)
 				FlxTween.tween(obj, {alpha: 0}, 0.1, {ease: FlxEase.quartInOut}), true);
+			if(pauseMusic.fadeTween != null) pauseMusic.fadeTween.cancel();
 			pauseMusic.fadeOut(0.1, 0, function(_) close());
 			closing = true;
 		}

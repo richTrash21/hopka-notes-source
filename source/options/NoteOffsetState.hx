@@ -1,5 +1,6 @@
 package options;
 
+import substates.PauseSubState;
 import flixel.math.FlxPoint;
 
 import objects.Character;
@@ -364,8 +365,9 @@ class NoteOffsetState extends MusicBeatState
 			MusicBeatState.switchState(new options.OptionsState());
 			if(OptionsState.onPlayState)
 			{
+				final mus:String = #if (haxe > "4.2.5") PauseSubState.songName ?? #else PauseSubState.songName != null ? PauseSubState.songName : #end ClientPrefs.data.pauseMusic;
 				(ClientPrefs.data.pauseMusic != 'None')
-					? FlxG.sound.playMusic(Paths.music(Paths.formatToSongPath(ClientPrefs.data.pauseMusic)))
+					? FlxG.sound.playMusic(Paths.music(Paths.formatToSongPath(mus)))
 					: FlxG.sound.music.volume = 0;
 			}
 			else FlxG.sound.playMusic(Paths.music('freakyMenu'));

@@ -1,5 +1,6 @@
 package states.editors;
 
+import substates.PauseSubState;
 import flixel.util.FlxStringUtil;
 import flixel.input.mouse.FlxMouseEventManager;
 import flixel.FlxObject;
@@ -69,7 +70,8 @@ class CharacterEditorState extends backend.MusicBeatUIState
 
 	override function create()
 	{
-		FlxG.sound.playMusic(Paths.music(Paths.formatToSongPath(ClientPrefs.data.pauseMusic)), 0.4);
+		final mus:String = #if (haxe > "4.2.5") PauseSubState.songName ?? #else PauseSubState.songName != null ? PauseSubState.songName : #end ClientPrefs.data.pauseMusic;
+		FlxG.sound.playMusic(Paths.music(Paths.formatToSongPath(mus)), 0.4);
 		if(ClientPrefs.data.cacheOnGPU) Paths.clearStoredMemory();
 
 		camEditor = new FlxCamera();
@@ -981,13 +983,13 @@ class CharacterEditorState extends backend.MusicBeatUIState
 					genBoyOffsets();
 				}
 
-				var controlArray:Array<Bool> = [FlxG.keys.justPressed.LEFT, FlxG.keys.justPressed.RIGHT, FlxG.keys.justPressed.UP, FlxG.keys.justPressed.DOWN];
+				final controlArray:Array<Bool> = [FlxG.keys.justPressed.LEFT, FlxG.keys.justPressed.RIGHT, FlxG.keys.justPressed.UP, FlxG.keys.justPressed.DOWN];
 
 				for (i in 0...controlArray.length) {
 					if(controlArray[i]) {
-						var multiplier = FlxG.keys.justPressed.SHIFT ? 10 : 1;
-						var arrayVal = i > 1 ? 1 : 0;
-						var negaMult:Int = i % 2 == 1 ? -1 : 1;
+						final multiplier = FlxG.keys.pressed.SHIFT ? 10 : 1;
+						final arrayVal = i > 1 ? 1 : 0;
+						final negaMult:Int = i % 2 == 1 ? -1 : 1;
 						char.animationsArray[curAnim].offsets[arrayVal] += negaMult * multiplier;
 
 						char.addOffset(char.animationsArray[curAnim].anim, char.animationsArray[curAnim].offsets[0], char.animationsArray[curAnim].offsets[1]);
