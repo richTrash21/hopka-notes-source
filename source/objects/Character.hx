@@ -8,38 +8,38 @@ import sys.FileSystem;
 import openfl.utils.Assets;
 
 typedef CharacterFile = {
-	var animations:Array<AnimArray>;
-	var image:String;
-	var scale:Float;
-	var sing_duration:Float;
-	var healthicon:String;
+	animations:Array<AnimArray>,
+	image:String,
+	scale:Float,
+	sing_duration:Float,
+	healthicon:String,
 
-	var position:Array<Float>;
-	var camera_position:Array<Float>;
+	position:Array<Float>,
+	camera_position:Array<Float>,
 
-	var flip_x:Bool;
-	var flip_y:Bool;
-	var no_antialiasing:Bool;
-	var healthbar_colors:Array<Int>;
+	flip_x:Bool,
+	flip_y:Bool,
+	no_antialiasing:Bool,
+	healthbar_colors:Array<Int>
 }
 
 typedef AnimArray = {
-	var anim:String;
-	var name:String;
-	var fps:Int;
-	var loop:Bool;
-	var loop_point:Int;
-	var indices:Array<Int>;
-	var offsets:Array<Int>;
-	var animflip_x:Bool;
-	var animflip_y:Bool;
+	anim:String,
+	name:String,
+	fps:Int,
+	loop:Bool,
+	loop_point:Int,
+	indices:Array<Int>,
+	offsets:Array<Int>,
+	animflip_x:Bool,
+	animflip_y:Bool
 }
 
 class Character extends FlxSprite
 {
 	inline public static final DEFAULT_CHARACTER:String = 'bf'; //In case a character is missing, it will use BF on its place
 
-	public var animOffsets:Map<String, Array<Dynamic>>;
+	public var animOffsets:Map<String, Array<Float>> = [];
 	public var debugMode:Bool = false;
 
 	public var isPlayer:Bool = false;
@@ -74,12 +74,10 @@ class Character extends FlxSprite
 	public function new(x:Float, y:Float, ?character:String = DEFAULT_CHARACTER, ?isPlayer:Bool = false)
 	{
 		super(x, y);
-
-		animOffsets = new Map<String, Array<Dynamic>>();
 		curCharacter = character;
 		this.isPlayer = isPlayer;
-
-		var characterPath:String = 'characters/$curCharacter.json';
+		
+		final characterPath:String = 'characters/$character.json';
 		#if MODS_ALLOWED
 		var path:String = Paths.modFolders(characterPath);
 		if(!FileSystem.exists(path)) path = Paths.getPreloadPath(characterPath);
@@ -91,22 +89,23 @@ class Character extends FlxSprite
 		#end
 			path = Paths.getPreloadPath('characters/$DEFAULT_CHARACTER.json'); //If a character couldn't be found, change him to BF just to prevent a crash
 
-		var rawJson = #if MODS_ALLOWED sys.io.File.getContent(path) #else Assets.getText(path) #end;
+		final rawJson = #if MODS_ALLOWED sys.io.File.getContent(path) #else Assets.getText(path) #end;
 
-		var json:CharacterFile = cast haxe.Json.parse(rawJson);
+		final json:CharacterFile = cast haxe.Json.parse(rawJson);
 		var useAtlas:Bool = false;
 
+		final img:String = json.image;
 		#if MODS_ALLOWED
-		var modAnimToFind:String = Paths.modFolders('images/' + json.image + '/Animation.json');
-		var animToFind:String = Paths.getPath('images/' + json.image + '/Animation.json', TEXT);
+		final modAnimToFind:String = Paths.modFolders('images/$img/Animation.json');
+		final animToFind:String = Paths.getPath('images/$img/Animation.json', TEXT);
 		useAtlas = (FileSystem.exists(modAnimToFind) || FileSystem.exists(animToFind) || Assets.exists(animToFind));
 		#else
-		useAtlas = Assets.exists(Paths.getPath('images/' + json.image + '/Animation.json', TEXT));
+		useAtlas = Assets.exists(Paths.getPath('images/$img/Animation.json', TEXT));
 		#end
 
-		frames = !useAtlas ? Paths.getAtlas(json.image) : animateatlas.AtlasFrameMaker.construct(json.image);
+		frames = !useAtlas ? Paths.getAtlas(img) : animateatlas.AtlasFrameMaker.construct(img);
 
-		imageFile = json.image;
+		imageFile = img;
 		if(json.scale != 1)
 		{
 			jsonScale = json.scale;
@@ -155,8 +154,8 @@ class Character extends FlxSprite
 		{
 			if(heyTimer > 0)
 			{
-				// https://github.com/ShadowMario/FNF-PsychEngine/pull/13591
-				var rate:Float = (PlayState.instance != null ? PlayState.instance.playbackRate : 1.0);
+				// https://github.com/ShadowMario/FNF-PsychEngine/pull/13591 (nvmd replaced with FlxG.animationTimeScale)
+				var rate:Float = FlxG.animationTimeScale /*(PlayState.instance != null ? PlayState.instance.playbackRate : 1.0)*/;
 				heyTimer -= elapsed * rate;
 				//heyTimer -= elapsed * PlayState.instance.playbackRate;
 				if(heyTimer <= 0)
@@ -206,15 +205,15 @@ class Character extends FlxSprite
 	{
 		if (!debugMode && !skipDance && !specialAnim)
 		{
-			var forceAnim:Bool = (animation.curAnim != null && animation.curAnim.looped && animation.curAnim.loopPoint > 0
-				&& animation.curAnim.curFrame >= animation.curAnim.loopPoint) || Force; //🤯🤯🤯
+			if (animation.curAnim != null && animation.curAnim.looped && animation.curAnim.loopPoint > 0 && animation.curAnim.curFrame >= animation.curAnim.loopPoint)
+				animation.finish(); // fix for characters that have loopPoint > 0
+			var danceAnim:String = 'idle$idleSuffix';
 			if (danceIdle)
 			{
 				danced = !danced;
-				playAnim('dance' + (danced ? 'Right' : 'Left') + idleSuffix, forceAnim);
+				danceAnim = 'dance${danced ? 'Right' : 'Left'}$idleSuffix';
 			}
-			else
-				playAnim('idle' + idleSuffix, forceAnim);
+			playAnim(danceAnim, Force);
 		}
 	}
 
@@ -228,20 +227,20 @@ class Character extends FlxSprite
 		}
 		animation.play(AnimName, Force, Reversed, Frame);
 
-		if (animOffsets.exists(AnimName)) {
+		if (animOffsets.exists(AnimName))
+		{
 			var daOffset = animOffsets.get(AnimName);
 			offset.set(daOffset[0], daOffset[1]);
-		} else offset.set(0, 0);
+		}
+		else offset.set(0, 0);
 
 		if (curCharacter.startsWith('gf') || danceIdle) // idk
-		{
-			if (AnimName == 'singLEFT')
-				danced = true;
-			else if (AnimName == 'singRIGHT')
-				danced = false;
-			else if (AnimName == 'singUP' || AnimName == 'singDOWN')
-				danced = !danced;
-		}
+			switch (AnimName)
+			{
+				case 'singLEFT':			 danced = true;
+				case 'singRIGHT':			 danced = false;
+				case 'singUP' | 'singDOWN':	 danced = !danced;
+			}
 	}
 	
 	function sortAnims(Obj1:Array<Dynamic>, Obj2:Array<Dynamic>):Int
@@ -251,7 +250,7 @@ class Character extends FlxSprite
 	private var settingCharacterUp:Bool = true;
 	public function recalculateDanceIdle()
 	{
-		var lastDanceIdle:Bool = danceIdle;
+		final lastDanceIdle:Bool = danceIdle;
 		danceIdle = (animation.getByName('danceLeft' + idleSuffix) != null && animation.getByName('danceRight' + idleSuffix) != null);
 
 		if (settingCharacterUp)
@@ -279,9 +278,9 @@ class Character extends FlxSprite
 	{
 		if(Anim != null)
 		{
-			var animAnim:String = '' + Anim.anim;
-			var temp = Anim.offsets;
-			var animOffsets:Array<Int> = (temp == null && temp.length <= 1) ? [0, 0] : temp;
+			final animAnim:String = '' + Anim.anim;
+			final temp:Array<Int> = Anim.offsets;
+			final animOffsets:Array<Int> = (temp != null && temp.length > 1) ? temp : [0, 0];
 			addAnim(animAnim, '' + Anim.name, Anim.indices, Anim.fps, Anim.loop, Anim.animflip_x, Anim.animflip_y, Anim.loop_point);
 			addOffset(animAnim, animOffsets[0], animOffsets[1]);
 		}
@@ -296,11 +295,13 @@ class Character extends FlxSprite
 		else
 			animation.addByPrefix(Name, Prefix, FrameRate, Looped, FlipX, FlipY);
 
-		var addedAnim:flixel.animation.FlxAnimation = animation.getByName(Name);
+		final addedAnim:flixel.animation.FlxAnimation = animation.getByName(Name);
 		if (addedAnim != null)
+		{
 			addedAnim.loopPoint = LoopPoint; // better than -loop anims lmao
+		}
 	}
 
-	public function addOffset(name:String, x:Float = 0, y:Float = 0)
-		animOffsets[name] = [x, y];
+	public function addOffset(name:String, x:Int = 0, y:Int = 0)
+		animOffsets.set(name, [x, y]);
 }

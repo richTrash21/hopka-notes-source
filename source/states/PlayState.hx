@@ -1095,10 +1095,7 @@ class PlayState extends MusicBeatState
 
 		FlxTween.num(1, 0, Conductor.crochet * 0.001, {ease: FlxEase.cubeInOut}, function(a:Float) {
 			spr.alpha = a;
-			if (a == 0) {
-				remove(spr);
-				spr.destroy();
-			}
+			if (a == 0) remove(spr).destroy();
 		});
 		return spr;
 	}
@@ -1706,8 +1703,8 @@ class PlayState extends MusicBeatState
 		iconP2.updateHitbox();
 
 		// frameWidth > frameHeight = icon have two frames
-		final P1_frameWidth = iconP1.frameWidth > iconP1.frameHeight ? iconP1.frameWidth * 0.5 : iconP1.frameWidth;
-		final P2_frameWidth = iconP2.frameWidth > iconP2.frameHeight ? iconP2.frameWidth * 0.5 : iconP2.frameWidth;
+		final P1_frameWidth = /*iconP1.frameWidth > iconP1.frameHeight ? iconP1.frameWidth * 0.5 :*/ iconP1.frameWidth;
+		final P2_frameWidth = /*iconP2.frameWidth > iconP2.frameHeight ? iconP2.frameWidth * 0.5 :*/ iconP2.frameWidth;
 		if (healthBarFlip)
 		{
 			iconP1.x = healthBar.centerPoint.x - (P1_frameWidth * iconP1.scale.x) * 0.5 - 52;

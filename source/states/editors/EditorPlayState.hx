@@ -1,5 +1,6 @@
 package states.editors;
 
+import flixel.util.FlxStringUtil;
 import backend.Section.SwagSection;
 import backend.Rating;
 
@@ -110,7 +111,7 @@ class EditorPlayState extends MusicBeatSubstate
 		generateStaticArrows(0);
 		generateStaticArrows(1);
 		
-		scoreTxt = new FlxText(10, FlxG.height - 50, FlxG.width - 20, "", 20);
+		scoreTxt = new FlxText(10, FlxG.height - 30, FlxG.width - 20, "", 20);
 		scoreTxt.setFormat(Paths.font("vcr.ttf"), 20, FlxColor.WHITE, CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
 		scoreTxt.scrollFactor.set();
 		scoreTxt.borderSize = 1.25;
@@ -209,8 +210,10 @@ class EditorPlayState extends MusicBeatSubstate
 			});
 		}
 		
-		var time:Float = CoolUtil.floorDecimal((Conductor.songPosition - ClientPrefs.data.noteOffset) / 1000, 1);
-		dataTxt.text = 'Time: $time / ${songLength/1000}\nSection: $curSection\nBeat: $curBeat\nStep: $curStep';
+		final curTime:Float = (Conductor.songPosition - ClientPrefs.data.noteOffset) / 1000;
+		final maxTime:Float = songLength / 1000;
+		// \n[${CoolUtil.floorDecimal(curTime, 2)} / ${CoolUtil.floorDecimal(maxTime, 2)}]
+		dataTxt.text = 'Time: ${FlxStringUtil.formatTime(curTime, true)} / ${FlxStringUtil.formatTime(maxTime, true)}\nSection: $curSection\nBeat: $curBeat\nStep: $curStep';
 		super.update(elapsed);
 	}
 	
@@ -765,9 +768,9 @@ class EditorPlayState extends MusicBeatSubstate
 	{
 		if(finishTimer != null) return;
 
-		vocals.pause();
+		//vocals.pause();
 
-		FlxG.sound.music.play();
+		//FlxG.sound.music.play();
 		#if FLX_PITCH FlxG.sound.music.pitch = playbackRate; #end
 		Conductor.songPosition = FlxG.sound.music.time;
 		if (Conductor.songPosition <= vocals.length)
@@ -775,7 +778,7 @@ class EditorPlayState extends MusicBeatSubstate
 			vocals.time = Conductor.songPosition;
 			#if FLX_PITCH vocals.pitch = playbackRate; #end
 		}
-		vocals.play();
+		//vocals.play();
 	}
 
 	function RecalculateRating(badHit:Bool = false) {

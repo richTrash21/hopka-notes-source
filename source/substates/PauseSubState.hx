@@ -23,7 +23,7 @@ class PauseSubState extends MusicBeatSubstate
 	var missingTextBG:FlxSprite;
 	var missingText:FlxText;
 
-	public static var songName:String = '';
+	public static var songName:String = null;
 
 	public function new()
 	{

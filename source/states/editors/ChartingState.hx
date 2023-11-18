@@ -1,5 +1,6 @@
 package states.editors;
 
+import flixel.util.FlxStringUtil;
 import flash.geom.Rectangle;
 import haxe.Json;
 import haxe.io.Bytes;
@@ -1863,11 +1864,14 @@ class ChartingState extends MusicBeatUIState
 		vocals.pitch = playbackSpeed;
 		#end
 
-		bpmTxt.text =
-		Std.string(FlxMath.roundDecimal(Conductor.songPosition / 1000, 2)) + " / " + Std.string(FlxMath.roundDecimal(FlxG.sound.music.length / 1000, 2)) +
+		final curTime:Float = Conductor.songPosition / 1000;
+		final maxTime:Float = FlxG.sound.music.length / 1000;
+		bpmTxt.text = // fromated time yaayyy!!!
+		FlxStringUtil.formatTime(curTime, true) + " / " + FlxStringUtil.formatTime(maxTime, true) +
+		"\n[" + Std.string(FlxMath.roundDecimal(curTime, 2)) + " / " + Std.string(FlxMath.roundDecimal(maxTime, 2)) + "]\n" +
 		"\nSection: " + curSec +
-		"\n\nBeat: " + Std.string(curDecBeat).substring(0,4) +
-		"\n\nStep: " + curStep +
+		"\nBeat: " + Std.string(curDecBeat).substring(0,4) +
+		"\nStep: " + curStep +
 		"\n\nBeat Snap: " + quantization + "th";
 
 		var playedSound:Array<Bool> = [false, false, false, false]; //Prevents ouchy GF sex sounds
