@@ -16,9 +16,9 @@ enum Countdown
 	START;
 }
 
-class BaseStage extends FlxBasic
+class BaseStage extends FlxBasic implements IMusicBeatState
 {
-	private var game(default, set):Dynamic = PlayState.instance;
+	private var game(default, set):MusicBeatState = PlayState.instance;
 	public var onPlayState:Bool = false;
 
 	// some variables for convenience
@@ -28,7 +28,7 @@ class BaseStage extends FlxBasic
 	public var seenCutscene(get, never):Bool;
 	public var inCutscene(get, set):Bool;
 	public var canPause(get, set):Bool;
-	public var members(get, never):Dynamic;
+	public var members(get, never):Array<FlxBasic>;
 
 	public var boyfriend(get, never):Character;
 	public var dad(get, never):Character;
@@ -46,24 +46,22 @@ class BaseStage extends FlxBasic
 
 	public function new()
 	{
-		this.game = MusicBeatState.getState();
-		if(this.game == null)
+		this.game = cast MusicBeatState.getState();
+		if(this.game == null || !(this.game is MusicBeatState))
 		{
 			FlxG.log.warn('Invalid state for the stage added!');
 			destroy();
+			return;
 		}
-		else 
-		{
-			this.game.stages.push(this);
-			super();
-			create();
-		}
+		this.game.stages.push(this);
+		super();
+		create();
 	}
 
 	//main callbacks
 	public function create() {}
 	public function createPost() {}
-	//public function update(elapsed:Float) {}
+	//public function update(elapsed:Float) {} // АНЕКДОТ????????
 	public function countdownTick(count:Countdown, num:Int) {}
 
 	// FNF steps, beats and sections
@@ -86,33 +84,53 @@ class BaseStage extends FlxBasic
 	public function eventPushedUnique(event:EventNote) {}
 
 	// Things to replace FlxGroup stuff and inject sprites directly into the state
-	function add(object:FlxBasic) game.add(object);
-	function remove(object:FlxBasic) game.remove(object);
-	function insert(position:Int, object:FlxBasic) game.insert(position, object);
+	function add(object:FlxBasic):FlxBasic
+		return game.add(object);
+	function remove(object:FlxBasic):FlxBasic
+		return game.remove(object);
+	function insert(position:Int, object:FlxBasic):FlxBasic
+		return game.insert(position, object);
 	
-	public function addBehindGF(obj:FlxBasic) insert(members.indexOf(game.gfGroup), obj);
-	public function addBehindBF(obj:FlxBasic) insert(members.indexOf(game.boyfriendGroup), obj);
-	public function addBehindDad(obj:FlxBasic) insert(members.indexOf(game.dadGroup), obj);
+	public function addBehindGF(obj:FlxBasic):FlxBasic
+	{
+		if (!onPlayState)
+			return null;
+
+		return insert(members.indexOf(cast (game, PlayState).gfGroup), obj);
+	}
+	public function addBehindBF(obj:FlxBasic):FlxBasic
+	{
+		if (!onPlayState)
+			return null;
+
+		return insert(members.indexOf(cast (game, PlayState).boyfriendGroup), obj);
+	}
+	public function addBehindDad(obj:FlxBasic):FlxBasic
+	{
+		if (!onPlayState)
+			return null;
+
+		return insert(members.indexOf(cast (game, PlayState).dadGroup), obj);
+	}
+
 	public function setDefaultGF(name:String) //Fix for the Chart Editor on Base Game stages
 	{
-		var gfVersion:String = PlayState.SONG.gfVersion;
+		final gfVersion:String = PlayState.SONG.gfVersion;
+
 		if(gfVersion == null || gfVersion.length < 1)
-		{
-			gfVersion = name;
-			PlayState.SONG.gfVersion = gfVersion;
-		}
+			PlayState.SONG.gfVersion = name;
 	}
 
 	//start/end callback functions
 	public function setStartCallback(myfn:Void->Void)
 	{
 		if(!onPlayState) return;
-		PlayState.instance.startCallback = myfn;
+		cast (game, PlayState).startCallback = myfn;
 	}
 	public function setEndCallback(myfn:Void->Void)
 	{
 		if(!onPlayState) return;
-		PlayState.instance.endCallback = myfn;
+		cast (game, PlayState).endCallback = myfn;
 	}
 
 	//precache functions
@@ -123,7 +141,7 @@ class BaseStage extends FlxBasic
 	public function precache(key:String, type:String)
 	{
 		if(onPlayState)
-			PlayState.instance.precacheList.set(key, type);
+			cast (game, PlayState).precacheList.set(key, type);
 
 		switch(type)
 		{
@@ -134,51 +152,104 @@ class BaseStage extends FlxBasic
 	}
 
 	// overrides
-	function startCountdown() if(onPlayState) return PlayState.instance.startCountdown(); else return false;
-	function endSong() if(onPlayState)return PlayState.instance.endSong(); else return false;
-	function moveCameraSection() if(onPlayState) moveCameraSection();
-	function moveCamera(isDad:Bool) if(onPlayState) moveCamera(isDad);
-	inline private function get_paused() return game.paused;
-	inline private function get_songName() return game.songName;
-	inline private function get_isStoryMode() return PlayState.isStoryMode;
-	inline private function get_seenCutscene() return PlayState.seenCutscene;
-	inline private function get_inCutscene() return game.inCutscene;
-	inline private function set_inCutscene(value:Bool)
+	function startCountdown():Bool
 	{
-		game.inCutscene = value;
-		return value;
-	}
-	inline private function get_canPause() return game.canPause;
-	inline private function set_canPause(value:Bool)
-	{
-		game.canPause = value;
-		return value;
-	}
-	inline private function get_members() return game.members;
-	inline private function set_game(value:MusicBeatState)
-	{
-		onPlayState = (Std.isOfType(value, states.PlayState));
-		game = value;
-		return value;
-	}
+		if (onPlayState)
+			return cast (game, PlayState).startCountdown();
 
-	inline private function get_boyfriend():Character return game.boyfriend;
-	inline private function get_dad():Character return game.dad;
-	inline private function get_gf():Character return game.gf;
+		return false;
+	}
+	function endSong():Bool
+	{
+		if (onPlayState)
+			return cast (game, PlayState).endSong();
 
-	inline private function get_boyfriendGroup():FlxSpriteGroup return game.boyfriendGroup;
-	inline private function get_dadGroup():FlxSpriteGroup return game.dadGroup;
-	inline private function get_gfGroup():FlxSpriteGroup return game.gfGroup;
+		return false;
+	}
 	
-	inline private function get_camGame():FlxCamera return game.camGame;
-	inline private function get_camHUD():FlxCamera return game.camHUD;
-	inline private function get_camOther():FlxCamera return game.camOther;
+	function moveCameraSection()
+	{
+		@:privateAccess
+		if (onPlayState)
+			cast (game, PlayState).moveCameraSection();
+	}
+	function moveCamera(char:String)
+	{
+		if (onPlayState)
+			cast (game, PlayState).moveCamera(char);
+	}
 
-	inline private function get_defaultCamZoom():Float return game.defaultCamZoom;
+	inline private function get_paused():Bool
+		return onPlayState ? cast (game, PlayState).paused : false;
+	inline private function get_songName():String
+		return onPlayState ? cast (game, PlayState).songName : null;
+	inline private function get_isStoryMode():Bool
+		return PlayState.isStoryMode;
+	inline private function get_seenCutscene():Bool
+		return PlayState.seenCutscene;
+
+	inline private function get_inCutscene():Bool
+		return onPlayState ? cast (game, PlayState).inCutscene : false;
+	inline private function set_inCutscene(value:Bool):Bool
+	{
+		if (onPlayState)
+			cast (game, PlayState).inCutscene = value;
+
+		return value;
+	}
+	
+	inline private function get_canPause():Bool
+	{
+		@:privateAccess
+		return onPlayState ? cast (game, PlayState).canPause : false;
+	}
+	inline private function set_canPause(value:Bool):Bool
+	{
+		@:privateAccess
+		if (onPlayState)
+			cast (game, PlayState).canPause = value;
+
+		return value;
+	}
+
+	inline private function get_members():Array<FlxBasic>
+		return game.members;
+	inline private function set_game(value:MusicBeatState):MusicBeatState
+	{
+		onPlayState = value is PlayState;
+		return game = value;
+	}
+
+	inline private function get_boyfriend():Character
+		return onPlayState ? cast (game, PlayState).boyfriend : null;
+	inline private function get_dad():Character
+		return onPlayState ? cast (game, PlayState).dad : null;
+	inline private function get_gf():Character
+		return onPlayState ? cast (game, PlayState).gf : null;
+
+	inline private function get_boyfriendGroup():FlxSpriteGroup
+		return onPlayState ? cast (game, PlayState).boyfriendGroup : null;
+	inline private function get_dadGroup():FlxSpriteGroup
+		return onPlayState ? cast (game, PlayState).dadGroup : null;
+	inline private function get_gfGroup():FlxSpriteGroup
+		return onPlayState ? cast (game, PlayState).gfGroup : null;
+	
+	inline private function get_camGame():FlxCamera
+		return onPlayState ? cast (game, PlayState).camGame : FlxG.camera;
+	inline private function get_camHUD():FlxCamera
+		return onPlayState ? cast (game, PlayState).camHUD : null;
+	inline private function get_camOther():FlxCamera
+		return onPlayState ? cast (game, PlayState).camOther : null;
+
+	inline private function get_defaultCamZoom():Float
+		return onPlayState ? cast (game, PlayState).defaultCamZoom : 1;
 	inline private function set_defaultCamZoom(value:Float):Float
 	{
-		game.defaultCamZoom = value;
-		return game.defaultCamZoom;
+		if (onPlayState)
+			cast (game, PlayState).defaultCamZoom = value;
+
+		return value;
 	}
-	inline private function get_camFollow():FlxObject return game.camFollow;
+	inline private function get_camFollow():FlxObject
+		return FlxG.camera.target;
 }

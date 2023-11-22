@@ -8,6 +8,7 @@ import flixel.addons.ui.FlxUI;
 
 /**
  * @author Lars Doucet
+ * edited by richTrash21
  */
 class UIInputTextAdvanced extends InputTextAdvanced implements IResizable implements IFlxUIWidget implements IHasParams
 {

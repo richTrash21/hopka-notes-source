@@ -2,8 +2,6 @@ package objects.ui;
 
 import flixel.addons.ui.*;
 import flixel.addons.ui.FlxUIDropDownMenu;
-import flixel.math.FlxPoint;
-import flixel.math.FlxMath;
 import flixel.FlxG;
 
 /**
@@ -24,7 +22,7 @@ class DropDownAdvanced extends FlxUIDropDownMenu
 
 	function set_currentScroll(scroll:Int):Int
 	{
-		currentScroll = Std.int(FlxMath.bound(scroll, 0, list.length - 1));
+		currentScroll = Std.int(flixel.math.FlxMath.bound(scroll, 0, list.length - 1));
 		updateButtonPositions();
 		return currentScroll;
 	}
@@ -63,10 +61,8 @@ class DropDownAdvanced extends FlxUIDropDownMenu
 
 	public override function update(elapsed:Float)
 	{
-		group.update(elapsed);
-
-		if (moves)
-			updateMotion(elapsed);
+		// cuz the main method needs to be overriden duhh
+		FlxSpriteGroupUpdate(elapsed);
 
 		#if FLX_MOUSE
 		if (dropPanel.visible)
@@ -80,20 +76,18 @@ class DropDownAdvanced extends FlxUIDropDownMenu
 					currentScroll++; // Go down
 			}
 
-			if (FlxG.mouse.justPressed && !mouseOverlapping())
+			if (FlxG.mouse.justPressed && !FlxG.mouse.overlaps(this, camera))
 				showList(false);
 		}
 		#end
 	}
 
-	function mouseOverlapping()
+	private function FlxSpriteGroupUpdate(elapsed:Float)
 	{
-		var mousePoint:FlxPoint = FlxG.mouse.getScreenPosition(camera);
-		var objPoint:FlxPoint = this.getScreenPosition(null, camera);
-		var ret:Bool = FlxMath.pointInCoordinates(mousePoint.x, mousePoint.y, objPoint.x, objPoint.y, this.width, this.height);
-		mousePoint.put();
-		objPoint.put();
-		return ret;
+		group.update(elapsed);
+
+		if (moves)
+			updateMotion(elapsed);
 	}
 
 	override private function showList(b:Bool)

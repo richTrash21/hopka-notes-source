@@ -31,10 +31,10 @@ class GameOverSubstate extends MusicBeatSubstate
 	{
 		if(_song != null)
 		{
-			characterName = (_song.gameOverChar != null && _song.gameOverChar.trim().length > 0) ? _song.gameOverChar : 'bf-dead';
-			deathSoundName = (_song.gameOverSound != null && _song.gameOverSound.trim().length > 0) ? _song.gameOverSound : 'fnf_loss_sfx';
-			loopSoundName = (_song.gameOverLoop != null && _song.gameOverLoop.trim().length > 0) ? _song.gameOverLoop : 'gameOver';
-			endSoundName = (_song.gameOverEnd != null && _song.gameOverEnd.trim().length > 0) ? _song.gameOverEnd : 'gameOverEnd';
+			characterName	= (_song.gameOverChar	!= null && _song.gameOverChar.trim().length	 > 0) ? _song.gameOverChar	: 'bf-dead';
+			deathSoundName	= (_song.gameOverSound	!= null && _song.gameOverSound.trim().length > 0) ? _song.gameOverSound	: 'fnf_loss_sfx';
+			loopSoundName	= (_song.gameOverLoop	!= null && _song.gameOverLoop.trim().length	 > 0) ? _song.gameOverLoop	: 'gameOver';
+			endSoundName	= (_song.gameOverEnd	!= null && _song.gameOverEnd.trim().length	 > 0) ? _song.gameOverEnd	: 'gameOverEnd';
 
 			if(!PlayState.instance.boyfriendMap.exists(characterName))
 				PlayState.instance.addCharacterToList(characterName, 0);

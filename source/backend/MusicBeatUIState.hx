@@ -1,7 +1,6 @@
 package backend;
 
 import flixel.addons.transition.FlxTransitionableState;
-import flixel.util.FlxStringUtil;
 import flixel.FlxState;
 
 import backend.MusicBeatState;
@@ -9,11 +8,11 @@ import backend.MusicBeatState;
 /**
 	An exact copy of MusicBeatState, but extending FlxUIState (whitch was originaly a MusicBeatState thing lmao)
  **/
-class MusicBeatUIState extends flixel.addons.ui.FlxUIState
+class MusicBeatUIState extends flixel.addons.ui.FlxUIState implements IMusicBeatState
 {
 	// TRANS RIGHTS!!!!
-	static final transTime:Float = MusicBeatState.transTime; // uniform transition time
-	static final substatesToTrans:Array<String> = MusicBeatState.substatesToTrans; // substates that transition can land onto
+	//static final transTime:Float = MusicBeatState.transTime; // uniform transition time
+	//static final substatesToTrans:Array<String> = MusicBeatState.substatesToTrans; // substates that transition can land onto
 
 	private var curSection:Int = 0;
 	private var stepsToDo:Int = 0;
@@ -32,7 +31,7 @@ class MusicBeatUIState extends flixel.addons.ui.FlxUIState
 		super.create();
 
 		if(!FlxTransitionableState.skipNextTransOut)
-			openSubState(new CustomFadeTransition(transTime, true));
+			openSubState(new CustomFadeTransition(MusicBeatState.transTime, true));
 
 		FlxTransitionableState.skipNextTransOut = false;
 		timePassedOnState = 0;
@@ -92,7 +91,7 @@ class MusicBeatUIState extends flixel.addons.ui.FlxUIState
 		curStep = lastChange.stepTime + Math.floor(shit);
 	}
 
-	public static function switchState(nextState:FlxState = null) {
+	/*public static function switchState(nextState:FlxState = null) {
 		if(nextState == null) nextState = FlxG.state;
 		if(nextState == FlxG.state)
 		{
@@ -129,7 +128,7 @@ class MusicBeatUIState extends flixel.addons.ui.FlxUIState
 	public static function getStateWithSubState()
 		return (FlxG.state.subState != null && substatesToTrans.contains(FlxStringUtil.getClassName(FlxG.state.subState, true)))
 			? getSubState()
-			: getState();
+			: getState();*/
 
 	public function stepHit():Void { if (curStep % 4 == 0) beatHit(); }
 	public function beatHit():Void {}

@@ -3,7 +3,6 @@ package objects.ui;
 import lime.system.Clipboard;
 
 import flixel.addons.ui.FlxInputText;
-import flixel.math.FlxPoint;
 
 class InputTextAdvanced extends FlxInputText
 {
@@ -18,6 +17,7 @@ class InputTextAdvanced extends FlxInputText
 	override function update(elapsed:Float)
 	{
 		//super.update(elapsed);
+		// cuz the main method needs to be overriden duhh
 		FlxSpriteUpdate(elapsed);
 
 		#if FLX_MOUSE
@@ -25,7 +25,7 @@ class InputTextAdvanced extends FlxInputText
 		if (FlxG.mouse.justPressed)
 		{
 			var hadFocus:Bool = hasFocus;
-			if (mouseOverlapping())
+			if (FlxG.mouse.overlaps(this, camera))
 			{
 				caretIndex = getCaretIndex();
 				hasFocus = true;
@@ -40,16 +40,6 @@ class InputTextAdvanced extends FlxInputText
 			}
 		}
 		#end
-	}
-
-	function mouseOverlapping()
-	{
-		var mousePoint:FlxPoint = FlxG.mouse.getScreenPosition(camera);
-		var objPoint:FlxPoint = this.getScreenPosition(null, camera);
-		var ret:Bool = FlxMath.pointInCoordinates(mousePoint.x, mousePoint.y, objPoint.x, objPoint.y, this.width, this.height);
-		mousePoint.put();
-		objPoint.put();
-		return ret;
 	}
 
 	// added these to skip super.update() since it will fuck everything up

@@ -13,7 +13,7 @@ class HealthIcon extends FlxSprite
 {
 	public var isPlayer(default, null):Bool = false;
 	public var baseScale(default, set):Float = 1; // TODO: actually find way to use baseScale (DONE!!)
-	public var char(default, null):String = '';
+	public var char(default, null):String = null;
 	public var sprTracker:FlxSprite;
 
 	function set_baseScale(Scale:Float):Float
@@ -57,16 +57,13 @@ class HealthIcon extends FlxSprite
 			}
 
 			final graphic = Paths.image(name, allowGPU);
-			final twoFrames:Bool = graphic.width > graphic.height;
-			loadGraphic(graphic, true, twoFrames ? Math.floor(graphic.width * 0.5) : graphic.width, graphic.height);
-			iconOffsets = [(width - 150) * 0.5, (height - 150) * 0.5];
-			updateHitbox();
+			loadGraphic(graphic, true, (graphic.width > graphic.height) ? Math.floor(graphic.width * 0.5) : graphic.width, graphic.height);
+			loadConfig(char);
 
 			if(animation.getByName(char) == null)
-				animation.add(char, twoFrames ? [0, 1] : [0], 0, false, flip);
+				animation.add(char, [for (i in 0...numFrames) i], 0, false, flip);
 			animation.play(char, false, false, prevFrame);
 			this.char = char;
-			loadConfig(char);
 		}
 	}
 
@@ -76,7 +73,7 @@ class HealthIcon extends FlxSprite
 	private function loadConfig(char:String)
 	{
 		var json:HealthIconConfig = defaultConfig; // so if json couldn't be found default would be used instead
-		var iconPath:String = 'images/icons/$char.json';
+		final iconPath:String = 'images/icons/$char.json';
 		#if MODS_ALLOWED
 		var path:String = Paths.modFolders(iconPath);
 		if (!FileSystem.exists(path)) path = Paths.getPreloadPath(iconPath);
@@ -86,7 +83,7 @@ class HealthIcon extends FlxSprite
 		if (Assets.exists(path))
 		#end
 		{
-			var rawJson:String = #if MODS_ALLOWED sys.io.File.getContent(path) #else Assets.getText(path) #end;
+			final rawJson:String = #if MODS_ALLOWED sys.io.File.getContent(path) #else Assets.getText(path) #end;
 			json = cast haxe.Json.parse(rawJson);
 		}
 
@@ -94,14 +91,18 @@ class HealthIcon extends FlxSprite
 		flipX		 = #if (haxe > "4.2.5") json.flip_x ?? #else json.flip_x != null ? json.flip_x : #end false;
 		baseScale	 = #if (haxe > "4.2.5") json.scale ?? #else json.scale != null ? json.scale : #end 1;
 
-		var _antialias:Bool = (ClientPrefs.data.antialiasing ? #if (haxe > "4.2.5") json.antialias ?? true #else (json.antialias != null && json.antialias) #end : false);
+		final _antialias:Bool = (ClientPrefs.data.antialiasing ? #if (haxe > "4.2.5") json.antialias ?? true #else (json.antialias != null && json.antialias) #end : false);
 		antialiasing = char.endsWith('-pixel') ? false : _antialias;
 
+		var offsetX:Float = (width - 150) * 0.5;
+		var offsetY:Float = (height - 150) * 0.5;
 		if (json.offset != null && json.offset.length > 1)
 		{
-			iconOffsets[0] += json.offset[0];
-			iconOffsets[1] += json.offset[1];
+			offsetX += json.offset[0];
+			offsetY += json.offset[1];
 		}
+		iconOffsets = [offsetX, offsetY];
+		updateHitbox();
 	}
 
 	override function updateHitbox()

@@ -3,8 +3,10 @@ package backend;
 import flixel.input.gamepad.FlxGamepad;
 
 class InputFormatter {
-	public static function getKeyName(key:flixel.input.keyboard.FlxKey):String {
-		switch (key) {
+	public static function getKeyName(key:flixel.input.keyboard.FlxKey):String
+	{
+		switch (key)
+		{
 			case BACKSPACE:			return "BckSpc";
 			case CONTROL:			return "Ctrl";
 			case ALT:				return "Alt";

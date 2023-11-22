@@ -220,9 +220,9 @@ class ChartingState extends MusicBeatUIState
 		eventIcon.antialiasing = ClientPrefs.data.antialiasing;
 		leftIcon = new HealthIcon('bf');
 		rightIcon = new HealthIcon('dad');
-		eventIcon.scrollFactor.set(1, 1);
-		leftIcon.scrollFactor.set(1, 1);
-		rightIcon.scrollFactor.set(1, 1);
+		//eventIcon.scrollFactor.set(1, 1);
+		//leftIcon.scrollFactor.set(1, 1);
+		//rightIcon.scrollFactor.set(1, 1);
 
 		eventIcon.setGraphicSize(30, 30);
 		leftIcon.setGraphicSize(0, 45);
@@ -306,7 +306,7 @@ class ChartingState extends MusicBeatUIState
 		Left Bracket / Right Bracket - Change Song Playback Rate (SHIFT to go Faster)
 		ALT + Left Bracket / Right Bracket - Reset Song Playback Rate
 		Hold Shift to move 4x faster
-		Right click on an arrow to select it
+		Right click (or Hold Control and click) on an arrow to select it
 		Z/X - Zoom in/out
 		Esc - Test your chart inside Chart Editor
 		Enter - Play your chart
@@ -392,7 +392,7 @@ class ChartingState extends MusicBeatUIState
 		var loadAutosaveBtn:FlxButton = new FlxButton(reloadSongJson.x, reloadSongJson.y + 30, 'Load Autosave', function()
 		{
 			PlayState.SONG = Song.parseJSONshit(FlxG.save.data.autosave);
-			MusicBeatUIState.resetState();
+			MusicBeatState.resetState();
 		});
 
 		var loadEventJson:FlxButton = new FlxButton(loadAutosaveBtn.x, loadAutosaveBtn.y + 30, 'Load Events', function()
@@ -881,7 +881,7 @@ class ChartingState extends MusicBeatUIState
 		tab_group_event.name = 'Events';
 
 		#if LUA_ALLOWED
-		var eventPushedMap:Map<String, Bool> = new Map<String, Bool>();
+		var eventPushedMap:Map<String, Bool> = [];
 		var directories:Array<String> = [];
 
 		#if MODS_ALLOWED
@@ -1533,7 +1533,9 @@ class ChartingState extends MusicBeatUIState
 				{
 					if (FlxG.mouse.overlaps(note))
 					{
-						if (FlxG.keys.pressed.ALT)
+						if (FlxG.keys.pressed.CONTROL)
+							selectNote(note);
+						else if (FlxG.keys.pressed.ALT)
 						{
 							selectNote(note);
 							curSelectedNote[3] = curNoteTypes[currentType];
@@ -1546,10 +1548,7 @@ class ChartingState extends MusicBeatUIState
 			}
 			else
 			{
-				if (FlxG.mouse.x > gridBG.x
-					&& FlxG.mouse.x < gridBG.x + gridBG.width
-					&& FlxG.mouse.y > gridBG.y
-					&& FlxG.mouse.y < gridBG.y + (GRID_SIZE * getSectionBeats() * 4) * zoomList[curZoom])
+				if (FlxMath.pointInCoordinates(FlxG.mouse.x, FlxG.mouse.y, gridBG.x, gridBG.y, gridBG.width, GRID_SIZE * getSectionBeats() * 4 * zoomList[curZoom]))
 				{
 					FlxG.log.add('added note');
 					addNote();
@@ -1620,7 +1619,7 @@ class ChartingState extends MusicBeatUIState
 
 				//if(_song.stage == null) _song.stage = stageDropDown.selectedLabel;
 				StageData.loadDirectory(_song);
-				LoadingState.loadAndSwitchStateFromEditor(new PlayState());
+				LoadingState.loadAndSwitchState(new PlayState());
 			}
 
 			if(curSelectedNote != null && curSelectedNote[1] > -1) {
@@ -1633,7 +1632,7 @@ class ChartingState extends MusicBeatUIState
 				// Protect against lost data when quickly leaving the chart editor.
 				autosaveSong();
 				PlayState.chartingMode = false;
-				MusicBeatUIState.switchState(new states.editors.MasterEditorMenu());
+				MusicBeatState.switchState(new states.editors.MasterEditorMenu());
 				FlxG.sound.playMusic(Paths.music('freakyMenu'));
 				FlxG.mouse.visible = false;
 				return;
@@ -2399,36 +2398,40 @@ class ChartingState extends MusicBeatUIState
 	{
 		var healthIconP1:String = loadHealthIconFromCharacter(_song.player1);
 		var healthIconP2:String = loadHealthIconFromCharacter(_song.player2);
+		final gfIcon:String = _song.gfVersion;
 
 		if (_song.notes[curSec].mustHitSection)
 		{
+			if (_song.notes[curSec].gfSection) healthIconP1 = (gfIcon != null && gfIcon.length > 0) ? gfIcon : 'gf';
 			leftIcon.changeIcon(healthIconP1);
 			rightIcon.changeIcon(healthIconP2);
-			if (_song.notes[curSec].gfSection) leftIcon.changeIcon('gf');
 		}
 		else
 		{
+			if (_song.notes[curSec].gfSection) healthIconP2 = (gfIcon != null && gfIcon.length > 0) ? gfIcon : 'gf';
 			leftIcon.changeIcon(healthIconP2);
 			rightIcon.changeIcon(healthIconP1);
-			if (_song.notes[curSec].gfSection) leftIcon.changeIcon('gf');
 		}
+		leftIcon.setGraphicSize(0, 45);
+		rightIcon.setGraphicSize(0, 45);
 	}
 
-	function loadHealthIconFromCharacter(char:String) {
-		var characterPath:String = 'characters/' + char + '.json';
+	var cachedCharIcons:Map<String, String> = []; // for optimisation purposes
+	function loadHealthIconFromCharacter(char:String):String
+	{
+		if (cachedCharIcons.exists(char)) return cachedCharIcons.get(char);
+
+		var characterPath:String = 'characters/$char.json';
 		#if MODS_ALLOWED
 		var path:String = Paths.modFolders(characterPath);
-		if (!FileSystem.exists(path)) {
-			path = Paths.getPreloadPath(characterPath);
-		}
-
+		if (!FileSystem.exists(path)) path = Paths.getPreloadPath(characterPath);
 		if (!FileSystem.exists(path))
 		#else
 		var path:String = Paths.getPreloadPath(characterPath);
 		if (!OpenFlAssets.exists(path))
 		#end
 		{
-			path = Paths.getPreloadPath('characters/' + Character.DEFAULT_CHARACTER + '.json'); //If a character couldn't be found, change him to BF just to prevent a crash
+			path = Paths.getPreloadPath('characters/${Character.DEFAULT_CHARACTER}.json'); //If a character couldn't be found, change him to BF just to prevent a crash
 		}
 
 		#if MODS_ALLOWED
@@ -2438,7 +2441,8 @@ class ChartingState extends MusicBeatUIState
 		#end
 
 		var json:CharacterFile = cast Json.parse(rawJson);
-		return json.healthicon;
+		cachedCharIcons.set(char, json.healthicon);
+		return cachedCharIcons.get(char);
 	}
 
 	function updateNoteUI():Void
@@ -2839,7 +2843,7 @@ class ChartingState extends MusicBeatUIState
 				var diff:String = Difficulty.getString();
 				PlayState.SONG = Song.loadFromJson(song.toLowerCase() + ((diff != null && diff != Difficulty.getDefault()) ? "-" + diff : ""), song.toLowerCase());
 			}
-			MusicBeatUIState.resetState();
+			MusicBeatState.resetState();
 		} catch(e) {
 			trace('ERROR! $e');
 

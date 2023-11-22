@@ -30,7 +30,7 @@ typedef AnimArray = {
 	loop:Bool,
 	loop_point:Int,
 	indices:Array<Int>,
-	offsets:Array<Int>,
+	offsets:Array<Float>,
 	animflip_x:Bool,
 	animflip_y:Bool
 }
@@ -71,7 +71,7 @@ class Character extends FlxSprite
 	public var originalFlipY:Bool = false;
 	public var healthColorArray:Array<Int> = [255, 0, 0];
 
-	public function new(x:Float, y:Float, ?character:String = DEFAULT_CHARACTER, ?isPlayer:Bool = false)
+	public function new(x:Float, y:Float, ?character:String = DEFAULT_CHARACTER, ?isPlayer:Bool = false, ?allowGPU:Bool = true)
 	{
 		super(x, y);
 		curCharacter = character;
@@ -103,7 +103,7 @@ class Character extends FlxSprite
 		useAtlas = Assets.exists(Paths.getPath('images/$img/Animation.json', TEXT));
 		#end
 
-		frames = !useAtlas ? Paths.getAtlas(img) : animateatlas.AtlasFrameMaker.construct(img);
+		frames = !useAtlas ? Paths.getAtlas(img, null, allowGPU) : animateatlas.AtlasFrameMaker.construct(img);
 
 		imageFile = img;
 		if(json.scale != 1)
@@ -262,9 +262,9 @@ class Character extends FlxSprite
 	}
 
 	//creates a copy of this character🤯😱
-	public function copy():Character
+	public function copy(?allowGPU:Bool = true):Character
 	{
-		var faker:Character = new Character(x, y, curCharacter, isPlayer);
+		var faker:Character = new Character(x, y, curCharacter, isPlayer, allowGPU);
 		faker.debugMode = debugMode;
 		return faker;
 	}
@@ -279,8 +279,8 @@ class Character extends FlxSprite
 		if(Anim != null)
 		{
 			final animAnim:String = '' + Anim.anim;
-			final temp:Array<Int> = Anim.offsets;
-			final animOffsets:Array<Int> = (temp != null && temp.length > 1) ? temp : [0, 0];
+			final temp:Array<Float> = Anim.offsets;
+			final animOffsets:Array<Float> = (temp != null && temp.length > 1) ? temp : [0.0, 0.0];
 			addAnim(animAnim, '' + Anim.name, Anim.indices, Anim.fps, Anim.loop, Anim.animflip_x, Anim.animflip_y, Anim.loop_point);
 			addOffset(animAnim, animOffsets[0], animOffsets[1]);
 		}
@@ -302,6 +302,6 @@ class Character extends FlxSprite
 		}
 	}
 
-	public function addOffset(name:String, x:Int = 0, y:Int = 0)
+	public function addOffset(name:String, x:Float = 0, y:Float = 0)
 		animOffsets.set(name, [x, y]);
 }

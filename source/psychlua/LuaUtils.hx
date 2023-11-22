@@ -1,8 +1,8 @@
 package psychlua;
 
+import Type.ValueType;
 import openfl.display.BlendMode;
 import animateatlas.AtlasFrameMaker;
-
 import substates.GameOverSubstate;
 
 typedef LuaTweenOptions = {
@@ -30,8 +30,9 @@ class LuaUtils
 		};
 	}
 
-	public static function setVarInArray(instance:Dynamic, variable:String, value:Dynamic, allowMaps:Bool = false):Any
+	public static function setVarInArray(instance:Dynamic, variable:String, value:Dynamic, ?allowMaps:Bool = false, ?bypassAccessor:Bool = false):Any
 	{
+		if (value is String) value = boolCkeck(value);
 		var splitProps:Array<String> = variable.split('[');
 		if(splitProps.length > 1)
 		{
@@ -41,7 +42,7 @@ class LuaUtils
 				var retVal:Dynamic = PlayState.instance.variables.get(splitProps[0]);
 				if(retVal != null) target = retVal;
 			}
-			else target = Reflect.getProperty(instance, splitProps[0]);
+			else target = bypassAccessor ? Reflect.field(instance, splitProps[0]) : Reflect.getProperty(instance, splitProps[0]);
 
 			for (i in 1...splitProps.length)
 			{
@@ -63,10 +64,10 @@ class LuaUtils
 			PlayState.instance.variables.set(variable, value);
 			return value;
 		}
-		Reflect.setProperty(instance, variable, value);
+		bypassAccessor ? Reflect.setField(instance, variable, value) : Reflect.setProperty(instance, variable, value);
 		return value;
 	}
-	public static function getVarInArray(instance:Dynamic, variable:String, allowMaps:Bool = false):Any
+	public static function getVarInArray(instance:Dynamic, variable:String, ?allowMaps:Bool = false, ?bypassAccessor:Bool = false):Any
 	{
 		var splitProps:Array<String> = variable.split('[');
 		if(splitProps.length > 1)
@@ -77,7 +78,7 @@ class LuaUtils
 				var retVal:Dynamic = PlayState.instance.variables.get(splitProps[0]);
 				if(retVal != null) target = retVal;
 			}
-			else target = Reflect.getProperty(instance, splitProps[0]);
+			else target = bypassAccessor ? Reflect.field(instance, splitProps[0]) : Reflect.getProperty(instance, splitProps[0]);
 
 			for (i in 1...splitProps.length)
 			{
@@ -94,37 +95,39 @@ class LuaUtils
 			var retVal:Dynamic = PlayState.instance.variables.get(variable);
 			if(retVal != null) return retVal;
 		}
-		return Reflect.getProperty(instance, variable);
+		return bypassAccessor ? Reflect.field(instance, variable) : Reflect.getProperty(instance, variable);
 	}
 	
-	public static function isMap(variable:Dynamic)
-	{
-		if(variable.exists != null && variable.keyValueIterator != null) return true;
-		return false;
-	}
+	public static function isMap(variable:Dynamic):Bool
+		return variable.exists != null && variable.keyValueIterator != null;
 
-	public static function setGroupStuff(leArray:Dynamic, variable:String, value:Dynamic, ?allowMaps:Bool = false) {
+	public static function setGroupStuff(leArray:Dynamic, variable:String, value:Dynamic, ?allowMaps:Bool = false, ?bypassAccessor:Bool = false)
+	{
+		if (value is String) value = boolCkeck(value);
 		var split:Array<String> = variable.split('.');
-		if(split.length > 1) {
+		if(split.length > 1)
+		{
 			var obj:Dynamic = Reflect.getProperty(leArray, split[0]);
 			for (i in 1...split.length-1) obj = Reflect.getProperty(obj, split[i]);
 			leArray = obj;
 			variable = split[split.length-1];
 		}
 		if(allowMaps && isMap(leArray)) leArray.set(variable, value);
-		else Reflect.setProperty(leArray, variable, value);
+		else bypassAccessor ? Reflect.setField(leArray, variable, value) : Reflect.setProperty(leArray, variable, value);
 		return value;
 	}
-	public static function getGroupStuff(leArray:Dynamic, variable:String, ?allowMaps:Bool = false) {
+	public static function getGroupStuff(leArray:Dynamic, variable:String, ?allowMaps:Bool = false, ?bypassAccessor:Bool = false)
+	{
 		var split:Array<String> = variable.split('.');
-		if(split.length > 1) {
+		if(split.length > 1)
+		{
 			var obj:Dynamic = Reflect.getProperty(leArray, split[0]);
 			for (i in 1...split.length-1) obj = Reflect.getProperty(obj, split[i]);
 			leArray = obj;
 			variable = split[split.length-1];
 		}
 		if(allowMaps && isMap(leArray)) return leArray.get(variable);
-		return Reflect.getProperty(leArray, variable);
+		return bypassAccessor ? Reflect.field(leArray, variable) : Reflect.getProperty(leArray, variable);
 	}
 
 	public static function getPropertyLoop(split:Array<String>, ?checkForTextsToo:Bool = true, ?getProperty:Bool=true, ?allowMaps:Bool = false):Dynamic
@@ -156,9 +159,15 @@ class LuaUtils
 	
 	public static function isOfTypes(value:Any, types:Array<Dynamic>)
 	{
-		for (type in types)
-			if(Std.isOfType(value, type)) return true;
+		for (type in types) if(Std.isOfType(value, type)) return true;
 		return false;
+	}
+
+	inline public static function boolCkeck(value:String):Null<Any> // should fix bool values
+	{
+		if (value == null) return value;
+		value = value.toLowerCase();
+		return (value == "true" || value == "false") ? value == "true" : value;
 	}
 	
 	public static inline function getTargetInstance()
@@ -230,7 +239,8 @@ class LuaUtils
 		}
 	}
 
-	public static function resetTextTag(tag:String) {
+	public static function resetTextTag(tag:String)
+	{
 		#if LUA_ALLOWED
 		if(!PlayState.instance.modchartTexts.exists(tag)) return;
 
@@ -242,7 +252,8 @@ class LuaUtils
 		#end
 	}
 
-	public static function resetSpriteTag(tag:String) {
+	public static function resetSpriteTag(tag:String)
+	{
 		#if LUA_ALLOWED
 		if(!PlayState.instance.modchartSprites.exists(tag)) return;
 
@@ -254,7 +265,8 @@ class LuaUtils
 		#end
 	}
 
-	public static function cancelTween(tag:String) {
+	public static function cancelTween(tag:String)
+	{
 		#if LUA_ALLOWED
 		if(PlayState.instance.modchartTweens.exists(tag)) {
 			PlayState.instance.modchartTweens.get(tag).cancel();
@@ -264,7 +276,8 @@ class LuaUtils
 		#end
 	}
 
-	public static function tweenPrepare(tag:String, vars:String) {
+	public static function tweenPrepare(tag:String, vars:String)
+	{
 		cancelTween(tag);
 		var variables:Array<String> = vars.split('.');
 		var sexyProp:Dynamic = LuaUtils.getObjectDirectly(variables[0]);
@@ -272,7 +285,8 @@ class LuaUtils
 		return sexyProp;
 	}
 
-	public static function cancelTimer(tag:String) {
+	public static function cancelTimer(tag:String)
+	{
 		#if LUA_ALLOWED
 		if(PlayState.instance.modchartTimers.exists(tag)) {
 			var theTimer:FlxTimer = PlayState.instance.modchartTimers.get(tag);
@@ -284,98 +298,112 @@ class LuaUtils
 	}
 
 	//buncho string stuffs
-	public static function getTweenTypeByString(?type:String = '') {
+	public static function getTweenTypeByString(?type:String = ''):FlxTweenType
+	{
+		var _type:FlxTweenType = FlxTweenType.ONESHOT;
 		switch(type.toLowerCase().trim())
 		{
-			case 'backward': return FlxTweenType.BACKWARD;
-			case 'looping'|'loop': return FlxTweenType.LOOPING;
-			case 'persist': return FlxTweenType.PERSIST;
-			case 'pingpong': return FlxTweenType.PINGPONG;
+			case 'backward':		_type = FlxTweenType.BACKWARD;
+			case 'looping'|'loop':	_type = FlxTweenType.LOOPING;
+			case 'persist':			_type = FlxTweenType.PERSIST;
+			case 'pingpong':		_type = FlxTweenType.PINGPONG;
 		}
-		return FlxTweenType.ONESHOT;
+		return _type;
 	}
 
-	public static function getTweenEaseByString(?ease:String = '') {
-		switch(ease.toLowerCase().trim()) {
-			case 'backin': return FlxEase.backIn;
-			case 'backinout': return FlxEase.backInOut;
-			case 'backout': return FlxEase.backOut;
-			case 'bouncein': return FlxEase.bounceIn;
-			case 'bounceinout': return FlxEase.bounceInOut;
-			case 'bounceout': return FlxEase.bounceOut;
-			case 'circin': return FlxEase.circIn;
-			case 'circinout': return FlxEase.circInOut;
-			case 'circout': return FlxEase.circOut;
-			case 'cubein': return FlxEase.cubeIn;
-			case 'cubeinout': return FlxEase.cubeInOut;
-			case 'cubeout': return FlxEase.cubeOut;
-			case 'elasticin': return FlxEase.elasticIn;
-			case 'elasticinout': return FlxEase.elasticInOut;
-			case 'elasticout': return FlxEase.elasticOut;
-			case 'expoin': return FlxEase.expoIn;
-			case 'expoinout': return FlxEase.expoInOut;
-			case 'expoout': return FlxEase.expoOut;
-			case 'quadin': return FlxEase.quadIn;
-			case 'quadinout': return FlxEase.quadInOut;
-			case 'quadout': return FlxEase.quadOut;
-			case 'quartin': return FlxEase.quartIn;
-			case 'quartinout': return FlxEase.quartInOut;
-			case 'quartout': return FlxEase.quartOut;
-			case 'quintin': return FlxEase.quintIn;
-			case 'quintinout': return FlxEase.quintInOut;
-			case 'quintout': return FlxEase.quintOut;
-			case 'sinein': return FlxEase.sineIn;
-			case 'sineinout': return FlxEase.sineInOut;
-			case 'sineout': return FlxEase.sineOut;
-			case 'smoothstepin': return FlxEase.smoothStepIn;
-			case 'smoothstepinout': return FlxEase.smoothStepInOut;
-			case 'smoothstepout': return FlxEase.smoothStepInOut;
-			case 'smootherstepin': return FlxEase.smootherStepIn;
-			case 'smootherstepinout': return FlxEase.smootherStepInOut;
-			case 'smootherstepout': return FlxEase.smootherStepOut;
+	public static function getTweenEaseByString(?ease:String = ''):(f:Float)->Float
+	{
+		var _ease:(f:Float)->Float = FlxEase.linear;
+		switch(ease.toLowerCase().trim())
+		{
+			case 'backin':				_ease = FlxEase.backIn;
+			case 'backinout':			_ease = FlxEase.backInOut;
+			case 'backout':				_ease = FlxEase.backOut;
+			case 'bouncein':			_ease = FlxEase.bounceIn;
+			case 'bounceinout':			_ease = FlxEase.bounceInOut;
+			case 'bounceout':			_ease = FlxEase.bounceOut;
+			case 'circin':				_ease = FlxEase.circIn;
+			case 'circinout':			_ease = FlxEase.circInOut;
+			case 'circout':				_ease = FlxEase.circOut;
+			case 'cubein':				_ease = FlxEase.cubeIn;
+			case 'cubeinout':			_ease = FlxEase.cubeInOut;
+			case 'cubeout':				_ease = FlxEase.cubeOut;
+			case 'elasticin':			_ease = FlxEase.elasticIn;
+			case 'elasticinout':		_ease = FlxEase.elasticInOut;
+			case 'elasticout':			_ease = FlxEase.elasticOut;
+			case 'expoin':				_ease = FlxEase.expoIn;
+			case 'expoinout':			_ease = FlxEase.expoInOut;
+			case 'expoout':				_ease = FlxEase.expoOut;
+			case 'quadin':				_ease = FlxEase.quadIn;
+			case 'quadinout':			_ease = FlxEase.quadInOut;
+			case 'quadout':				_ease = FlxEase.quadOut;
+			case 'quartin':				_ease = FlxEase.quartIn;
+			case 'quartinout':			_ease = FlxEase.quartInOut;
+			case 'quartout':			_ease = FlxEase.quartOut;
+			case 'quintin':				_ease = FlxEase.quintIn;
+			case 'quintinout':			_ease = FlxEase.quintInOut;
+			case 'quintout':			_ease = FlxEase.quintOut;
+			case 'sinein':				_ease = FlxEase.sineIn;
+			case 'sineinout':			_ease = FlxEase.sineInOut;
+			case 'sineout':				_ease = FlxEase.sineOut;
+			case 'smoothstepin':		_ease = FlxEase.smoothStepIn;
+			case 'smoothstepinout':		_ease = FlxEase.smoothStepInOut;
+			case 'smoothstepout':		_ease = FlxEase.smoothStepInOut;
+			case 'smootherstepin':		_ease = FlxEase.smootherStepIn;
+			case 'smootherstepinout':	_ease = FlxEase.smootherStepInOut;
+			case 'smootherstepout':		_ease = FlxEase.smootherStepOut;
 		}
-		return FlxEase.linear;
+		return _ease;
 	}
 
-	public static function blendModeFromString(blend:String):BlendMode {
-		switch(blend.toLowerCase().trim()) {
-			case 'add': return ADD;
-			case 'alpha': return ALPHA;
-			case 'darken': return DARKEN;
-			case 'difference': return DIFFERENCE;
-			case 'erase': return ERASE;
-			case 'hardlight': return HARDLIGHT;
-			case 'invert': return INVERT;
-			case 'layer': return LAYER;
-			case 'lighten': return LIGHTEN;
-			case 'multiply': return MULTIPLY;
-			case 'overlay': return OVERLAY;
-			case 'screen': return SCREEN;
-			case 'shader': return SHADER;
-			case 'subtract': return SUBTRACT;
+	public static function blendModeFromString(blend:String):BlendMode
+	{
+		var _blend:BlendMode = NORMAL;
+		switch(blend.toLowerCase().trim())
+		{
+			case 'add':			_blend = ADD;
+			case 'alpha':		_blend = ALPHA;
+			case 'darken':		_blend = DARKEN;
+			case 'difference':	_blend = DIFFERENCE;
+			case 'erase':		_blend = ERASE;
+			case 'hardlight':	_blend = HARDLIGHT;
+			case 'invert':		_blend = INVERT;
+			case 'layer':		_blend = LAYER;
+			case 'lighten':		_blend = LIGHTEN;
+			case 'multiply':	_blend = MULTIPLY;
+			case 'overlay':		_blend = OVERLAY;
+			case 'screen':		_blend = SCREEN;
+			case 'shader':		_blend = SHADER;
+			case 'subtract':	_blend = SUBTRACT;
 		}
-		return NORMAL;
+		return _blend;
 	}
 	
-	public static function typeToString(type:Int):String {
+	public static function typeToString(type:Int):String
+	{
 		#if LUA_ALLOWED
-		switch(type) {
-			case Lua.LUA_TBOOLEAN: return "boolean";
-			case Lua.LUA_TNUMBER: return "number";
-			case Lua.LUA_TSTRING: return "string";
-			case Lua.LUA_TTABLE: return "table";
-			case Lua.LUA_TFUNCTION: return "function";
+		var _type:String = "unknown";
+		switch(type)
+		{
+			case Lua.LUA_TBOOLEAN:	_type = "boolean";
+			case Lua.LUA_TNUMBER:	_type = "number";
+			case Lua.LUA_TSTRING:	_type = "string";
+			case Lua.LUA_TTABLE:	_type = "table";
+			case Lua.LUA_TFUNCTION:	_type = "function";
 		}
-		if (type <= Lua.LUA_TNIL) return "nil";
+		if (type <= Lua.LUA_TNIL)	_type = "nil";
 		#end
-		return "unknown";
+		return _type;
 	}
 
-	public static function cameraFromString(cam:String):FlxCamera {
-		switch(cam.toLowerCase()) {
-			case 'camhud' | 'hud': return PlayState.instance.camHUD;
-			case 'camother' | 'other': return PlayState.instance.camOther;
+	public static function cameraFromString(cam:String):FlxCamera
+	{
+		var _cam:FlxCamera = PlayState.instance.camGame;
+		switch(cam.toLowerCase())
+		{
+			case 'camhud' | 'hud':		_cam = PlayState.instance.camHUD;
+			case 'camother' | 'other':	_cam = PlayState.instance.camOther;
 		}
-		return PlayState.instance.camGame;
+		return _cam;
 	}
 }

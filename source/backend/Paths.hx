@@ -298,16 +298,16 @@ class Paths
 	}
 
 	// less optimized but automatic handling
-	static public function getAtlas(key:String, ?library:String = null):FlxAtlasFrames
+	static public function getAtlas(key:String, ?library:String = null, ?allowGPU:Bool = true):FlxAtlasFrames
 	{
 		#if MODS_ALLOWED
 		if(FileSystem.exists(modsXml(key)) || OpenFlAssets.exists(getPath('images/$key.xml', library), TEXT))
 		#else
 		if(OpenFlAssets.exists(getPath('images/$key.xml', library)))
 		#end
-			return getSparrowAtlas(key, library);
+			return getSparrowAtlas(key, library, allowGPU);
 
-		return getPackerAtlas(key, library);
+		return getPackerAtlas(key, library, allowGPU);
 	}
 
 	inline static public function getSparrowAtlas(key:String, ?library:String = null, ?allowGPU:Bool = true):FlxAtlasFrames

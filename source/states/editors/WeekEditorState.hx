@@ -137,7 +137,7 @@ class WeekEditorState extends MusicBeatUIState
 		loadWeekButton.x -= 120;
 		add(loadWeekButton);
 		
-		var freeplayButton:FlxButton = new FlxButton(0, 650, "Freeplay", function() MusicBeatUIState.switchState(new WeekEditorFreeplayState(weekFile)));
+		var freeplayButton:FlxButton = new FlxButton(0, 650, "Freeplay", function() MusicBeatState.switchState(new WeekEditorFreeplayState(weekFile)));
 		freeplayButton.screenCenter(X);
 		add(freeplayButton);
 	
@@ -413,7 +413,7 @@ class WeekEditorState extends MusicBeatUIState
 		if(!blockInput) {
 			ClientPrefs.toggleVolumeKeys(true);
 			if(FlxG.keys.justPressed.ESCAPE) {
-				MusicBeatUIState.switchState(new MasterEditorMenu());
+				MusicBeatState.switchState(new MasterEditorMenu());
 				FlxG.sound.playMusic(Paths.music('freakyMenu'));
 			}
 		}
@@ -618,7 +618,7 @@ class WeekEditorFreeplayState extends backend.MusicBeatUIState
 		loadWeekButton.x -= 120;
 		add(loadWeekButton);
 		
-		var storyModeButton:FlxButton = new FlxButton(0, 685, "Story Mode", function() MusicBeatUIState.switchState(new WeekEditorState(weekFile)));
+		var storyModeButton:FlxButton = new FlxButton(0, 685, "Story Mode", function() MusicBeatState.switchState(new WeekEditorState(weekFile)));
 		storyModeButton.screenCenter(X);
 		add(storyModeButton);
 	
@@ -736,7 +736,7 @@ class WeekEditorFreeplayState extends backend.MusicBeatUIState
 			super.update(elapsed);
 			FlxTransitionableState.skipNextTransIn = true;
 			FlxTransitionableState.skipNextTransOut = true;
-			MusicBeatUIState.switchState(new WeekEditorFreeplayState(WeekEditorState.loadedWeek));
+			MusicBeatState.switchState(new WeekEditorFreeplayState(WeekEditorState.loadedWeek));
 			WeekEditorState.loadedWeek = null;
 			return;
 		}
@@ -748,7 +748,7 @@ class WeekEditorFreeplayState extends backend.MusicBeatUIState
 		} else {
 			ClientPrefs.toggleVolumeKeys(true);
 			if(FlxG.keys.justPressed.ESCAPE) {
-				MusicBeatUIState.switchState(new MasterEditorMenu());
+				MusicBeatState.switchState(new MasterEditorMenu());
 				FlxG.sound.playMusic(Paths.music('freakyMenu'));
 			}
 			if(controls.UI_UP_P) changeSelection(-1);

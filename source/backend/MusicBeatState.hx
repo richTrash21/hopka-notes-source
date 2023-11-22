@@ -4,7 +4,7 @@ import flixel.addons.transition.FlxTransitionableState;
 import flixel.util.FlxStringUtil;
 import flixel.FlxState;
 
-class MusicBeatState extends FlxTransitionableState
+class MusicBeatState extends FlxTransitionableState implements IMusicBeatState
 {
 	// TRANS RIGHTS!!!!
 	public static final transTime:Float = 0.45; // uniform transition time
@@ -36,7 +36,7 @@ class MusicBeatState extends FlxTransitionableState
 	public static var timePassedOnState:Float = 0;
 	override function update(elapsed:Float)
 	{
-		var oldStep:Int = curStep;
+		final oldStep:Int = curStep;
 		timePassedOnState += elapsed;
 
 		updateCurStep();
@@ -72,7 +72,7 @@ class MusicBeatState extends FlxTransitionableState
 	{
 		if(curStep < 0) return;
 
-		var lastSection:Int = curSection;
+		final lastSection:Int = curSection;
 		curSection = 0;
 		stepsToDo = 0;
 		for (i in 0...PlayState.SONG.notes.length)
@@ -97,16 +97,16 @@ class MusicBeatState extends FlxTransitionableState
 
 	private function updateCurStep():Void
 	{
-		var lastChange = Conductor.getBPMFromSeconds(Conductor.songPosition);
+		final lastChange = Conductor.getBPMFromSeconds(Conductor.songPosition);
 
-		var shit = ((Conductor.songPosition - ClientPrefs.data.noteOffset) - lastChange.songTime) / lastChange.stepCrochet;
+		final shit = ((Conductor.songPosition - ClientPrefs.data.noteOffset) - lastChange.songTime) / lastChange.stepCrochet;
 		curDecStep = lastChange.stepTime + shit;
 		curStep = lastChange.stepTime + Math.floor(shit);
 	}
 
-	public static function switchState(nextState:FlxState = null) {
-		if(nextState == null) nextState = FlxG.state;
-		if(nextState == FlxG.state)
+	public static function switchState(?nextState:FlxState)
+	{
+		if(nextState == null || nextState == FlxG.state)
 		{
 			resetState();
 			return;
@@ -117,35 +117,37 @@ class MusicBeatState extends FlxTransitionableState
 		FlxTransitionableState.skipNextTransIn = false;
 	}
 
-	public static function resetState() {
-		if(FlxTransitionableState.skipNextTransIn) FlxG.resetState();
+	public static function resetState()
+	{
+		if (FlxTransitionableState.skipNextTransIn) FlxG.resetState();
 		else startTransition();
 		FlxTransitionableState.skipNextTransIn = false;
 	}
 
 	// Custom made Trans in
-	public static function startTransition(nextState:FlxState = null)
+	public static function startTransition(?nextState:FlxState)
 	{
-		if(nextState == null) nextState = FlxG.state;
+		if (nextState == null) nextState = FlxG.state;
 
 		getStateWithSubState().openSubState(new CustomFadeTransition(transTime, false));
 		CustomFadeTransition.finishCallback = function() nextState == FlxG.state ? FlxG.resetState() : FlxG.switchState(nextState);
 	}
 
-	public static function getState():MusicBeatState
-		return cast (FlxG.state, MusicBeatState);
+	public static function getState():FlxState
+		return cast FlxG.state;
 
-	public static function getSubState():MusicBeatSubstate
-		return cast (FlxG.state.subState, MusicBeatSubstate);
+	public static function getSubState():FlxState
+		return cast FlxG.state.subState;
 
-	public static function getStateWithSubState()
+	public static function getStateWithSubState():FlxState
 		return (FlxG.state.subState != null && substatesToTrans.contains(FlxStringUtil.getClassName(FlxG.state.subState, true)))
 			? getSubState()
 			: getState();
 
 	public function stepHit():Void
 	{
-		stagesFunc(function(stage:BaseStage) {
+		stagesFunc(function(stage:BaseStage)
+		{
 			stage.curStep = curStep;
 			stage.curDecStep = curDecStep;
 			stage.stepHit();
@@ -157,7 +159,8 @@ class MusicBeatState extends FlxTransitionableState
 	public var stages:Array<BaseStage> = [];
 	public function beatHit():Void
 	{
-		stagesFunc(function(stage:BaseStage) {
+		stagesFunc(function(stage:BaseStage)
+		{
 			stage.curBeat = curBeat;
 			stage.curDecBeat = curDecBeat;
 			stage.beatHit();
@@ -166,7 +169,8 @@ class MusicBeatState extends FlxTransitionableState
 
 	public function sectionHit():Void
 	{
-		stagesFunc(function(stage:BaseStage) {
+		stagesFunc(function(stage:BaseStage)
+		{
 			stage.curSection = curSection;
 			stage.sectionHit();
 		});
