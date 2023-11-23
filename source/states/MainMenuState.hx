@@ -60,7 +60,7 @@ class MainMenuState extends MusicBeatState
 
 		final yScroll:Float = Math.max(0.25 - (0.05 * (optionShit.length - 4)), 0.1);
 
-		var bg:FlxSprite = new FlxSprite(0, 0, Paths.image('menuBG'));
+		final bg:FlxSprite = new FlxSprite(0, 0, Paths.image('menuBG'));
 		bg.antialiasing = ClientPrefs.data.antialiasing;
 		bg.scrollFactor.set(0, yScroll);
 		bg.setGraphicSize(Std.int(bg.width * 1.175));
@@ -78,7 +78,7 @@ class MainMenuState extends MusicBeatState
 		magenta.color = 0xFFfd719b;
 		add(magenta);
 
-		var grid:FlxBackdrop = new FlxBackdrop(flixel.addons.display.FlxGridOverlay.createGrid(80, 80, 160, 160, true, 0x33FFFFFF, 0x0));
+		final grid:FlxBackdrop = new FlxBackdrop(flixel.addons.display.FlxGridOverlay.createGrid(80, 80, 160, 160, true, 0x33FFFFFF, 0x0));
 		grid.scrollFactor.set(0, yScroll);
 		grid.velocity.set(40, 40);
 		add(grid);
@@ -88,7 +88,7 @@ class MainMenuState extends MusicBeatState
 
 		for (i in 0...optionShit.length)
 		{
-			var menuItem:FlxSprite = new FlxSprite(0, (i * 140) + 108 - (Math.max(optionShit.length, 4) - 4) * 80);
+			final menuItem:FlxSprite = new FlxSprite(0, (i * 140) + 108 - (Math.max(optionShit.length, 4) - 4) * 80);
 			menuItem.antialiasing = ClientPrefs.data.antialiasing;
 			menuItem.frames = Paths.getSparrowAtlas('mainmenu/menu_' + optionShit[i]);
 			menuItem.animation.addByPrefix('idle', optionShit[i] + " basic", 24);
@@ -102,12 +102,12 @@ class MainMenuState extends MusicBeatState
 
 		FlxG.camera.follow(menuItems.members[0], null, 0);
 
-		var versionShit:FlxText = new FlxText(12, FlxG.height - 44, 0, "Psych Engine v" + psychEngineVersion, 12);
+		final versionShit:FlxText = new FlxText(12, FlxG.height - 44, 0, "Psych Engine v" + psychEngineVersion, 12);
 		versionShit.scrollFactor.set();
 		versionShit.setFormat("VCR OSD Mono", 16, FlxColor.WHITE, LEFT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
 		add(versionShit);
 
-		var versionShit:FlxText = new FlxText(12, FlxG.height - 24, 0, "Friday Night Funkin' v" + lime.app.Application.current.meta.get('version'), 12);
+		final versionShit:FlxText = new FlxText(12, FlxG.height - 24, 0, "Friday Night Funkin' v" + lime.app.Application.current.meta.get('version'), 12);
 		versionShit.scrollFactor.set();
 		versionShit.setFormat("VCR OSD Mono", 16, FlxColor.WHITE, LEFT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
 		add(versionShit);
@@ -116,9 +116,9 @@ class MainMenuState extends MusicBeatState
 
 		#if ACHIEVEMENTS_ALLOWED
 		Achievements.loadAchievements();
-		var leDate = Date.now();
+		final leDate = Date.now();
 		if (leDate.getDay() == 5 && leDate.getHours() >= 18) {
-			var achieveID:Int = Achievements.getAchievementIndex('friday_night_play');
+			final achieveID:Int = Achievements.getAchievementIndex('friday_night_play');
 			if(!Achievements.isAchievementUnlocked(Achievements.achievementsStuff[achieveID][2])) { //It's a friday night. WEEEEEEEEEEEEEEEEEE
 				Achievements.achievementsMap.set(Achievements.achievementsStuff[achieveID][2], true);
 				giveAchievement();

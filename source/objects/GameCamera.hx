@@ -32,14 +32,14 @@ class GameCamera extends FlxCamera
 	**/
 	public var paused(default, set):Bool = false;
 
-	// internal values
-	var _speed:Float = 2.4;
-	var _zoomSpeed:Float = 3.125;
-
 	/**
 		Global game speed. Can be controlled outside of PlatState.
 	**/
 	@:isVar public static var globalSpeed(get, set):Float = 1.0;
+
+	// internal values
+	var _speed:Float = 2.4;
+	var _zoomSpeed:Float = 3.125;
 
 	public function new(Zoom:Float = 0.0, BGAlpha:Float = 1.0, UpdateLerp:Bool = false, UpdateZoom:Bool = false)
 	{
@@ -68,14 +68,13 @@ class GameCamera extends FlxCamera
 
 	override public function update(elapsed:Float)
 	{
-		if (!paused)
-		{
-			if (target != null && updateLerp)
-				followLerp = elapsed * _speed * cameraSpeed * globalSpeed * (FlxG.updateFramerate / 60);
+		if (paused) return;
 
-			if (updateZoom && !tweeningZoom)
-				zoom = FlxMath.lerp(defaultZoom, zoom, Math.max(1 - (elapsed * _zoomSpeed * zoomDecay * globalSpeed), 0));
-		}
+		if (target != null && updateLerp)
+			followLerp = elapsed * _speed * cameraSpeed * globalSpeed * (FlxG.updateFramerate / 60);
+
+		if (updateZoom && !tweeningZoom)
+			zoom = FlxMath.lerp(defaultZoom, zoom, Math.max(1 - (elapsed * _zoomSpeed * zoomDecay * globalSpeed), 0));
 
 		super.update(elapsed);
 	}

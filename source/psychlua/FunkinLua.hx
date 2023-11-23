@@ -604,8 +604,8 @@ class FunkinLua {
 		addCallback("getMisses", function() return game.songMisses);
 		addCallback("getHits",   function() return game.songHits);
 
-		addCallback("setHealth", function(value:Float = 0) game.health = value);
-		addCallback("addHealth", function(value:Float = 0) game.health += value);
+		addCallback("setHealth", function(value:Float = 0) return game.health = value);
+		addCallback("addHealth", function(value:Float = 0) return game.health += value);
 		addCallback("getHealth", function() return game.health);
 
 		//Identical functions

@@ -312,17 +312,27 @@ class Paths
 
 	inline static public function getSparrowAtlas(key:String, ?library:String = null, ?allowGPU:Bool = true):FlxAtlasFrames
 	{
-		#if MODS_ALLOWED
-		var imageLoaded:FlxGraphic = image(key, allowGPU);
-		var xmlExists:Bool = false;
+		try
+		{
+			#if MODS_ALLOWED
+			var imageLoaded:FlxGraphic = image(key, allowGPU);
+			var xmlExists:Bool = false;
 
-		var xml:String = modsXml(key);
-		if(FileSystem.exists(xml)) xmlExists = true;
+			var xml:String = modsXml(key);
+			if(FileSystem.exists(xml)) xmlExists = true;
 
-		return FlxAtlasFrames.fromSparrow((imageLoaded != null ? imageLoaded : image(key, library, allowGPU)), (xmlExists ? File.getContent(xml) : getPath('images/$key.xml', library)));
-		#else
-		return FlxAtlasFrames.fromSparrow(image(key, library, allowGPU), getPath('images/$key.xml', library));
-		#end
+			return FlxAtlasFrames.fromSparrow((imageLoaded != null ? imageLoaded : image(key, library, allowGPU)),
+										(xmlExists ? File.getContent(xml) : getPath('images/$key.xml', library)));
+			#else
+			return FlxAtlasFrames.fromSparrow(image(key, library, allowGPU), getPath('images/$key.xml', library));
+			#end
+		}
+		catch(e)
+		{
+			trace('[getSparrowAtlas] - ERROR WHILE LOADING \"$key\" xml! Full Log:\n ${e.message}');
+			lime.app.Application.current.window.alert('${e.message}\n\ntl;dr; no spritesheet lmao\nbtw, this message won\'t crash the game! :D', 'XML ERROR!!');
+			return null;
+		}
 	}
 
 	inline static public function getPackerAtlas(key:String, ?library:String = null, ?allowGPU:Bool = true):FlxAtlasFrames
@@ -334,7 +344,8 @@ class Paths
 		var txt:String = modsTxt(key);
 		if(FileSystem.exists(txt)) txtExists = true;
 
-		return FlxAtlasFrames.fromSpriteSheetPacker((imageLoaded != null ? imageLoaded : image(key, library, allowGPU)), (txtExists ? File.getContent(txt) : getPath('images/$key.txt', library)));
+		return FlxAtlasFrames.fromSpriteSheetPacker((imageLoaded != null ? imageLoaded : image(key, library, allowGPU)),
+												(txtExists ? File.getContent(txt) : getPath('images/$key.txt', library)));
 		#else
 		return FlxAtlasFrames.fromSpriteSheetPacker(image(key, library, allowGPU), getPath('images/$key.txt', library));
 		#end

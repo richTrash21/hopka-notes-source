@@ -193,7 +193,7 @@ class PlayState extends MusicBeatState
 	public var grpNoteSplashes:FlxTypedGroup<NoteSplash>;
 
 	// for score popups recycling
-	public var scoreGroup:FlxSpriteGroup;
+	public var scoreGroup:FlxTypedSpriteGroup<PopupSprite>;
 
 	public var camZooming(default, set):Bool = false;
 	public var camZoomingMult:Float = 1.0;
@@ -210,7 +210,7 @@ class PlayState extends MusicBeatState
 	public var combo:Int = 0;
 	public var health(default, set):Float = 1.0;
 	@:noCompletion function set_health(value:Float):Float {
-		health = FlxMath.bound(value, null, healthBar.bounds.max);
+		health = Math.min(value, healthBar.bounds.max) /*FlxMath.bound(value, null, healthBar.bounds.max)*/;
 		doDeathCheck();
 		return health;
 	}
@@ -251,8 +251,14 @@ class PlayState extends MusicBeatState
 
 	public var iconP1:HealthIcon;
 	public var iconP2:HealthIcon;
-	public var iconBoping:Bool = true;
-	public var iconBopSpeed:Float = 1.0;
+	public var iconBoping(default, set):Bool = true;
+	public var iconBopSpeed(default, set):Float = 1.0;
+
+	@:noCompletion inline function set_iconBoping(bool:Bool):Bool
+		return iconP2.lerpScale = iconP1.lerpScale = iconBoping = bool;
+
+	@:noCompletion inline function set_iconBopSpeed(speed:Float):Float
+		return iconP2.lerpSpeed = iconP1.lerpSpeed = iconBopSpeed = speed;
 
 	public var camHUD:GameCamera;
 	public var camGame:GameCamera;
@@ -354,7 +360,7 @@ class PlayState extends MusicBeatState
 	public static var instance(default, null):PlayState; // по приколу :) - Redar13
 	public var luaArray:Array<FunkinLua> = [];
 	#if LUA_ALLOWED
-	private var luaDebugGroup:FlxTypedGroup<DebugLuaText>;
+	private var luaDebugGroup:FlxTypedSpriteGroup<DebugLuaText>;
 	#end
 
 	// Less laggy controls
@@ -477,7 +483,7 @@ class PlayState extends MusicBeatState
 		GameOverSubstate.resetVariables(SONG);
 
 		#if LUA_ALLOWED
-		luaDebugGroup = new FlxTypedGroup<DebugLuaText>();
+		luaDebugGroup = new FlxTypedSpriteGroup<DebugLuaText>(0, Main.fpsVar.visible ? 20 : 0); // for better visibility duhh
 		luaDebugGroup.cameras = [camOther];
 		add(luaDebugGroup);
 		#end
@@ -489,7 +495,7 @@ class PlayState extends MusicBeatState
 			for (file in FileSystem.readDirectory(folder))
 			{
 				if(file.toLowerCase().endsWith('.lua')) new FunkinLua(folder + file);
-				#if HSCRIPT_ALLOWED if(file.toLowerCase().endsWith('.hx'))  initHScript(folder + file); #end
+				#if HSCRIPT_ALLOWED if(file.toLowerCase().endsWith('.hx')) initHScript(folder + file); #end
 			}
 		#end
 
@@ -519,11 +525,10 @@ class PlayState extends MusicBeatState
 		startCharacterScripts(boyfriend.curCharacter);
 		charList.push(boyfriend);
 
-		var camPos:FlxPoint = FlxPoint.get(girlfriendCameraOffset[0], girlfriendCameraOffset[1]);
+		final camPos:FlxPoint = FlxPoint.get(girlfriendCameraOffset[0], girlfriendCameraOffset[1]);
 		if(gf != null) {
-			var gfMidpoint:FlxPoint = gf.getGraphicMidpoint();
-			camPos.x += gfMidpoint.x + gf.cameraPosition[0];
-			camPos.y += gfMidpoint.y + gf.cameraPosition[1];
+			final gfMidpoint:FlxPoint = gf.getGraphicMidpoint().add(gf.cameraPosition[0], gf.cameraPosition[1]);
+			camPos.addPoint(gfMidpoint);
 			gfMidpoint.put();
 		}
 
@@ -567,7 +572,7 @@ class PlayState extends MusicBeatState
 			}
 		}
 
-		scoreGroup = new FlxSpriteGroup();
+		scoreGroup = new FlxTypedSpriteGroup<PopupSprite>();
 		strumLineNotes = new FlxTypedGroup<StrumNote>();
 		grpNoteSplashes = new FlxTypedGroup<NoteSplash>();
 		add(scoreGroup);
@@ -618,12 +623,14 @@ class PlayState extends MusicBeatState
 		iconP1.y = healthBar.y - 75;
 		iconP1.visible = !ClientPrefs.data.hideHud;
 		iconP1.alpha = ClientPrefs.data.healthBarAlpha;
+		iconP1.lerpScale = true;
 		add(iconP1);
 
 		iconP2 = new HealthIcon(dad.healthIcon, false);
 		iconP2.y = healthBar.y - 75;
 		iconP2.visible = !ClientPrefs.data.hideHud;
 		iconP2.alpha = ClientPrefs.data.healthBarAlpha;
+		iconP2.lerpScale = true;
 		add(iconP2);
 
 		healthBar.updateCallback = function(value:Float, percent:Float) {
@@ -783,9 +790,7 @@ class PlayState extends MusicBeatState
 			var newText:DebugLuaText = luaDebugGroup.recycle(DebugLuaText);
 			newText.text = text;
 			newText.color = color;
-			newText.disableTime = 6;
-			newText.alpha = 1;
-			newText.setPosition(10, (Main.fpsVar.visible ? 28 : 8) - newText.height);
+			newText.setPosition(10, 8 - newText.height);
 
 			luaDebugGroup.forEachAlive(function(spr:DebugLuaText) spr.y += newText.height + 2);
 			luaDebugGroup.add(newText);
@@ -1652,7 +1657,10 @@ class PlayState extends MusicBeatState
 	var canPause:Bool = true;
 
 	@:noCompletion inline function set_paused(bool:Bool):Bool
+	{
+		iconP1.lerpScale = iconP2.lerpScale = bool ? false : iconBoping;
 		return paused = camGame.paused = camHUD.paused = bool;
+	}
 
 	override public function update(elapsed:Float)
 	{
@@ -1717,17 +1725,6 @@ class PlayState extends MusicBeatState
 		if (controls.justPressed('debug_2') && !endingSong && !inCutscene) openCharacterEditor();
 		#end
 
-		if (iconBoping)
-		{
-			final mult:Float = FlxMath.lerp(iconP1.baseScale, iconP1.scale.x, Math.max(1 - (9 * elapsed * iconBopSpeed * playbackRate), 0));
-			iconP1.scale.set(mult, mult);
-			iconP1.updateHitbox();
-
-			final mult:Float = FlxMath.lerp(iconP2.baseScale, iconP2.scale.x, Math.max(1 - (9 * elapsed * iconBopSpeed * playbackRate), 0));
-			iconP2.scale.set(mult, mult);
-			iconP2.updateHitbox();
-		}
-
 		// frameWidth > frameHeight = icon have two frames
 		//final P1_frameWidth = /*iconP1.frameWidth > iconP1.frameHeight ? iconP1.frameWidth * 0.5 :*/ iconP1.frameWidth;
 		//final P2_frameWidth = /*iconP2.frameWidth > iconP2.frameHeight ? iconP2.frameWidth * 0.5 :*/ iconP2.frameWidth;
@@ -1754,12 +1751,6 @@ class PlayState extends MusicBeatState
 			final curTime:Float = Math.max(0, Conductor.songPosition - ClientPrefs.data.noteOffset);
 			songPercent = curTime / songLength;
 		}
-
-		/*if (camZooming)
-		{
-			camGame.zoom = FlxMath.lerp(defaultCamZoom, camGame.zoom, Math.max(1 - (elapsed * 3.125 * camZoomingDecay * playbackRate), 0));
-			camHUD.zoom = FlxMath.lerp(defaultHUDZoom, camHUD.zoom, Math.max(1 - (elapsed * 3.125 * camZoomingDecay * playbackRate), 0));
-		}*/
 
 		// RESET = Quick Game Over Screen
 		if (!ClientPrefs.data.noReset && controls.RESET && canReset && !inCutscene && startedCountdown && !endingSong)
@@ -2413,9 +2404,9 @@ class PlayState extends MusicBeatState
 	public var showComboNum:Bool = true;
 	public var showRating:Bool	 = true;
 
-	var lastRating:FlxSprite;			  // stores the last judgement object
-	var lastCombo:FlxSprite;			  // stores the last combo sprite object
-	var lastScore:Array<FlxSprite> = [];  // stores the last combo score objects in an array
+	var lastRating:PopupSprite;			  // stores the last judgement object
+	var lastCombo:PopupSprite;			  // stores the last combo sprite object
+	var lastScore:Array<PopupSprite> = [];  // stores the last combo score objects in an array
 
 	private function cachePopUpScore()
 	{
@@ -2427,20 +2418,20 @@ class PlayState extends MusicBeatState
 			// preloading first group objects (please work please work please work please work please work)
 			// UPD: IT DOESN'T WAAAAAAAAAAAHHHH😭😭😭
 			// https://preview.redd.it/7nskgql0k1w91.png?width=960&crop=smart&auto=webp&s=84099357cf2f7d30075e6c9989b15ef81bda9037
-			var rating:FlxSprite = new FlxSprite(0, 0, Paths.image(uiPrefix + 'sick'  + uiSuffix));
+			/*var rating:FlxSprite = new FlxSprite(0, 0, Paths.image(uiPrefix + 'sick'  + uiSuffix));
 			var combo:FlxSprite  = new FlxSprite(0, 0, Paths.image(uiPrefix + 'combo' + uiSuffix));
 			var score:FlxSprite  = new FlxSprite(0, 0, Paths.image(uiPrefix + 'num0'  + uiSuffix));
 			rating.alpha = combo.alpha = score.alpha = 0.000001;
 			scoreGroup.add(rating);
 			scoreGroup.add(combo);
-			scoreGroup.add(score);
+			scoreGroup.add(score);*/
 		}
 	}
 
 	private function popUpScore(note:Note = null):Void
 	{
 		//tryna do MS based judgment due to popular demand
-		var daRating:Rating = Conductor.judgeNote(ratingsData, Math.abs(note.strumTime - Conductor.songPosition + ClientPrefs.data.ratingOffset) / playbackRate);		
+		final daRating:Rating = Conductor.judgeNote(ratingsData, Math.abs(note.strumTime - Conductor.songPosition + ClientPrefs.data.ratingOffset) / playbackRate);		
 		var score:Int = daRating.score;
 
 		totalNotesHit += daRating.ratingMod;
@@ -2465,25 +2456,27 @@ class PlayState extends MusicBeatState
 		if (ClientPrefs.data.enableCombo)
 		{
 			final placement:Float = FlxG.width * 0.35;
-			var antialias:Bool	  = ClientPrefs.data.antialiasing;
+			//var antialias:Bool	  = ClientPrefs.data.antialiasing;
 			var scaleMult:Float	  = 0.7;
 			//var numRes:Array<Int> = [100, 120];
 			var numScale:Float	  = 0.5;
 			if (isPixelStage)
 			{
-				antialias = false;
+				//antialias = false;
 				scaleMult = daPixelZoom * 0.85;
 				//numRes	  = [10, 12];
 				numScale  = daPixelZoom * 0.85;
 			}
 
-			var noStacking:Bool = !ClientPrefs.data.comboStacking;
-			if (noStacking) {
-				scoreGroup.forEachAlive(function(spr:FlxSprite) FlxTween.completeTweensOf(spr));
+			final noStacking:Bool = !ClientPrefs.data.comboStacking;
+			if (noStacking)
+			{
+				scoreGroup.forEachAlive(function(spr:PopupSprite) FlxTween.completeTweensOf(spr));
 				lastScore = [];
 			}
 
-			var rating:FlxSprite = scoreGroup.remove(scoreGroup.recycle(FlxSprite), true).loadGraphic(Paths.image(uiPrefix + daRating.image + uiSuffix));
+			final rating:PopupSprite = scoreGroup.remove(scoreGroup.recycle(PopupSprite), true);
+			rating.loadGraphic(Paths.image(uiPrefix + daRating.image + uiSuffix));
 			rating.x = placement - 40 + ClientPrefs.data.comboOffset[0];
 			rating.screenCenter(Y).y -= 60 + ClientPrefs.data.comboOffset[1];
 			rating.setGraphicSize(Std.int(rating.width * scaleMult));
@@ -2491,13 +2484,13 @@ class PlayState extends MusicBeatState
 
 			rating.alpha = 1;
 			rating.angle = 0;
-			rating.acceleration.y = 550 * playbackRate * playbackRate;
-			rating.velocity.set(-FlxG.random.int(1, 10) * playbackRate, -FlxG.random.int(140, 175) * playbackRate);
+			rating.setAcceleration(0, 550);
+			rating.setVelocity(-FlxG.random.int(1, 10), -FlxG.random.int(140, 175));
 			rating.angularVelocity = rating.velocity.x * FlxG.random.int(1, -1, [0]);
 			rating.visible = (!ClientPrefs.data.hideHud && showRating);
-			rating.antialiasing = antialias;
 
-			var comboSpr:FlxSprite = scoreGroup.remove(scoreGroup.recycle(FlxSprite), true).loadGraphic(Paths.image(uiPrefix + 'combo' + uiSuffix));
+			final comboSpr:PopupSprite = scoreGroup.remove(scoreGroup.recycle(PopupSprite), true);
+			comboSpr.loadGraphic(Paths.image(uiPrefix + 'combo' + uiSuffix));
 			comboSpr.x = placement + ClientPrefs.data.comboOffset[0];
 			comboSpr.screenCenter(Y).y += 60 - ClientPrefs.data.comboOffset[1];
 			comboSpr.setGraphicSize(Std.int(comboSpr.width * scaleMult));
@@ -2505,11 +2498,13 @@ class PlayState extends MusicBeatState
 
 			comboSpr.alpha = 1;
 			comboSpr.angle = 0;
-			comboSpr.acceleration.y = FlxG.random.int(200, 300) * playbackRate * playbackRate;
-			comboSpr.velocity.set(FlxG.random.int(1, 10) * playbackRate, -FlxG.random.int(140, 160) * playbackRate);
+			comboSpr.setAcceleration(0, FlxG.random.int(200, 300));
+			comboSpr.setVelocity(FlxG.random.int(1, 10), -FlxG.random.int(140, 160));
 			comboSpr.angularVelocity = rating.velocity.x * FlxG.random.int(1, -1, [0]);
 			comboSpr.visible = (!ClientPrefs.data.hideHud && showCombo);
-			comboSpr.antialiasing = antialias;
+
+			if (isPixelStage)
+				rating.antialiasing = comboSpr.antialiasing = false;
 
 			if (showRating)	scoreGroup.add(rating);
 			if (showCombo)	scoreGroup.add(comboSpr);
@@ -2518,14 +2513,15 @@ class PlayState extends MusicBeatState
 				lastCombo = comboSpr;
 			}
 
-			var seperatedScore:Array<Int> = [for(i in 0...(combo > 999 ? 4 : 3)) Math.floor(combo / Math.pow(10, i)) % 10];
+			final seperatedScore:Array<Int> = [for(i in 0...(combo > 999 ? 4 : 3)) Math.floor(combo / Math.pow(10, i)) % 10];
 			seperatedScore.reverse();
 
 			var daLoop:Int = 0;
 			var xThing:Float = 0.0;
 			for (i in seperatedScore)
 			{
-				var numScore:FlxSprite = scoreGroup.remove(scoreGroup.recycle(FlxSprite), true).loadGraphic(Paths.image(uiPrefix + 'num$i' + uiSuffix));
+				final numScore:PopupSprite = scoreGroup.remove(scoreGroup.recycle(PopupSprite), true);
+				numScore.loadGraphic(Paths.image(uiPrefix + 'num$i' + uiSuffix));
 				//numScore.loadGraphic(Paths.image(uiPrefix + 'num' + uiSuffix), true, numRes[0], numRes[1]);
 				numScore.x = placement + (45 * daLoop) - 90 + ClientPrefs.data.comboOffset[2];
 				numScore.screenCenter(Y).y += 80 - ClientPrefs.data.comboOffset[3];
@@ -2537,13 +2533,12 @@ class PlayState extends MusicBeatState
 
 				numScore.alpha = 1;
 				numScore.angle = 0;
-				numScore.offset.x += FlxG.random.int(-1, 1);
-				numScore.offset.y += FlxG.random.int(-1, 1);
-				numScore.acceleration.y = FlxG.random.int(200, 300) * playbackRate * playbackRate;
-				numScore.velocity.set(FlxG.random.float(-5, 5) * playbackRate, -FlxG.random.int(140, 160) * playbackRate);
+				numScore.offset.add(FlxG.random.int(-1, 1), FlxG.random.int(-1, 1));
+				numScore.setAcceleration(0, FlxG.random.int(200, 300));
+				numScore.setVelocity(FlxG.random.float(-5, 5), -FlxG.random.int(140, 160));
 				numScore.angularVelocity = -numScore.velocity.x;
 				numScore.visible = !ClientPrefs.data.hideHud;
-				numScore.antialiasing = antialias;
+				if (isPixelStage) numScore.antialiasing = false;
 
 				if (showComboNum) scoreGroup.add(numScore);
 				if (noStacking)   lastScore.push(numScore);
@@ -3014,12 +3009,11 @@ class PlayState extends MusicBeatState
 
 		if (iconBoping)
 		{
-			iconP1.scale.set(1.2 * iconP1.baseScale, 1.2 * iconP1.baseScale);
-			iconP2.scale.set(1.2 * iconP2.baseScale, 1.2 * iconP2.baseScale);
+			iconP1.setScale(1.2 * iconP1.baseScale);
+			iconP2.setScale(1.2 * iconP2.baseScale);
+			iconP1.updateHitbox();
+			iconP2.updateHitbox();
 		}
-
-		iconP1.updateHitbox();
-		iconP2.updateHitbox();
 
 		charsDance(curBeat);
 
