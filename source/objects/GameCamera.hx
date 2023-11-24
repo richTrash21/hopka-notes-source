@@ -28,7 +28,7 @@ class GameCamera extends FlxCamera
 	public var updateLerp(default, set):Bool = false;
 
 	/**
-		Controlls whenever `update()` update camera lerp related values.
+		Controlls whenever `update()` should be called.
 	**/
 	public var paused(default, set):Bool = false;
 

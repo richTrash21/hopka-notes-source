@@ -1,5 +1,8 @@
 package objects;
 
+import flixel.math.FlxPoint;
+import flixel.util.FlxDestroyUtil;
+import flixel.FlxObject;
 import flixel.util.FlxSort;
 
 #if MODS_ALLOWED
@@ -71,6 +74,9 @@ class Character extends FlxSprite
 	public var originalFlipY:Bool = false;
 	public var healthColorArray:Array<Int> = [255, 0, 0];
 
+	public var camFollow(default, null):FlxObject = new FlxObject(0, 0, 1, 1);
+	public var camFollowOffset(default, null):FlxPoint = FlxPoint.get();
+
 	public function new(x:Float, y:Float, ?character:String = DEFAULT_CHARACTER, ?isPlayer:Bool = false, ?allowGPU:Bool = true)
 	{
 		super(x, y);
@@ -80,33 +86,31 @@ class Character extends FlxSprite
 		final characterPath:String = 'characters/$character.json';
 		#if MODS_ALLOWED
 		var path:String = Paths.modFolders(characterPath);
-		if(!FileSystem.exists(path)) path = Paths.getPreloadPath(characterPath);
+		if (!FileSystem.exists(path)) path = Paths.getPreloadPath(characterPath);
 
-		if(!FileSystem.exists(path))
+		if (!FileSystem.exists(path))
 		#else
 		var path:String = Paths.getPreloadPath(characterPath);
-		if(!Assets.exists(path))
+		if (!Assets.exists(path))
 		#end
 			path = Paths.getPreloadPath('characters/$DEFAULT_CHARACTER.json'); //If a character couldn't be found, change him to BF just to prevent a crash
 
 		final rawJson = #if MODS_ALLOWED sys.io.File.getContent(path) #else Assets.getText(path) #end;
 
 		final json:CharacterFile = cast haxe.Json.parse(rawJson);
-		var useAtlas:Bool = false;
-
 		final img:String = json.image;
 		#if MODS_ALLOWED
 		final modAnimToFind:String = Paths.modFolders('images/$img/Animation.json');
 		final animToFind:String = Paths.getPath('images/$img/Animation.json', TEXT);
-		useAtlas = (FileSystem.exists(modAnimToFind) || FileSystem.exists(animToFind) || Assets.exists(animToFind));
+		final useAtlas = (FileSystem.exists(modAnimToFind) || FileSystem.exists(animToFind) || Assets.exists(animToFind));
 		#else
-		useAtlas = Assets.exists(Paths.getPath('images/$img/Animation.json', TEXT));
+		final useAtlas = Assets.exists(Paths.getPath('images/$img/Animation.json', TEXT));
 		#end
 
 		frames = !useAtlas ? Paths.getAtlas(img, null, allowGPU) : animateatlas.AtlasFrameMaker.construct(img);
 
 		imageFile = img;
-		if(json.scale != 1)
+		if (json.scale != 1)
 		{
 			jsonScale = json.scale;
 			setGraphicSize(Math.floor(width * jsonScale));
@@ -123,7 +127,7 @@ class Character extends FlxSprite
 		flipX = json.flip_x;
 		flipY = json.flip_y;
 
-		if(json.healthbar_colors != null && json.healthbar_colors.length > 2)
+		if (json.healthbar_colors != null && json.healthbar_colors.length > 2)
 			healthColorArray = json.healthbar_colors;
 
 		// antialiasing
@@ -132,35 +136,36 @@ class Character extends FlxSprite
 
 		// animations
 		animationsArray = json.animations;
-		if(animationsArray != null && animationsArray.length > 0) {
+		if (animationsArray != null && animationsArray.length > 0)
+		{
 			for (anim in animationsArray) generateAnim(anim);
 		}
 		else addAnim('idle', 'BF idle dance', null, 24, false);
 		originalFlipX = flipX;
 		originalFlipY = flipY;
 
-		for(name => arr in animOffsets)
-			if(name.startsWith('sing') && name.contains('miss'))
+		for (name => arr in animOffsets)
+			if (name.startsWith('sing') && name.contains('miss'))
 				hasMissAnimations = true;
 		recalculateDanceIdle();
 		dance();
 
 		if (isPlayer) flipX = !flipX;
+		updateCamFollow();
 	}
 
 	override function update(elapsed:Float)
 	{
-		if(!debugMode && animation.curAnim != null)
+		if (!debugMode && animation.curAnim != null)
 		{
-			if(heyTimer > 0)
+			if (heyTimer > 0)
 			{
 				// https://github.com/ShadowMario/FNF-PsychEngine/pull/13591 (nvmd replaced with FlxG.animationTimeScale)
-				var rate:Float = FlxG.animationTimeScale /*(PlayState.instance != null ? PlayState.instance.playbackRate : 1.0)*/;
-				heyTimer -= elapsed * rate;
+				heyTimer -= elapsed * FlxG.animationTimeScale;
 				//heyTimer -= elapsed * PlayState.instance.playbackRate;
-				if(heyTimer <= 0)
+				if (heyTimer <= 0)
 				{
-					if(specialAnim && animation.curAnim.name == 'hey' || animation.curAnim.name == 'cheer')
+					if (specialAnim && animation.curAnim.name == 'hey' || animation.curAnim.name == 'cheer')
 					{
 						specialAnim = false;
 						dance();
@@ -168,7 +173,7 @@ class Character extends FlxSprite
 					heyTimer = 0;
 				}
 			}
-			else if(specialAnim && animation.curAnim.finished)
+			else if (specialAnim && animation.curAnim.finished)
 			{
 				specialAnim = false;
 				dance();
@@ -194,6 +199,27 @@ class Character extends FlxSprite
 				playAnim(animation.curAnim.name + '-loop');
 		}
 		super.update(elapsed);
+		camFollow.update(elapsed); // https://upload.wikimedia.org/wikipedia/ru/c/c2/%D0%A1%D0%B0%D0%BC%D1%8B%D0%B9_%D1%83%D0%BC%D0%BD%D1%8B%D0%B9_%D0%A1%D0%A2%D0%A1.jpg
+	}
+
+	override public function draw()
+	{
+		super.draw();
+		camFollow.draw();
+	}
+
+	public function updateCamFollow()
+	{
+		final midPoint:flixel.math.FlxPoint = getMidpoint();
+		camFollow.setPosition(midPoint.x + (isPlayer ? -cameraPosition[0] : cameraPosition[0]) + camFollowOffset.x, midPoint.y + cameraPosition[1] + camFollowOffset.y);
+		midPoint.put();
+	}
+
+	override public function destroy()
+	{
+		super.destroy();
+		camFollow = FlxDestroyUtil.destroy(camFollow);
+		camFollowOffset = FlxDestroyUtil.put(camFollowOffset);
 	}
 
 	public var danced:Bool = false;
@@ -221,7 +247,8 @@ class Character extends FlxSprite
 	{
 		specialAnim = false;
 		// if there is no animation named "AnimName" then just skips the whole shit
-		if(AnimName == null || animation.getByName(AnimName) == null) {
+		if (AnimName == null || animation.getByName(AnimName) == null)
+		{
 			FlxG.log.warn("No animation called \"" + AnimName + "\"");
 			return;
 		}
@@ -276,7 +303,7 @@ class Character extends FlxSprite
 	 */
 	public function generateAnim(Anim:AnimArray)
 	{
-		if(Anim != null)
+		if (Anim != null)
 		{
 			final animAnim:String = '' + Anim.anim;
 			final temp:Array<Float> = Anim.offsets;
@@ -304,4 +331,30 @@ class Character extends FlxSprite
 
 	public function addOffset(name:String, x:Float = 0, y:Float = 0)
 		animOffsets.set(name, [x, y]);
+
+	@:noCompletion override function set_x(X:Float):Float
+	{
+		camFollow.x -= x - X;
+		return x = X;
+	}
+
+	@:noCompletion override function set_y(Y:Float):Float
+	{
+		camFollow.y -= y - Y;
+		return y = Y;
+	}
+
+	@:noCompletion override function set_width(Width:Float):Float
+	{
+		super.set_width(Width);
+		updateCamFollow();
+		return Width;
+	}
+
+	@:noCompletion override function set_height(Height:Float):Float
+	{
+		super.set_height(Height);
+		updateCamFollow();
+		return Height;
+	}
 }

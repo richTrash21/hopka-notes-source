@@ -1,5 +1,6 @@
 package substates;
 
+import objects.GameCamera;
 import objects.Character;
 import flixel.FlxObject;
 import flixel.math.FlxPoint;
@@ -15,8 +16,21 @@ import psychlua.HScript;
 class GameOverSubstate extends MusicBeatSubstate
 {
 	public var boyfriend:Character;
-	public var camFollow:FlxObject;
-	public var updateCamera:Bool = false;
+	public var camFollow(get, never):FlxObject;
+	public var updateCamera(default, set):Bool = false;
+	public var realCamera:GameCamera = cast FlxG.camera; // whoops😬
+
+	@:noCompletion inline function get_camFollow():FlxObject
+		return boyfriend.camFollow;
+
+	@:noCompletion inline function set_updateCamera(bool:Bool):Bool
+	{
+		if (updateCamera == bool)
+			return bool;
+
+		realCamera.cameraSpeed = 0.25;
+		return realCamera.updateLerp = updateCamera = bool;
+	}
 
 	// better structurised now
 	public static var characterName:String = 'bf-dead';
@@ -24,7 +38,7 @@ class GameOverSubstate extends MusicBeatSubstate
 	public static var loopSoundName:String = 'gameOver';
 	public static var endSoundName:String = 'gameOverEnd';
 
-	public static var instance:GameOverSubstate;
+	public static var instance(default, null):GameOverSubstate;
 	public static var game(default, null):PlayState;
 
 	public static function resetVariables(_song:backend.Song.SwagSong)
@@ -99,12 +113,13 @@ class GameOverSubstate extends MusicBeatSubstate
 		boyfriend.playAnim('firstDeath');
 
 		var midpoint:FlxPoint = boyfriend.getGraphicMidpoint();
-		camFollow = new FlxObject(midpoint.x, midpoint.y, 1, 1);
+		camFollow.setPosition(midpoint.x, midpoint.y);
 		add(camFollow);
 		midpoint.put();
 
-		FlxG.camera.follow(camFollow, LOCKON, 0);
-		FlxG.camera.scroll.set();
+		realCamera.follow(camFollow, LOCKON, 0);
+		realCamera.scroll.set();
+		realCamera.updateLerp = realCamera.updateZoom = false;
 	}
 
 	public var startedDeath:Bool = false;
@@ -132,7 +147,7 @@ class GameOverSubstate extends MusicBeatSubstate
 			game.callOnScripts('onGameOverConfirm', [false]);
 		}
 		
-		FlxG.camera.followLerp = updateCamera ? elapsed * 0.6 #if (flixel < "5.4.0") / #else * #end (FlxG.updateFramerate / 60) : 0;
+		// realCamera.followLerp = updateCamera ? elapsed * 0.6 #if (flixel < "5.4.0") / #else * #end (FlxG.updateFramerate / 60) : 0;
 
 		if (FlxG.sound.music.playing) Conductor.songPosition = FlxG.sound.music.time;
 		game.callOnScripts('onUpdatePost', [elapsed]);
@@ -153,7 +168,7 @@ class GameOverSubstate extends MusicBeatSubstate
 				FlxG.sound.play(Paths.sound(endSoundName));
 				
 				new FlxTimer().start(0.7, function(tmr:FlxTimer)
-					FlxG.camera.fade(FlxColor.BLACK, 2, false, function() MusicBeatState.resetState())
+					realCamera.fade(FlxColor.BLACK, 2, false, function() MusicBeatState.resetState())
 				);
 			}
 		}

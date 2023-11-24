@@ -754,15 +754,15 @@ class CharacterEditorState extends backend.MusicBeatUIState
 	var moveOffset:Bool = false;
 	function loadChar(isDad:Bool, genOffsets:Bool = true)
 	{
-		var i:Int = charLayer.members.length-1;
-		while(i >= 0) {
+		var i:Int = charLayer.members.length;
+		while (i-- >= 0)
+		{
 			var memb:Character = charLayer.members[i];
-			if(memb != null) {
+			if (memb != null)
+			{
 				memb.kill();
-				charLayer.remove(memb);
-				memb.destroy();
+				charLayer.remove(memb).destroy();
 			}
-			--i;
 		}
 		charLayer.clear();
 

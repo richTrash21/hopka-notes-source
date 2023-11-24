@@ -51,14 +51,14 @@ class HealthIcon extends FlxSprite
 	}
 
 	// kinda like setGraphicSize, but with just scale value
-	inline public function setScale(X:Float = 0, Y:Float = 0):FlxPoint
+	inline public function setScale(?X:Float, ?Y:Float):FlxPoint
 	{
-		if (X <= 0 && Y <= 0)
+		if (X == null && Y == null)
 			return scale;
 
-		if (X <= 0)
+		if (X == null)
 			X = Y;
-		else if (Y <= 0)
+		else if (Y == null)
 			Y = X;
 
 		return scale.set(X, Y);
