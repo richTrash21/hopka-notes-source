@@ -1,8 +1,11 @@
 package psychlua;
 
+import llua.Lua;
+import llua.Convert;
+
 class CallbackHandler
 {
-	public static inline function call(l:State, fname:String):Int
+	public static inline function call(l:llua.State, fname:String):Int
 	{
 		try
 		{
@@ -38,7 +41,7 @@ class CallbackHandler
 		}
 		catch(e:Dynamic)
 		{
-			if(Lua_helper.sendErrorsToLua) {LuaL.error(l, 'CALLBACK ERROR! ${if(e.message != null) e.message else e}');return 0;}
+			if(Lua_helper.sendErrorsToLua) {llua.LuaL.error(l, 'CALLBACK ERROR! ${if(e.message != null) e.message else e}');return 0;}
 			trace(e);
 			throw(e);
 		}

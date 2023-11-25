@@ -5,6 +5,8 @@ import openfl.display.BlendMode;
 import animateatlas.AtlasFrameMaker;
 import substates.GameOverSubstate;
 
+import llua.Lua;
+
 typedef LuaTweenOptions = {
 	type:FlxTweenType,
 	startDelay:Float,

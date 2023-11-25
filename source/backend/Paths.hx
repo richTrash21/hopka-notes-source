@@ -87,8 +87,8 @@ class Paths
 		#if !html5 openfl.Assets.cache.clear("songs"); #end
 	}
 
-	static public var currentLevel:String;
-	static public function setCurrentLevel(name:String) currentLevel = name.toLowerCase();
+	static public var currentLevel(default, set):String;
+	inline static public function set_currentLevel(level:String):String return currentLevel = level.toLowerCase();
 
 	public static function getPath(file:String, ?type:AssetType = TEXT, ?library:Null<String> = null, ?modsAllowed:Bool = false):String
 	{
@@ -120,7 +120,7 @@ class Paths
 		return getPreloadPath(file);
 	}
 
-	static public function getLibraryPath(file:String, library = "preload")
+	inline static public function getLibraryPath(file:String, library = "preload")
 		return if (library == "preload" || library == "default") getPreloadPath(file); else getLibraryPathForce(file, library);
 
 	inline static function getLibraryPathForce(file:String, library:String, ?level:String)
@@ -240,8 +240,19 @@ class Paths
 		return null;
 	}
 
-	static public function getTextFromFile(key:String, ?ignoreMods:Bool = false):String
+	static public function getTextFromFile(key:String, ?ignoreMods:Bool = false, ?absolute:Bool = false):String
 	{
+		if (absolute)
+		{
+			#if sys
+			if (FileSystem.exists(key))
+				return File.getContent(key);
+			#end
+			if(OpenFlAssets.exists(key, TEXT))
+				return Assets.getText(key);
+
+			return null;
+		}
 		#if sys
 		#if MODS_ALLOWED
 		if (!ignoreMods && FileSystem.exists(modFolders(key)))

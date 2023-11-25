@@ -1,5 +1,6 @@
 package objects;
 
+import flixel.animation.FlxAnimation;
 import flixel.math.FlxPoint;
 import flixel.util.FlxDestroyUtil;
 import flixel.FlxObject;
@@ -52,10 +53,9 @@ class Character extends FlxSprite
 	public var holdTimer:Float = 0;
 	public var heyTimer:Float = 0;
 	public var specialAnim:Bool = false;
-	//public var animationNotes:Array<Dynamic> = [];
 	public var stunned:Bool = false;
 	public var singDuration:Float = 4; //Multiplier of how long a character holds the sing pose
-	public var idleSuffix:String = '';
+	public var idleSuffix(default, set):String = '';
 	public var danceIdle:Bool = false; //Character use "danceLeft" and "danceRight" instead of "idle"
 	public var skipDance:Bool = false;
 
@@ -146,7 +146,10 @@ class Character extends FlxSprite
 
 		for (name => arr in animOffsets)
 			if (name.startsWith('sing') && name.contains('miss'))
+			{
 				hasMissAnimations = true;
+				break;
+			}
 		recalculateDanceIdle();
 		dance();
 
@@ -154,7 +157,7 @@ class Character extends FlxSprite
 		updateCamFollow();
 	}
 
-	override function update(elapsed:Float)
+	override public function update(elapsed:Float)
 	{
 		if (!debugMode && animation.curAnim != null)
 		{
@@ -202,22 +205,25 @@ class Character extends FlxSprite
 		camFollow.update(elapsed); // https://upload.wikimedia.org/wikipedia/ru/c/c2/%D0%A1%D0%B0%D0%BC%D1%8B%D0%B9_%D1%83%D0%BC%D0%BD%D1%8B%D0%B9_%D0%A1%D0%A2%D0%A1.jpg
 	}
 
+	#if FLX_DEBUG
 	override public function draw()
 	{
 		super.draw();
 		camFollow.draw();
 	}
+	#end
 
-	public function updateCamFollow()
+	var _midPoint:FlxPoint = FlxPoint.get();
+	inline public function updateCamFollow()
 	{
-		final midPoint:flixel.math.FlxPoint = getMidpoint();
-		camFollow.setPosition(midPoint.x + (isPlayer ? -cameraPosition[0] : cameraPosition[0]) + camFollowOffset.x, midPoint.y + cameraPosition[1] + camFollowOffset.y);
-		midPoint.put();
+		getMidpoint(_midPoint);
+		camFollow.setPosition(_midPoint.x + (isPlayer ? -cameraPosition[0] : cameraPosition[0]) + camFollowOffset.x, _midPoint.y + cameraPosition[1] + camFollowOffset.y);
 	}
 
 	override public function destroy()
 	{
 		super.destroy();
+		_midPoint = FlxDestroyUtil.destroy(_midPoint);
 		camFollow = FlxDestroyUtil.destroy(camFollow);
 		camFollowOffset = FlxDestroyUtil.put(camFollowOffset);
 	}
@@ -278,7 +284,7 @@ class Character extends FlxSprite
 	public function recalculateDanceIdle()
 	{
 		final lastDanceIdle:Bool = danceIdle;
-		danceIdle = (animation.getByName('danceLeft' + idleSuffix) != null && animation.getByName('danceRight' + idleSuffix) != null);
+		danceIdle = (animation.exists('danceLeft$idleSuffix') && animation.exists('danceRight$idleSuffix'));
 
 		if (settingCharacterUp)
 			danceEveryNumBeats = (danceIdle ? 1 : 2);
@@ -288,10 +294,20 @@ class Character extends FlxSprite
 		settingCharacterUp = false;
 	}
 
-	//creates a copy of this character🤯😱
-	public function copy(?allowGPU:Bool = true):Character
+	@:noCompletion function set_idleSuffix(Suffix:String):String
 	{
-		var faker:Character = new Character(x, y, curCharacter, isPlayer, allowGPU);
+		final prevSuffix = idleSuffix;
+		idleSuffix = Suffix;
+		if (prevSuffix != Suffix)
+			recalculateDanceIdle();
+
+		return Suffix;
+	}
+
+	//creates a copy of this character🤯😱
+	inline public function copy(?allowGPU:Bool = true):Character
+	{
+		final faker:Character = new Character(x, y, curCharacter, isPlayer, allowGPU);
 		faker.debugMode = debugMode;
 		return faker;
 	}
@@ -301,7 +317,7 @@ class Character extends FlxSprite
 	 * btw stolen from redar13 :3
 	 * https://i.imgur.com/P7MDx2C.png
 	 */
-	public function generateAnim(Anim:AnimArray)
+	inline public function generateAnim(Anim:AnimArray)
 	{
 		if (Anim != null)
 		{
@@ -314,44 +330,45 @@ class Character extends FlxSprite
 	}
 
 	//quick n' easy animation setup
-	public function addAnim(Name:String, Prefix:String, ?Indices:Array<Int>, FrameRate:Int = 24, Looped:Bool = true,FlipX:Bool = false, FlipY:Bool = false,
-			LoopPoint:Int = 0)
+	inline public function addAnim(Name:String, Prefix:String, ?Indices:Array<Int>, FrameRate:Int = 24, Looped:Bool = true,FlipX:Bool = false, FlipY:Bool = false,
+			LoopPoint:Int = 0):FlxAnimation
 	{
 		if (Indices != null && Indices.length > 0)
 			animation.addByIndices(Name, Prefix, Indices, "", FrameRate, Looped, FlipX, FlipY);
 		else
 			animation.addByPrefix(Name, Prefix, FrameRate, Looped, FlipX, FlipY);
 
-		final addedAnim:flixel.animation.FlxAnimation = animation.getByName(Name);
+		final addedAnim:FlxAnimation = animation.getByName(Name);
 		if (addedAnim != null)
 		{
 			addedAnim.loopPoint = LoopPoint; // better than -loop anims lmao
 		}
+		return addedAnim;
 	}
 
-	public function addOffset(name:String, x:Float = 0, y:Float = 0)
+	inline public function addOffset(name:String, x:Float = 0, y:Float = 0)
 		animOffsets.set(name, [x, y]);
 
-	@:noCompletion override function set_x(X:Float):Float
+	@:noCompletion override inline function set_x(X:Float):Float
 	{
-		camFollow.x -= x - X;
+		camFollow.x += X - x;
 		return x = X;
 	}
 
-	@:noCompletion override function set_y(Y:Float):Float
+	@:noCompletion override inline function set_y(Y:Float):Float
 	{
-		camFollow.y -= y - Y;
+		camFollow.y += Y - y;
 		return y = Y;
 	}
 
-	@:noCompletion override function set_width(Width:Float):Float
+	@:noCompletion override inline function set_width(Width:Float):Float
 	{
 		super.set_width(Width);
 		updateCamFollow();
 		return Width;
 	}
 
-	@:noCompletion override function set_height(Height:Float):Float
+	@:noCompletion override inline function set_height(Height:Float):Float
 	{
 		super.set_height(Height);
 		updateCamFollow();

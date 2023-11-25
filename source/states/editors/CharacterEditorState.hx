@@ -90,7 +90,7 @@ class CharacterEditorState extends backend.MusicBeatUIState
 
 		// fuck pixel bg nobody used it anyway
 		var prevLevel:String = Paths.currentLevel;
-		Paths.setCurrentLevel('week1');
+		Paths.currentLevel = 'week1';
 		bg = new BGSprite('stageback', -600 + OFFSET_X, -300, 0.9, 0.9);
 		add(bg);
 
@@ -98,7 +98,7 @@ class CharacterEditorState extends backend.MusicBeatUIState
 		stageFront.setGraphicSize(Math.floor(stageFront.width * 1.1));
 		stageFront.updateHitbox();
 		add(stageFront);
-		Paths.setCurrentLevel(prevLevel);
+		Paths.currentLevel = prevLevel;
 
 		charLayer = new FlxTypedGroup<Character>();
 		add(charLayer);
@@ -786,11 +786,9 @@ class CharacterEditorState extends backend.MusicBeatUIState
 
 	function updatePointerPos()
 	{
-		final charMidpoint:FlxPoint = char.getMidpoint();
-		final x:Float = charMidpoint.x + (!char.isPlayer ? 150 + char.cameraPosition[0] : (100 + char.cameraPosition[0]) * -1) - (cameraFollowPointer.height * 0.5);
-		final y:Float = charMidpoint.y - (100 - char.cameraPosition[1]) - (cameraFollowPointer.height * 0.5);
-		cameraFollowPointer.setPosition(x, y);
-		charMidpoint.put();
+		char.camFollowOffset.set(char.isPlayer ? -100 : 150, -100);
+		char.updateCamFollow();
+		cameraFollowPointer.setPosition(char.camFollow.x - (cameraFollowPointer.height * 0.5), char.camFollow.y - (cameraFollowPointer.height * 0.5));
 	}
 
 	function findAnimationByName(name:String):AnimArray {
@@ -1036,10 +1034,8 @@ class CharacterEditorState extends backend.MusicBeatUIState
 			{
 				if (FlxG.keys.justPressed.W) curAnim--;
 				if (FlxG.keys.justPressed.S) curAnim++;
+				curAnim = FlxMath.wrap(curAnim, 0, char.animationsArray.length - 1);
 				final _curAnim:AnimArray = char.animationsArray[curAnim];
-
-				if (curAnim < 0) curAnim = char.animationsArray.length - 1;
-				if (curAnim >= char.animationsArray.length) curAnim = 0;
 
 				if (FlxG.keys.justPressed.S || FlxG.keys.justPressed.W || FlxG.keys.justPressed.SPACE)
 				{

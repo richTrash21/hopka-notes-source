@@ -22,7 +22,7 @@ class PopupSprite extends FlxSprite
 	@:isVar public static var globalSpeed(get, set):Float = 1.0;
 
 	public function new(?X:Float = 0, ?Y:Float = 0, ?Graphic:FlxGraphicAsset, ?VelocityX:Float = 0, ?VelocityY:Float = 0,
-		?AccelerationX:Float = 0, ?AccelerationY:Float = 0):Void
+			?AccelerationX:Float = 0, ?AccelerationY:Float = 0):Void
 	{
 		super(X, Y, Graphic);
 		antialiasing = ClientPrefs.data.antialiasing;

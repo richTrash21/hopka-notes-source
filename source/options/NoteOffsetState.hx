@@ -57,7 +57,7 @@ class NoteOffsetState extends MusicBeatState
 		FlxG.sound.pause();
 
 		// Stage
-		Paths.setCurrentLevel('week1');
+		Paths.currentLevel = 'week1';
 		new states.stages.StageWeek1();
 
 		// Characters
