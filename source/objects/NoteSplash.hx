@@ -13,8 +13,8 @@ typedef NoteSplashConfig = {
 class NoteSplash extends FlxSprite
 {
 	public var rgbShader:PixelSplashShaderRef;
-	private var _textureLoaded:String = null;
-	private var _configLoaded:String = null;
+	var _textureLoaded:String = null;
+	var _configLoaded:String = null;
 
 	inline public static final defaultNoteSplash:String = 'noteSplashes/noteSplashes';
 	public static var configs:Map<String, NoteSplashConfig> = new Map<String, NoteSplashConfig>();

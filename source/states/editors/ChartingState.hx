@@ -85,7 +85,7 @@ class ChartingState extends MusicBeatUIState
 		['Screen Shake', "Value 1: Camera shake\nValue 2: HUD shake\n\nEvery value works as the following example: \"1, 0.05\".\nThe first number (1) is the duration.\nThe second number (0.05) is the intensity."],
 		['Change Character', "Value 1: Character to change (Dad, BF, GF)\nValue 2: New character's name"],
 		['Change Scroll Speed', "Value 1: Scroll Speed Multiplier (1 is default)\nValue 2: Time it takes to change fully in seconds."],
-		['Set Property', "Value 1: Variable name\nValue 2: New value\nNOTE: DOESN'T WORK WITH BOOLEANS!!!"],
+		['Set Property', "Value 1: Variable name\nValue 2: New value\nNOTE: DOESN'T WORK WITH BOOLEANS!!! (nvmd fixed lmao)"],
 		['Play Sound', "Value 1: Sound file name\nValue 2: Volume (Default: 1), ranges from 0 to 1"]
 	];
 
@@ -242,7 +242,7 @@ class ChartingState extends MusicBeatUIState
 		nextRenderedSustains = new FlxTypedGroup<FlxSprite>();
 		nextRenderedNotes = new FlxTypedGroup<Note>();
 
-		FlxG.mouse.visible = true;
+		//FlxG.mouse.visible = true;
 
 		currentSongName = Paths.formatToSongPath(_song.song);
 		loadSong();
@@ -1495,7 +1495,7 @@ class ChartingState extends MusicBeatUIState
 		strumLineUpdateY();
 		for (i in 0...8) strumLineNotes.members[i].y = strumLine.y;
 
-		FlxG.mouse.visible = true;//cause reasons. trust me
+		//FlxG.mouse.visible = true;//cause reasons. trust me
 		camPos.y = strumLine.y;
 		if(!disableAutoScrolling.checked) {
 			if (Math.ceil(strumLine.y) >= gridBG.height)
@@ -1509,11 +1509,8 @@ class ChartingState extends MusicBeatUIState
 		FlxG.watch.addQuick('daBeat', curBeat);
 		FlxG.watch.addQuick('daStep', curStep);
 
-
-		if (FlxG.mouse.x > gridBG.x
-			&& FlxG.mouse.x < gridBG.x + gridBG.width
-			&& FlxG.mouse.y > gridBG.y
-			&& FlxG.mouse.y < gridBG.y + (GRID_SIZE * getSectionBeats() * 4) * zoomList[curZoom])
+		final onGrid:Bool = FlxMath.pointInCoordinates(FlxG.mouse.x, FlxG.mouse.y, gridBG.x, gridBG.y, gridBG.width, GRID_SIZE * getSectionBeats() * 4 * zoomList[curZoom]);
+		if (onGrid)
 		{
 			dummyArrow.visible = true;
 			dummyArrow.x = Math.floor(FlxG.mouse.x / GRID_SIZE) * GRID_SIZE;
@@ -1548,7 +1545,7 @@ class ChartingState extends MusicBeatUIState
 			}
 			else
 			{
-				if (FlxMath.pointInCoordinates(FlxG.mouse.x, FlxG.mouse.y, gridBG.x, gridBG.y, gridBG.width, GRID_SIZE * getSectionBeats() * 4 * zoomList[curZoom]))
+				if (onGrid)
 				{
 					FlxG.log.add('added note');
 					addNote();
@@ -1612,7 +1609,7 @@ class ChartingState extends MusicBeatUIState
 			if (FlxG.keys.justPressed.ENTER)
 			{
 				autosaveSong();
-				FlxG.mouse.visible = false;
+				//FlxG.mouse.visible = false;
 				PlayState.SONG = _song;
 				FlxG.sound.music.stop();
 				if(vocals != null) vocals.stop();
@@ -1634,7 +1631,7 @@ class ChartingState extends MusicBeatUIState
 				PlayState.chartingMode = false;
 				MusicBeatState.switchState(new states.editors.MasterEditorMenu());
 				FlxG.sound.playMusic(Paths.music('freakyMenu'));
-				FlxG.mouse.visible = false;
+				//FlxG.mouse.visible = false;
 				return;
 			}
 

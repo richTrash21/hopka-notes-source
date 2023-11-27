@@ -23,10 +23,7 @@ class HealthIcon extends FlxSprite
 	@:isVar public static var globalSpeed(get, set):Float = 1.0;
 
 	inline function set_baseScale(Scale:Float):Float
-	{
-		if (baseScale == Scale) return Scale;
-		return baseScale = setScale(Scale).x;
-	}
+		return (baseScale == Scale ? Scale : baseScale = setScale(Scale).x);
 
 	public function new(char:String = 'bf', isPlayer:Bool = false, allowGPU:Bool = true)
 	{
@@ -44,10 +41,10 @@ class HealthIcon extends FlxSprite
 			updateHitbox();
 		}
 
-		super.update(elapsed);
-
 		if (sprTracker != null)
-			setPosition(sprTracker.x + sprTracker.width + 12, sprTracker.y - 30);
+			setPosition(sprTracker.x + sprTracker.width + 12, sprTracker.y - height * 0.25);
+		
+		super.update(elapsed);
 	}
 
 	// kinda like setGraphicSize, but with just scale value
@@ -56,12 +53,7 @@ class HealthIcon extends FlxSprite
 		if (X == null && Y == null)
 			return scale;
 
-		if (X == null)
-			X = Y;
-		else if (Y == null)
-			Y = X;
-
-		return scale.set(X, Y);
+		return scale.set(X ?? Y, Y ?? X);
 	}
 
 	public var iconOffsets:FlxPoint = FlxPoint.get();

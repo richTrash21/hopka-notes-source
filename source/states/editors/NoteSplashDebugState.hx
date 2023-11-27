@@ -125,7 +125,7 @@ class NoteSplashDebugState extends MusicBeatUIState
 		loadFrames();
 		changeSelection();
 		super.create();
-		FlxG.mouse.visible = true;
+		//FlxG.mouse.visible = true;
 	}
 
 	var curAnim:Int = 1;
@@ -141,7 +141,7 @@ class NoteSplashDebugState extends MusicBeatUIState
 		{
 			MusicBeatState.switchState(new MasterEditorMenu());
 			FlxG.sound.playMusic(Paths.music('freakyMenu'));
-			FlxG.mouse.visible = false;
+			//FlxG.mouse.visible = false;
 		}
 		super.update(elapsed);
 

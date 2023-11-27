@@ -186,7 +186,7 @@ class NoteOffsetState extends MusicBeatState
 		if(controls.controllerMode != _lastControllerMode)
 		{
 			//trace('changed controller mode');
-			FlxG.mouse.visible = !controls.controllerMode;
+			//FlxG.mouse.visible = !controls.controllerMode;
 			controllerPointer.visible = controls.controllerMode;
 
 			// changed to controller mid state
@@ -371,7 +371,7 @@ class NoteOffsetState extends MusicBeatState
 					: FlxG.sound.music.volume = 0;
 			}
 			else FlxG.sound.playMusic(Paths.music('freakyMenu'));
-			FlxG.mouse.visible = false;
+			//FlxG.mouse.visible = false;
 		}
 
 		Conductor.songPosition = FlxG.sound.music.time;
@@ -473,10 +473,10 @@ class NoteOffsetState extends MusicBeatState
 		beatText.visible = !onComboMenu;
 
 		controllerPointer.visible = false;
-		FlxG.mouse.visible = false;
+		//FlxG.mouse.visible = false;
 		if(onComboMenu)
 		{
-			FlxG.mouse.visible = !controls.controllerMode;
+			//FlxG.mouse.visible = !controls.controllerMode;
 			controllerPointer.visible = controls.controllerMode;
 		}
 

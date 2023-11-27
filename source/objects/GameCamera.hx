@@ -28,11 +28,6 @@ class GameCamera extends FlxCamera
 	public var updateLerp(default, set):Bool = false;
 
 	/**
-		Controlls whenever `update()` should be called.
-	**/
-	public var paused(default, set):Bool = false;
-
-	/**
 		Global game speed. Can be controlled outside of PlatState.
 	**/
 	@:isVar public static var globalSpeed(get, set):Float = 1.0;
@@ -54,7 +49,7 @@ class GameCamera extends FlxCamera
 	**/
 	public var tweeningZoom(get, never):Bool;
 
-	private function get_tweeningZoom():Bool // it hurts my eyes but i hope it will do the trick
+	private inline function get_tweeningZoom():Bool // it hurts my eyes but i hope it will do the trick
 	{
 		var ret:Bool = false;
 		@:privateAccess
@@ -68,7 +63,7 @@ class GameCamera extends FlxCamera
 
 	override public function update(elapsed:Float)
 	{
-		if (paused) return;
+		if (!active) return;
 
 		if (target != null && updateLerp)
 			followLerp = elapsed * _speed * cameraSpeed * globalSpeed * (FlxG.updateFramerate / 60);
@@ -79,10 +74,10 @@ class GameCamera extends FlxCamera
 		super.update(elapsed);
 	}
 
-	@:noCompletion inline function set_paused(bool:Bool):Bool
+	@:noCompletion inline override function set_active(bool:Bool):Bool
 	{
-		if (bool) followLerp = 0;
-		return paused = bool;
+		if (!bool) followLerp = 0;
+		return active = bool;
 	}
 
 	@:noCompletion inline function set_updateLerp(bool:Bool):Bool

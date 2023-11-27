@@ -129,7 +129,7 @@ class EditorPlayState extends MusicBeatSubstate
 		tipText.borderSize = 2;
 		tipText.scrollFactor.set();
 		add(tipText);
-		FlxG.mouse.visible = false;
+		//FlxG.mouse.visible = false;
 		
 		generateSong(PlayState.SONG.song);
 
@@ -257,7 +257,7 @@ class EditorPlayState extends MusicBeatSubstate
 	{
 		FlxG.stage.removeEventListener(KeyboardEvent.KEY_DOWN, onKeyPress);
 		FlxG.stage.removeEventListener(KeyboardEvent.KEY_UP, onKeyRelease);
-		FlxG.mouse.visible = true;
+		//FlxG.mouse.visible = true;
 		super.destroy();
 	}
 	

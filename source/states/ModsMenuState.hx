@@ -250,7 +250,7 @@ class ModsMenuState extends MusicBeatState
 		updatePosition();
 		FlxG.sound.play(Paths.sound('scrollMenu'));
 
-		FlxG.mouse.visible = true;
+		//FlxG.mouse.visible = true;
 
 		super.create();
 	}
@@ -331,7 +331,7 @@ class ModsMenuState extends MusicBeatState
 		{
 			if(colorTween != null) colorTween.cancel();
 			FlxG.sound.play(Paths.sound('cancelMenu'));
-			FlxG.mouse.visible = false;
+			//FlxG.mouse.visible = false;
 			saveTxt();
 			if(needaReset)
 			{

@@ -66,6 +66,7 @@ class MainMenuState extends MusicBeatState
 		bg.setGraphicSize(Std.int(bg.width * 1.175));
 		bg.updateHitbox();
 		bg.screenCenter();
+		bg.active = false;
 		add(bg);
 
 		magenta = new FlxSprite(0, 0, Paths.image('menuDesat'));
@@ -76,6 +77,7 @@ class MainMenuState extends MusicBeatState
 		magenta.screenCenter();
 		magenta.visible = false;
 		magenta.color = 0xFFfd719b;
+		magenta.active = false;
 		add(magenta);
 
 		final grid:FlxBackdrop = new FlxBackdrop(flixel.addons.display.FlxGridOverlay.createGrid(80, 80, 160, 160, true, 0x33FFFFFF, 0x0));
@@ -86,9 +88,10 @@ class MainMenuState extends MusicBeatState
 		menuItems = new FlxTypedGroup<FlxSprite>();
 		add(menuItems);
 
+		final offset:Float = 108 - (Math.max(optionShit.length, 4) - 4) * 80;
 		for (i in 0...optionShit.length)
 		{
-			final menuItem:FlxSprite = new FlxSprite(0, (i * 140) + 108 - (Math.max(optionShit.length, 4) - 4) * 80);
+			final menuItem:FlxSprite = new FlxSprite(0, (i * 140) + offset);
 			menuItem.antialiasing = ClientPrefs.data.antialiasing;
 			menuItem.frames = Paths.getSparrowAtlas('mainmenu/menu_' + optionShit[i]);
 			menuItem.animation.addByPrefix('idle', optionShit[i] + " basic", 24);
@@ -102,15 +105,21 @@ class MainMenuState extends MusicBeatState
 
 		FlxG.camera.follow(menuItems.members[0], null, 0);
 
-		final versionShit:FlxText = new FlxText(12, FlxG.height - 44, 0, "Psych Engine v" + psychEngineVersion, 12);
-		versionShit.scrollFactor.set();
-		versionShit.setFormat("VCR OSD Mono", 16, FlxColor.WHITE, LEFT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
-		add(versionShit);
+		final psychVersion:FlxText = new FlxText(12, FlxG.height - 44, 0, 'Psych Engine v$psychEngineVersion', 16);
+		psychVersion.active = false;
+		psychVersion.scrollFactor.set();
+		psychVersion.borderStyle = FlxTextBorderStyle.OUTLINE;
+		psychVersion.borderColor = FlxColor.BLACK;
+		psychVersion.font = Paths.font('vcr.ttf');
+		add(psychVersion);
 
-		final versionShit:FlxText = new FlxText(12, FlxG.height - 24, 0, "Friday Night Funkin' v" + lime.app.Application.current.meta.get('version'), 12);
-		versionShit.scrollFactor.set();
-		versionShit.setFormat("VCR OSD Mono", 16, FlxColor.WHITE, LEFT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
-		add(versionShit);
+		final fnfVersion:FlxText = new FlxText(12, FlxG.height - 24, 0, 'Friday Night Funkin v${lime.app.Application.current.meta.get('version')}', 16);
+		fnfVersion.active = false;
+		fnfVersion.scrollFactor.set();
+		fnfVersion.borderStyle = FlxTextBorderStyle.OUTLINE;
+		fnfVersion.borderColor = FlxColor.BLACK;
+		fnfVersion.font = Paths.font('vcr.ttf');
+		add(fnfVersion);
 
 		changeItem();
 
@@ -152,8 +161,8 @@ class MainMenuState extends MusicBeatState
 
 		if (!selectedSomethin)
 		{
-			if (controls.UI_UP_P)   changeItem(-1);
-			if (controls.UI_DOWN_P) changeItem(1);
+			if (controls.UI_UP_P || controls.UI_DOWN_P)
+				changeItem(controls.UI_UP_P ? -1 : 1);
 
 			if (controls.BACK)
 			{
@@ -173,15 +182,13 @@ class MainMenuState extends MusicBeatState
 
 					menuItems.forEach(function(spr:FlxSprite)
 					{
-						if (curSelected == spr.ID) {
+						if (curSelected == spr.ID)
+						{
 							FlxFlicker.flicker(spr, 1, 0.06, false, false, function(flick:FlxFlicker)
 								switchShit(optionShit[curSelected]));
 							return;
 						}
-						FlxTween.num(1, 0, 0.4, {ease: FlxEase.quadOut}, function(value:Float) {
-							spr.alpha = value;
-							if(value == 0) spr.destroy();
-						});
+						FlxTween.num(1, 0, 0.4, {ease: FlxEase.quadOut, onComplete: function(_) spr.destroy()}, function(value:Float) spr.alpha = value);
 					});
 				}
 			}
@@ -201,10 +208,7 @@ class MainMenuState extends MusicBeatState
 				massage.scrollFactor.set();
 				massage.borderSize = 1.2;
 				add(massage);
-				FlxTween.num(1, 0, 0.4, {startDelay: 0.8}, function(value:Float) {
-					massage.alpha = value;
-					if(value == 0) massage.destroy();
-				});
+				FlxTween.num(1, 0, 0.4, {startDelay: 0.8, onComplete: function(_) massage.destroy()}, function(value:Float) massage.alpha = value);
 
 				FlxG.sound.play(Paths.sound('cancelMenu'));
 				Paths.clearUnusedMemory();

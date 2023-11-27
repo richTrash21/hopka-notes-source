@@ -199,15 +199,15 @@ class CharacterEditorState extends backend.MusicBeatUIState
 		addAnimationsUI();
 		UI_characterbox.selected_tab_id = 'Character';
 
-		FlxG.mouse.visible = true;
+		//FlxG.mouse.visible = true;
 		reloadCharacterOptions();
 
 		super.create();
 	}
 
-	var OFFSET_X:Float = 300;
+	final OFFSET_X:Float = 300;
 	function reloadBGs() {
-		var playerXDifference = char.isPlayer ? 670 : 0;
+		final playerXDifference = char.isPlayer ? 670 : 0;
 		bg.x = -600 + OFFSET_X - playerXDifference;
 		stageFront.x = -650 + OFFSET_X - playerXDifference;
 	}
@@ -960,7 +960,7 @@ class CharacterEditorState extends backend.MusicBeatUIState
 					updatePointerPos();
 				}
 			}
-			if (FlxG.mouse.pressedRight)
+			else if (FlxG.mouse.pressedRight)
 			{
 				camFollow.x -= FlxG.mouse.deltaScreenX;
 				camFollow.y -= FlxG.mouse.deltaScreenY;
@@ -977,7 +977,7 @@ class CharacterEditorState extends backend.MusicBeatUIState
 					MusicBeatState.switchState(new states.editors.MasterEditorMenu());
 					FlxG.sound.playMusic(Paths.music('freakyMenu'));
 				}
-				FlxG.mouse.visible = false;
+				//FlxG.mouse.visible = false;
 				return;
 			}
 

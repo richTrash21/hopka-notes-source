@@ -18,7 +18,7 @@ class GameOverSubstate extends MusicBeatSubstate
 	public var boyfriend:Character;
 	public var camFollow(get, never):FlxObject;
 	public var updateCamera(default, set):Bool = false;
-	public var realCamera:GameCamera = cast FlxG.camera; // whoops😬
+	public final realCamera:GameCamera = cast FlxG.camera; // whoops😬
 
 	@:noCompletion inline function get_camFollow():FlxObject
 		return boyfriend.camFollow;
@@ -28,7 +28,6 @@ class GameOverSubstate extends MusicBeatSubstate
 		if (updateCamera == bool)
 			return bool;
 
-		realCamera.cameraSpeed = 0.25;
 		return realCamera.updateLerp = updateCamera = bool;
 	}
 
@@ -62,7 +61,8 @@ class GameOverSubstate extends MusicBeatSubstate
 	{
 		instance = this;
 		game.callOnScripts('onGameOverStart');
-
+		boyfriend.animation.callback = onAnimationUpdate;
+		boyfriend.animation.finishCallback = onAnimationFinished;
 		super.create();
 	}
 
@@ -72,10 +72,10 @@ class GameOverSubstate extends MusicBeatSubstate
 		super();
 
 		game.setOnScripts('inGameOver', true);
-
 		Conductor.songPosition = 0;
 
-		if(game.boyfriendMap.exists(characterName)) {
+		if(game.boyfriendMap.exists(characterName))
+		{
 			boyfriend = game.boyfriendMap.get(characterName);
 			boyfriend.setPosition(x, y);
 			boyfriend.alpha = 1;
@@ -85,34 +85,10 @@ class GameOverSubstate extends MusicBeatSubstate
 		boyfriend.y += boyfriend.positionArray[1];
 		add(boyfriend);
 
-		boyfriend.animation.callback = function(Name:String, Frame:Int, FrameID:Int) {
-			if(Name == 'firstDeath' && Frame >= 12 && !isFollowingAlready)
-			{
-				updateCamera = true;
-				isFollowingAlready = true;
-			}
-		}
-		boyfriend.animation.finishCallback = function(Name:String) {
-			if (Name == 'firstDeath')
-			{
-				updateCamera = true;
-				startedDeath = true;
-				FlxG.sound.playMusic(Paths.music(loopSoundName));
-				boyfriend.playAnim('deathLoop');
-			}
-			// in case of missing animations death will continue with music n' shit
-			/*else if(!boyfriend.animation.curAnim.name.startsWith('death') && boyfriend.animation.curAnim.finished)
-			{
-				updateCamera = true;
-				startedDeath = true;
-				FlxG.sound.playMusic(Paths.music(loopSoundName));
-			}*/
-		}
-
 		FlxG.sound.play(Paths.sound(deathSoundName));
 		boyfriend.playAnim('firstDeath');
 
-		var midpoint:FlxPoint = boyfriend.getGraphicMidpoint();
+		final midpoint:FlxPoint = boyfriend.getGraphicMidpoint();
 		camFollow.setPosition(midpoint.x, midpoint.y);
 		add(camFollow);
 		midpoint.put();
@@ -120,18 +96,39 @@ class GameOverSubstate extends MusicBeatSubstate
 		realCamera.follow(camFollow, LOCKON, 0);
 		realCamera.scroll.set();
 		realCamera.updateLerp = realCamera.updateZoom = false;
+		@:privateAccess realCamera._speed = 0.6;
+		realCamera.cameraSpeed = 1;
+	}
+
+	dynamic public function onAnimationUpdate(Name:String, Frame:Int, FrameID:Int):Void
+	{
+		if(Name == 'firstDeath' && Frame >= 12 && !isFollowingAlready)
+			updateCamera = isFollowingAlready = true;
+	}
+
+	dynamic public function onAnimationFinished(Name:String):Void
+	{
+		if (Name == 'firstDeath')
+		{
+			updateCamera = startedDeath = true;
+			FlxG.sound.playMusic(Paths.music(loopSoundName));
+			boyfriend.playAnim('deathLoop');
+		}
+		// in case of missing animations death will continue with music n' shit
+		/*else if(!boyfriend.animation.curAnim.name.startsWith('death') && boyfriend.animation.curAnim.finished)
+		{
+			updateCamera = startedDeath = true;
+			FlxG.sound.playMusic(Paths.music(loopSoundName));
+		}*/
 	}
 
 	public var startedDeath:Bool = false;
 	var isFollowingAlready:Bool = false;
 	override function update(elapsed:Float)
 	{
-		super.update(elapsed);
-
 		game.callOnScripts('onUpdate', [elapsed]);
 
 		if (controls.ACCEPT) endBullshit();
-
 		if (controls.BACK)
 		{
 			#if desktop DiscordClient.resetClientID(); #end
@@ -150,26 +147,26 @@ class GameOverSubstate extends MusicBeatSubstate
 		// realCamera.followLerp = updateCamera ? elapsed * 0.6 #if (flixel < "5.4.0") / #else * #end (FlxG.updateFramerate / 60) : 0;
 
 		if (FlxG.sound.music.playing) Conductor.songPosition = FlxG.sound.music.time;
+
+		super.update(elapsed);
 		game.callOnScripts('onUpdatePost', [elapsed]);
 	}
 
 	var isEnding:Bool = false;
-
 	function endBullshit():Void
 	{
 		if (!isEnding)
 		{
-			var ret:Dynamic = game.callOnScripts('onGameOverConfirm', [true], true);
-			if (ret != FunkinLua.Function_Stop) {
+			final ret:Dynamic = game.callOnScripts('onGameOverConfirm', [true], true);
+			if (ret != FunkinLua.Function_Stop)
+			{
 				isEnding = true;
 				boyfriend.playAnim('deathConfirm', true);
 
 				FlxG.sound.music.stop();
 				FlxG.sound.play(Paths.sound(endSoundName));
 				
-				new FlxTimer().start(0.7, function(tmr:FlxTimer)
-					realCamera.fade(FlxColor.BLACK, 2, false, function() MusicBeatState.resetState())
-				);
+				new FlxTimer().start(0.7, function(tmr:FlxTimer) realCamera.fade(FlxColor.BLACK, 2, false, function() MusicBeatState.resetState()));
 			}
 		}
 	}

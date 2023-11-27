@@ -149,7 +149,7 @@ class NotesSubState extends MusicBeatSubstate
 		controllerPointer.screenCenter();
 		add(controllerPointer);
 		
-		FlxG.mouse.visible = !controls.controllerMode;
+		//FlxG.mouse.visible = !controls.controllerMode;
 		controllerPointer.visible = controls.controllerMode;
 		_lastControllerMode = controls.controllerMode;
 	}
@@ -167,7 +167,7 @@ class NotesSubState extends MusicBeatSubstate
 
 	override function update(elapsed:Float) {
 		if (controls.BACK) {
-			FlxG.mouse.visible = false;
+			//FlxG.mouse.visible = false;
 			FlxG.sound.play(Paths.sound('cancelMenu'));
 			close();
 			return;
@@ -184,7 +184,7 @@ class NotesSubState extends MusicBeatSubstate
 		if(controls.controllerMode != _lastControllerMode)
 		{
 			//trace('changed controller mode');
-			FlxG.mouse.visible = !controls.controllerMode;
+			//FlxG.mouse.visible = !controls.controllerMode;
 			controllerPointer.visible = controls.controllerMode;
 
 			// changed to controller mid state

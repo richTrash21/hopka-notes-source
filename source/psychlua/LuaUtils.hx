@@ -1,27 +1,27 @@
 package psychlua;
 
-import Type.ValueType;
 import openfl.display.BlendMode;
 import animateatlas.AtlasFrameMaker;
-import substates.GameOverSubstate;
 
+#if LUA_ALLOWED
 import llua.Lua;
+#end
 
 typedef LuaTweenOptions = {
 	type:FlxTweenType,
 	startDelay:Float,
-	onUpdate:Null<String>,
-	onStart:Null<String>,
-	onComplete:Null<String>,
+	?onUpdate:String,
+	?onStart:String,
+	?onComplete:String,
 	loopDelay:Float,
 	ease:EaseFunction
 }
 
 class LuaUtils
 {
-	public static function getLuaTween(options:Dynamic)
+	public static function getLuaTween(options:Dynamic):LuaTweenOptions
 	{
-		return {
+		return cast {
 			type: getTweenTypeByString(options.type),
 			startDelay: options.startDelay,
 			onUpdate: options.onUpdate,
@@ -135,31 +135,23 @@ class LuaUtils
 	public static function getPropertyLoop(split:Array<String>, ?checkForTextsToo:Bool = true, ?getProperty:Bool=true, ?allowMaps:Bool = false):Dynamic
 	{
 		var obj:Dynamic = getObjectDirectly(split[0], checkForTextsToo);
-		var end = split.length;
-		if(getProperty) end = split.length-1;
-
-		for (i in 1...end) obj = getVarInArray(obj, split[i], allowMaps);
+		for (i in 1...(getProperty ? split.length-1 : split.length)) obj = getVarInArray(obj, split[i], allowMaps);
 		return obj;
 	}
 
-	public static function getObjectDirectly(objectName:String, ?checkForTextsToo:Bool = true, ?allowMaps:Bool = false):Dynamic
+	inline public static function getObjectDirectly(objectName:String, ?checkForTextsToo:Bool = true, ?allowMaps:Bool = false):Dynamic
 	{
-		switch(objectName)
-		{
-			case 'this' | 'instance' | 'game':
-				return PlayState.instance;
-			
-			default:
-				var obj:Dynamic = PlayState.instance.getLuaObject(objectName, checkForTextsToo);
-				if(obj == null) obj = getVarInArray(getTargetInstance(), objectName, allowMaps);
-				return obj;
-		}
+		return switch(objectName)
+			{
+				case 'this' | 'instance' | 'game':	PlayState.instance;
+				default:							PlayState.instance.getLuaObject(objectName, checkForTextsToo) ?? getVarInArray(getTargetInstance(), objectName, allowMaps);
+			}
 	}
 
 	inline public static function getTextObject(name:String):FlxText
 		return #if LUA_ALLOWED PlayState.instance.modchartTexts.exists(name) ? PlayState.instance.modchartTexts.get(name) : #end Reflect.getProperty(PlayState.instance, name);
 	
-	public static function isOfTypes(value:Any, types:Array<Dynamic>)
+	inline public static function isOfTypes(value:Any, types:Array<Dynamic>)
 	{
 		for (type in types) if(Std.isOfType(value, type)) return true;
 		return false;
@@ -173,7 +165,7 @@ class LuaUtils
 	}
 	
 	public static inline function getTargetInstance()
-		return PlayState.instance.isDead ? GameOverSubstate.instance : PlayState.instance;
+		return PlayState.instance.isDead ? substates.GameOverSubstate.instance : PlayState.instance;
 
 	public static inline function getLowestCharacterGroup():FlxSpriteGroup
 	{
@@ -198,7 +190,7 @@ class LuaUtils
 	
 	public static function addAnimByIndices(obj:String, name:String, prefix:String, indices:Any = null, framerate:Int = 24, loop:Bool = false)
 	{
-		var obj:Dynamic = LuaUtils.getObjectDirectly(obj, false);
+		final obj:Dynamic = getObjectDirectly(obj, false);
 		if(obj != null && obj.animation != null)
 		{
 			if(indices == null) indices = [];
@@ -215,30 +207,22 @@ class LuaUtils
 			obj.animation.addByIndices(name, prefix, indices, '', framerate, loop);
 			if(obj.animation.curAnim == null)
 			{
-				if(obj.playAnim != null) obj.playAnim(name, true);
-				else obj.animation.play(name, true);
+				(obj.playAnim != null ? obj.playAnim(name, true) : obj.animation.play(name, true));
 			}
 			return true;
 		}
 		return false;
 	}
 	
-	public static function loadFrames(spr:FlxSprite, image:String, spriteType:String)
+	inline public static function loadFrames(image:String, spriteType:String)
 	{
-		switch(spriteType.toLowerCase().trim())
-		{
-			case "texture" | "textureatlas" | "tex":
-				spr.frames = AtlasFrameMaker.construct(image);
-
-			case "texture_noaa" | "textureatlas_noaa" | "tex_noaa":
-				spr.frames = AtlasFrameMaker.construct(image, null, true);
-
-			case "packer" | "packeratlas" | "pac":
-				spr.frames = Paths.getPackerAtlas(image);
-
-			default:
-				spr.frames = Paths.getSparrowAtlas(image);
-		}
+		return switch(spriteType.toLowerCase().trim())
+			{
+				case "texture" | "textureatlas" | "tex":				 AtlasFrameMaker.construct(image);
+				case "texture_noaa" | "textureatlas_noaa" | "tex_noaa":	 AtlasFrameMaker.construct(image, null, true);
+				case "packer" | "packeratlas" | "pac":					 Paths.getPackerAtlas(image);
+				default:												 Paths.getSparrowAtlas(image);
+			}
 	}
 
 	public static function resetTextTag(tag:String)
@@ -246,10 +230,9 @@ class LuaUtils
 		#if LUA_ALLOWED
 		if(!PlayState.instance.modchartTexts.exists(tag)) return;
 
-		var target:FlxText = PlayState.instance.modchartTexts.get(tag);
+		final target:FlxText = PlayState.instance.modchartTexts.get(tag);
 		target.kill();
-		PlayState.instance.remove(target, true);
-		target.destroy();
+		PlayState.instance.remove(target, true).destroy();
 		PlayState.instance.modchartTexts.remove(tag);
 		#end
 	}
@@ -259,10 +242,9 @@ class LuaUtils
 		#if LUA_ALLOWED
 		if(!PlayState.instance.modchartSprites.exists(tag)) return;
 
-		var target:ModchartSprite = PlayState.instance.modchartSprites.get(tag);
+		final target:ModchartSprite = PlayState.instance.modchartSprites.get(tag);
 		target.kill();
-		PlayState.instance.remove(target, true);
-		target.destroy();
+		PlayState.instance.remove(target, true).destroy();
 		PlayState.instance.modchartSprites.remove(tag);
 		#end
 	}
@@ -270,28 +252,29 @@ class LuaUtils
 	public static function cancelTween(tag:String)
 	{
 		#if LUA_ALLOWED
-		if(PlayState.instance.modchartTweens.exists(tag)) {
-			PlayState.instance.modchartTweens.get(tag).cancel();
-			PlayState.instance.modchartTweens.get(tag).destroy();
+		if(PlayState.instance.modchartTweens.exists(tag))
+		{
+			final leTween:FlxTween = PlayState.instance.modchartTweens.get(tag);
+			leTween.cancel();
+			leTween.destroy();
 			PlayState.instance.modchartTweens.remove(tag);
 		}
 		#end
 	}
 
-	public static function tweenPrepare(tag:String, vars:String)
+	inline public static function tweenPrepare(tag:String, vars:String)
 	{
 		cancelTween(tag);
-		var variables:Array<String> = vars.split('.');
-		var sexyProp:Dynamic = LuaUtils.getObjectDirectly(variables[0]);
-		if(variables.length > 1) sexyProp = LuaUtils.getVarInArray(LuaUtils.getPropertyLoop(variables), variables[variables.length-1]);
-		return sexyProp;
+		final variables:Array<String> = vars.split('.');
+		return (variables.length > 1 ? getVarInArray(getPropertyLoop(variables), variables[variables.length-1]) : getObjectDirectly(variables[0]));
 	}
 
 	public static function cancelTimer(tag:String)
 	{
 		#if LUA_ALLOWED
-		if(PlayState.instance.modchartTimers.exists(tag)) {
-			var theTimer:FlxTimer = PlayState.instance.modchartTimers.get(tag);
+		if(PlayState.instance.modchartTimers.exists(tag))
+		{
+			final theTimer:FlxTimer = PlayState.instance.modchartTimers.get(tag);
 			theTimer.cancel();
 			theTimer.destroy();
 			PlayState.instance.modchartTimers.remove(tag);
@@ -300,112 +283,107 @@ class LuaUtils
 	}
 
 	//buncho string stuffs
-	public static function getTweenTypeByString(?type:String = ''):FlxTweenType
+	inline public static function getTweenTypeByString(?type:String):FlxTweenType
 	{
-		var _type:FlxTweenType = FlxTweenType.ONESHOT;
-		switch(type.toLowerCase().trim())
-		{
-			case 'backward':		_type = FlxTweenType.BACKWARD;
-			case 'looping'|'loop':	_type = FlxTweenType.LOOPING;
-			case 'persist':			_type = FlxTweenType.PERSIST;
-			case 'pingpong':		_type = FlxTweenType.PINGPONG;
-		}
-		return _type;
+		return switch(type.toLowerCase().trim())
+			{
+				case 'backward':		FlxTweenType.BACKWARD;
+				case 'looping'|'loop':	FlxTweenType.LOOPING;
+				case 'persist':			FlxTweenType.PERSIST;
+				case 'pingpong':		FlxTweenType.PINGPONG;
+				default:				FlxTweenType.ONESHOT;
+			}
 	}
 
-	public static function getTweenEaseByString(?ease:String = ''):(f:Float)->Float
+	inline public static function getTweenEaseByString(?ease:String):Float->Float
 	{
-		var _ease:(f:Float)->Float = FlxEase.linear;
-		switch(ease.toLowerCase().trim())
-		{
-			case 'backin':				_ease = FlxEase.backIn;
-			case 'backinout':			_ease = FlxEase.backInOut;
-			case 'backout':				_ease = FlxEase.backOut;
-			case 'bouncein':			_ease = FlxEase.bounceIn;
-			case 'bounceinout':			_ease = FlxEase.bounceInOut;
-			case 'bounceout':			_ease = FlxEase.bounceOut;
-			case 'circin':				_ease = FlxEase.circIn;
-			case 'circinout':			_ease = FlxEase.circInOut;
-			case 'circout':				_ease = FlxEase.circOut;
-			case 'cubein':				_ease = FlxEase.cubeIn;
-			case 'cubeinout':			_ease = FlxEase.cubeInOut;
-			case 'cubeout':				_ease = FlxEase.cubeOut;
-			case 'elasticin':			_ease = FlxEase.elasticIn;
-			case 'elasticinout':		_ease = FlxEase.elasticInOut;
-			case 'elasticout':			_ease = FlxEase.elasticOut;
-			case 'expoin':				_ease = FlxEase.expoIn;
-			case 'expoinout':			_ease = FlxEase.expoInOut;
-			case 'expoout':				_ease = FlxEase.expoOut;
-			case 'quadin':				_ease = FlxEase.quadIn;
-			case 'quadinout':			_ease = FlxEase.quadInOut;
-			case 'quadout':				_ease = FlxEase.quadOut;
-			case 'quartin':				_ease = FlxEase.quartIn;
-			case 'quartinout':			_ease = FlxEase.quartInOut;
-			case 'quartout':			_ease = FlxEase.quartOut;
-			case 'quintin':				_ease = FlxEase.quintIn;
-			case 'quintinout':			_ease = FlxEase.quintInOut;
-			case 'quintout':			_ease = FlxEase.quintOut;
-			case 'sinein':				_ease = FlxEase.sineIn;
-			case 'sineinout':			_ease = FlxEase.sineInOut;
-			case 'sineout':				_ease = FlxEase.sineOut;
-			case 'smoothstepin':		_ease = FlxEase.smoothStepIn;
-			case 'smoothstepinout':		_ease = FlxEase.smoothStepInOut;
-			case 'smoothstepout':		_ease = FlxEase.smoothStepInOut;
-			case 'smootherstepin':		_ease = FlxEase.smootherStepIn;
-			case 'smootherstepinout':	_ease = FlxEase.smootherStepInOut;
-			case 'smootherstepout':		_ease = FlxEase.smootherStepOut;
-		}
-		return _ease;
+		return switch(ease.toLowerCase().trim())
+			{
+				case 'backin':				FlxEase.backIn;
+				case 'backinout':			FlxEase.backInOut;
+				case 'backout':				FlxEase.backOut;
+				case 'bouncein':			FlxEase.bounceIn;
+				case 'bounceinout':			FlxEase.bounceInOut;
+				case 'bounceout':			FlxEase.bounceOut;
+				case 'circin':				FlxEase.circIn;
+				case 'circinout':			FlxEase.circInOut;
+				case 'circout':				FlxEase.circOut;
+				case 'cubein':				FlxEase.cubeIn;
+				case 'cubeinout':			FlxEase.cubeInOut;
+				case 'cubeout':				FlxEase.cubeOut;
+				case 'elasticin':			FlxEase.elasticIn;
+				case 'elasticinout':		FlxEase.elasticInOut;
+				case 'elasticout':			FlxEase.elasticOut;
+				case 'expoin':				FlxEase.expoIn;
+				case 'expoinout':			FlxEase.expoInOut;
+				case 'expoout':				FlxEase.expoOut;
+				case 'quadin':				FlxEase.quadIn;
+				case 'quadinout':			FlxEase.quadInOut;
+				case 'quadout':				FlxEase.quadOut;
+				case 'quartin':				FlxEase.quartIn;
+				case 'quartinout':			FlxEase.quartInOut;
+				case 'quartout':			FlxEase.quartOut;
+				case 'quintin':				FlxEase.quintIn;
+				case 'quintinout':			FlxEase.quintInOut;
+				case 'quintout':			FlxEase.quintOut;
+				case 'sinein':				FlxEase.sineIn;
+				case 'sineinout':			FlxEase.sineInOut;
+				case 'sineout':				FlxEase.sineOut;
+				case 'smoothstepin':		FlxEase.smoothStepIn;
+				case 'smoothstepinout':		FlxEase.smoothStepInOut;
+				case 'smoothstepout':		FlxEase.smoothStepInOut;
+				case 'smootherstepin':		FlxEase.smootherStepIn;
+				case 'smootherstepinout':	FlxEase.smootherStepInOut;
+				case 'smootherstepout':		FlxEase.smootherStepOut;
+				default:					FlxEase.linear;
+			}
 	}
 
-	public static function blendModeFromString(blend:String):BlendMode
+	inline public static function blendModeFromString(blend:String):BlendMode
 	{
-		var _blend:BlendMode = NORMAL;
-		switch(blend.toLowerCase().trim())
-		{
-			case 'add':			_blend = ADD;
-			case 'alpha':		_blend = ALPHA;
-			case 'darken':		_blend = DARKEN;
-			case 'difference':	_blend = DIFFERENCE;
-			case 'erase':		_blend = ERASE;
-			case 'hardlight':	_blend = HARDLIGHT;
-			case 'invert':		_blend = INVERT;
-			case 'layer':		_blend = LAYER;
-			case 'lighten':		_blend = LIGHTEN;
-			case 'multiply':	_blend = MULTIPLY;
-			case 'overlay':		_blend = OVERLAY;
-			case 'screen':		_blend = SCREEN;
-			case 'shader':		_blend = SHADER;
-			case 'subtract':	_blend = SUBTRACT;
-		}
-		return _blend;
+		return switch(blend.toLowerCase().trim())
+			{
+				case 'add':			ADD;
+				case 'alpha':		ALPHA;
+				case 'darken':		DARKEN;
+				case 'difference':	DIFFERENCE;
+				case 'erase':		ERASE;
+				case 'hardlight':	HARDLIGHT;
+				case 'invert':		INVERT;
+				case 'layer':		LAYER;
+				case 'lighten':		LIGHTEN;
+				case 'multiply':	MULTIPLY;
+				case 'overlay':		OVERLAY;
+				case 'screen':		SCREEN;
+				case 'shader':		SHADER;
+				case 'subtract':	SUBTRACT;
+				default:			NORMAL;
+			}
 	}
 	
-	public static function typeToString(type:Int):String
+	inline public static function typeToString(type:Int):String
 	{
 		#if LUA_ALLOWED
-		var _type:String = "unknown";
-		switch(type)
-		{
-			case Lua.LUA_TBOOLEAN:	_type = "boolean";
-			case Lua.LUA_TNUMBER:	_type = "number";
-			case Lua.LUA_TSTRING:	_type = "string";
-			case Lua.LUA_TTABLE:	_type = "table";
-			case Lua.LUA_TFUNCTION:	_type = "function";
-		}
-		if (type <= Lua.LUA_TNIL)	_type = "nil";
+		return switch(type)
+			{
+				case Lua.LUA_TBOOLEAN:	 "boolean";
+				case Lua.LUA_TNUMBER:	 "number";
+				case Lua.LUA_TSTRING:	 "string";
+				case Lua.LUA_TTABLE:	 "table";
+				case Lua.LUA_TFUNCTION:	 "function";
+				default:				 (type <= Lua.LUA_TNIL ? "nil" : "unknown");
+			}
+		#else
+		trace('lua isn\'t allowed, returning "null"!');
+		return null;
 		#end
-		return _type;
 	}
 
-	public static function cameraFromString(cam:String):FlxCamera
-	{
-		var _cam:FlxCamera = PlayState.instance.camGame;
-		switch(cam.toLowerCase())
-		{
-			case 'camhud' | 'hud':		_cam = PlayState.instance.camHUD;
-			case 'camother' | 'other':	_cam = PlayState.instance.camOther;
-		}
-		return _cam;
-	}
+	inline public static function cameraFromString(cam:String):FlxCamera
+		return switch(cam.toLowerCase())
+			{
+				case 'camhud' | 'hud':		PlayState.instance.camHUD;
+				case 'camother' | 'other':	PlayState.instance.camOther;
+				default:					PlayState.instance.camGame;
+			}
 }

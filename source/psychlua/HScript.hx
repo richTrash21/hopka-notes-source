@@ -117,7 +117,7 @@ class HScript #if HSCRIPT_ALLOWED extends Interp #end
 		setVar('StringTools', StringTools);
 
 		// Functions & Variables
-		setVar('setVar', function(name:String, value:Dynamic) PlayState.instance.variables.set(name, value));
+		setVar('setVar', PlayState.instance.variables.set);
 		setVar('getVar', function(name:String)
 		{
 			var result:Dynamic = null;
