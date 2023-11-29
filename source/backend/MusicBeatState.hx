@@ -27,7 +27,7 @@ class MusicBeatState extends FlxTransitionableState implements IMusicBeatState
 		super.create();
 
 		if(!FlxTransitionableState.skipNextTransOut)
-			openSubState(new CustomFadeTransition(transTime, true));
+			openSubState(new CustomFadeTransition(transTime * 1.1, true));
 
 		FlxTransitionableState.skipNextTransOut = false;
 		timePassedOnState = 0;

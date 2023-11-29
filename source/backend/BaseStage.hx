@@ -46,14 +46,14 @@ class BaseStage extends FlxBasic implements IMusicBeatState
 
 	public function new()
 	{
-		this.game = cast MusicBeatState.getState();
-		if(this.game == null || !(this.game is MusicBeatState))
+		game = cast MusicBeatState.getState();
+		if(game == null || !(game is MusicBeatState))
 		{
 			FlxG.log.warn('Invalid state for the stage added!');
 			destroy();
 			return;
 		}
-		this.game.stages.push(this);
+		game.stages.push(this);
 		super();
 		create();
 	}
@@ -84,54 +84,25 @@ class BaseStage extends FlxBasic implements IMusicBeatState
 	public function eventPushedUnique(event:EventNote) {}
 
 	// Things to replace FlxGroup stuff and inject sprites directly into the state
-	function add(object:FlxBasic):FlxBasic
-		return game.add(object);
-	function remove(object:FlxBasic):FlxBasic
-		return game.remove(object);
-	function insert(position:Int, object:FlxBasic):FlxBasic
-		return game.insert(position, object);
+	function add(object:FlxBasic):FlxBasic						return game.add(object);
+	function remove(object:FlxBasic):FlxBasic					return game.remove(object);
+	function insert(position:Int, object:FlxBasic):FlxBasic		return game.insert(position, object);
 	
-	public function addBehindGF(obj:FlxBasic):FlxBasic
-	{
-		if (!onPlayState)
-			return null;
-
-		return insert(members.indexOf(cast (game, PlayState).gfGroup), obj);
-	}
-	public function addBehindBF(obj:FlxBasic):FlxBasic
-	{
-		if (!onPlayState)
-			return null;
-
-		return insert(members.indexOf(cast (game, PlayState).boyfriendGroup), obj);
-	}
-	public function addBehindDad(obj:FlxBasic):FlxBasic
-	{
-		if (!onPlayState)
-			return null;
-
-		return insert(members.indexOf(cast (game, PlayState).dadGroup), obj);
-	}
+	public function addBehindGF(obj:FlxBasic):FlxBasic			return (onPlayState ? insert(members.indexOf(cast (game, PlayState).gfGroup), obj) : null);
+	public function addBehindBF(obj:FlxBasic):FlxBasic			return (onPlayState ? insert(members.indexOf(cast (game, PlayState).boyfriendGroup), obj) : null);
+	public function addBehindDad(obj:FlxBasic):FlxBasic			return (onPlayState ? insert(members.indexOf(cast (game, PlayState).dadGroup), obj) : null);
 
 	public function setDefaultGF(name:String) //Fix for the Chart Editor on Base Game stages
 	{
 		final gfVersion:String = PlayState.SONG.gfVersion;
 
-		if(gfVersion == null || gfVersion.length < 1)
+		if (gfVersion == null || gfVersion.length < 1)
 			PlayState.SONG.gfVersion = name;
 	}
 
 	//start/end callback functions
-	public function setStartCallback(myfn:Void->Void)
-	{
-		if(!onPlayState) return;
-		cast (game, PlayState).startCallback = myfn;
-	}
-	public function setEndCallback(myfn:Void->Void)
-	{
-		if(!onPlayState) return;
-		cast (game, PlayState).endCallback = myfn;
-	}
+	public function setStartCallback(myfn:Void->Void)	if (onPlayState) cast (game, PlayState).startCallback = myfn;
+	public function setEndCallback(myfn:Void->Void)		if (onPlayState) cast (game, PlayState).endCallback = myfn;
 
 	//precache functions
 	public function precacheImage(key:String) precache(key, 'image');
@@ -140,7 +111,7 @@ class BaseStage extends FlxBasic implements IMusicBeatState
 
 	public function precache(key:String, type:String)
 	{
-		if(onPlayState)
+		if (onPlayState)
 			cast (game, PlayState).precacheList.set(key, type);
 
 		switch(type)
@@ -152,104 +123,43 @@ class BaseStage extends FlxBasic implements IMusicBeatState
 	}
 
 	// overrides
-	function startCountdown():Bool
-	{
-		if (onPlayState)
-			return cast (game, PlayState).startCountdown();
+	function startCountdown():Bool		return (onPlayState ? cast (game, PlayState).startCountdown() : false);
+	function endSong():Bool				return (onPlayState ? cast (game, PlayState).endSong() : false);
 
-		return false;
-	}
-	function endSong():Bool
-	{
-		if (onPlayState)
-			return cast (game, PlayState).endSong();
+	function moveCameraSection()		@:privateAccess if (onPlayState) cast (game, PlayState).moveCameraSection();
+	function moveCamera(char:String)	if (onPlayState) cast (game, PlayState).moveCamera(char);
 
-		return false;
-	}
+	inline private function get_paused():Bool					return (onPlayState ? cast (game, PlayState).paused : false);
+	inline private function get_songName():String				return (onPlayState ? cast (game, PlayState).songName : null);
+	inline private function get_isStoryMode():Bool				return PlayState.isStoryMode;
+	inline private function get_seenCutscene():Bool				return PlayState.seenCutscene;
+
+	inline private function get_inCutscene():Bool				return (onPlayState ? cast (game, PlayState).inCutscene : false);
+	inline private function set_inCutscene(value:Bool):Bool		return (onPlayState ? cast (game, PlayState).inCutscene = value : value);
 	
-	function moveCameraSection()
-	{
-		@:privateAccess
-		if (onPlayState)
-			cast (game, PlayState).moveCameraSection();
-	}
-	function moveCamera(char:String)
-	{
-		if (onPlayState)
-			cast (game, PlayState).moveCamera(char);
-	}
+	inline private function get_canPause():Bool					return @:privateAccess (onPlayState ? cast (game, PlayState).canPause : false);
+	inline private function set_canPause(value:Bool):Bool		return @:privateAccess (onPlayState ? cast (game, PlayState).canPause = value : value);
 
-	inline private function get_paused():Bool
-		return onPlayState ? cast (game, PlayState).paused : false;
-	inline private function get_songName():String
-		return onPlayState ? cast (game, PlayState).songName : null;
-	inline private function get_isStoryMode():Bool
-		return PlayState.isStoryMode;
-	inline private function get_seenCutscene():Bool
-		return PlayState.seenCutscene;
-
-	inline private function get_inCutscene():Bool
-		return onPlayState ? cast (game, PlayState).inCutscene : false;
-	inline private function set_inCutscene(value:Bool):Bool
-	{
-		if (onPlayState)
-			cast (game, PlayState).inCutscene = value;
-
-		return value;
-	}
-	
-	inline private function get_canPause():Bool
-	{
-		@:privateAccess
-		return onPlayState ? cast (game, PlayState).canPause : false;
-	}
-	inline private function set_canPause(value:Bool):Bool
-	{
-		@:privateAccess
-		if (onPlayState)
-			cast (game, PlayState).canPause = value;
-
-		return value;
-	}
-
-	inline private function get_members():Array<FlxBasic>
-		return game.members;
+	inline private function get_members():Array<FlxBasic>		return game.members;
 	inline private function set_game(value:MusicBeatState):MusicBeatState
 	{
 		onPlayState = value is PlayState;
 		return game = value;
 	}
 
-	inline private function get_boyfriend():Character
-		return onPlayState ? cast (game, PlayState).boyfriend : null;
-	inline private function get_dad():Character
-		return onPlayState ? cast (game, PlayState).dad : null;
-	inline private function get_gf():Character
-		return onPlayState ? cast (game, PlayState).gf : null;
+	inline private function get_boyfriend():Character				return (onPlayState ? cast (game, PlayState).boyfriend : null);
+	inline private function get_dad():Character						return (onPlayState ? cast (game, PlayState).dad : null);
+	inline private function get_gf():Character						return (onPlayState ? cast (game, PlayState).gf : null);
 
-	inline private function get_boyfriendGroup():FlxSpriteGroup
-		return onPlayState ? cast (game, PlayState).boyfriendGroup : null;
-	inline private function get_dadGroup():FlxSpriteGroup
-		return onPlayState ? cast (game, PlayState).dadGroup : null;
-	inline private function get_gfGroup():FlxSpriteGroup
-		return onPlayState ? cast (game, PlayState).gfGroup : null;
+	inline private function get_boyfriendGroup():FlxSpriteGroup		return (onPlayState ? cast (game, PlayState).boyfriendGroup : null);
+	inline private function get_dadGroup():FlxSpriteGroup			return (onPlayState ? cast (game, PlayState).dadGroup : null);
+	inline private function get_gfGroup():FlxSpriteGroup			return (onPlayState ? cast (game, PlayState).gfGroup : null);
 	
-	inline private function get_camGame():FlxCamera
-		return onPlayState ? cast (game, PlayState).camGame : FlxG.camera;
-	inline private function get_camHUD():FlxCamera
-		return onPlayState ? cast (game, PlayState).camHUD : null;
-	inline private function get_camOther():FlxCamera
-		return onPlayState ? cast (game, PlayState).camOther : null;
+	inline private function get_camGame():FlxCamera					return (onPlayState ? cast (game, PlayState).camGame : FlxG.camera);
+	inline private function get_camHUD():FlxCamera					return (onPlayState ? cast (game, PlayState).camHUD : null);
+	inline private function get_camOther():FlxCamera				return (onPlayState ? cast (game, PlayState).camOther : null);
 
-	inline private function get_defaultCamZoom():Float
-		return onPlayState ? cast (game, PlayState).defaultCamZoom : 1;
-	inline private function set_defaultCamZoom(value:Float):Float
-	{
-		if (onPlayState)
-			cast (game, PlayState).defaultCamZoom = value;
-
-		return value;
-	}
-	inline private function get_camFollow():FlxObject
-		return FlxG.camera.target;
+	inline private function get_defaultCamZoom():Float				return (onPlayState ? cast (game, PlayState).defaultCamZoom : 1);
+	inline private function set_defaultCamZoom(value:Float):Float	return (onPlayState ? cast (game, PlayState).defaultCamZoom = value : value);
+	inline private function get_camFollow():FlxObject				return FlxG.camera.target;
 }

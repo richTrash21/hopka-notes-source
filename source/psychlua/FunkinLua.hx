@@ -1040,7 +1040,7 @@ class FunkinLua
 				game.startVideo(videoFile, subtitles, antialias);
 				return true;
 			} else {
-				luaTrace('startVideo: Video file not found: ' + videoFile, false, false, FlxColor.RED);
+				luaTrace('startVideo: Video file not found: $videoFile', false, false, FlxColor.RED);
 			}
 			return false;
 

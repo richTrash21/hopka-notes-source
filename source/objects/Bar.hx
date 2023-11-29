@@ -3,15 +3,13 @@ package objects;
 import flixel.math.FlxPoint;
 import flixel.math.FlxRect;
 
-typedef BarBounds = {min:Float, max:Float}
-
 class Bar extends FlxSpriteGroup
 {
 	public var leftBar:FlxSprite;
 	public var rightBar:FlxSprite;
 	public var bg:FlxSprite;
 	
-	public var bounds:BarBounds = {min: 0, max: 1};
+	public var bounds:{min:Float, max:Float} = {min: 0, max: 1};
 	public var percent(default, set):Float = 0;
 	public var leftToRight(default, set):Bool = true;
 

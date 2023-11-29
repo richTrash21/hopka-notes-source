@@ -49,10 +49,10 @@ class GameCamera extends FlxCamera
 	**/
 	public var tweeningZoom(get, never):Bool;
 
+	@:access(flixel.tweens.FlxTweenManager)
 	private inline function get_tweeningZoom():Bool // it hurts my eyes but i hope it will do the trick
 	{
 		var ret:Bool = false;
-		@:privateAccess
 		FlxTween.globalManager.forEachTweensOf(this, ['zoom'], function(twn:FlxTween) 
 		{
 			ret = true;
@@ -87,17 +87,8 @@ class GameCamera extends FlxCamera
 	}
 
 	@:noCompletion inline static function get_globalSpeed():Float
-	{
-		if (PlayState.instance != null)
-			return PlayState.instance.playbackRate;
+		return (PlayState.instance != null ? PlayState.instance.playbackRate : globalSpeed);
 
-		return globalSpeed;
-	}
 	@:noCompletion inline static function set_globalSpeed(speed:Float):Float
-	{
-		if (PlayState.instance != null) // won't allow to set variable if camera placed in PlayState
-			return PlayState.instance.playbackRate;
-
-		return globalSpeed = speed;
-	}
+		return (PlayState.instance != null ? PlayState.instance.playbackRate : globalSpeed = speed); // won't allow to set variable if camera placed in PlayState
 }
