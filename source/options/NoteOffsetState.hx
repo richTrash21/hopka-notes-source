@@ -15,14 +15,14 @@ class NoteOffsetState extends MusicBeatState
 	public var camGame:FlxCamera;
 	public var camOther:FlxCamera;
 
-	var placement:Float = FlxG.width * 0.35;
-	var rating:FlxSprite;
+	final placement:Float = FlxG.width * 0.35;
+	var rating:ExtendedSprite;
 	var comboNums:FlxSpriteGroup;
 	var dumbTexts:FlxTypedGroup<FlxText>;
 
 	var barPercent(default, set):Float = 0;
-	var delayMin:Int = -500;
-	var delayMax:Int = 500;
+	final delayMin:Int = -500;
+	final delayMax:Int = 500;
 	var timeBar:Bar;
 	var timeTxt:FlxText;
 	var beatText:Alphabet;
@@ -72,10 +72,10 @@ class NoteOffsetState extends MusicBeatState
 		add(boyfriend);
 
 		// Combo stuff
-		rating = new FlxSprite(0, 0, Paths.image('sick'));
+		rating = new ExtendedSprite(0, 0, Paths.image('sick'));
 		rating.cameras = [camHUD];
 		rating.antialiasing = ClientPrefs.data.antialiasing;
-		rating.setGraphicSize(Std.int(rating.width * 0.7));
+		rating.setScale(0.7);
 		rating.updateHitbox();
 		add(rating);
 
@@ -83,24 +83,17 @@ class NoteOffsetState extends MusicBeatState
 		comboNums.cameras = [camHUD];
 		add(comboNums);
 
-		var seperatedScore:Array<Int> = [];
-		for (i in 0...3) seperatedScore.push(FlxG.random.int(0, 9));
-
+		final seperatedScore:Array<Int> = [for (i in 0...3) FlxG.random.int(0, 9)];
 		var daLoop:Int = 0;
 		for (i in seperatedScore)
 		{
-			var numScore:FlxSprite = new FlxSprite(43 * daLoop).loadGraphic(Paths.image('num'), true, 100, 120);
-			(numScore.frames == null && numScore.frames.frames[i] == null)
-				? numScore.loadGraphic("flixel/images/logo/default.png") //prevents crash
-				: numScore.frame = numScore.frames.frames[i];
+			final numScore:ExtendedSprite = new ExtendedSprite(43 * daLoop++, Paths.image('num$i'));
 			numScore.cameras = [camHUD];
 			numScore.antialiasing = ClientPrefs.data.antialiasing;
-			numScore.setGraphicSize(Std.int(numScore.width * 0.5));
+			numScore.setScale(0.5);
 			numScore.updateHitbox();
-			numScore.offset.x += FlxG.random.int(-1, 1);
-			numScore.offset.y += FlxG.random.int(-1, 1);
+			numScore.offset.add(FlxG.random.int(-1, 1), FlxG.random.int(-1, 1));
 			comboNums.add(numScore);
-			daLoop++;
 		}
 
 		dumbTexts = new FlxTypedGroup<FlxText>();

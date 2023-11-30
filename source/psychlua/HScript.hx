@@ -105,6 +105,7 @@ class HScript #if HSCRIPT_ALLOWED extends Interp #end
 		setVar('Paths', Paths);
 		setVar('Conductor', Conductor);
 		setVar('ClientPrefs', ClientPrefs);
+		setVar('ExtendedSprite', objects.ExtendedSprite);
 		setVar('Character', objects.Character);
 		setVar('Alphabet', Alphabet);
 		setVar('Note', objects.Note);
@@ -117,23 +118,10 @@ class HScript #if HSCRIPT_ALLOWED extends Interp #end
 		setVar('StringTools', StringTools);
 
 		// Functions & Variables
-		setVar('setVar', PlayState.instance.variables.set);
-		setVar('getVar', function(name:String)
-		{
-			var result:Dynamic = null;
-			if(PlayState.instance.variables.exists(name)) result = PlayState.instance.variables.get(name);
-			return result;
-		});
-		setVar('removeVar', function(name:String)
-		{
-			if(PlayState.instance.variables.exists(name))
-			{
-				PlayState.instance.variables.remove(name);
-				return true;
-			}
-			return false;
-		});
-		setVar('debugPrint', function(text:String, ?color:FlxColor = null) PlayState.instance.addTextToDebug(text, color ?? FlxColor.WHITE));
+		setVar('setVar',	 PlayState.instance.variables.set);
+		setVar('getVar',	 PlayState.instance.variables.get);
+		setVar('removeVar',	 PlayState.instance.variables.remove);
+		setVar('debugPrint', PlayState.instance.addTextToDebug);
 
 		// For adding your own callbacks
 
@@ -151,9 +139,8 @@ class HScript #if HSCRIPT_ALLOWED extends Interp #end
 		// tested
 		setVar('createCallback', function(name:String, func:Dynamic, ?funk:FunkinLua = null)
 		{
-			if(funk == null) funk = parentLua;
-			
-			if(parentLua != null) funk.addLocalCallback(name, func);
+			if (funk == null) funk = parentLua;
+			if (parentLua != null) funk.addLocalCallback(name, func);
 			else FunkinLua.luaTrace('createCallback ($name): 3rd argument is null', false, false, FlxColor.RED);
 		});
 
@@ -180,13 +167,11 @@ class HScript #if HSCRIPT_ALLOWED extends Interp #end
 	{
 		#if HSCRIPT_ALLOWED
 		if (codeToRun == null || !active) return null;
-
 		try
 		{
 			return execute(parser.parseString(codeToRun, origin));
 		}
-		catch(e)
-			exception = e;
+		catch(e) exception = e;
 		#end
 		return null;
 	}

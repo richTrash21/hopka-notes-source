@@ -1,6 +1,5 @@
 package states.editors;
 
-import substates.PauseSubState;
 import flixel.util.FlxStringUtil;
 import flixel.input.mouse.FlxMouseEventManager;
 import flixel.FlxObject;
@@ -20,11 +19,13 @@ import haxe.Json;
 
 import objects.ui.UIInputTextAdvanced;
 import objects.ui.DropDownAdvanced;
-import objects.Character;
+import objects.ExtendedSprite;
 import objects.HealthIcon;
+import objects.Character;
 import objects.Bar;
 
 import backend.MusicBeatUIState;
+import substates.PauseSubState;
 
 #if MODS_ALLOWED
 import sys.FileSystem;
@@ -63,8 +64,8 @@ class CharacterEditorState extends backend.MusicBeatUIState
 	var cameraFollowPointer:FlxSprite;
 	var healthBar:Bar;
 
-	var bg:BGSprite;
-	var stageFront:BGSprite;
+	var bg:ExtendedSprite;
+	var stageFront:ExtendedSprite;
 
 	var mouseManager:FlxMouseEventManager;
 
@@ -91,11 +92,12 @@ class CharacterEditorState extends backend.MusicBeatUIState
 		// fuck pixel bg nobody used it anyway
 		var prevLevel:String = Paths.currentLevel;
 		Paths.currentLevel = 'week1';
-		bg = new BGSprite('stageback', -600 + OFFSET_X, -300, 0.9, 0.9);
+		bg = new ExtendedSprite(-600 + OFFSET_X, -300, 'stageback');
+		bg.scrollFactor.set(0.9, 0.9);
 		add(bg);
 
-		stageFront = new BGSprite('stagefront', -650 + OFFSET_X, 500);
-		stageFront.setGraphicSize(Math.floor(stageFront.width * 1.1));
+		stageFront = new ExtendedSprite(-650 + OFFSET_X, 500, 'stagefront');
+		stageFront.setScale(1.1);
 		stageFront.updateHitbox();
 		add(stageFront);
 		Paths.currentLevel = prevLevel;
@@ -714,15 +716,15 @@ class CharacterEditorState extends backend.MusicBeatUIState
 
 	function genBoyOffsets():Void
 	{
-		var i:Int = dumbTexts.members.length-1;
-		while(i >= 0) {
-			var memb:FlxText = dumbTexts.members[i];
-			if(memb != null) {
+		var i:Int = dumbTexts.members.length;
+		while(i-- >= 0)
+		{
+			final memb:FlxText = dumbTexts.members[i];
+			if (memb != null)
+			{
 				memb.kill();
-				dumbTexts.remove(memb);
-				memb.destroy();
+				dumbTexts.remove(memb).destroy();
 			}
-			--i;
 		}
 		dumbTexts.clear();
 
@@ -730,18 +732,17 @@ class CharacterEditorState extends backend.MusicBeatUIState
 		var offset:Float = Main.fpsVar.visible ? 34 : 20;
 		for (anim => offsets in char.animOffsets)
 		{
-			var text:FlxText = new FlxText(10, offset + (18 * daLoop), 0, anim + ": " + offsets, 16);
+			final text:FlxText = new FlxText(10, offset + (18 * daLoop++), 0, anim + ": " + '[${offsets.x}, ${offsets.y}]', 16);
 			text.setFormat(null, 16, FlxColor.WHITE, CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
 			//text.scrollFactor.set();
 			text.borderSize = 1;
 			dumbTexts.add(text);
 			text.cameras = [camHUD];
-			daLoop++;
 		}
 
 		textAnim.visible = true;
-		if(dumbTexts.length < 1) {
-			var text:FlxText = new FlxText(10, 38, 0, "ERROR! No animations found.", 15);
+		if (dumbTexts.length < 1) {
+			final text:FlxText = new FlxText(10, 38, 0, "ERROR! No animations found.", 15);
 			//text.scrollFactor.set();
 			text.borderSize = 1;
 			text.cameras = [camHUD];
@@ -757,7 +758,7 @@ class CharacterEditorState extends backend.MusicBeatUIState
 		var i:Int = charLayer.members.length;
 		while (i-- >= 0)
 		{
-			var memb:Character = charLayer.members[i];
+			final memb:Character = charLayer.members[i];
 			if (memb != null)
 			{
 				memb.kill();

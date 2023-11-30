@@ -242,16 +242,18 @@ class ClientPrefs {
 		return (data.gameplaySettings.exists(name) ? data.gameplaySettings.get(name) : defaultValue);
 	}
 
-	public static function reloadVolumeKeys() {
-		TitleState.muteKeys = keyBinds.get('volume_mute').copy();
-		TitleState.volumeDownKeys = keyBinds.get('volume_down').copy();
-		TitleState.volumeUpKeys = keyBinds.get('volume_up').copy();
+	public static function reloadVolumeKeys()
+	{
+		Main.muteKeys		= keyBinds.get('volume_mute').copy();
+		Main.volumeDownKeys = keyBinds.get('volume_down').copy();
+		Main.volumeUpKeys	= keyBinds.get('volume_up').copy();
 		toggleVolumeKeys(true);
 	}
 
-	public static function toggleVolumeKeys(turnOn:Bool) {
-		FlxG.sound.volumeDownKeys = turnOn ? TitleState.volumeDownKeys	: [];
-		FlxG.sound.volumeUpKeys	  = turnOn ? TitleState.volumeUpKeys	: [];
-		FlxG.sound.muteKeys 	  = turnOn ? TitleState.muteKeys		: [];
+	public static function toggleVolumeKeys(turnOn:Bool)
+	{
+		FlxG.sound.volumeDownKeys = turnOn ? Main.volumeDownKeys : [];
+		FlxG.sound.volumeUpKeys	  = turnOn ? Main.volumeUpKeys	 : [];
+		FlxG.sound.muteKeys 	  = turnOn ? Main.muteKeys		 : [];
 	}
 }

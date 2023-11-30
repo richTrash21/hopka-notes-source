@@ -115,7 +115,7 @@ class PlayState extends MusicBeatState
 
 	#if LUA_ALLOWED
 	public var modchartTweens:Map<String, FlxTween> = [];
-	public var modchartSprites:Map<String, ModchartSprite> = [];
+	public var modchartSprites:Map<String, ExtendedSprite> = [];
 	public var modchartTimers:Map<String, FlxTimer> = [];
 	public var modchartSounds:Map<String, FlxSound> = [];
 	public var modchartTexts:Map<String, FlxText> = [];
@@ -798,7 +798,7 @@ class PlayState extends MusicBeatState
 		return value;
 	}
 
-	public function addTextToDebug(text:String, color:FlxColor)
+	public function addTextToDebug(text:String, ?color:FlxColor)
 	{
 		#if LUA_ALLOWED
 		if (!isDead) // ACTUALLY CAN CAUSES MEMORY LEAK!!!
@@ -810,11 +810,12 @@ class PlayState extends MusicBeatState
 			}
 			var newText:DebugLuaText = luaDebugGroup.recycle(DebugLuaText);
 			newText.text = text;
-			newText.color = color;
+			newText.color = color ?? FlxColor.WHITE;
 			newText.setPosition(10, 8 - newText.height);
 
 			luaDebugGroup.forEachAlive(function(spr:DebugLuaText) spr.y += newText.height + 2);
 			luaDebugGroup.add(newText);
+			trace(text);
 		}
 		#end
 	}
@@ -1149,15 +1150,14 @@ class PlayState extends MusicBeatState
 
 	inline private function createCountdownSprite(image:String, antialias:Bool):FlxSprite
 	{
-		final spr:FlxSprite = new FlxSprite(0, 0, Paths.image(image));
+		final spr:ExtendedSprite = new ExtendedSprite(image, antialias);
 		spr.cameras = [camHUD];
 		if (isPixelStage)
 		{
-			spr.setGraphicSize(Std.int(spr.width * daPixelZoom));
+			spr.setScale(daPixelZoom);
 			spr.updateHitbox();
 		}
 		spr.screenCenter();
-		spr.antialiasing = antialias;
 		FlxTween.num(1, 0, Conductor.crochet * 0.001, {ease: FlxEase.cubeInOut, onComplete: function(_) remove(spr).destroy()}, function(a:Float) spr.alpha = a);
 		return cast insert(members.indexOf(notes), spr);
 	}
@@ -1174,8 +1174,7 @@ class PlayState extends MusicBeatState
 			final daNote:Note = unspawnNotes[i--];
 			if (daNote.strumTime - 350 < time)
 			{
-				daNote.active = false;
-				daNote.visible = false;
+				daNote.active = daNote.visible = false;
 				daNote.ignoreNote = true;
 
 				daNote.kill();
@@ -1190,8 +1189,7 @@ class PlayState extends MusicBeatState
 			final daNote:Note = notes.members[i--];
 			if (daNote.strumTime - 350 < time)
 			{
-				daNote.active = false;
-				daNote.visible = false;
+				daNote.active = daNote.visible = false;
 				daNote.ignoreNote = true;
 				invalidateNote(daNote);
 			}
@@ -1206,9 +1204,13 @@ class PlayState extends MusicBeatState
 			{
 				final doDance:Bool = reference % (char == gf ? Math.round(gfSpeed * char.danceEveryNumBeats) : char.danceEveryNumBeats) == 0;
 				final _curAnim:flixel.animation.FlxAnimation = char.animation.curAnim;
-				final force:Bool = (char.danceEveryNumBeats == 1 && _curAnim.curFrame > 4) && (!_curAnim.looped || (_curAnim.looped && _curAnim.loopPoint > 0));
 				if (doDance && #if (haxe > "4.2.5") !_curAnim?.name.startsWith("sing") #else _curAnim != null && !_curAnim.name.startsWith("sing") #end && !char.stunned)
-					char.dance(force); // fixes danceEveryNumBeats = 1 on idle dance (and idles with loop points)
+				{
+					// fixes danceEveryNumBeats = 1 on idle dances (and idles with loop points)
+					final force:Bool = (char.danceEveryNumBeats == 1 && _curAnim.curFrame > (_curAnim.frameRate > 0 ? Math.round(4 / (24 * _curAnim.frameDuration)) : 0))
+									&& (!_curAnim.looped || (_curAnim.looped && _curAnim.loopPoint > 0));
+					char.dance(force);
+				}
 			}
 	}
 
@@ -2415,9 +2417,8 @@ class PlayState extends MusicBeatState
 	{
 		while(notes.length > 0)
 		{
-			var daNote:Note = notes.members[0];
-			daNote.active = false;
-			daNote.visible = false;
+			final daNote:Note = notes.members[0];
+			daNote.active = daNote.visible = false;
 			invalidateNote(daNote);
 		}
 		unspawnNotes = [];
@@ -2478,85 +2479,65 @@ class PlayState extends MusicBeatState
 		}
 
 		// доволен??🙄🙄
-		if (ClientPrefs.data.enableCombo && !ClientPrefs.data.hideHud)
+		if (!ClientPrefs.data.enableCombo || ClientPrefs.data.hideHud)
+			return;
+
+		final placement:Float = FlxG.width * 0.35;
+		var scaleMult:Float	  = 0.7;
+		var numScale:Float	  = 0.5;
+		if (isPixelStage)
 		{
-			final placement:Float = FlxG.width * 0.35;
-			//var antialias:Bool	  = ClientPrefs.data.antialiasing;
-			var scaleMult:Float	  = 0.7;
-			//var numRes:Array<Int> = [100, 120];
-			var numScale:Float	  = 0.5;
-			if (isPixelStage)
-			{
-				//antialias = false;
-				scaleMult = daPixelZoom * 0.85;
-				//numRes	  = [10, 12];
-				numScale  = daPixelZoom * 0.85;
-			}
+			scaleMult = daPixelZoom * 0.85;
+			numScale  = daPixelZoom * 0.85;
+		}
 
-			final noStacking:Bool = !ClientPrefs.data.comboStacking;
-			if (noStacking)
-			{
-				scoreGroup.forEachAlive(function(spr:PopupSprite) FlxTween.completeTweensOf(spr));
-				lastScore = [];
-			}
+		final noStacking:Bool = !ClientPrefs.data.comboStacking;
+		if (noStacking)
+		{
+			scoreGroup.forEachAlive(function(spr:PopupSprite) FlxTween.completeTweensOf(spr));
+			lastScore = [];
+		}
 
-			final rating:PopupSprite = scoreGroup.remove(scoreGroup.recycle(PopupSprite,
-				function() return new PopupSprite(-10, -1, -175, -140, 0, 0, 550, 550), true), true);
+		if (showRating)
+		{
+			final rating:PopupSprite = scoreGroup.remove(scoreGroup.recycle(PopupSprite, function() return new PopupSprite(-10, -1, -175, -140, 0, 0, 550, 550), true), true);
 			rating.loadGraphic(Paths.image(uiPrefix + daRating.image + uiSuffix));
 			rating.x = placement - 40 + ClientPrefs.data.comboOffset[0];
 			rating.screenCenter(Y).y -= 60 + ClientPrefs.data.comboOffset[1];
-			rating.setGraphicSize(Std.int(rating.width * scaleMult));
+			rating.setScale(scaleMult);
 			rating.updateHitbox();
-
-			rating.alpha = 1;
-			/*rating.angle = 0;
-			rating.setVelocity(-10, -1, -175, -140);
-			rating.setAcceleration(0, 0, 550, 550);*/
 			rating.setAngleVelocity(-rating.velocity.x, rating.velocity.x);
-			rating.visible = showRating;
 			if (isPixelStage) rating.antialiasing = false;
+			scoreGroup.add(rating);
+			if (noStacking) lastRating = rating;
 
-			if (showRating)   scoreGroup.add(rating);
-			if (noStacking)   lastRating = rating;
+			rating.fadeOut(0.2, Conductor.crochet * 0.001);
+		}
 
-			final seperatedScore:Array<Int> = [for (i in 0...(combo > 999 ? 4 : 3)) Math.floor(combo / Math.pow(10, i)) % 10];
-			seperatedScore.reverse();
+		if (!showComboNum) return;
 
-			var daLoop:Int = 0;
-			var xThing:Float = 0.0;
-			for (i in seperatedScore)
-			{
-				final numScore:PopupScore = cast scoreGroup.remove(scoreGroup.recycle(PopupScore,
-					function() return new PopupScore(-5, 5, -160, -140, 0, 0, 200, 300), true), true);
-				numScore.loadGraphic(Paths.image(uiPrefix + 'num$i' + uiSuffix));
-				//numScore.loadGraphic(Paths.image(uiPrefix + 'num' + uiSuffix), true, numRes[0], numRes[1]);
-				numScore.x = placement + (45 * daLoop++) - 90 + ClientPrefs.data.comboOffset[2];
-				numScore.screenCenter(Y).y += 80 - ClientPrefs.data.comboOffset[3];
-				/*(#if (haxe > "4.2.5") numScore.frames?.frames[i] != null #else numScore.frames != null && numScore.frames.frames[i] != null #end)
-					? numScore.frame = numScore.frames.frames[i]
-					: numScore.loadGraphic("flixel/images/logo/default.png"); //prevents crash*/
-				numScore.setGraphicSize(Std.int(numScore.width * numScale));
-				numScore.updateHitbox();
-				numScore.offset.add(FlxG.random.float(-1, 1), FlxG.random.float(-1, 1));
+		final seperatedScore:Array<Int> = [for (i in 0...(combo > 999 ? 4 : 3)) Math.floor(combo / Math.pow(10, i)) % 10];
+		seperatedScore.reverse();
 
-				numScore.alpha = 1;
-				//numScore.angle = 0;
-				/*numScore.setVelocity(-5, 5, -160, -140);
-				numScore.setAcceleration(0, 0, 200, 300);*/
-				numScore.angularVelocity = -numScore.velocity.x;
-				numScore.visible = showComboNum;
-				if (isPixelStage) numScore.antialiasing = false;
+		var daLoop:Int = 0;
+		for (i in seperatedScore)
+		{
+			final numScore:PopupScore = cast scoreGroup.remove(scoreGroup.recycle(PopupScore, function() return new PopupScore(-5, 5, -160, -140, 0, 0, 200, 300), true), true);
+			numScore.loadGraphic(Paths.image(uiPrefix + 'num$i' + uiSuffix));
+			numScore.x = placement + (45 * daLoop++) - 90 + ClientPrefs.data.comboOffset[2];
+			numScore.screenCenter(Y).y += 80 - ClientPrefs.data.comboOffset[3];
+			/*(#if (haxe > "4.2.5") numScore.frames?.frames[i] != null #else numScore.frames != null && numScore.frames.frames[i] != null #end)
+				? numScore.frame = numScore.frames.frames[i]
+				: numScore.loadGraphic("flixel/images/logo/default.png"); //prevents crash*/
+			numScore.setScale(numScale);
+			numScore.updateHitbox();
+			numScore.offset.add(FlxG.random.float(-1, 1), FlxG.random.float(-1, 1));
+			numScore.angularVelocity = -numScore.velocity.x;
+			if (isPixelStage) numScore.antialiasing = false;
+			scoreGroup.add(numScore);
+			if (noStacking) lastScore.push(numScore);
 
-				if (showComboNum) scoreGroup.add(numScore);
-				if (noStacking)   lastScore.push(numScore);
-
-				FlxTween.tween(numScore, {alpha: 0}, 0.2 / playbackRate, {startDelay: Conductor.crochet * 0.002 / playbackRate,
-					onComplete: function(t:FlxTween) numScore.kill()});
-
-				if (numScore.x > xThing) xThing = numScore.x;
-			}
-			FlxTween.tween(rating, {alpha: 0}, 0.2 / playbackRate, {startDelay: Conductor.crochet * 0.001 / playbackRate,
-				onComplete: function(tween:FlxTween) rating.kill()});
+			numScore.fadeOut(0.2, Conductor.crochet * 0.002);
 		}
 	}
 
@@ -2970,7 +2951,7 @@ class PlayState extends MusicBeatState
 				script.executeFunction('onDestroy');
 				script.destroy();
 			}
-			hscriptArray.shift();
+			//hscriptArray.shift();
 		}
 		#end
 		instance = null;
@@ -3197,8 +3178,8 @@ class PlayState extends MusicBeatState
 		var returnVal:Dynamic = psychlua.FunkinLua.Function_Continue;
 
 		#if HSCRIPT_ALLOWED
-		if (exclusions == null)		exclusions = new Array();
-		if (excludeValues == null)	excludeValues = new Array();
+		if (exclusions == null)		exclusions = [];
+		if (excludeValues == null)	excludeValues = [];
 		excludeValues.push(psychlua.FunkinLua.Function_Continue);
 
 		final len:Int = hscriptArray.length;
@@ -3206,7 +3187,7 @@ class PlayState extends MusicBeatState
 		for (i in 0...len)
 		{
 			final script:HScript = hscriptArray[i];
-			if (script == null || !script.active || !script.variables.exists(funcToCall) || exclusions.contains(script.origin))
+			if (script == null || !script.active || exclusions.contains(script.origin))
 				continue;
 
 			try

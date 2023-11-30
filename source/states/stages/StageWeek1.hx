@@ -1,34 +1,36 @@
 package states.stages;
 
+import objects.ExtendedSprite;
+
 class StageWeek1 extends BaseStage
 {
 	override function create()
 	{
-		var bg:BGSprite = new BGSprite('stageback', -600, -200, 0.9, 0.9);
+		final bg:ExtendedSprite = new ExtendedSprite(-600, -200, 'stageback');
+		bg.scrollFactor.set(0.9, 0.9);
 		add(bg);
 
-		var stageFront:BGSprite = new BGSprite('stagefront', -650, 600);
-		stageFront.setGraphicSize(Std.int(stageFront.width * 1.1));
+		final stageFront:ExtendedSprite = new ExtendedSprite(-650, 600, 'stagefront');
+		stageFront.setScale(1.1);
 		stageFront.updateHitbox();
 		add(stageFront);
 
-		if(!ClientPrefs.data.lowQuality)
-		{
-			var stageLight:BGSprite = new BGSprite('stage_light', -125, -100, 0.9, 0.9);
-			stageLight.setGraphicSize(Std.int(stageLight.width * 1.1));
-			stageLight.updateHitbox();
-			add(stageLight);
-			
-			var stageLight:BGSprite = new BGSprite('stage_light', 1225, -100, 0.9, 0.9);
-			stageLight.setGraphicSize(Std.int(stageLight.width * 1.1));
-			stageLight.updateHitbox();
-			stageLight.flipX = true;
-			add(stageLight);
+		if (ClientPrefs.data.lowQuality) return; // fuck it
 
-			var stageCurtains:BGSprite = new BGSprite('stagecurtains', -500, -300, 1.3, 1.3);
-			stageCurtains.setGraphicSize(Std.int(stageCurtains.width * 0.9));
-			stageCurtains.updateHitbox();
-			add(stageCurtains);
+		for (i in 0...2)
+		{
+			final stageLight:ExtendedSprite = new ExtendedSprite(i == 0 ? -125 : 1225, -100, 'stage_light');
+			stageLight.scrollFactor.set(0.9, 0.9);
+			stageLight.setScale(1.1);
+			stageLight.updateHitbox();
+			if (i == 1) stageLight.flipX = true;
+			add(stageLight);
 		}
+
+		final stageCurtains:ExtendedSprite = new ExtendedSprite(-500, -300, 'stagecurtains');
+		stageCurtains.scrollFactor.set(1.3, 1.3);
+		stageCurtains.setScale(0.9);
+		stageCurtains.updateHitbox();
+		add(stageCurtains);
 	}
 }

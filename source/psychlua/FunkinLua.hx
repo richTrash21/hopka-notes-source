@@ -22,6 +22,7 @@ import cutscenes.DialogueBoxPsych;
 import objects.StrumNote;
 import objects.Note;
 import objects.NoteSplash;
+import objects.ExtendedSprite;
 
 import states.MainMenuState;
 import states.StoryMenuState;
@@ -33,7 +34,6 @@ import substates.GameOverSubstate;
 import psychlua.LuaUtils;
 import psychlua.LuaUtils.LuaTweenOptions;
 import psychlua.HScript;
-import psychlua.ModchartSprite;
 
 #if LUA_ALLOWED
 import llua.*;
@@ -734,7 +734,7 @@ class FunkinLua
 		set("makeLuaSprite", function(tag:String, ?image:String = null, ?x:Float = 0, ?y:Float = 0, ?animated:Bool = false, ?spriteType:String = "sparrow") {
 			tag = tag.replace('.', '');
 			LuaUtils.resetSpriteTag(tag);
-			final leSprite:ModchartSprite = new ModchartSprite(x, y, (!animated && image != null && image.length > 0) ? Paths.image(image) : null);
+			final leSprite:ExtendedSprite = new ExtendedSprite(x, y, image);
 			if(animated) leSprite.frames = LuaUtils.loadFrames(image, spriteType);
 			//leSprite.active = animated;
 			game.modchartSprites.set(tag, leSprite);
@@ -743,7 +743,7 @@ class FunkinLua
 			FunkinLua.luaTrace("makeAnimatedLuaSprite is deprecated! Use makeLuaSprite instead", false, true); // just wanted to merge them
 			tag = tag.replace('.', '');
 			LuaUtils.resetSpriteTag(tag);
-			final leSprite:ModchartSprite = new ModchartSprite(x, y);
+			final leSprite:ExtendedSprite = new ExtendedSprite(x, y);
 			leSprite.frames = LuaUtils.loadFrames(image, spriteType);
 			game.modchartSprites.set(tag, leSprite);
 		});
@@ -833,7 +833,7 @@ class FunkinLua
 		});
 		set("addLuaSprite", function(tag:String, front:Bool = false) {
 			if(game.modchartSprites.exists(tag)) {
-				var shit:ModchartSprite = game.modchartSprites.get(tag);
+				var shit:ExtendedSprite = game.modchartSprites.get(tag);
 				(front)
 					? LuaUtils.getTargetInstance().add(shit)
 					: (!game.isDead)
@@ -907,7 +907,7 @@ class FunkinLua
 		set("removeLuaSprite", function(tag:String, destroy:Bool = true) {
 			if(!game.modchartSprites.exists(tag)) return;
 
-			final pee:ModchartSprite = game.modchartSprites.get(tag);
+			final pee:ExtendedSprite = game.modchartSprites.get(tag);
 			if(destroy) pee.kill();
 
 			LuaUtils.getTargetInstance().remove(pee, true);

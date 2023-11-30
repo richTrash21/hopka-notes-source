@@ -18,7 +18,7 @@ import backend.Difficulty;
 import backend.Mods;
 
 import objects.Alphabet;
-import objects.BGSprite;
+import objects.ExtendedSprite;
 
 import states.PlayState;
 import states.LoadingState;

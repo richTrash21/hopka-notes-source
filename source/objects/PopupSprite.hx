@@ -1,13 +1,13 @@
 package objects;
 
-import flixel.system.FlxAssets.FlxGraphicAsset;
+//import flixel.system.FlxAssets.FlxGraphicAsset;
 import flixel.util.FlxDestroyUtil;
 import flixel.math.FlxPoint;
 
 // stupid alias for popup score numbers
 class PopupScore extends PopupSprite {}
 
-class PopupSprite extends FlxSprite
+class PopupSprite extends ExtendedSprite
 {
 	// internal stuff, for reseting shit
 	//var _spawnPos:FlxPoint = FlxPoint.get();
@@ -22,6 +22,11 @@ class PopupSprite extends FlxSprite
 		Should this object be destroyed after leaving the screen?
 	**/
 	public var autoDestroy:Bool = false;
+
+	/**
+		Tracker for fade tween.
+	**/
+	public var fadeTween:FlxTween;
 
 	/**
 		Global game speed. Can be controlled outside of PlatState.
@@ -44,16 +49,21 @@ class PopupSprite extends FlxSprite
 
 		if (alive && !isOnScreen(camera))
 		{
-			autoDestroy ? destroy() : kill();
+			cancelTween();
+			killOrDestroy();
 			return;
 		}
 	}
+
+	function killOrDestroy():Void
+		autoDestroy ? destroy() : kill();
 
 	override public function revive():Void
 	{
 		//setPosition(_spawnPos.x, _spawnPos.y);
 		resetMovement();
 		angle = 0;
+		alpha = 1;
 		super.revive();
 	}
 
@@ -68,26 +78,6 @@ class PopupSprite extends FlxSprite
 		_angleVelocity = FlxDestroyUtil.put(_angleVelocity);
 		_angleAcceleration = FlxDestroyUtil.put(_angleAcceleration);
 	}
-
-	/*
-	override public function loadGraphic(graphic:FlxGraphicAsset, animated:Bool = false, frameWidth:Int = 0, frameHeight:Int = 0, unique:Bool = false, ?key:String):PopupSprite
-		return cast super.loadGraphic(graphic, animated, frameWidth, frameHeight, unique, key);
-
-	override public function loadGraphicFromSprite(Sprite:FlxSprite):PopupSprite
-		return cast super.loadGraphicFromSprite(Sprite);
-
-	override public function loadRotatedFrame(Frame:flixel.graphics.frames.FlxFrame, Rotations:Int = 16, AntiAliasing:Bool = false, AutoBuffer:Bool = false):PopupSprite
-		return cast super.loadRotatedFrame(Frame, Rotations, AntiAliasing, AutoBuffer);
-
-	override public function makeGraphic(Width:Int, Height:Int, Color:FlxColor = FlxColor.WHITE, Unique:Bool = false, ?Key:String):PopupSprite
-		return cast super.makeGraphic(Width, Height, Color, Unique, Key);
-
-	override public function loadRotatedGraphic(Graphic:FlxGraphicAsset, Rotations:Int = 16, Frame:Int = -1, AntiAliasing:Bool = false, AutoBuffer:Bool = false, ?Key:String):PopupSprite
-		return cast super.loadRotatedGraphic(Graphic, Rotations, Frame, AntiAliasing, AutoBuffer, Key);
-
-	override public function setFrames(Frames:flixel.graphics.frames.FlxFramesCollection, saveAnimations:Bool = true):PopupSprite
-		return cast super.setFrames(Frames, saveAnimations);
-	*/
 
 	public function resetMovement():Void
 	{
@@ -134,6 +124,37 @@ class PopupSprite extends FlxSprite
 
 	inline public function resetAngleAcceleration():Float
 		return angularAcceleration = FlxG.random.float(_angleAcceleration.x, _angleAcceleration.y);
+
+	/**
+		Simple fade out tween that kills/destroys (controlled via `autoDestroy`) this sprite after it's completion.
+		@param    Duration - Duration of this tween.
+		@param    Delay - Delay of this tween.
+		@return   This sprite, for chaining stuff.
+	**/
+	inline public function fadeOut(Duration:Float = 1, ?Delay:Float = 0):PopupSprite
+	{
+		cancelTween();
+		fadeTween = FlxTween.num(1, 0, Duration / globalSpeed, {startDelay: Delay / globalSpeed, onComplete: function(_) 
+			{
+				killOrDestroy();
+				fadeTween = null;
+			}},
+			function(a:Float) this.alpha = a);
+
+		return this;
+	}
+
+	/**
+		Helper function to get rid of the tween.
+	**/
+	function cancelTween():Void
+	{
+		if (fadeTween != null)
+		{
+			fadeTween.cancel();
+			fadeTween = null;
+		}
+	}
 
 	@:noCompletion inline static function get_globalSpeed():Float
 	{

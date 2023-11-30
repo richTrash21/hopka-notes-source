@@ -242,7 +242,7 @@ class LuaUtils
 		#if LUA_ALLOWED
 		if(!PlayState.instance.modchartSprites.exists(tag)) return;
 
-		final target:ModchartSprite = PlayState.instance.modchartSprites.get(tag);
+		final target:ExtendedSprite = PlayState.instance.modchartSprites.get(tag);
 		target.kill();
 		PlayState.instance.remove(target, true).destroy();
 		PlayState.instance.modchartSprites.remove(tag);

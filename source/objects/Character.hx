@@ -39,11 +39,11 @@ typedef AnimArray = {
 	animflip_y:Bool
 }
 
-class Character extends FlxSprite
+class Character extends objects.ExtendedSprite
 {
 	inline public static final DEFAULT_CHARACTER:String = 'bf'; //In case a character is missing, it will use BF on its place
 
-	public var animOffsets:Map<String, Array<Float>> = [];
+	//public var animOffsets:Map<String, Array<Float>> = [];
 	public var debugMode:Bool = false;
 
 	public var isPlayer:Bool = false;
@@ -144,7 +144,7 @@ class Character extends FlxSprite
 		originalFlipX = flipX;
 		originalFlipY = flipY;
 
-		for (name => arr in animOffsets)
+		for (name => offset in animOffsets)
 			if (name.startsWith('sing') && name.contains('miss'))
 			{
 				hasMissAnimations = true;
@@ -249,23 +249,21 @@ class Character extends FlxSprite
 		}
 	}
 
-	public function playAnim(AnimName:String, Force:Bool = false, Reversed:Bool = false, Frame:Int = 0):Void
+	override public function playAnim(AnimName:String, Force:Bool = false, ?Reversed:Bool = false, ?Frame:Int = 0):Void
 	{
 		specialAnim = false;
 		// if there is no animation named "AnimName" then just skips the whole shit
-		if (AnimName == null || animation.getByName(AnimName) == null)
+		if (AnimName == null || !animation.exists(AnimName))
 		{
-			FlxG.log.warn("No animation called \"" + AnimName + "\"");
+			FlxG.log.warn('No animation called "$AnimName"');
 			return;
 		}
 		animation.play(AnimName, Force, Reversed, Frame);
-
+		
 		if (animOffsets.exists(AnimName))
-		{
-			var daOffset = animOffsets.get(AnimName);
-			offset.set(daOffset[0], daOffset[1]);
-		}
-		else offset.set(0, 0);
+			offset.copyFrom(animOffsets.get(AnimName));
+		else
+			offset.set();
 
 		if (curCharacter.startsWith('gf') || danceIdle) // idk
 			switch (AnimName)
@@ -294,7 +292,7 @@ class Character extends FlxSprite
 		settingCharacterUp = false;
 	}
 
-	@:noCompletion function set_idleSuffix(Suffix:String):String
+	@:noCompletion inline function set_idleSuffix(Suffix:String):String
 	{
 		final prevSuffix = idleSuffix;
 		idleSuffix = Suffix;
@@ -328,26 +326,6 @@ class Character extends FlxSprite
 			addOffset(animAnim, animOffsets[0], animOffsets[1]);
 		}
 	}
-
-	//quick n' easy animation setup
-	inline public function addAnim(Name:String, Prefix:String, ?Indices:Array<Int>, FrameRate:Int = 24, Looped:Bool = true,FlipX:Bool = false, FlipY:Bool = false,
-			LoopPoint:Int = 0):FlxAnimation
-	{
-		if (Indices != null && Indices.length > 0)
-			animation.addByIndices(Name, Prefix, Indices, "", FrameRate, Looped, FlipX, FlipY);
-		else
-			animation.addByPrefix(Name, Prefix, FrameRate, Looped, FlipX, FlipY);
-
-		final addedAnim:FlxAnimation = animation.getByName(Name);
-		if (addedAnim != null)
-		{
-			addedAnim.loopPoint = LoopPoint; // better than -loop anims lmao
-		}
-		return addedAnim;
-	}
-
-	inline public function addOffset(name:String, x:Float = 0, y:Float = 0)
-		animOffsets.set(name, [x, y]);
 
 	@:noCompletion override inline function set_x(X:Float):Float
 	{

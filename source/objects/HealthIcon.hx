@@ -3,17 +3,12 @@ package objects;
 import flixel.math.FlxPoint;
 import #if MODS_ALLOWED sys.FileSystem #else openfl.utils.Assets #end;
 
-typedef HealthIconConfig = {
-	?scale:Float,
-	?offset:Array<Float>,
-	?antialias:Bool,
-	?flip_x:Bool
-}
+typedef HealthIconConfig = {?scale:Float, ?offset:Array<Float>, ?antialias:Bool, ?flip_x:Bool}
 
-class HealthIcon extends FlxSprite
+class HealthIcon extends ExtendedSprite
 {
 	public var isPlayer(default, null):Bool = false;
-	public var baseScale(default, set):Float = 1; // TODO: actually find way to use baseScale (DONE!!)
+	public var baseScale(default, set):Float = 1;
 	public var char(default, null):String = null;
 	public var sprTracker:FlxSprite;
 
@@ -47,15 +42,6 @@ class HealthIcon extends FlxSprite
 		super.update(elapsed);
 	}
 
-	// kinda like setGraphicSize, but with just scale value
-	inline public function setScale(?X:Float, ?Y:Float):FlxPoint
-	{
-		if (X == null && Y == null)
-			return scale;
-
-		return scale.set(X ?? Y, Y ?? X);
-	}
-
 	public var iconOffsets:FlxPoint = FlxPoint.get();
 	public function changeIcon(char:String, allowGPU:Bool = true)
 	{
@@ -81,11 +67,11 @@ class HealthIcon extends FlxSprite
 			loadGraphic(graphic, true, (graphic.width > graphic.height) ? Math.floor(graphic.width * 0.5) : graphic.width, graphic.height);
 			iconOffsets.set((width - 150) * 0.5, (height - 150) * 0.5);
 
-			// seems  messy but should work just fiiine (not sure if it's optimised tho but idc its 2:30AM and im still up)
-			flipX	  = #if (haxe > "4.2.5") json.flip_x ?? #else json.flip_x != null ? json.flip_x : #end false;
-			baseScale = #if (haxe > "4.2.5") json.scale ?? #else json.scale != null ? json.scale : #end 1;
+			// seems messy but should work just fiiine (not sure if it's optimised tho but idc its 2:30AM and im still up)
+			flipX	  = json.flip_x ?? false;
+			baseScale = json.scale ?? 1;
 
-			final _antialias:Bool = (ClientPrefs.data.antialiasing ? #if (haxe > "4.2.5") json.antialias ?? true #else (json.antialias != null && json.antialias) #end : false);
+			final _antialias:Bool = ClientPrefs.data.antialiasing ? json.antialias ?? true : false;
 			antialiasing = char.endsWith('-pixel') ? false : _antialias;
 
 			if (json.offset != null && json.offset.length > 1)
@@ -101,7 +87,7 @@ class HealthIcon extends FlxSprite
 	}
 
 	// for icons that don't have config
-	private static final defaultConfig:HealthIconConfig = {scale: 1, offset: [0, 0], antialias: true, flip_x: false};
+	private static final defaultConfig:HealthIconConfig = {scale: 1, offset: [0, 0], flip_x: false};
 
 	inline public static function getConfig(char:String):HealthIconConfig
 	{
