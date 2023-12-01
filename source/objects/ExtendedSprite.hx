@@ -1,5 +1,6 @@
 package objects;
 
+import flixel.system.FlxAssets.FlxGraphicAsset;
 import flixel.animation.FlxAnimation;
 import flixel.math.FlxPoint;
 
@@ -11,9 +12,9 @@ class ExtendedSprite extends FlxSprite
 	public var onGraphicLoaded:()->Void = null;
 	public var animOffsets:Map<String, FlxPoint> = [];
 
-	public function new(?X:Float = 0, ?Y:Float = 0, ?SimpleGraphic:flixel.system.FlxAssets.FlxGraphicAsset, ?Antialiasing:Bool):Void
+	public function new(?X:Float = 0, ?Y:Float = 0, ?SimpleGraphic:FlxGraphicAsset, ?Antialiasing:Bool):Void
 	{
-		super(X, Y, (SimpleGraphic is String ? Paths.image(SimpleGraphic) : SimpleGraphic));
+		super(X, Y, SimpleGraphic is String ? Paths.image(SimpleGraphic) : SimpleGraphic);
 		antialiasing = Antialiasing ?? ClientPrefs.data.antialiasing;
 	}
 
@@ -47,20 +48,32 @@ class ExtendedSprite extends FlxSprite
 	}
 
 	//quick n' easy animation setup
-	inline public function addAnim(Name:String, Prefix:String, ?Indices:Array<Int>, FrameRate:Int = 24, Looped:Bool = true, ?FlipX:Bool = false, ?FlipY:Bool = false,
+	inline public function addAnim(Name:String, ?Prefix:String, ?Indices:Array<Int>, FrameRate:Int = 24, Looped:Bool = true, ?FlipX:Bool = false, ?FlipY:Bool = false,
 			?LoopPoint:Int = 0):FlxAnimation
 	{
-		if (Indices != null && Indices.length > 0)
-			animation.addByIndices(Name, Prefix, Indices, "", FrameRate, Looped, FlipX, FlipY);
-		else
-			animation.addByPrefix(Name, Prefix, FrameRate, Looped, FlipX, FlipY);
+		if (Prefix != null)
+		{
+			if (Indices != null && Indices.length > 0)
+				animation.addByIndices(Name, Prefix, Indices, "", FrameRate, Looped, FlipX, FlipY);
+			else
+				animation.addByPrefix(Name, Prefix, FrameRate, Looped, FlipX, FlipY);
+		}
+		else if (Indices != null && Indices.length > 0)
+			animation.add(Name, Indices, FrameRate, Looped, FlipX, FlipY);
 
-		final addedAnim:FlxAnimation = animation.getByName(Name);
+		final addedAnim = animation.getByName(Name);
 		if (addedAnim != null)
 		{
 			addedAnim.loopPoint = LoopPoint; // better than -loop anims lmao
 		}
 		return addedAnim;
+	}
+
+	public function getScaledGraphicMidpoint(?point:FlxPoint):FlxPoint
+	{
+		if (point == null)
+			point = FlxPoint.get();
+		return point.set(x + (frameWidth * scale.x) * 0.5, y + (frameHeight * scale.y) * 0.5);
 	}
 
 	// kinda like setGraphicSize, but with just scale value
@@ -72,7 +85,7 @@ class ExtendedSprite extends FlxSprite
 		if (animOffsets.exists(Name))
 			return animOffsets.get(Name).set(X, Y);
 
-		final point:FlxPoint = FlxPoint.get(X, Y);
+		final point = FlxPoint.get(X, Y);
 		animOffsets.set(Name, point);
 		return point;
 	}

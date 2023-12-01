@@ -44,12 +44,12 @@ class MusicBeatState extends FlxTransitionableState implements IMusicBeatState
 
 		if (oldStep != curStep)
 		{
-			if(curStep > 0) stepHit();
-			if(PlayState.SONG != null)
+			if (curStep > 0) stepHit();
+			if (PlayState.SONG != null)
 				(oldStep < curStep) ? updateSection() : rollbackSection();
 		}
 
-		if(FlxG.save.data != null) FlxG.save.data.fullscreen = FlxG.fullscreen;
+		//if(FlxG.save.data != null) FlxG.save.data.fullscreen = FlxG.fullscreen;
 		
 		stagesFunc(function(stage:BaseStage) stage.update(elapsed));
 
@@ -112,15 +112,13 @@ class MusicBeatState extends FlxTransitionableState implements IMusicBeatState
 			return;
 		}
 
-		if(FlxTransitionableState.skipNextTransIn) FlxG.switchState(nextState);
-		else startTransition(nextState);
+		FlxTransitionableState.skipNextTransIn ? FlxG.switchState(nextState) : startTransition(nextState);
 		FlxTransitionableState.skipNextTransIn = false;
 	}
 
 	public static function resetState()
 	{
-		if (FlxTransitionableState.skipNextTransIn) FlxG.resetState();
-		else startTransition();
+		FlxTransitionableState.skipNextTransIn ? FlxG.resetState() : startTransition();
 		FlxTransitionableState.skipNextTransIn = false;
 	}
 
@@ -185,7 +183,7 @@ class MusicBeatState extends FlxTransitionableState implements IMusicBeatState
 
 	function getBeatsOnSection()
 	{
-		var val:Null<Float> = (PlayState.SONG != null && PlayState.SONG.notes[curSection] != null) ? PlayState.SONG.notes[curSection].sectionBeats : 4;
+		final val:Null<Float> = PlayState.SONG?.notes[curSection]?.sectionBeats;
 		return val == null ? 4 : val;
 	}
 }

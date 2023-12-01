@@ -293,11 +293,11 @@ class CharacterEditorState extends backend.MusicBeatUIState
 		check_player.checked = daAnim.startsWith('bf');
 		check_player.callback = function()
 		{
-			char.isPlayer = !char.isPlayer;
-			char.flipX = !char.flipX;
+			ghostChar.isPlayer = char.isPlayer = !char.isPlayer;
+			//char.flipX = !char.flipX;
 			updatePointerPos();
 			reloadBGs();
-			ghostChar.flipX = char.flipX;
+			//ghostChar.flipX = char.flipX;
 		};
 
 		charDropDown = new DropDownAdvanced(10, 30, FlxUIDropDownMenu.makeStrIdLabelArray([''], true), function(character:String)

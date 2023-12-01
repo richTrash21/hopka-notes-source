@@ -271,7 +271,7 @@ class StoryMenuState extends MusicBeatState
 				return;
 			}
 			
-			if (stopspamming == false)
+			if (!stopspamming)
 			{
 				FlxG.sound.play(Paths.sound('confirmMenu'));
 
@@ -286,7 +286,7 @@ class StoryMenuState extends MusicBeatState
 			new FlxTimer().start(1, function(tmr:FlxTimer)
 			{
 				LoadingState.loadAndSwitchState(new PlayState(), true);
-				FreeplayState.destroyFreeplayVocals();
+				FreeplayState.stopVocals();
 			});
 			
 			#if MODS_ALLOWED

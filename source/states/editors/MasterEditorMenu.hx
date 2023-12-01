@@ -106,7 +106,7 @@ class MasterEditorMenu extends MusicBeatState
 			}
 			if(options[curSelected] != 'Mods Menu') FlxG.sound.music.volume = 0;
 			#if PRELOAD_ALL
-			FreeplayState.destroyFreeplayVocals();
+			FreeplayState.stopVocals();
 			#end
 		}
 		super.update(elapsed);

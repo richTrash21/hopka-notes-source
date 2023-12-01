@@ -7,7 +7,7 @@ class MenuItem extends FlxSprite
 
 	public function new(x:Float, y:Float, weekName:String = '')
 	{
-		super(x, y, Paths.image('storymenu/' + weekName));
+		super(x, y, Paths.image('storymenu/$weekName'));
 		antialiasing = ClientPrefs.data.antialiasing;
 	}
 
@@ -19,14 +19,14 @@ class MenuItem extends FlxSprite
 	// if it runs at 144 fps, fake framerate will be like 14, and will update the graphic every 0.016666 * 3 seconds still???
 	// so it runs basically every so many seconds, not dependant on framerate??
 	// I'm still learning how math works thanks whoever is reading this lol
-	var fakeFramerate:Int = Math.round((1 / FlxG.elapsed) / 10);
+	final fakeFramerate:Int = Math.round((1 / FlxG.elapsed) * 0.1);
 
 	override function update(elapsed:Float)
 	{
 		super.update(elapsed);
-		y = FlxMath.lerp(y, (targetY * 120) + 480, FlxMath.bound(elapsed * 10.2, 0, 1));
+		y = FlxMath.lerp(y, (targetY * 120) + 480, Math.max(elapsed * 10.2, 0));
 
-		if (isFlashing) flashingInt += 1;
-		color = (flashingInt % fakeFramerate >= Math.floor(fakeFramerate / 2)) ? 0xFF33ffff : FlxColor.WHITE;
+		if (isFlashing) flashingInt++;
+		color = (flashingInt % fakeFramerate >= Math.floor(fakeFramerate * 0.5)) ? 0xFF33ffff : FlxColor.WHITE;
 	}
 }

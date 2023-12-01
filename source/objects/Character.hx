@@ -46,8 +46,13 @@ class Character extends objects.ExtendedSprite
 	//public var animOffsets:Map<String, Array<Float>> = [];
 	public var debugMode:Bool = false;
 
-	public var isPlayer:Bool = false;
+	public var isPlayer(default, set):Bool;
 	public var curCharacter:String;
+	@:noCompletion function set_isPlayer(bool:Bool):Bool
+	{
+		if (isPlayer != bool) flipX = !flipX;
+		return isPlayer = bool;
+	}
 
 	public var colorTween:FlxTween;
 	public var holdTimer:Float = 0;
@@ -81,7 +86,6 @@ class Character extends objects.ExtendedSprite
 	{
 		super(x, y);
 		curCharacter = character;
-		this.isPlayer = isPlayer;
 		
 		final characterPath:String = 'characters/$character.json';
 		#if MODS_ALLOWED
@@ -143,6 +147,7 @@ class Character extends objects.ExtendedSprite
 		else addAnim('idle', 'BF idle dance', null, 24, false);
 		originalFlipX = flipX;
 		originalFlipY = flipY;
+		this.isPlayer = isPlayer;
 
 		for (name => offset in animOffsets)
 			if (name.startsWith('sing') && name.contains('miss'))
@@ -151,10 +156,8 @@ class Character extends objects.ExtendedSprite
 				break;
 			}
 		recalculateDanceIdle();
-		dance();
-
-		if (isPlayer) flipX = !flipX;
 		updateCamFollow();
+		dance();
 	}
 
 	override public function update(elapsed:Float)

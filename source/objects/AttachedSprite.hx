@@ -12,10 +12,11 @@ class AttachedSprite extends FlxSprite
 	public var copyAlpha:Bool = true;
 	public var copyVisible:Bool = false;
 
-	public function new(?file:String = null, ?anim:String = null, ?library:String = null, ?loop:Bool = false)
+	public function new(?file:String, ?anim:String, ?library:String, ?loop:Bool = false)
 	{
-		super(0, 0, file != null ? Paths.image(file) : null);
-		if(anim != null) {
+		super(file != null ? Paths.image(file) : null);
+		if (anim != null)
+		{
 			frames = Paths.getSparrowAtlas(file, library);
 			animation.addByPrefix('idle', anim, 24, loop);
 			animation.play('idle');
@@ -24,16 +25,16 @@ class AttachedSprite extends FlxSprite
 		scrollFactor.set();
 	}
 
-	override function update(elapsed:Float)
+	override function draw()
 	{
-		super.update(elapsed);
-
-		if (sprTracker != null) {
+		if (sprTracker != null)
+		{
 			setPosition(sprTracker.x + xAdd, sprTracker.y + yAdd);
 			scrollFactor.set(sprTracker.scrollFactor.x, sprTracker.scrollFactor.y);
-			if(copyAngle) angle = sprTracker.angle + angleAdd;
-			if(copyAlpha) alpha = sprTracker.alpha * alphaMult;
-			if(copyVisible)  visible = sprTracker.visible;
+			if (copyAngle)	  angle = sprTracker.angle + angleAdd;
+			if (copyAlpha)	  alpha = sprTracker.alpha * alphaMult;
+			if (copyVisible)  visible = sprTracker.visible;
 		}
+		super.draw();
 	}
 }
