@@ -1,7 +1,6 @@
 package;
 
 import flixel.addons.transition.FlxTransitionableState;
-import backend.Highscore;
 import states.FlashingState;
 
 // THIS IS FOR INITIALIZING STUFF BECAUSE FLIXEL HATES INITIALIZING STUFF IN MAIN
@@ -32,7 +31,7 @@ class Init extends flixel.FlxState
 		Controls.instance = new Controls();
 		ClientPrefs.loadDefaultKeys();
 		#if ACHIEVEMENTS_ALLOWED Achievements.load(); #end
-		Highscore.load();
+		backend.Highscore.load();
 
 		if (FlxG.save.data.weekCompleted != null) states.StoryMenuState.weekCompleted = FlxG.save.data.weekCompleted;
 
@@ -40,13 +39,12 @@ class Init extends flixel.FlxState
 
 		if (FlxG.save.data != null && FlxG.save.data.fullscreen) FlxG.fullscreen = FlxG.save.data.fullscreen;
 
-		if(FlxG.save.data.flashing == null && !FlashingState.leftState)
+		if (FlxG.save.data.flashing == null && !FlashingState.leftState)
 		{
 			FlxTransitionableState.skipNextTransIn = true;
 			FlxTransitionableState.skipNextTransOut = true;
 			MusicBeatState.switchState(new FlashingState());
 		}
-		else
-			FlxG.switchState(Type.createInstance(Main.game.initialState, []));
+		else FlxG.switchState(Type.createInstance(Main.game.initialState, []));
 	}
 }

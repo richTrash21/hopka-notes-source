@@ -60,6 +60,11 @@ class GameOverSubstate extends MusicBeatSubstate
 	override function create()
 	{
 		instance = this;
+
+		realCamera.updateLerp = realCamera.updateZoom = false;
+		realCamera._speed = 0.6;
+		realCamera.cameraSpeed = 1;
+
 		game.callOnScripts('onGameOverStart');
 		boyfriend.animation.callback = onAnimationUpdate;
 		boyfriend.animation.finishCallback = onAnimationFinished;
@@ -95,14 +100,11 @@ class GameOverSubstate extends MusicBeatSubstate
 
 		realCamera.follow(camFollow, LOCKON, 0);
 		realCamera.scroll.set();
-		realCamera.updateLerp = realCamera.updateZoom = false;
-		@:privateAccess realCamera._speed = 0.6;
-		realCamera.cameraSpeed = 1;
 	}
 
 	dynamic public function onAnimationUpdate(Name:String, Frame:Int, FrameID:Int):Void
 	{
-		if(Name == 'firstDeath' && Frame >= 12 && !isFollowingAlready)
+		if (Name == 'firstDeath' && Frame >= 12 && !isFollowingAlready)
 			updateCamera = isFollowingAlready = true;
 	}
 
@@ -134,8 +136,7 @@ class GameOverSubstate extends MusicBeatSubstate
 			#if desktop DiscordClient.resetClientID(); #end
 			FlxG.sound.music.stop();
 			PlayState.deathCounter = 0;
-			PlayState.seenCutscene = false;
-			PlayState.chartingMode = false;
+			PlayState.seenCutscene = PlayState.chartingMode = false;
 
 			Mods.loadTopMod();
 			MusicBeatState.switchState(PlayState.isStoryMode ? new states.StoryMenuState() : new states.FreeplayState());
@@ -143,8 +144,6 @@ class GameOverSubstate extends MusicBeatSubstate
 			FlxG.sound.playMusic(Paths.music('freakyMenu'));
 			game.callOnScripts('onGameOverConfirm', [false]);
 		}
-		
-		// realCamera.followLerp = updateCamera ? elapsed * 0.6 #if (flixel < "5.4.0") / #else * #end (FlxG.updateFramerate / 60) : 0;
 
 		if (FlxG.sound.music.playing) Conductor.songPosition = FlxG.sound.music.time;
 
@@ -155,20 +154,19 @@ class GameOverSubstate extends MusicBeatSubstate
 	var isEnding:Bool = false;
 	function endBullshit():Void
 	{
-		if (!isEnding)
-		{
-			final ret:Dynamic = game.callOnScripts('onGameOverConfirm', [true], true);
-			if (ret != FunkinLua.Function_Stop)
-			{
-				isEnding = true;
-				boyfriend.playAnim('deathConfirm', true);
+		if (isEnding) return;
 
-				FlxG.sound.music.stop();
-				FlxG.sound.play(Paths.sound(endSoundName));
-				
-				new FlxTimer().start(0.7, function(tmr:FlxTimer) realCamera.fade(FlxColor.BLACK, 2, false, function() MusicBeatState.resetState()));
-			}
-		}
+		final ret:Dynamic = game.callOnScripts('onGameOverConfirm', [true], true);
+		if (ret == FunkinLua.Function_Stop)
+			return;
+
+		isEnding = true;
+		boyfriend.playAnim('deathConfirm', true);
+
+		FlxG.sound.music.stop();
+		FlxG.sound.play(Paths.sound(endSoundName));
+		
+		new FlxTimer().start(0.7, function(tmr:FlxTimer) realCamera.fade(FlxColor.BLACK, 2, false, function() MusicBeatState.resetState()));
 	}
 
 	override function destroy()

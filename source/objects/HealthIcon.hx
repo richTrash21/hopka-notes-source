@@ -65,23 +65,21 @@ class HealthIcon extends ExtendedSprite
 			final json:HealthIconConfig = getConfig(char);
 			final graphic = Paths.image(name, allowGPU);
 			loadGraphic(graphic, true, (graphic.width > graphic.height) ? Math.floor(graphic.width * 0.5) : graphic.width, graphic.height);
-			iconOffsets.set((width - 150) * 0.5, (height - 150) * 0.5);
+
+			iconOffsets.copyFrom(animOffsets.exists(char) ? animOffsets.get(char) : addOffset(char, (width - 150) * 0.5, (height - 150) * 0.5));
+			if (json.offset != null && json.offset.length > 1) iconOffsets.add(json.offset[0], json.offset[1]);
 
 			// seems messy but should work just fiiine (not sure if it's optimised tho but idc its 2:30AM and im still up)
 			flipX	  = json.flip_x ?? false;
 			baseScale = json.scale ?? 1;
+			updateHitbox();
 
 			final _antialias:Bool = ClientPrefs.data.antialiasing ? json.antialias ?? true : false;
 			antialiasing = char.endsWith('-pixel') ? false : _antialias;
 
-			if (json.offset != null && json.offset.length > 1)
-				iconOffsets.add(json.offset[0], json.offset[1]);
-
-			updateHitbox();
-
-			if (animation.getByName(char) == null)
-				animation.add(char, [for (i in 0...numFrames) i], 0, false, flip);
-			animation.play(char, false, false, prevFrame);
+			if (!animExists(char))
+				addAnim(char, [for (i in 0...numFrames) i], 0, false, flip);
+			playAnim(char, false, prevFrame);
 			this.char = char;
 		}
 	}
@@ -91,7 +89,6 @@ class HealthIcon extends ExtendedSprite
 
 	inline public static function getConfig(char:String):HealthIconConfig
 	{
-		var json:HealthIconConfig = defaultConfig; // so if json couldn't be found default would be used instead
 		final iconPath:String = 'images/icons/$char.json';
 		#if MODS_ALLOWED
 		var path:String = Paths.modFolders(iconPath);
@@ -103,9 +100,9 @@ class HealthIcon extends ExtendedSprite
 		#end
 		{
 			final rawJson:String = #if MODS_ALLOWED sys.io.File.getContent(path) #else Assets.getText(path) #end;
-			json = cast haxe.Json.parse(rawJson);
+			return cast haxe.Json.parse(rawJson);
 		}
-		return json;
+		return defaultConfig; // so if json couldn't be found default would be used instead
 	}
 
 	override function updateHitbox()

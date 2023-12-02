@@ -344,15 +344,27 @@ class Character extends objects.ExtendedSprite
 
 	@:noCompletion override inline function set_width(Width:Float):Float
 	{
-		super.set_width(Width);
-		updateCamFollow();
-		return Width;
+		#if FLX_DEBUG
+		if (Width < 0)
+		{
+			FlxG.log.warn("An object's width cannot be smaller than 0. Use offset for sprites to control the hitbox position!");
+			return Width;
+		}
+		#end
+		camFollow.x += (width - Width) * 0.5;
+		return width = Width;
 	}
 
 	@:noCompletion override inline function set_height(Height:Float):Float
 	{
-		super.set_height(Height);
-		updateCamFollow();
-		return Height;
+		#if FLX_DEBUG
+		if (Height < 0)
+		{
+			FlxG.log.warn("An object's height cannot be smaller than 0. Use offset for sprites to control the hitbox position!");
+			return Height;
+		}
+		#end
+		camFollow.y += (height - Height) * 0.5;
+		return height = Height;
 	}
 }

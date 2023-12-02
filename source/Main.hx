@@ -19,15 +19,15 @@ import haxe.CallStack;
 
 class Main extends Sprite
 {
-	public static var game =
+	public static final game =
 	{
-		width: 1280, // WINDOW width
-		height: 720, // WINDOW height
-		initialState: states.TitleState, // initial game state
-		zoom: -1.0, // game state bounds
-		framerate: 60, // default framerate
-		skipSplash: true, // if the default flixel splash screen should be skipped
-		startFullscreen: false // if the game should start at fullscreen mode
+		width: 1280,					  // WINDOW width
+		height: 720,					  // WINDOW height
+		initialState: states.TitleState,  // initial game state
+		zoom: -1.0,						  // game state bounds
+		framerate: 60,					  // default framerate
+		skipSplash: true,				  // if the default flixel splash screen should be skipped
+		startFullscreen: false			  // if the game should start at fullscreen mode
 	};
 
 	public static var fpsVar:FPSCounter;
@@ -49,17 +49,17 @@ class Main extends Sprite
 		Application.current.window.onFocusOut.add(volumeOnFocusLost);
 	}
 
-	private function volumeOnFocus() // dont ask
+	static function volumeOnFocus() // dont ask
 	{
 		if (ClientPrefs.data.lostFocusDeafen && !FlxG.sound.muted)
 			FlxG.sound.volume = _focusVolume;
 	}
 
-	private static function volumeOnFocusLost() // dont ask
+	static function volumeOnFocusLost() // dont ask
 	{
 		if (ClientPrefs.data.lostFocusDeafen && !FlxG.sound.muted)
 		{
-			_focusVolume = Math.round(FlxG.sound.volume * 10) / 10;
+			_focusVolume = Math.floor(FlxG.sound.volume * 10) * 0.1;
 			FlxG.sound.volume *= 0.5;
 		}
 	}
@@ -75,8 +75,7 @@ class Main extends Sprite
 		addChild(fpsShadow);
 		addChild(fpsVar);
 
-		if (fpsVar != null)
-			fpsVar.visible = fpsShadow.visible = ClientPrefs.data.showFPS;
+		if (fpsVar != null) fpsVar.visible = fpsShadow.visible = ClientPrefs.data.showFPS;
 
 		Lib.current.stage.align = "tl";
 		Lib.current.stage.scaleMode = openfl.display.StageScaleMode.NO_SCALE;
@@ -108,19 +107,11 @@ class Main extends Sprite
 		{
 			if (FlxG.cameras != null)
 				for (cam in FlxG.cameras.list)
-				{
-					#if (flixel < "5.4.0")
-					@:privateAccess
-					if (cam != null && cam._filters != null)
-					#else
 					if (cam != null && cam.filters != null)
-					#end
 						resetSpriteCache(cam.flashSprite);
-				}
 
-			var _game = FlxG.game;
-			if (_game != null)
-				resetSpriteCache(_game);
+			if (FlxG.game != null)
+				resetSpriteCache(FlxG.game);
 		});
 	}
 
@@ -139,18 +130,16 @@ class Main extends Sprite
 	#if CRASH_HANDLER
 	function onCrash(e:UncaughtErrorEvent):Void
 	{
-		var errMsg:String = "";
-		var path:String;
-		var callStack:Array<StackItem> = CallStack.exceptionStack(true);
+		final callStack:Array<StackItem> = CallStack.exceptionStack(true);
 		var dateNow:String = Date.now().toString();
+		var errMsg:String = "";
 
 		dateNow = dateNow.replace(" ", "_");
 		dateNow = dateNow.replace(":", "'");
 
-		path = "./crash/" + "PsychEngine_" + dateNow + ".txt";
+		final path = "./crash/" + "PsychEngine_" + dateNow + ".txt";
 
 		for (stackItem in callStack)
-		{
 			switch (stackItem)
 			{
 				case FilePos(s, file, line, column):
@@ -158,7 +147,6 @@ class Main extends Sprite
 				default:
 					Sys.println(stackItem);
 			}
-		}
 
 		errMsg += "
 			\nUncaught Error: " + e.error + "\n\ntl;dr" + #if RELESE_BUILD_FR " - i messed up whoops (richTrash21)" #else " - you done goofed (richTrash21)" #end

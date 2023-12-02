@@ -5,12 +5,12 @@ class GameCamera extends FlxCamera
 	/**
 		Default lerpin' zoom. Not to be confused with `FlxCamera.defaultZoom`!
 	**/
-	public var defaultZoom:Float = 1.0;
+	public var targetZoom:Float = 1.0;
 
 	/**
 		Should current zoom lerp to the default value?
 	**/
-	public var updateZoom:Bool = false;
+	public var updateZoom:Bool;
 
 	/**
 		How fast zoom should lerp?
@@ -25,7 +25,7 @@ class GameCamera extends FlxCamera
 	/**
 		Should camera lerp be updated via `update()`.
 	**/
-	public var updateLerp(default, set):Bool = false;
+	public var updateLerp(default, set):Bool;
 
 	/**
 		Global game speed. Can be controlled outside of PlatState.
@@ -33,10 +33,11 @@ class GameCamera extends FlxCamera
 	@:isVar public static var globalSpeed(get, set):Float = 1.0;
 
 	// internal values
+	@:allow(substates.GameOverSubstate)
 	var _speed:Float = 2.4;
 	var _zoomSpeed:Float = 3.125;
 
-	public function new(Zoom:Float = 0.0, BGAlpha:Float = 1.0, UpdateLerp:Bool = false, UpdateZoom:Bool = false)
+	public function new(?Zoom:Float = 0.0, ?BGAlpha:Float = 1.0, UpdateLerp:Bool = false, UpdateZoom:Bool = false):Void
 	{
 		super(0, 0, 0, 0, Zoom);
 		bgColor.alphaFloat = BGAlpha;
@@ -61,7 +62,7 @@ class GameCamera extends FlxCamera
 		return ret;
 	}
 
-	override public function update(elapsed:Float)
+	override public function update(elapsed:Float):Void
 	{
 		if (!active) return;
 
@@ -69,7 +70,7 @@ class GameCamera extends FlxCamera
 			followLerp = elapsed * _speed * cameraSpeed * globalSpeed * (FlxG.updateFramerate / 60);
 
 		if (updateZoom && !tweeningZoom)
-			zoom = FlxMath.lerp(defaultZoom, zoom, Math.max(1 - (elapsed * _zoomSpeed * zoomDecay * globalSpeed), 0));
+			zoom = FlxMath.lerp(targetZoom, zoom, Math.max(1 - (elapsed * _zoomSpeed * zoomDecay * globalSpeed), 0));
 
 		super.update(elapsed);
 	}

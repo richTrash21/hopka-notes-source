@@ -297,9 +297,9 @@ class PlayState extends MusicBeatState
 	public var defaultHUDZoom(default, set):Float = 1.0;
 
 	@:noCompletion inline function set_defaultCamZoom(zoom:Float):Float
-		return defaultCamZoom = camGame.defaultZoom = zoom;
+		return defaultCamZoom = camGame.targetZoom = zoom;
 	@:noCompletion inline function set_defaultHUDZoom(zoom:Float):Float
-		return defaultCamZoom = camHUD.defaultZoom = zoom;
+		return defaultCamZoom = camHUD.targetZoom = zoom;
 
 	// how big to stretch the pixel art assets
 	public static var daPixelZoom:Float = 6.0;
@@ -387,8 +387,8 @@ class PlayState extends MusicBeatState
 	public var songName(default, null):String;
 
 	// Callbacks for stages
-	public var startCallback:()->Void = null;
-	public var endCallback:()->Void = null;
+	public var startCallback:()->Void;
+	public var endCallback:()->Void;
 
 	override public function create()
 	{
@@ -434,9 +434,9 @@ class PlayState extends MusicBeatState
 		#if desktop
 		storyDifficultyText = Difficulty.getString();
 		// String that contains the mode defined here so it isn't necessary to call changePresence for each mode
-		detailsText = isStoryMode ? "Story Mode: " + WeekData.getCurrentWeek().weekName : "Freeplay";
+		detailsText = isStoryMode ? 'Story Mode: ${WeekData.getCurrentWeek().weekName}' : "Freeplay";
 		// String for when the game is paused
-		detailsPausedText = "Paused - " + detailsText;
+		detailsPausedText = 'Paused - $detailsText';
 		#end
 
 		songName = Paths.formatToSongPath(SONG.song);
@@ -1732,7 +1732,7 @@ class PlayState extends MusicBeatState
 			//if (showcaseTxt != null) showcaseTxt.alpha = 1 - Math.sin((Math.PI * botplaySine) / 180);
 		}
 
-		if (controls.PAUSE && startedCountdown && canPause)
+		if (controls.PAUSE && !FlxG.keys.pressed.ALT && startedCountdown && canPause)
 		{
 			final ret:Dynamic = callOnScripts('onPause', null, true);
 			if (ret != FunkinLua.Function_Stop) openPauseMenu();
@@ -2186,7 +2186,7 @@ class PlayState extends MusicBeatState
 					(flValue2 <= 0.0)
 						? songSpeed = newValue
 						: songSpeedTween = FlxTween.tween(this, {songSpeed: newValue}, flValue2 / playbackRate, {ease: FlxEase.linear,
-							onComplete: function (twn:FlxTween) songSpeedTween = null});
+							onComplete: function (_) songSpeedTween = null});
 				}
 
 			case 'Set Property':

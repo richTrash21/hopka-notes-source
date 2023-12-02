@@ -6,8 +6,8 @@ import sys.FileSystem;
 
 typedef WeekFile = {
 	// JSON variables
-	//var songs:Array<SongData>;
-	var songs:Array<Dynamic>;
+	var ?realSongs:Array<SongData>;
+	var ?songs:Array<Dynamic>; // for backward compability!!!!
 	var weekCharacters:Array<String>;
 	var weekBackground:String;
 	var weekBefore:String;
@@ -22,7 +22,7 @@ typedef WeekFile = {
 }
 
 // instead of dynamic array
-//typedef SongData = {name:String, icon:String, colors:Array<Int>}
+typedef SongData = {name:String, icon:String, colors:Array<Int>}
 
 class WeekData
 {
@@ -31,8 +31,7 @@ class WeekData
 	public var folder:String = '';
 	
 	// JSON variables
-	//public var songs:Array<SongData>;
-	public var songs:Array<Dynamic>;
+	public var songs:Array<SongData>;
 	public var weekCharacters:Array<String>;
 	public var weekBackground:String;
 	public var weekBefore:String;
@@ -48,12 +47,11 @@ class WeekData
 	public var fileName:String;
 
 	public static final DEFAULT_WEEK:WeekFile = {
-		/*songs: [
-			{name: "Bopeebo", name: "dad", colors: [146, 113, 253]},
-			{name: "Fresh", name: "dad", colors: [146, 113, 253]},
-			{name: "Dad Battle", name: "dad", colors: [146, 113, 253]}
-		],*/
-		songs: [["Bopeebo", "dad", [146, 113, 253]], ["Fresh", "dad", [146, 113, 253]], ["Dad Battle", "dad", [146, 113, 253]]],
+		realSongs: [
+			{name: "Bopeebo",    icon: "dad", colors: [146, 113, 253]},
+			{name: "Fresh",      icon: "dad", colors: [146, 113, 253]},
+			{name: "Dad Battle", icon: "dad", colors: [146, 113, 253]}
+		],
 		weekCharacters: ['dad', 'bf', 'gf'],
 		weekBackground: 'stage',
 		weekBefore: 'tutorial',
@@ -69,10 +67,21 @@ class WeekData
 
 	inline public static function createWeekFile():WeekFile return DEFAULT_WEEK;
 
+	inline public static function fixWeek(Week:WeekFile):WeekFile
+	{
+		// GETTING RID OF DYNAMIC ARRAY SINCE ITS SHIIIIITT
+		if (Week?.songs != null)
+		{
+			Week.realSongs = [for (shit in Week.songs) {name: shit[0], icon: shit[1], colors: shit[2]}];
+			Reflect.deleteField(Week, "songs"); // i hope this won't backfire in like 2 seconds :clueless:
+		}
+		return Week;
+	}
+
 	// HELP: Is there any way to convert a WeekFile to WeekData without having to put all variables there manually? I'm kind of a noob in haxe lmao
 	public function new(weekFile:WeekFile, fileName:String)
 	{
-		songs = weekFile.songs;
+		songs = weekFile.realSongs;
 		weekCharacters = weekFile.weekCharacters;
 		weekBackground = weekFile.weekBackground;
 		weekBefore = weekFile.weekBefore;
@@ -97,7 +106,7 @@ class WeekData
 		final originalLength:Int = directories.length;
 
 		for (mod in Mods.parseList().enabled)
-			directories.push(Paths.mods(mod + '/'));
+			directories.push(Paths.mods('$mod/'));
 		#else
 		final directories:Array<String> = [Paths.getPreloadPath()];
 		final originalLength:Int = directories.length;
@@ -190,7 +199,7 @@ class WeekData
 		#end
 
 		if (rawJson != null && rawJson.length > 0)
-			return cast haxe.Json.parse(rawJson);
+			return fixWeek(cast haxe.Json.parse(rawJson));
 
 		return null;
 	}
