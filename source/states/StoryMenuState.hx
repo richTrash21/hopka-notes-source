@@ -242,7 +242,7 @@ class StoryMenuState extends MusicBeatState
 		{
 			// We can't use Dynamic Array .copy() because that crashes HTML5, here's a workaround.
 			// no more dynamic array!!! - richTrash21
-			final songArray:Array<String> = [for (song in loadedWeeks[curWeek].songs) song.name];
+			final songArray:Array<String> = [for (song in loadedWeeks[curWeek].songs) song[0]];
 
 			// Nevermind that's stupid lmao
 			try
@@ -370,7 +370,7 @@ class StoryMenuState extends MusicBeatState
 
 		final leWeek:WeekData = loadedWeeks[curWeek];
 		final stringThing:Array<String> = [];
-		for (song in leWeek.songs) stringThing.push(song.name);
+		for (song in leWeek.songs) stringThing.push(song[0]);
 
 		txtTracklist.text = '';
 		for (i in 0...stringThing.length) txtTracklist.text += stringThing[i] + '\n';

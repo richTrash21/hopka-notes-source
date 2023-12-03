@@ -1,13 +1,6 @@
 {
-	"songs": [
-		["Test", "dad", [124, 124, 124]]
-	],
-
-	"weekCharacters": [
-		"dad",
-		"bf",
-		"gf"
-	],
+	"songs": [["Test", "dad", [124, 124, 124]]],
+	"weekCharacters": ["dad", "bf", "gf"],
 	"weekBackground": "stage",
 
 	"storyName": "",

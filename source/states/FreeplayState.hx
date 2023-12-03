@@ -63,16 +63,16 @@ class FreeplayState extends MusicBeatState
 
 			for (song in leWeek.songs)
 			{
-				leSongs.push(song.name);
-				leChars.push(song.icon);
+				leSongs.push(song[0]);
+				leChars.push(song[1]);
 			}
 
 			WeekData.setDirectoryFromWeek(leWeek);
 			for (song in leWeek.songs)
 			{
-				final colrs = song.colors;
+				final colrs:Array<Int> = cast song[2];
 				final colors:Array<Int> = colrs == null || colrs.length < 3 ? [146, 113, 253] : colrs;
-				addSong(song.name, i, song.icon, FlxColor.fromRGB(colors[0], colors[1], colors[2]));
+				addSong(song[0], i, song[1], FlxColor.fromRGB(colors[0], colors[1], colors[2]));
 			}
 		}
 		Mods.loadTopMod();

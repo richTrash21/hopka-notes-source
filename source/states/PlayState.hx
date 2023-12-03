@@ -77,24 +77,23 @@ import psychlua.LuaUtils;
 import psychlua.HScript;
 #end
 
-typedef RatingData = {percent:Float, name:String}
-
 class PlayState extends MusicBeatState
 {
 	public static var STRUM_X:Float = 42.0;
 	public static var STRUM_X_MIDDLESCROLL:Float = -278.0;
 
-	public static var ratingStuff:Array<RatingData> = [
-		{percent: 0.2,	  name: 'You Suck!'},	// From 0% to 19%
-		{percent: 0.4,	  name: 'Shit'},		// From 20% to 39%
-		{percent: 0.5,	  name: 'Bad'},			// From 40% to 49%
-		{percent: 0.6,	  name: 'Bruh'},		// From 50% to 59%
-		{percent: 0.69,	  name: 'Meh'},			// From 60% to 68%
-		{percent: 0.7,	  name: 'Nice'},		// 69% :trollface:
-		{percent: 0.8,	  name: 'Good'},		// From 70% to 79%
-		{percent: 0.9,	  name: 'Great'},		// From 80% to 89%
-		{percent: 1,	  name: 'Sick!'},		// From 90% to 99%
-		{percent: 1,	  name: 'Perfect!!'}	// The value on this one isn't used actually, since Perfect is always "1"
+	// https://media.discordapp.net/attachments/1041755661630976052/1180970202079436908/image.png?ex=657f5b35&is=656ce635&hm=477b7411d344068f3cf93abbc76f0fc5457eb03123b25d788c663ef2d58ad107&=&format=webp&quality=lossless&width=517&height=631
+	public static var ratingStuff:Array<Array<haxe.extern.EitherType<Float, String>>> = [
+		[0.2,	'You Suck!'],	// From 0% to 19%
+		[0.4,	'Shit'],		// From 20% to 39%
+		[0.5,	'Bad'],			// From 40% to 49%
+		[0.6,	'Bruh'],		// From 50% to 59%
+		[0.69,	'Meh'],			// From 60% to 68%
+		[0.7,	'Nice'],		// 69% :trollface:
+		[0.8,	'Good'],		// From 70% to 79%
+		[0.9,	'Great'],		// From 80% to 89%
+		[1.0,	'Sick!'],		// From 90% to 99%
+		[1.0,	'Perfect!!']	// The value on this one isn't used actually, since Perfect is always "1"
 	];
 
 	//event variables
@@ -2483,7 +2482,7 @@ class PlayState extends MusicBeatState
 		final noStacking:Bool = !ClientPrefs.data.comboStacking;
 		if (noStacking)
 		{
-			scoreGroup.forEachAlive(function(spr:PopupSprite) FlxTween.completeTweensOf(spr));
+			scoreGroup.forEachAlive(function(spr:PopupSprite) spr.finishFade());
 			lastScore = [];
 		}
 
@@ -3263,15 +3262,15 @@ class PlayState extends MusicBeatState
 				if (ratingPercent < 1)
 					for (i in 0...ratingStuff.length-1)
 					{
-						final rat:RatingData = ratingStuff[i];
-						if (ratingPercent < rat.percent)
+						final rat = ratingStuff[i];
+						if (ratingPercent < cast rat[0])
 						{
-							ratingName = rat.name;
+							ratingName = rat[1];
 							break;
 						}
 					}
 				else
-					ratingName = ratingStuff[ratingStuff.length-1].name; //Uses last string
+					ratingName = ratingStuff[ratingStuff.length-1][1]; //Uses last string
 			}
 			fullComboFunction();
 		}

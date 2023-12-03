@@ -162,48 +162,57 @@ class Character extends objects.ExtendedSprite
 
 	override public function update(elapsed:Float)
 	{
-		if (!debugMode && animation.curAnim != null)
+		if (debugMode || animation.curAnim == null)
 		{
-			if (heyTimer > 0)
-			{
-				// https://github.com/ShadowMario/FNF-PsychEngine/pull/13591 (nvmd replaced with FlxG.animationTimeScale)
-				heyTimer -= elapsed * FlxG.animationTimeScale;
-				//heyTimer -= elapsed * PlayState.instance.playbackRate;
-				if (heyTimer <= 0)
-				{
-					if (specialAnim && animation.curAnim.name == 'hey' || animation.curAnim.name == 'cheer')
-					{
-						specialAnim = false;
-						dance();
-					}
-					heyTimer = 0;
-				}
-			}
-			else if (specialAnim && animation.curAnim.finished)
-			{
-				specialAnim = false;
-				dance();
-			}
-			else if (animation.curAnim.name.endsWith('miss') && animation.curAnim.finished)
-			{
-				dance();
-				animation.finish();
-			}
-
-			if (animation.curAnim.name.startsWith('sing'))
-				holdTimer += elapsed;
-			else if (isPlayer)
-				holdTimer = 0;
-
-			if (!isPlayer && holdTimer >= Conductor.stepCrochet * (0.0011 #if FLX_PITCH / (FlxG.sound.music != null ? FlxG.sound.music.pitch : 1) #end) * singDuration)
-			{
-				dance();
-				holdTimer = 0;
-			}
-
-			if (animation.curAnim.finished && animation.getByName(animation.curAnim.name + '-loop') != null)
-				playAnim(animation.curAnim.name + '-loop');
+			superUpdate(elapsed);
+			return;
 		}
+
+		if (heyTimer > 0)
+		{
+			// https://github.com/ShadowMario/FNF-PsychEngine/pull/13591 (nvmd replaced with FlxG.animationTimeScale)
+			heyTimer -= elapsed * FlxG.animationTimeScale;
+			//heyTimer -= elapsed * PlayState.instance.playbackRate;
+			if (heyTimer <= 0)
+			{
+				if (specialAnim && animation.curAnim.name == 'hey' || animation.curAnim.name == 'cheer')
+				{
+					specialAnim = false;
+					dance();
+				}
+				heyTimer = 0;
+			}
+		}
+		else if (specialAnim && animation.curAnim.finished)
+		{
+			specialAnim = false;
+			dance();
+		}
+		else if (animation.curAnim.name.endsWith('miss') && animation.curAnim.finished)
+		{
+			dance();
+			animation.finish();
+		}
+
+		if (animation.curAnim.name.startsWith('sing'))
+			holdTimer += elapsed;
+		else if (isPlayer)
+			holdTimer = 0;
+
+		if (!isPlayer && holdTimer >= Conductor.stepCrochet * (0.0011 #if FLX_PITCH / (FlxG.sound.music == null ? 1 : FlxG.sound.music.pitch) #end) * singDuration)
+		{
+			dance();
+			holdTimer = 0;
+		}
+
+		if (animation.curAnim.finished && animation.getByName(animation.curAnim.name + '-loop') != null)
+			playAnim(animation.curAnim.name + '-loop');
+
+		superUpdate(elapsed);
+	}
+
+	function superUpdate(elapsed:Float)
+	{
 		super.update(elapsed);
 		camFollow.update(elapsed); // https://upload.wikimedia.org/wikipedia/ru/c/c2/%D0%A1%D0%B0%D0%BC%D1%8B%D0%B9_%D1%83%D0%BC%D0%BD%D1%8B%D0%B9_%D0%A1%D0%A2%D0%A1.jpg
 	}
@@ -238,18 +247,18 @@ class Character extends objects.ExtendedSprite
 	 */
 	public function dance(Force:Bool = false)
 	{
-		if (!debugMode && !skipDance && !specialAnim)
+		if (debugMode || skipDance || specialAnim)
+			return;
+
+		if (animation.curAnim != null && animation.curAnim.looped && animation.curAnim.loopPoint > 0 && animation.curAnim.curFrame >= animation.curAnim.loopPoint)
+			animation.finish(); // fix for characters that have loopPoint > 0
+		var danceAnim:String = 'idle$idleSuffix';
+		if (danceIdle)
 		{
-			if (animation.curAnim != null && animation.curAnim.looped && animation.curAnim.loopPoint > 0 && animation.curAnim.curFrame >= animation.curAnim.loopPoint)
-				animation.finish(); // fix for characters that have loopPoint > 0
-			var danceAnim:String = 'idle$idleSuffix';
-			if (danceIdle)
-			{
-				danced = !danced;
-				danceAnim = 'dance${danced ? 'Right' : 'Left'}$idleSuffix';
-			}
-			playAnim(danceAnim, Force);
+			danced = !danced;
+			danceAnim = 'dance${danced ? 'Right' : 'Left'}$idleSuffix';
 		}
+		playAnim(danceAnim, Force);
 	}
 
 	override public function playAnim(AnimName:String, Force:Bool = false, ?Reversed:Bool = false, ?Frame:Int = 0):Void

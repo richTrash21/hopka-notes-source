@@ -80,9 +80,11 @@ class ExtendedSprite extends FlxSprite
 		for (anim => offset in animOffsets)
 			offset.put();
 
-		boundBox = FlxDestroyUtil.put(boundBox);
 		animOffsets.clear();
+		boundBox = FlxDestroyUtil.put(boundBox);
 		onGraphicLoaded = null;
+		onEnterBounds = null;
+		onLeaveBounds = null;
 		super.destroy();
 	}
 

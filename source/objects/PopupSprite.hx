@@ -10,7 +10,6 @@ class PopupScore extends PopupSprite {}
 class PopupSprite extends ExtendedSprite
 {
 	// internal stuff, for reseting shit
-	//var _spawnPos:FlxPoint = FlxPoint.get();
 	var _velocityX:FlxPoint = FlxPoint.get();
 	var _velocityY:FlxPoint = FlxPoint.get();
 	var _accelerationX:FlxPoint = FlxPoint.get();
@@ -49,7 +48,7 @@ class PopupSprite extends ExtendedSprite
 
 		if (alive && !isOnScreen(camera))
 		{
-			cancelTween();
+			cancelFade();
 			killOrDestroy();
 			return;
 		}
@@ -60,7 +59,6 @@ class PopupSprite extends ExtendedSprite
 
 	override public function revive():Void
 	{
-		//setPosition(_spawnPos.x, _spawnPos.y);
 		resetMovement();
 		angle = 0;
 		alpha = 1;
@@ -133,7 +131,7 @@ class PopupSprite extends ExtendedSprite
 	**/
 	inline public function fadeOut(Duration:Float = 1, ?Delay:Float = 0):PopupSprite
 	{
-		cancelTween();
+		cancelFade();
 		fadeTween = FlxTween.num(1, 0, Duration / globalSpeed, {startDelay: Delay / globalSpeed, onComplete: function(_) 
 			{
 				killOrDestroy();
@@ -147,7 +145,7 @@ class PopupSprite extends ExtendedSprite
 	/**
 		Helper function to get rid of the tween.
 	**/
-	function cancelTween():Void
+	public function cancelFade():Void
 	{
 		if (fadeTween != null)
 		{
@@ -156,9 +154,19 @@ class PopupSprite extends ExtendedSprite
 		}
 	}
 
+	@:access(flixel.tweens.FlxTween.finish)
+	public function finishFade():Void
+	{
+		if (fadeTween != null)
+		{
+			fadeTween.finish();
+			fadeTween = null;
+		}
+	}
+
 	@:noCompletion inline static function get_globalSpeed():Float
 		return (PlayState.instance != null ? PlayState.instance.playbackRate : globalSpeed);
 
 	@:noCompletion inline static function set_globalSpeed(speed:Float):Float
-		return (PlayState.instance != null ? PlayState.instance.playbackRate : globalSpeed = speed); // won't allow to set variable if camera placed in PlayState
+		return (PlayState.instance != null ? PlayState.instance.playbackRate : globalSpeed = speed); // won't allow to set variable if sprite placed in PlayState
 }

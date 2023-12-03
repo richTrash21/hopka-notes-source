@@ -29,7 +29,7 @@ class HScript #if HSCRIPT_ALLOWED extends Interp #end
 		#if HSCRIPT_ALLOWED
 		if(parent.hscript == null)
 		{
-			var times:Float = Date.now().getTime();
+			final times:Float = Date.now().getTime();
 			parent.hscript = new HScript(parent);
 			trace('initialized hscript interp successfully: ${parent.scriptName} (${Std.int(Date.now().getTime() - times)}ms)');
 		}
@@ -46,7 +46,7 @@ class HScript #if HSCRIPT_ALLOWED extends Interp #end
 	public static function hscriptTrace(text:String, color:FlxColor = FlxColor.WHITE)
 	{
 		PlayState.instance.addTextToDebug(text, color);
-		trace(text);
+		//trace(text);
 	}
 
 	public var origin:String;
@@ -76,6 +76,9 @@ class HScript #if HSCRIPT_ALLOWED extends Interp #end
 		parser = new Parser();
 		parser.allowJSON = parser.allowMetadata = parser.allowTypes = true;
 		scriptObject = PlayState.instance; // allow use vars from playstate without "game" thing
+
+		// for closing scripts
+		setVar('close', function() active = false);
 
 		// classes from SScript (rip)
 		setVar('Date', Date);
