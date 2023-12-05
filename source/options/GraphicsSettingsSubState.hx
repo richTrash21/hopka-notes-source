@@ -21,12 +21,12 @@ class GraphicsSettingsSubState extends BaseOptionsMenu
 			'bool'
 		));
 
-		var option:Option = new Option('Anti-Aliasing',
+		final option:Option = new Option('Anti-Aliasing',
 			'If unchecked, disables anti-aliasing, increases performance\nat the cost of sharper visuals.',
 			'antialiasing',
 			'bool');
-		//Changing onChange is only needed if you want to make a special interaction after it changes the value
-		option.onChange = function()
+		//Changing change is only needed if you want to make a special interaction after it changes the value
+		option.change = function()
 			for (_leState in [this, _parentState])
 				_leState.forEachOfType(FlxSprite, function(sprite:FlxSprite) sprite.antialiasing = ClientPrefs.data.antialiasing, true);
 		addOption(option);
@@ -45,21 +45,21 @@ class GraphicsSettingsSubState extends BaseOptionsMenu
 		));
 
 		#if !html5 //Apparently other framerates isn't correctly supported on Browser? Probably it has some V-Sync shit enabled by default, idk
-		var option:Option = new Option('V-Sync',
+		final option:Option = new Option('V-Sync',
 			"[!] EXPERIMENTAL [!]\n\nNot really a V-Sync, but something similar.",
 			'fixedTimestep',
 			'bool');
-		option.onChange = function() FlxG.fixedTimestep = ClientPrefs.data.fixedTimestep;
+		option.change = function() FlxG.fixedTimestep = ClientPrefs.data.fixedTimestep;
 		addOption(option);
 
-		var option:Option = new Option('Framerate',
+		final option:Option = new Option('Framerate',
 			"Pretty self explanatory, isn't it?",
 			'framerate',
 			'int');
 		option.minValue = 60;
 		option.maxValue = 360;
 		option.displayFormat = '%v FPS';
-		option.onChange = function()
+		option.change = function()
 		{
 			if(ClientPrefs.data.framerate > FlxG.drawFramerate)
 			{

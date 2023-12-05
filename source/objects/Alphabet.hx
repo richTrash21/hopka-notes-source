@@ -14,17 +14,17 @@ class Alphabet extends FlxSpriteGroup
 {
 	public var text(default, set):String;
 
-	public var bold:Bool = false;
+	public var bold:Bool;
 	public var letters:Array<AlphaCharacter> = [];
 
-	public var isMenuItem:Bool = false;
+	public var isMenuItem:Bool;
 	public var targetY:Int = 0;
 	public var changeX:Bool = true;
 	public var changeY:Bool = true;
 
 	public var alignment(default, set):Alignment = LEFT;
-	public var scaleX(default, set):Float = 1;
-	public var scaleY(default, set):Float = 1;
+	public var scaleX(default, set):Float = 1.0;
+	public var scaleY(default, set):Float = 1.0;
 	public var rows:Int = 0;
 
 	public var distancePerItem:FlxPoint = FlxPoint.get(20, 120);

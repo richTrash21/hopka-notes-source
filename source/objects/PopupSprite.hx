@@ -27,11 +27,6 @@ class PopupSprite extends ExtendedSprite
 	**/
 	public var fadeTween:FlxTween;
 
-	/**
-		Global game speed. Can be controlled outside of PlatState.
-	**/
-	@:isVar public static var globalSpeed(get, set):Float = 1.0;
-
 	public function new(minVelocityX:Float = 0, maxVelocityX:Float = 0, minVelocityY:Float = 0, maxVelocityY:Float = 0, minAccelerationX:Float = 0,
 			maxAccelerationX:Float = 0, minAccelerationY:Float = 0, maxAccelerationY:Float = 0):Void
 	{
@@ -87,6 +82,7 @@ class PopupSprite extends ExtendedSprite
 
 	inline public function setVelocity(minVelocityX:Float = 0, maxVelocityX:Float = 0, minVelocityY:Float = 0, maxVelocityY:Float = 0):FlxPoint
 	{
+		final globalSpeed = CoolUtil.globalSpeed;
 		_velocityX.set(minVelocityX * globalSpeed, maxVelocityX * globalSpeed);
 		_velocityY.set(minVelocityY * globalSpeed, maxVelocityY * globalSpeed);
 		return resetVelocity();
@@ -94,6 +90,7 @@ class PopupSprite extends ExtendedSprite
 
 	inline public function setAcceleration(minAccelerationX:Float = 0, maxAccelerationX:Float = 0, minAccelerationY:Float = 0, maxAccelerationY:Float = 0):FlxPoint
 	{
+		final globalSpeed = CoolUtil.globalSpeed;
 		_accelerationX.set(minAccelerationX * Math.pow(globalSpeed, 2), maxAccelerationX * Math.pow(globalSpeed, 2));
 		_accelerationY.set(minAccelerationY * Math.pow(globalSpeed, 2), maxAccelerationY * Math.pow(globalSpeed, 2));
 		return resetAcceleration();
@@ -101,12 +98,14 @@ class PopupSprite extends ExtendedSprite
 
 	inline public function setAngleVelocity(min:Float = 0, max:Float = 0):Float
 	{
+		final globalSpeed = CoolUtil.globalSpeed;
 		_angleVelocity.set(min * globalSpeed, max * globalSpeed);
 		return resetAngleVelocity();
 	}
 
 	inline public function setAngleAcceleration(min:Float = 0, max:Float = 0):Float
 	{
+		final globalSpeed = CoolUtil.globalSpeed;
 		_angleAcceleration.set(min * globalSpeed, max * globalSpeed);
 		return resetAngleAcceleration();
 	}
@@ -132,6 +131,7 @@ class PopupSprite extends ExtendedSprite
 	inline public function fadeOut(Duration:Float = 1, ?Delay:Float = 0):PopupSprite
 	{
 		cancelFade();
+		final globalSpeed = CoolUtil.globalSpeed;
 		fadeTween = FlxTween.num(1, 0, Duration / globalSpeed, {startDelay: Delay / globalSpeed, onComplete: function(_) 
 			{
 				killOrDestroy();
@@ -163,10 +163,4 @@ class PopupSprite extends ExtendedSprite
 			fadeTween = null;
 		}
 	}
-
-	@:noCompletion inline static function get_globalSpeed():Float
-		return (PlayState.instance != null ? PlayState.instance.playbackRate : globalSpeed);
-
-	@:noCompletion inline static function set_globalSpeed(speed:Float):Float
-		return (PlayState.instance != null ? PlayState.instance.playbackRate : globalSpeed = speed); // won't allow to set variable if sprite placed in PlayState
 }

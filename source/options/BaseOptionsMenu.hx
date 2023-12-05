@@ -9,7 +9,7 @@ import options.Option;
 
 class BaseOptionsMenu extends MusicBeatSubstate
 {
-	private var curOption:Option = null;
+	private var curOption:Option;
 	private var curSelected:Int = 0;
 	private var optionsArray:Array<Option>;
 
@@ -27,39 +27,32 @@ class BaseOptionsMenu extends MusicBeatSubstate
 	{
 		super();
 
-		if(title == null) title = 'Options';
-		if(rpcTitle == null) rpcTitle = 'Options Menu';
+		if (title == null) title = 'Options';
+		if (rpcTitle == null) rpcTitle = 'Options Menu';
 		
 		#if desktop
 		DiscordClient.changePresence(rpcTitle, null);
 		#end
 		
-		var bg:FlxSprite = new FlxSprite().loadGraphic(Paths.image('menuDesat'));
+		final bg:ExtendedSprite = new ExtendedSprite('menuDesat');
 		bg.color = 0xFFea71fd;
 		bg.screenCenter();
-		bg.antialiasing = ClientPrefs.data.antialiasing;
+		bg.active = false;
 		add(bg);
 
-		var grid:FlxBackdrop = new FlxBackdrop(FlxGridOverlay.createGrid(80, 80, 160, 160, true, 0x33FFFFFF, 0x0));
+		final grid:FlxBackdrop = new FlxBackdrop(FlxGridOverlay.createGrid(80, 80, 160, 160, true, 0x33FFFFFF, 0x0));
 		grid.velocity.set(40, 40);
 		grid.alpha = 0;
 		FlxTween.num(0, 1, 0.5, {ease: FlxEase.quadOut}, function(a:Float) grid.alpha = a);
 		add(grid);
 
 		// avoids lagspikes while scrolling through menus!
-		grpOptions = new FlxTypedGroup<Alphabet>();
-		add(grpOptions);
+		add(grpOptions	  = new FlxTypedGroup<Alphabet>());
+		add(grpTexts	  = new FlxTypedGroup<AttachedText>());
+		add(checkboxGroup = new FlxTypedGroup<CheckboxThingie>());
+		add(descBox		  = new FlxSprite().makeGraphic(1, 1, 0x99000000));
 
-		grpTexts = new FlxTypedGroup<AttachedText>();
-		add(grpTexts);
-
-		checkboxGroup = new FlxTypedGroup<CheckboxThingie>();
-		add(checkboxGroup);
-
-		descBox = new FlxSprite().makeGraphic(1, 1, 0x99000000);
-		add(descBox);
-
-		var titleText:Alphabet = new Alphabet(75, 45, title, true);
+		final titleText:Alphabet = new Alphabet(75, 45, title, true);
 		titleText.setScale(0.6);
 		titleText.alpha = 0.4;
 		add(titleText);
@@ -72,23 +65,26 @@ class BaseOptionsMenu extends MusicBeatSubstate
 
 		for (i in 0...optionsArray.length)
 		{
-			var optionText:Alphabet = new Alphabet(290, 260, optionsArray[i].name, false);
+			final optionText:Alphabet = new Alphabet(290, 260, optionsArray[i].name, false);
 			optionText.isMenuItem = true;
 			/*optionText.forceX = 300;
 			optionText.yMult = 90;*/
 			optionText.targetY = i;
 			grpOptions.add(optionText);
 
-			if(optionsArray[i].type == 'bool') {
-				var checkbox:CheckboxThingie = new CheckboxThingie(optionText.x - 105, optionText.y, optionsArray[i].getValue() == true);
+			if (optionsArray[i].type == 'bool')
+			{
+				final checkbox:CheckboxThingie = new CheckboxThingie(optionText.x - 105, optionText.y, optionsArray[i].value == true);
 				checkbox.sprTracker = optionText;
 				checkbox.ID = i;
 				checkboxGroup.add(checkbox);
-			} else {
+			}
+			else
+			{
 				optionText.x -= 80;
 				optionText.startPosition.x -= 80;
 				//optionText.xAdd -= 80;
-				var valueText:AttachedText = new AttachedText('' + optionsArray[i].getValue(), optionText.width + 60);
+				final valueText:AttachedText = new AttachedText('' + optionsArray[i].value, optionText.width + 60);
 				valueText.sprTracker = optionText;
 				valueText.copyAlpha = true;
 				valueText.ID = i;
@@ -103,8 +99,9 @@ class BaseOptionsMenu extends MusicBeatSubstate
 		reloadCheckboxes();
 	}
 
-	public function addOption(option:Option) {
-		if(optionsArray == null || optionsArray.length < 1) optionsArray = [];
+	public function addOption(option:Option)
+	{
+		if (optionsArray == null) optionsArray = [];
 		optionsArray.push(option);
 	}
 
@@ -113,98 +110,84 @@ class BaseOptionsMenu extends MusicBeatSubstate
 	var holdValue:Float = 0;
 	override function update(elapsed:Float)
 	{
-		if (controls.UI_UP_P)   changeSelection(-1);
-		if (controls.UI_DOWN_P) changeSelection(1);
+		if (controls.UI_UP_P || controls.UI_DOWN_P)
+			changeSelection(controls.UI_UP_P ? -1 : 1);
 
-		if (controls.BACK) {
+		if (controls.BACK)
+		{
 			close();
 			FlxG.sound.play(Paths.sound('cancelMenu'));
 		}
 
-		if(nextAccept <= 0)
+		if (nextAccept <= 0)
 		{
-			var usesCheckbox = true;
-			if(curOption.type != 'bool') usesCheckbox = false;
-
-			if(usesCheckbox)
+			final usesCheckbox = curOption.type == 'bool';
+			if (usesCheckbox)
 			{
-				if(controls.ACCEPT)
+				if (controls.ACCEPT)
 				{
 					FlxG.sound.play(Paths.sound('scrollMenu'));
-					curOption.setValue((curOption.getValue() == true) ? false : true);
+					curOption.value = (curOption.value == true) ? false : true;
 					curOption.change();
 					reloadCheckboxes();
 				}
-			} else {
-				if(controls.UI_LEFT || controls.UI_RIGHT) {
-					var pressed = (controls.UI_LEFT_P || controls.UI_RIGHT_P);
-					if(holdTime > 0.5 || pressed) {
-						if(pressed) {
-							var add:Dynamic = (curOption.type != 'string')
-								? controls.UI_LEFT ? -curOption.changeValue : curOption.changeValue
-								: null;
-
+			}
+			else
+			{
+				if (controls.UI_LEFT || controls.UI_RIGHT)
+				{
+					final pressed = (controls.UI_LEFT_P || controls.UI_RIGHT_P);
+					if (holdTime > 0.5 || pressed)
+					{
+						if (pressed)
+						{
 							switch(curOption.type)
 							{
 								case 'int' | 'float' | 'percent':
-									holdValue = curOption.getValue() + add;
-									if(holdValue < curOption.minValue) holdValue = curOption.minValue;
-									else if (holdValue > curOption.maxValue) holdValue = curOption.maxValue;
-
+									holdValue = FlxMath.bound(curOption.value + (controls.UI_LEFT ? -curOption.changeValue : curOption.changeValue), curOption.minValue, curOption.maxValue);
 									switch(curOption.type)
 									{
-										case 'int':
-											holdValue = Math.round(holdValue);
-											curOption.setValue(holdValue);
-
-										case 'float' | 'percent':
-											holdValue = FlxMath.roundDecimal(holdValue, curOption.decimals);
-											curOption.setValue(holdValue);
+										case 'int':					holdValue = Math.round(holdValue);
+										case 'float' | 'percent':	holdValue = FlxMath.roundDecimal(holdValue, curOption.decimals);
 									}
+									curOption.value = holdValue;
 
 								case 'string':
-									var num:Int = curOption.curOption; //lol
-									num = FlxMath.wrap(num + (controls.UI_LEFT_P ? -1 : 1), 0, curOption.options.length-1);
-
+									final num = FlxMath.wrap(curOption.curOption + (controls.UI_LEFT_P ? -1 : 1), 0, curOption.options.length-1); //lol
 									curOption.curOption = num;
-									curOption.setValue(curOption.options[num]); //lol
+									curOption.value = curOption.options[num]; //lol
 							}
 							updateTextFrom(curOption);
 							curOption.change();
 							FlxG.sound.play(Paths.sound('scrollMenu'));
-						} else if(curOption.type != 'string') {
-							holdValue += curOption.scrollSpeed * elapsed * (controls.UI_LEFT ? -1 : 1);
-							if(holdValue < curOption.minValue) holdValue = curOption.minValue;
-							else if (holdValue > curOption.maxValue) holdValue = curOption.maxValue;
-
+						}
+						else if (curOption.type != 'string')
+						{
+							holdValue = FlxMath.bound(curOption.scrollSpeed * elapsed * (controls.UI_LEFT ? -1 : 1), curOption.minValue, curOption.maxValue);
 							switch(curOption.type)
 							{
-								case 'int':
-									curOption.setValue(Math.round(holdValue));
-								
-								case 'float' | 'percent':
-									curOption.setValue(FlxMath.roundDecimal(holdValue, curOption.decimals));
+								case 'int':					curOption.value = Math.round(holdValue);
+								case 'float' | 'percent':	curOption.value = FlxMath.roundDecimal(holdValue, curOption.decimals);
 							}
 							updateTextFrom(curOption);
 							curOption.change();
 						}
 					}
 
-					if(curOption.type != 'string') {
+					if (curOption.type != 'string')
 						holdTime += elapsed;
-					}
-				} else if(controls.UI_LEFT_R || controls.UI_RIGHT_R) {
-					clearHold();
 				}
+				else if (controls.UI_LEFT_R || controls.UI_RIGHT_R)
+					clearHold();
 			}
 
-			if(controls.RESET)
+			if (controls.RESET)
 			{
-				var leOption:Option = optionsArray[curSelected];
-				leOption.setValue(leOption.defaultValue);
-				if(leOption.type != 'bool')
+				final leOption:Option = optionsArray[curSelected];
+				leOption.value = leOption.defaultValue;
+				if (leOption.type != 'bool')
 				{
-					if(leOption.type == 'string') leOption.curOption = leOption.options.indexOf(leOption.getValue());
+					if (leOption.type == 'string') leOption.curOption = leOption.options.indexOf(leOption.value);
 					updateTextFrom(leOption);
 				}
 				leOption.change();
@@ -213,19 +196,20 @@ class BaseOptionsMenu extends MusicBeatSubstate
 			}
 		}
 
-		if(nextAccept > 0) --nextAccept;
+		if (nextAccept > 0) --nextAccept;
 		super.update(elapsed);
 	}
 
-	function updateTextFrom(option:Option) {
-		var val:Dynamic = option.getValue();
-		if(option.type == 'percent') val *= 100;
+	function updateTextFrom(option:Option)
+	{
+		var val:Dynamic = option.value;
+		if (option.type == 'percent') val *= 100;
 		option.text = option.displayFormat.replace('%v', val).replace('%d', option.defaultValue);
 	}
 
 	function clearHold()
 	{
-		if(holdTime > 0.5) FlxG.sound.play(Paths.sound('scrollMenu'));
+		if (holdTime > 0.5) FlxG.sound.play(Paths.sound('scrollMenu'));
 		holdTime = 0;
 	}
 	
@@ -238,10 +222,10 @@ class BaseOptionsMenu extends MusicBeatSubstate
 		descText.y += 270;
 
 		var bullShit:Int = 0;
-		for (item in grpOptions.members) {
-			item.targetY = bullShit - curSelected;
+		for (item in grpOptions.members)
+		{
+			item.targetY = bullShit++ - curSelected;
 			item.alpha = item.targetY == 0 ? 1 : 0.6;
-			bullShit++;
 		}
 		for (text in grpTexts)
 			text.alpha = text.ID == curSelected ? 1 : 0.6;
@@ -254,5 +238,5 @@ class BaseOptionsMenu extends MusicBeatSubstate
 		FlxG.sound.play(Paths.sound('scrollMenu'));
 	}
 
-	function reloadCheckboxes() for (checkbox in checkboxGroup) checkbox.daValue = (optionsArray[checkbox.ID].getValue() == true);
+	function reloadCheckboxes() for (checkbox in checkboxGroup) checkbox.daValue = (optionsArray[checkbox.ID].value == true);
 }

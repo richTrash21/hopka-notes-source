@@ -62,7 +62,7 @@ class GameOverSubstate extends MusicBeatSubstate
 		instance = this;
 
 		realCamera.updateLerp = realCamera.updateZoom = false;
-		realCamera._speed = 0.6;
+		realCamera._speed *= 4;
 		realCamera.cameraSpeed = 1;
 
 		game.callOnScripts('onGameOverStart');

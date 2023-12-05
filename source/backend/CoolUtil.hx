@@ -6,6 +6,18 @@ import openfl.utils.Assets;
 
 class CoolUtil
 {
+	/**
+		Global game speed. Can be controlled outside of PlatState.
+	**/
+	public static var globalSpeed(get, set):Float;
+	static var _globalSpeed:Float = 1.0; // internal tracker, for use outside of PlayState
+
+	@:noCompletion inline static function get_globalSpeed():Float
+		return (PlayState.instance != null ? PlayState.instance.playbackRate : _globalSpeed);
+
+	@:noCompletion inline static function set_globalSpeed(speed:Float):Float
+		return (PlayState.instance != null ? PlayState.instance.playbackRate : _globalSpeed = speed); // won't allow to set variable if camera placed in PlayState
+
 	inline public static function quantize(f:Float, snap:Float):Float
 	{
 		// changed so this actually works lol

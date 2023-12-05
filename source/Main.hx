@@ -131,13 +131,9 @@ class Main extends Sprite
 	function onCrash(e:UncaughtErrorEvent):Void
 	{
 		final callStack:Array<StackItem> = CallStack.exceptionStack(true);
-		var dateNow:String = Date.now().toString();
-		var errMsg:String = "";
-
-		dateNow = dateNow.replace(" ", "_");
-		dateNow = dateNow.replace(":", "'");
-
+		final dateNow:String = Date.now().toString().replace(" ", "_").replace(":", "'");
 		final path = "./crash/" + "PsychEngine_" + dateNow + ".txt";
+		var errMsg:String = "";
 
 		for (stackItem in callStack)
 			switch (stackItem)

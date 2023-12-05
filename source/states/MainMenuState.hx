@@ -184,8 +184,7 @@ class MainMenuState extends MusicBeatState
 					{
 						if (curSelected == spr.ID)
 						{
-							FlxFlicker.flicker(spr, 1, 0.06, false, false, function(flick:FlxFlicker)
-								switchShit(optionShit[curSelected]));
+							FlxFlicker.flicker(spr, 1, 0.06, false, false, function(flick:FlxFlicker) switchShit(optionShit[curSelected]));
 							return;
 						}
 						FlxTween.num(1, 0, 0.4, {ease: FlxEase.quadOut, onComplete: function(_) spr.destroy()}, function(value:Float) spr.alpha = value);
@@ -202,13 +201,13 @@ class MainMenuState extends MusicBeatState
 			#end
 			else if (controls.justPressed('reset')) // garbage begone!!!
 			{
-				var massage:FlxText = new FlxText(0, 0, 0, "MEMORY CLEARED!"); // I KNOW THAT I MISSPELLED IT!!!!
+				final massage:FlxText = new FlxText(0, 0, 0, "MEMORY CLEARED!"); // I KNOW THAT I MISSPELLED IT!!!!
 				massage.setFormat("VCR OSD Mono", 24, FlxColor.WHITE, LEFT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
 				massage.setPosition(FlxG.width - massage.width - 5, FlxG.height - massage.height - 5);
 				massage.scrollFactor.set();
 				massage.borderSize = 1.2;
 				add(massage);
-				FlxTween.num(1, 0, 0.4, {startDelay: 0.8, onComplete: function(_) massage.destroy()}, function(value:Float) massage.alpha = value);
+				FlxTween.num(1, 0, 0.4, {startDelay: 0.8, onComplete: function(_) massage.destroy()}, function(a:Float) massage.alpha = a);
 
 				FlxG.sound.play(Paths.sound('cancelMenu'));
 				Paths.clearUnusedMemory();
@@ -217,8 +216,23 @@ class MainMenuState extends MusicBeatState
 			}
 			#end
 		}
+		if (FlxG.keys.justPressed.P) // ITS PIZZA TIME!!
+		{
+			if (pizzaTime)
+				FlxG.sound.playMusic(Paths.music('freakyMenu'));
+			else // just don't ask, i was bored lmao - richTrash21
+			{
+				FlxG.sound.playMusic(Paths.music('mu_pizzatime'));
+				final barMS = 60 / 180 * 4 * 1000;
+				FlxG.sound.music.loopTime = barMS * 36;
+				FlxG.sound.music.endTime = barMS * 120;
+			}
+			pizzaTime = !pizzaTime;
+		}
 		super.update(elapsed);
 	}
+	
+	static var pizzaTime:Bool;
 
 	function changeItem(huh:Int = 0)
 	{

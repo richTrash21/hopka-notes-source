@@ -179,7 +179,7 @@ class CharacterEditorState extends backend.MusicBeatUIState
 		UI_box.resize(250, 120);
 		UI_box.x = FlxG.width - 275;
 		UI_box.y = 25;
-		UI_box.scrollFactor.set();
+		//UI_box.scrollFactor.set();
 
 		UI_characterbox = new FlxUITabMenu(null, [
 			{name: 'Character', label: 'Character'},
@@ -190,7 +190,7 @@ class CharacterEditorState extends backend.MusicBeatUIState
 		UI_characterbox.resize(350, 250);
 		UI_characterbox.x = UI_box.x - 100;
 		UI_characterbox.y = UI_box.y + UI_box.height;
-		UI_characterbox.scrollFactor.set();
+		//UI_characterbox.scrollFactor.set();
 		add(UI_characterbox);
 		add(UI_box);
 
@@ -818,27 +818,30 @@ class CharacterEditorState extends backend.MusicBeatUIState
 	}
 
 	function reloadAnimationDropDown() {
-		var anims:Array<String> = [];
-		var ghostAnims:Array<String> = [''];
-		for (anim in char.animationsArray) {
+		final anims:Array<String> = [];
+		final ghostAnims:Array<String> = [''];
+		for (anim in char.animationsArray)
+		{
 			anims.push(anim.anim);
 			ghostAnims.push(anim.anim);
 		}
-		if(anims.length < 1) anims.push('NO ANIMATIONS'); //Prevents crash
+		if (anims.length < 1) anims.push('NO ANIMATIONS'); //Prevents crash
 
 		animationDropDown.setData(FlxUIDropDownMenu.makeStrIdLabelArray(anims, true));
 		ghostDropDown.setData(FlxUIDropDownMenu.makeStrIdLabelArray(ghostAnims, true));
 		reloadGhost();
 	}
 
-	function reloadGhost() {
+	function reloadGhost()
+	{
 		ghostChar.frames = char.frames;
 		for (anim in char.animationsArray)
 			ghostChar.generateAnim(anim);
 
 		char.alpha = 0.85;
 		ghostChar.visible = true;
-		if(ghostDropDown.selectedLabel == '') {
+		if (ghostDropDown.selectedLabel == '')
+		{
 			ghostChar.visible = false;
 			char.alpha = 1;
 		}
@@ -847,20 +850,25 @@ class CharacterEditorState extends backend.MusicBeatUIState
 	}
 
 	function reloadCharacterDropDown() {
-		var charsLoaded:Map<String, Bool> = new Map();
+		final charsLoaded:Map<String, Bool> = [];
 
 		#if MODS_ALLOWED
 		characterList = [];
-		var directories:Array<String> = [Paths.mods('characters/'), Paths.mods(Mods.currentModDirectory + '/characters/'), Paths.getPreloadPath('characters/')];
-		for(mod in Mods.getGlobalMods()) directories.push(Paths.mods(mod + '/characters/'));
-		for (i in 0...directories.length) {
-			var directory:String = directories[i];
-			if(FileSystem.exists(directory)) {
-				for (file in FileSystem.readDirectory(directory)) {
-					var path = haxe.io.Path.join([directory, file]);
-					if (!sys.FileSystem.isDirectory(path) && file.endsWith('.json')) {
-						var charToCheck:String = file.substr(0, file.length - 5);
-						if(!charsLoaded.exists(charToCheck)) {
+		final directories:Array<String> = [Paths.mods('characters/'), Paths.mods('${Mods.currentModDirectory}/characters/'), Paths.getPreloadPath('characters/')];
+		for(mod in Mods.getGlobalMods()) directories.push(Paths.mods('$mod/characters/'));
+		for (i in 0...directories.length)
+		{
+			final directory:String = directories[i];
+			if (FileSystem.exists(directory))
+			{
+				for (file in FileSystem.readDirectory(directory))
+				{
+					final path = haxe.io.Path.join([directory, file]);
+					if (!sys.FileSystem.isDirectory(path) && file.endsWith('.json'))
+					{
+						final charToCheck:String = file.substr(0, file.length - 5);
+						if( !charsLoaded.exists(charToCheck))
+						{
 							characterList.push(charToCheck);
 							charsLoaded.set(charToCheck, true);
 						}
@@ -890,9 +898,11 @@ class CharacterEditorState extends backend.MusicBeatUIState
 		#end
 	}
 
+	var __point:FlxPoint = FlxPoint.get();
 	override function update(elapsed:Float)
 	{
-		if(char.animationsArray[curAnim] != null) {
+		if (char.animationsArray[curAnim] != null)
+		{
 			var txtAnim:String = char.animationsArray[curAnim].anim;
 			final curAnim:FlxAnimation = char.animation.getByName(txtAnim);
 			if(curAnim == null || curAnim.frames.length < 1)
@@ -905,9 +915,9 @@ class CharacterEditorState extends backend.MusicBeatUIState
 		}
 		else textAnim.text = '';
 
-		var inputTexts:Array<UIInputTextAdvanced> = [animationInputText, imageInputText, healthIconInputText, animationNameInputText, animationIndicesInputText];
+		final inputTexts:Array<UIInputTextAdvanced> = [animationInputText, imageInputText, healthIconInputText, animationNameInputText, animationIndicesInputText];
 		for (inputText in inputTexts)
-			if(inputText.hasFocus)
+			if (inputText.hasFocus)
 			{
 				ClientPrefs.toggleVolumeKeys(false);
 				super.update(elapsed);
@@ -916,8 +926,11 @@ class CharacterEditorState extends backend.MusicBeatUIState
 
 		ClientPrefs.toggleVolumeKeys(true);
 
-		final onChar:Bool = FlxMath.pointInCoordinates(FlxG.mouse.x, FlxG.mouse.y, char.x - char.offset.x, char.y - char.offset.y, char.width, char.height);
-		if (FlxG.mouse.justPressed && onChar) // mouse down event
+		final onChar:Bool = FlxMath.pointInCoordinates(FlxG.mouse.screenX, FlxG.mouse.screenY, char.x - char.offset.x, char.y - char.offset.y, char.width, char.height);
+		FlxG.mouse.getScreenPosition(camMenu, __point);
+		final onUI:Bool = FlxMath.pointInCoordinates(__point.x, __point.y, UI_box.x, UI_box.y, UI_box.width, UI_box.height)
+					   || FlxMath.pointInCoordinates(__point.x, __point.y, UI_characterbox.x, UI_characterbox.y, UI_characterbox.width, UI_characterbox.height);
+		if (FlxG.mouse.justPressed && onChar && !onUI) // mouse down event
 		{
 			moveOffset = !FlxG.keys.pressed.SHIFT;
 			moveChar = true;
@@ -927,7 +940,7 @@ class CharacterEditorState extends backend.MusicBeatUIState
 		{
 			moveChar = false;
 			char.alpha = 1;
-			if (moveOffset)
+			if (moveOffset && char.animation.curAnim != null)
 			{
 				final charAnim:String = char.animation.curAnim.name;
 				char.addOffset(charAnim, char.offset.x, char.offset.y);
@@ -944,7 +957,7 @@ class CharacterEditorState extends backend.MusicBeatUIState
 		{
 			if (moveChar)
 			{
-				if (moveOffset)
+				if (moveOffset && char.animation.curAnim != null)
 				{
 					ghostChar.animationsArray[curAnim].offsets[0] = char.offset.x = char.animationsArray[curAnim].offsets[0] -= FlxG.mouse.deltaScreenX;
 					ghostChar.animationsArray[curAnim].offsets[1] = char.offset.y = char.animationsArray[curAnim].offsets[1] -= FlxG.mouse.deltaScreenY;
@@ -968,13 +981,14 @@ class CharacterEditorState extends backend.MusicBeatUIState
 			}
 		}
 
-		if(!charDropDown.dropPanel.visible)
+		if (!charDropDown.dropPanel.visible)
 		{
 			if (FlxG.keys.justPressed.ESCAPE)
 			{
-				if (goToPlayState) {
+				if (goToPlayState)
 					MusicBeatState.switchState(new PlayState());
-				} else {
+				else
+				{
 					MusicBeatState.switchState(new states.editors.MasterEditorMenu());
 					FlxG.sound.playMusic(Paths.music('freakyMenu'));
 				}
@@ -983,36 +997,33 @@ class CharacterEditorState extends backend.MusicBeatUIState
 			}
 
 			if (FlxG.mouse.wheel != 0)
-				FlxG.camera.zoom = FlxMath.bound(FlxG.camera.zoom + FlxG.mouse.wheel * 0.1, 0.1, 3);
+				FlxG.camera.zoom = FlxMath.bound(FlxG.camera.zoom + FlxG.camera.zoom * FlxG.mouse.wheel * 0.1, 0.1, 3);
 
 			if (FlxG.keys.justPressed.TAB)
 				camMenu.visible = camHUD.visible = !camHUD.visible;
 
 			if (FlxG.keys.justPressed.R)
 			{
-				final midPoint:FlxPoint = cameraFollowPointer.getMidpoint();
-				camFollow.setPosition(midPoint.x, midPoint.y);
-				midPoint.put();
-				FlxG.camera.zoom = 1;
+				cameraFollowPointer.getMidpoint(__point);
+				camFollow.setPosition(__point.x, __point.y);
+				FlxG.camera.zoom = 1.05;
 			}
 
 			if (FlxG.keys.pressed.E || FlxG.keys.pressed.Q)
 			{
-				var add:Float = FlxG.camera.zoom;
-					 if	 (FlxG.keys.pressed.E)	add *= elapsed;
-				else if	 (FlxG.keys.pressed.Q)	add *= -elapsed;
+				final add:Float = FlxG.camera.zoom * (FlxG.keys.pressed.E ? elapsed : -elapsed);
 				FlxG.camera.zoom = FlxMath.bound(FlxG.camera.zoom + add, 0.1, 3);
 			}
 
-			if (FlxG.keys.pressed.I || FlxG.keys.pressed.J || FlxG.keys.pressed.K || FlxG.keys.pressed.L)
+			final _vertical:Bool = FlxG.keys.pressed.I || FlxG.keys.pressed.K;
+			final _horizontal:Bool = FlxG.keys.pressed.J || FlxG.keys.pressed.L;
+			if (_vertical || _horizontal)
 			{
 				var addToCam:Float = 500 * elapsed;
 				if (FlxG.keys.pressed.SHIFT) addToCam *= 4;
 
-					 if	 (FlxG.keys.pressed.I)	camFollow.y -= addToCam;
-				else if	 (FlxG.keys.pressed.K)	camFollow.y += addToCam;
-					 if	 (FlxG.keys.pressed.J)	camFollow.x -= addToCam;
-				else if	 (FlxG.keys.pressed.L)	camFollow.x += addToCam;
+				if (_vertical)   camFollow.y += FlxG.keys.pressed.I ? -addToCam : addToCam;
+				if (_horizontal) camFollow.x += FlxG.keys.pressed.J ? -addToCam : addToCam;
 			}
 
 			final _animName = #if (haxe > "4.2.5") char.animationsArray[curAnim]?.anim
@@ -1022,16 +1033,14 @@ class CharacterEditorState extends backend.MusicBeatUIState
 			if ((FlxG.keys.justPressed.Z || FlxG.keys.justPressed.X) && _curAnim != null) // like in flash!!! :D
 			{
 				if (!_curAnim.paused) _curAnim.pause();
-				var add:Int = 0;
-					 if	 (FlxG.keys.justPressed.Z)	add--;
-				else if	 (FlxG.keys.justPressed.X)	add++;
-					 if	 (FlxG.keys.pressed.SHIFT)	add *= 2;
+				var add:Int = FlxG.keys.justPressed.Z ? -1 : 1;
+				if (FlxG.keys.pressed.SHIFT) add *= 2;
 				_curAnim.curFrame = Std.int(FlxMath.bound(_curAnim.curFrame + add, 0, _curAnim.numFrames-1));
-				if(ghostChar.visible && #if (haxe > "4.2.5") _curAnimGHOST?.name #else _curAnimGHOST != null && _curAnimGHOST.name #end == _curAnim.name)
-					_curAnimGHOST.curFrame = _curAnim.curFrame;
+				/*if (ghostChar.visible && #if (haxe > "4.2.5") _curAnimGHOST?.name #else _curAnimGHOST != null && _curAnimGHOST.name #end == _curAnim.name)
+					_curAnimGHOST.curFrame = _curAnim.curFrame;*/
 			}
 
-			if(char.animationsArray.length > 0)
+			if (char.animationsArray.length > 0)
 			{
 				if (FlxG.keys.justPressed.W) curAnim--;
 				if (FlxG.keys.justPressed.S) curAnim++;
@@ -1055,7 +1064,7 @@ class CharacterEditorState extends backend.MusicBeatUIState
 				final controlArray:Array<Bool> = [FlxG.keys.justPressed.LEFT, FlxG.keys.justPressed.RIGHT, FlxG.keys.justPressed.UP, FlxG.keys.justPressed.DOWN];
 
 				for (i in 0...controlArray.length)
-					if(controlArray[i])
+					if (controlArray[i])
 					{
 						final multiplier = FlxG.keys.pressed.SHIFT ? 10 : 1;
 						final arrayVal = i > 1 ? 1 : 0;
@@ -1066,7 +1075,7 @@ class CharacterEditorState extends backend.MusicBeatUIState
 						ghostChar.addOffset(_curAnim.anim, _curAnim.offsets[0], _curAnim.offsets[1]);
 
 						char.playAnim(_curAnim.anim, false);
-						if(#if (haxe > "4.2.5") _curAnim?.name == _curAnimGHOST?.name
+						if (#if (haxe > "4.2.5") _curAnim?.name == _curAnimGHOST?.name
 							#else _curAnimGHOST != null && _curAnim != null && _curAnim.name == _curAnimGHOST.name #end)
 							ghostChar.playAnim(_curAnim.name, false);
 						genBoyOffsets();
@@ -1077,8 +1086,13 @@ class CharacterEditorState extends backend.MusicBeatUIState
 		super.update(elapsed);
 	}
 
-	var _file:FileReference;
+	override function destroy()
+	{
+		__point.put();
+		super.destroy();
+	}
 
+	var _file:FileReference;
 	function onSaveComplete(_):Void
 	{
 		_file.removeEventListener(Event.COMPLETE, onSaveComplete);
@@ -1112,7 +1126,7 @@ class CharacterEditorState extends backend.MusicBeatUIState
 	}
 
 	function saveCharacter() {
-		var json = {
+		final json = {
 			"animations": char.animationsArray,
 			"image": char.imageFile,
 			"scale": char.jsonScale,
@@ -1128,7 +1142,7 @@ class CharacterEditorState extends backend.MusicBeatUIState
 			"healthbar_colors": char.healthColorArray
 		};
 
-		var data:String = haxe.Json.stringify(json, !optimizeJsonBox.checked ? "\t" : null);
+		final data:String = haxe.Json.stringify(json, !optimizeJsonBox.checked ? "\t" : null);
 
 		if (data.length > 0)
 		{
@@ -1144,7 +1158,7 @@ class CharacterEditorState extends backend.MusicBeatUIState
 		if(prefix.toLowerCase().endsWith('v')) //probably copy paste attempt
 			prefix = prefix.substring(0, prefix.length-1);
 
-		var text:String = prefix + lime.system.Clipboard.text.replace('\n', '');
+		final text:String = prefix + lime.system.Clipboard.text.replace('\n', '');
 		return text;
 	}
 	#end

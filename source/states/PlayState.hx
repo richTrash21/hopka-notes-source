@@ -84,16 +84,16 @@ class PlayState extends MusicBeatState
 
 	// https://media.discordapp.net/attachments/1041755661630976052/1180970202079436908/image.png?ex=657f5b35&is=656ce635&hm=477b7411d344068f3cf93abbc76f0fc5457eb03123b25d788c663ef2d58ad107&=&format=webp&quality=lossless&width=517&height=631
 	public static var ratingStuff:Array<Array<haxe.extern.EitherType<Float, String>>> = [
-		[0.2,	'You Suck!'],	// From 0% to 19%
-		[0.4,	'Shit'],		// From 20% to 39%
-		[0.5,	'Bad'],			// From 40% to 49%
-		[0.6,	'Bruh'],		// From 50% to 59%
-		[0.69,	'Meh'],			// From 60% to 68%
-		[0.7,	'Nice'],		// 69% :trollface:
-		[0.8,	'Good'],		// From 70% to 79%
-		[0.9,	'Great'],		// From 80% to 89%
-		[1.0,	'Sick!'],		// From 90% to 99%
-		[1.0,	'Perfect!!']	// The value on this one isn't used actually, since Perfect is always "1"
+		[0.2,	'You Suck!'],  // From 0% to 19%
+		[0.4,	'Shit'],	   // From 20% to 39%
+		[0.5,	'Bad'],		   // From 40% to 49%
+		[0.6,	'Bruh'],	   // From 50% to 59%
+		[0.69,	'Meh'],		   // From 60% to 68%
+		[0.7,	'Nice'],	   // 69% :trollface:
+		[0.8,	'Good'],	   // From 70% to 79%
+		[0.9,	'Great'],	   // From 80% to 89%
+		[1.0,	'Sick!'],	   // From 90% to 99%
+		[1.0,	'Perfect!!']   // The value on this one isn't used actually, since Perfect is always "1"
 	];
 
 	//event variables
@@ -574,14 +574,12 @@ class PlayState extends MusicBeatState
 			timeTxt.size = 24;
 			timeTxt.y += 3;
 		}
-
-		if (ClientPrefs.data.timeBarType != 'Song Name')
+		else
 			timeBar.updateCallback = function(value:Float, percent:Float)
 			{
 				final curTime:Float = songLength * (percent * 0.01);
 				final songCalc:Float = ClientPrefs.data.timeBarType == 'Time Elapsed' ? curTime : songLength - curTime;
-				final newText:String = FlxStringUtil.formatTime(FlxMath.bound(Math.floor(songCalc * 0.001), 0), false);
-				timeTxt.text = newText;
+				timeTxt.text = FlxStringUtil.formatTime(FlxMath.bound(Math.floor(songCalc * 0.001), 0), false);
 			}
 
 		scoreGroup = new FlxTypedSpriteGroup<PopupSprite>();
@@ -939,8 +937,7 @@ class PlayState extends MusicBeatState
 			char.setPosition(GF_POS.x, GF_POS.y);
 			char.danceEveryNumBeats = 2;
 		}
-		char.x += char.positionArray[0];
-		char.y += char.positionArray[1];
+		char.addPosition(char.positionArray[0], char.positionArray[1]);
 	}
 
 	private var videoPlayer:VideoHandler = null;
@@ -1553,9 +1550,9 @@ class PlayState extends MusicBeatState
 				vocals.pause();
 			}
 
-			if (startTimer != null && !startTimer.finished)	  startTimer.active = false;
+			if (startTimer != null && !startTimer.finished)	   startTimer.active = false;
 			if (finishTimer != null && !finishTimer.finished)  finishTimer.active = false;
-			if (songSpeedTween != null)						  songSpeedTween.active = false;
+			if (songSpeedTween != null)						   songSpeedTween.active = false;
 
 			for (char in charList)
 				if (#if (haxe > "4.2.5") char?.colorTween #else char != null && char.colorTween #end != null)
@@ -2064,17 +2061,14 @@ class PlayState extends MusicBeatState
 				}
 
 			case 'Camera Follow Pos':
-				if (camFollow != null)
+				isCameraOnForcedPos = false;
+				if (flValue1 != null || flValue2 != null)
 				{
-					isCameraOnForcedPos = false;
-					if (flValue1 != null || flValue2 != null)
-					{
-						isCameraOnForcedPos = true;
-						if (flValue1 == null) flValue1 = 0;
-						if (flValue2 == null) flValue2 = 0;
-						camFollow.x = flValue1;
-						camFollow.y = flValue2;
-					}
+					isCameraOnForcedPos = true;
+					if (flValue1 == null) flValue1 = 0;
+					if (flValue2 == null) flValue2 = 0;
+					_camFollow.x = flValue1;
+					_camFollow.y = flValue2;
 				}
 
 			case 'Alt Idle Animation':
@@ -2178,14 +2172,13 @@ class PlayState extends MusicBeatState
 			case 'Change Scroll Speed':
 				if (songSpeedType != "constant")
 				{
-					if (flValue1 == null) flValue1 = 1;
-					if (flValue2 == null) flValue2 = 0;
+					if (flValue1 == null) flValue1 = 1.0;
+					if (flValue2 == null) flValue2 = 0.0;
 
 					final newValue:Float = SONG.speed * ClientPrefs.getGameplaySetting('scrollspeed') * flValue1;
 					(flValue2 <= 0.0)
 						? songSpeed = newValue
-						: songSpeedTween = FlxTween.tween(this, {songSpeed: newValue}, flValue2 / playbackRate, {ease: FlxEase.linear,
-							onComplete: function (_) songSpeedTween = null});
+						: songSpeedTween = FlxTween.num(songSpeed, newValue, flValue2 / playbackRate, {onComplete: function(_) songSpeedTween = null}, set_songSpeed);
 				}
 
 			case 'Set Property':
@@ -2210,10 +2203,9 @@ class PlayState extends MusicBeatState
 		callOnScripts('onEvent', [eventName, value1, value2, strumTime]);
 	}
 
-	function moveCameraSection(?sec:Null<Int>):Void
+	function moveCameraSection(?sec:Int):Void
 	{
-		if (sec == null)
-			sec = FlxMath.maxInt(curSection, 0);
+		sec = FlxMath.maxInt(sec ?? curSection, 0);
 
 		if (SONG.notes[sec] == null) return;
 
@@ -2225,7 +2217,7 @@ class PlayState extends MusicBeatState
 	{
 		_camTarget = char = char.toLowerCase().trim();
 		if (!isCameraOnForcedPos) setCharCamOffset(char);
-		camGame.follow(camFollow, null, 0);
+		camGame.follow(camFollow, LOCKON, 0);
 		callOnScripts('onMoveCamera', [char]);
 		return char == 'dad' || char == 'opponent'; // for lua
 	}
@@ -2267,7 +2259,7 @@ class PlayState extends MusicBeatState
 		vocals.volume = 0;
 		(ClientPrefs.data.noteOffset <= 0 || ignoreNoteOffset)
 			? endCallback()
-			: finishTimer = new FlxTimer().start(ClientPrefs.data.noteOffset * 0.001, function(tmr:FlxTimer) endCallback());
+			: finishTimer = new FlxTimer().start(ClientPrefs.data.noteOffset * 0.001, function(_) endCallback());
 	}
 
 	public var transitioning = false;
@@ -2308,7 +2300,7 @@ class PlayState extends MusicBeatState
 		#end
 
 		final ret:Dynamic = callOnScripts('onEndSong', null, true);
-		if (ret == FunkinLua.Function_Stop && !transitioning)
+		if (ret == FunkinLua.Function_Stop || transitioning)
 			return true;
 
 		#if !switch

@@ -3,6 +3,7 @@ package options;
 import substates.PauseSubState;
 import flixel.math.FlxPoint;
 
+import objects.GameCamera;
 import objects.Character;
 import objects.Bar;
 
@@ -42,8 +43,8 @@ class NoteOffsetState extends MusicBeatState
 		camGame = new FlxCamera();
 		camHUD = new FlxCamera();
 		camOther = new FlxCamera();
-		camHUD.bgColor.alpha = 0;
-		camOther.bgColor.alpha = 0;
+		camHUD.bgColor.alpha = camOther.bgColor.alpha = 0;
+		camGame.active = camHUD.active = camOther.active = false;
 
 		FlxG.cameras.reset(camGame);
 		FlxG.cameras.add(camHUD, false);
@@ -128,15 +129,16 @@ class NoteOffsetState extends MusicBeatState
 		timeBar.visible = false;
 		timeBar.cameras = [camHUD];
 		timeBar.leftBar.color = FlxColor.LIME;
-		timeBar.updateCallback = function(p:Float, v:Float) updateNoteDelay();
+		timeBar.updateCallback = function(p, v) updateNoteDelay();
 
 		add(timeBar);
 		add(timeTxt);
 
 
-		var blackBox:FlxSprite = new FlxSprite().makeGraphic(FlxG.width, 40, 0x99000000);
+		final blackBox:FlxSprite = new FlxSprite().makeGraphic(FlxG.width, 40, 0x99000000);
 		//blackBox.scrollFactor.set();
 		blackBox.cameras = [camHUD];
+		blackBox.active = false;
 		add(blackBox);
 
 		changeModeText = new FlxText(0, 4, FlxG.width, "", 32);
@@ -166,41 +168,36 @@ class NoteOffsetState extends MusicBeatState
 
 	var startMousePos:FlxPoint = FlxPoint.get();
 	var startComboOffset:FlxPoint = FlxPoint.get();
+	var __point:FlxPoint = FlxPoint.get();
 
 	override public function update(elapsed:Float)
 	{
-		var addNum:Int = 1;
-		if(FlxG.keys.pressed.SHIFT || FlxG.gamepads.anyPressed(LEFT_SHOULDER))
-			addNum = onComboMenu ? 10 : 3;
+		final addNum:Int = FlxG.keys.pressed.SHIFT || FlxG.gamepads.anyPressed(LEFT_SHOULDER) ? (onComboMenu ? 10 : 3) : 1;
+		if (FlxG.gamepads.anyJustPressed(ANY)) controls.controllerMode = true;
+		else if (FlxG.mouse.justPressed) controls.controllerMode = false;
 
-		if(FlxG.gamepads.anyJustPressed(ANY)) controls.controllerMode = true;
-		else if(FlxG.mouse.justPressed) controls.controllerMode = false;
-
-		if(controls.controllerMode != _lastControllerMode)
+		if (controls.controllerMode != _lastControllerMode)
 		{
 			//trace('changed controller mode');
 			//FlxG.mouse.visible = !controls.controllerMode;
 			controllerPointer.visible = controls.controllerMode;
 
 			// changed to controller mid state
-			if(controls.controllerMode)
+			if (controls.controllerMode)
 			{
-				var mousePos = FlxG.mouse.getScreenPosition(camHUD);
-				controllerPointer.x = mousePos.x;
-				controllerPointer.y = mousePos.y;
+				FlxG.mouse.getScreenPosition(camHUD, __point);
+				controllerPointer.setPosition(__point.x, __point.y);
 			}
 			updateMode();
 			_lastControllerMode = controls.controllerMode;
 		}
 
-		if(onComboMenu)
+		if (onComboMenu)
 		{
-			if(FlxG.keys.justPressed.ANY || FlxG.gamepads.anyJustPressed(ANY))
+			if (FlxG.keys.justPressed.ANY || FlxG.gamepads.anyJustPressed(ANY))
 			{
-				var controlArray:Array<Bool> = null;
-				if(!controls.controllerMode)
-				{
-					controlArray = [
+				final controlArray:Array<Bool> = if (!controls.controllerMode)
+					[
 						FlxG.keys.justPressed.LEFT,
 						FlxG.keys.justPressed.RIGHT,
 						FlxG.keys.justPressed.UP,
@@ -211,10 +208,8 @@ class NoteOffsetState extends MusicBeatState
 						FlxG.keys.justPressed.W,
 						FlxG.keys.justPressed.S
 					];
-				}
 				else
-				{
-					controlArray = [
+					[
 						FlxG.gamepads.anyJustPressed(DPAD_LEFT),
 						FlxG.gamepads.anyJustPressed(DPAD_RIGHT),
 						FlxG.gamepads.anyJustPressed(DPAD_UP),
@@ -225,13 +220,12 @@ class NoteOffsetState extends MusicBeatState
 						FlxG.gamepads.anyJustPressed(RIGHT_STICK_DIGITAL_UP),
 						FlxG.gamepads.anyJustPressed(RIGHT_STICK_DIGITAL_DOWN)
 					];
-				}
 
-				if(controlArray.contains(true))
+				if (controlArray.contains(true))
 				{
 					for (i in 0...controlArray.length)
 					{
-						if(controlArray[i])
+						if (controlArray[i])
 						{
 							switch(i)
 							{
@@ -256,14 +250,14 @@ class NoteOffsetState extends MusicBeatState
 			var analogMoved:Bool = false;
 			var gamepadPressed:Bool = false;
 			var gamepadReleased:Bool = false;
-			if(controls.controllerMode)
+			if (controls.controllerMode)
 			{
 				for (gamepad in FlxG.gamepads.getActiveGamepads())
 				{
 					analogX = gamepad.getXAxis(LEFT_ANALOG_STICK);
 					analogY = gamepad.getYAxis(LEFT_ANALOG_STICK);
 					analogMoved = (analogX != 0 || analogY != 0);
-					if(analogMoved) break;
+					if (analogMoved) break;
 				}
 				controllerPointer.x = Math.max(0, Math.min(FlxG.width, controllerPointer.x + analogX * 1000 * elapsed));
 				controllerPointer.y = Math.max(0, Math.min(FlxG.height, controllerPointer.y + analogY * 1000 * elapsed));
@@ -275,9 +269,10 @@ class NoteOffsetState extends MusicBeatState
 			if (FlxG.mouse.justPressed || gamepadPressed)
 			{
 				holdingObjectType = null;
-				startMousePos = (controls.controllerMode)
-					? controllerPointer.getScreenPosition(startMousePos, camHUD)
-					: FlxG.mouse.getScreenPosition(camHUD, startMousePos);
+				if (controls.controllerMode)
+					controllerPointer.getScreenPosition(startMousePos, camHUD);
+				else
+					FlxG.mouse.getScreenPosition(camHUD, startMousePos);
 
 				if (startMousePos.x - comboNums.x >= 0 && startMousePos.x - comboNums.x <= comboNums.width &&
 					startMousePos.y - comboNums.y >= 0 && startMousePos.y - comboNums.y <= comboNums.height)
@@ -294,26 +289,26 @@ class NoteOffsetState extends MusicBeatState
 					startComboOffset.y = ClientPrefs.data.comboOffset[1];
 				}
 			}
-			if(FlxG.mouse.justReleased || gamepadReleased)
+			if (FlxG.mouse.justReleased || gamepadReleased)
 				holdingObjectType = null;
 
-			if(holdingObjectType != null)
+			if (holdingObjectType != null)
 			{
-				if(FlxG.mouse.justMoved || analogMoved)
+				if (FlxG.mouse.justMoved || analogMoved)
 				{
-					var mousePos:FlxPoint = (controls.controllerMode)
-						? controllerPointer.getScreenPosition(camHUD)
-						: FlxG.mouse.getScreenPosition(camHUD);
+					if (controls.controllerMode)
+						controllerPointer.getScreenPosition(__point, camHUD);
+					else
+						FlxG.mouse.getScreenPosition(camHUD, __point);
 
-					var addNum:Int = holdingObjectType ? 2 : 0;
-					ClientPrefs.data.comboOffset[addNum]   =  Math.round((mousePos.x - startMousePos.x) + startComboOffset.x);
-					ClientPrefs.data.comboOffset[addNum+1] = -Math.round((mousePos.y - startMousePos.y) - startComboOffset.y);
+					final addNum:Int = holdingObjectType ? 2 : 0;
+					ClientPrefs.data.comboOffset[addNum]   =  Math.round((__point.x - startMousePos.x) + startComboOffset.x);
+					ClientPrefs.data.comboOffset[addNum+1] = -Math.round((__point.y - startMousePos.y) - startComboOffset.y);
 					repositionCombo();
-					mousePos.put();
 				}
 			}
 
-			if(controls.RESET)
+			if (controls.RESET)
 			{
 				for (i in 0...ClientPrefs.data.comboOffset.length)
 					ClientPrefs.data.comboOffset[i] = 0;
@@ -323,40 +318,40 @@ class NoteOffsetState extends MusicBeatState
 		}
 		else
 		{
-			if(controls.UI_LEFT_P)
+			if (controls.UI_LEFT_P)
 				barPercent = ClientPrefs.data.noteOffset - 1;
-			else if(controls.UI_RIGHT_P)
+			else if (controls.UI_RIGHT_P)
 				barPercent = ClientPrefs.data.noteOffset + 1;
 
-			if(controls.UI_LEFT || controls.UI_RIGHT) holdTime += elapsed;
-			if(controls.UI_LEFT_R || controls.UI_RIGHT_R) holdTime = 0;
+			if (controls.UI_LEFT || controls.UI_RIGHT) holdTime += elapsed;
+			if (controls.UI_LEFT_R || controls.UI_RIGHT_R) holdTime = 0;
 
-			if(holdTime > 0.5)
+			if (holdTime > 0.5)
 				barPercent += 100 * addNum * elapsed * (controls.UI_LEFT ? -1 : 1);
 
-			if(controls.RESET)
+			if (controls.RESET)
 			{
 				holdTime = 0;
 				barPercent = 0;
 			}
 		}
 
-		if((!controls.controllerMode && controls.ACCEPT) ||
+		if ((!controls.controllerMode && controls.ACCEPT) ||
 		(controls.controllerMode && FlxG.gamepads.anyJustPressed(START)))
 		{
 			onComboMenu = !onComboMenu;
 			updateMode();
 		}
 
-		if(controls.BACK)
+		if (controls.BACK)
 		{
-			if(zoomTween != null) zoomTween.cancel();
-			if(beatTween != null) beatTween.cancel();
+			if (zoomTween != null) zoomTween.cancel();
+			if (beatTween != null) beatTween.cancel();
 
 			persistentUpdate = false;
 			CustomFadeTransition.nextCamera = camOther;
 			MusicBeatState.switchState(new options.OptionsState());
-			if(OptionsState.onPlayState)
+			if (OptionsState.onPlayState)
 			{
 				final mus:String = #if (haxe > "4.2.5") PauseSubState.songName ?? #else PauseSubState.songName != null ? PauseSubState.songName : #end ClientPrefs.data.pauseMusic;
 				(ClientPrefs.data.pauseMusic != 'None')
@@ -371,9 +366,11 @@ class NoteOffsetState extends MusicBeatState
 		super.update(elapsed);
 	}
 
-	override function destroy() {
+	override function destroy()
+	{
 		startMousePos.put();
 		startComboOffset.put();
+		__point.put();
 		super.destroy();
 	}
 
@@ -383,30 +380,26 @@ class NoteOffsetState extends MusicBeatState
 	{
 		super.beatHit();
 
-		if(lastBeatHit == curBeat) return;
+		if (lastBeatHit == curBeat) return;
 
-		if(curBeat % 2 == 0)
+		if (curBeat % 2 == 0)
 		{
 			boyfriend.dance();
 			gf.dance();
 		}
 		
-		if(curBeat % 4 == 2)
+		if (curBeat % 4 == 2)
 		{
 			FlxG.camera.zoom = 1.15;
 
-			if(zoomTween != null) zoomTween.cancel();
-			zoomTween = FlxTween.tween(FlxG.camera, {zoom: 1}, 1, {ease: FlxEase.circOut,
-				onComplete: function(twn:FlxTween) zoomTween = null
-			});
+			if (zoomTween != null) zoomTween.cancel();
+			zoomTween = FlxTween.tween(FlxG.camera, {zoom: 1}, 1, {ease: FlxEase.circOut, onComplete: function(twn:FlxTween) zoomTween = null});
 
 			beatText.alpha = 1;
 			beatText.y = 320;
 			beatText.velocity.y = -150;
-			if(beatTween != null) beatTween.cancel();
-			beatTween = FlxTween.tween(beatText, {alpha: 0}, 1, {ease: FlxEase.sineIn,
-				onComplete: function(twn:FlxTween) beatTween = null
-			});
+			if (beatTween != null) beatTween.cancel();
+			beatTween = FlxTween.num(1, 0, 1, {ease: FlxEase.sineIn, onComplete: function(twn:FlxTween) beatTween = null}, function(a:Float) beatText.alpha = a);
 		}
 
 		lastBeatHit = curBeat;
@@ -426,7 +419,7 @@ class NoteOffsetState extends MusicBeatState
 	{
 		for (i in 0...4)
 		{
-			var text:FlxText = new FlxText(10, (i > 1 ? 72 : 48) + (i * 30), 0, '', 24);
+			final text:FlxText = new FlxText(10, (i > 1 ? 72 : 48) + (i * 30), 0, '', 24);
 			text.setFormat(Paths.font("vcr.ttf"), 24, FlxColor.WHITE, LEFT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
 			//text.scrollFactor.set();
 			text.borderSize = 2;
@@ -467,14 +460,14 @@ class NoteOffsetState extends MusicBeatState
 
 		controllerPointer.visible = false;
 		//FlxG.mouse.visible = false;
-		if(onComboMenu)
+		if (onComboMenu)
 		{
 			//FlxG.mouse.visible = !controls.controllerMode;
 			controllerPointer.visible = controls.controllerMode;
 		}
 
-		var str:String = onComboMenu ? 'Combo Offset' : 'Note/Beat Delay';
-		var str2:String = controls.controllerMode ? '(Press Start to Switch)' : '(Press Accept to Switch)';
+		final str:String = onComboMenu ? 'Combo Offset' : 'Note/Beat Delay';
+		final str2:String = controls.controllerMode ? '(Press Start to Switch)' : '(Press Accept to Switch)';
 		changeModeText.text = '< ${str.toUpperCase()} ${str2.toUpperCase()} >';
 	}
 }

@@ -28,23 +28,23 @@ class VisualsUISubState extends BaseOptionsMenu
 
 		// options
 
-		var noteSkins:Array<String> = Mods.mergeAllTextsNamed('images/noteSkins/list.txt', 'shared');
-		if(noteSkins.length > 0)
+		final noteSkins:Array<String> = Mods.mergeAllTextsNamed('images/noteSkins/list.txt', 'shared');
+		if (noteSkins.length > 0)
 		{
-			if(!noteSkins.contains(ClientPrefs.data.noteSkin))
+			if (!noteSkins.contains(ClientPrefs.data.noteSkin))
 				ClientPrefs.data.noteSkin = ClientPrefs.defaultData.noteSkin; //Reset to default if saved noteskin couldnt be found
 
 			noteSkins.insert(0, ClientPrefs.defaultData.noteSkin); //Default skin always comes first
-			var option:Option = new Option('Note Skins:',
+			final option:Option = new Option('Note Skins:',
 				"Select your prefered Note skin.",
 				'noteSkin',
 				'string',
 				noteSkins);
-			option.onChange = function()
+			option.change = function()
 				notes.forEachAlive(function(note:StrumNote) {
 					var skin:String = Note.defaultNoteSkin;
-					var customSkin:String = skin + Note.getNoteSkinPostfix();
-					if(Paths.fileExists('images/$customSkin.png', IMAGE)) skin = customSkin;
+					final customSkin:String = skin + Note.getNoteSkinPostfix();
+					if (Paths.fileExists('images/$customSkin.png', IMAGE)) skin = customSkin;
 			
 					note.texture = skin; //Load texture and anims
 					note.reloadNote();
@@ -57,10 +57,10 @@ class VisualsUISubState extends BaseOptionsMenu
 			noteOptionID = optionsArray.length - 1;
 		}
 		
-		var noteSplashes:Array<String> = Mods.mergeAllTextsNamed('images/noteSplashes/list.txt', 'shared');
-		if(noteSplashes.length > 0)
+		final noteSplashes:Array<String> = Mods.mergeAllTextsNamed('images/noteSplashes/list.txt', 'shared');
+		if (noteSplashes.length > 0)
 		{
-			if(!noteSplashes.contains(ClientPrefs.data.splashSkin))
+			if (!noteSplashes.contains(ClientPrefs.data.splashSkin))
 				ClientPrefs.data.splashSkin = ClientPrefs.defaultData.splashSkin; //Reset to default if saved splashskin couldnt be found
 
 			noteSplashes.insert(0, ClientPrefs.defaultData.splashSkin); //Default skin always comes first
@@ -72,7 +72,7 @@ class VisualsUISubState extends BaseOptionsMenu
 			));
 		}
 
-		var option:Option = new Option('Note Splash Opacity',
+		final option:Option = new Option('Note Splash Opacity',
 			'How much transparent should the Note Splashes be.',
 			'splashAlpha',
 			'percent');
@@ -83,7 +83,7 @@ class VisualsUISubState extends BaseOptionsMenu
 		option.decimals = 1;
 		addOption(option);
 
-		var option:Option = new Option('Sustain Note Opacity',
+		final option:Option = new Option('Sustain Note Opacity',
 			'How much transparent should the Sustain Notes be.',
 			'susAlpha', //i want to kms
 			'percent');
@@ -94,7 +94,7 @@ class VisualsUISubState extends BaseOptionsMenu
 		option.decimals = 1;
 		addOption(option);
 		
-		var option:Option = new Option('Health Bar Opacity',
+		final option:Option = new Option('Health Bar Opacity',
 			'How much transparent should the health bar and icons be.',
 			'healthBarAlpha',
 			'percent');
@@ -137,24 +137,24 @@ class VisualsUISubState extends BaseOptionsMenu
 		));
 		
 		#if !mobile
-		var option:Option = new Option('FPS Counter',
+		final option:Option = new Option('FPS Counter',
 			'If unchecked, hides FPS Counter.',
 			'showFPS',
 			'bool');
-		option.onChange = function()
-			if(Main.fpsVar != null) {
+		option.change = function()
+			if (Main.fpsVar != null) {
 				Main.fpsVar.visible = ClientPrefs.data.showFPS;
 				Main.fpsShadow.visible = ClientPrefs.data.showFPS;
 			};
 		addOption(option);
 		#end
 		
-		var option:Option = new Option('Pause Screen Song:',
+		final option:Option = new Option('Pause Screen Song:',
 			"What song do you prefer for the Pause Screen?",
 			'pauseMusic',
 			'string',
 			['None', 'Noodles', 'Breakfast', 'Tea Time']);
-		option.onChange = function() {
+		option.change = function() {
 			(ClientPrefs.data.pauseMusic == 'None')
 				? FlxG.sound.music.volume = 0
 				: FlxG.sound.playMusic(Paths.music(Paths.formatToSongPath(ClientPrefs.data.pauseMusic)));
@@ -199,19 +199,19 @@ class VisualsUISubState extends BaseOptionsMenu
 	{
 		super.changeSelection(change);
 		
-		if(noteOptionID < 0) return;
+		if (noteOptionID < 0) return;
 
 		for (i in 0...Note.colArray.length)
 		{
-			var note:StrumNote = notes.members[i];
-			if(notesTween[i] != null) notesTween[i].cancel();
+			final note:StrumNote = notes.members[i];
+			if (notesTween[i] != null) notesTween[i].cancel();
 			notesTween[i] = FlxTween.tween(note, {y: curSelected == noteOptionID ? 90 : -200}, Math.abs(note.y / 290) / 3, {ease: FlxEase.quadInOut});
 		}
 	}
 
 	override function destroy()
 	{
-		if(changedMusic && !OptionsState.onPlayState) FlxG.sound.playMusic(Paths.music('freakyMenu'), 1, true);
+		if (changedMusic && !OptionsState.onPlayState) FlxG.sound.playMusic(Paths.music('freakyMenu'), 1, true);
 		super.destroy();
 	}
 }

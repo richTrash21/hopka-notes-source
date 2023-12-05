@@ -15,7 +15,6 @@ class HealthIcon extends ExtendedSprite
 	public var lerpScale:Bool = false;
 	public var lerpSpeed:Float = 1.0;
 	var _speed:Float = 9.0;
-	@:isVar public static var globalSpeed(get, set):Float = 1.0;
 
 	inline function set_baseScale(Scale:Float):Float
 		return (baseScale == Scale ? Scale : baseScale = setScale(Scale).x);
@@ -30,9 +29,9 @@ class HealthIcon extends ExtendedSprite
 
 	override function update(elapsed:Float)
 	{
-		if (lerpScale)
+		if (lerpScale && isOnScreen(camera))
 		{
-			setScale(FlxMath.lerp(baseScale, scale.x, Math.max(1 - (_speed * elapsed * lerpSpeed * globalSpeed), 0)));
+			setScale(FlxMath.lerp(baseScale, scale.x, Math.max(1 - (_speed * elapsed * lerpSpeed * CoolUtil.globalSpeed), 0)));
 			updateHitbox();
 		}
 
@@ -118,10 +117,4 @@ class HealthIcon extends ExtendedSprite
 	}
 
 	public function getCharacter():String return char;
-
-	@:noCompletion inline static function get_globalSpeed():Float
-		return (PlayState.instance != null ? PlayState.instance.playbackRate : globalSpeed);
-
-	@:noCompletion inline static function set_globalSpeed(speed:Float):Float
-		return (PlayState.instance != null ? PlayState.instance.playbackRate : globalSpeed = speed); // won't allow to set variable if camera placed in PlayState
 }

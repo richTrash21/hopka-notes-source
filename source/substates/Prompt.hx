@@ -12,11 +12,11 @@ import openfl.geom.Rectangle;
 class Prompt extends MusicBeatSubstate
 {
 	var selected = 0;
-	public var okc:Void->Void;
-	public var cancelc:Void->Void;
+	public var okc:()->Void;
+	public var cancelc:()->Void;
 	var buttons:FlxSprite = new FlxSprite(473.3, 450);
 	var theText:String = '';
-	var goAnyway:Bool = false;
+	var goAnyway:Bool;
 	var UI_box:FlxUIPopup;
 	var panel:FlxSprite;
 	var panelbg:FlxSprite;
@@ -31,17 +31,16 @@ class Prompt extends MusicBeatSubstate
 		theText = promptText;
 		goAnyway = acceptOnDefault;
 		
-		var op1 = 'OK';
-		var op2 = 'CANCEL';
-		
-		if (option1 != null) op1 = option1;
-		if (option2 != null) op2 = option2;
-		buttonAccept = new FlxButton(473.3, 450, op1, function() {
-			if(okc != null) okc();
+		final op1 = option1 ?? 'OK';
+		final op2 = option2 ?? 'CANCEL';
+		buttonAccept = new FlxButton(473, 450, op1, function()
+		{
+			if (okc != null) okc();
 			close();
-		} );
-		buttonNo = new FlxButton(633.3,450,op2,function() {
-			if(cancelc != null) cancelc();
+		});
+		buttonNo = new FlxButton(633, 450, op2, function()
+		{
+			if (cancelc != null) cancelc();
 			close();
 		});
 		super();	
@@ -50,10 +49,13 @@ class Prompt extends MusicBeatSubstate
 	override public function create():Void 
 	{
 		super.create();
-		if (goAnyway) {
-			if(okc != null) okc();
+		if (goAnyway)
+		{
+			if (okc != null) okc();
 			close();
-		} else {
+		}
+		else
+		{
 			panel = new FlxSprite(0, 0);
 			panelbg = new FlxSprite(0, 0);
 			makeSelectorGraphic(panel,300,150,0xff999999);
@@ -68,7 +70,7 @@ class Prompt extends MusicBeatSubstate
 			add(buttonAccept);
 			add(buttonNo);
 			//add(buttons);
-			var textshit:FlxText = new FlxText(buttonNo.width*2, panel.y, 300, theText, 16);
+			final textshit:FlxText = new FlxText(buttonNo.width*2, panel.y, 300, theText, 16);
 			textshit.alignment = 'center';
 			add(textshit);
 			textshit.screenCenter();
@@ -82,7 +84,7 @@ class Prompt extends MusicBeatSubstate
 		}
 	}
 	
-	function makeSelectorGraphic(panel:FlxSprite,w,h,color:FlxColor)
+	function makeSelectorGraphic(panel:FlxSprite, w:Int, h:Int, color:FlxColor)
 	{
 		panel.makeGraphic(w, h, color);
 		panel.pixels.fillRect(new Rectangle(0, 190, panel.width, 5), 0x0);
@@ -99,15 +101,15 @@ class Prompt extends MusicBeatSubstate
 		drawCircleCornerOnSelector(panel,true, true,color);
 	}
 
-	function drawCircleCornerOnSelector(panel:FlxSprite,flipX:Bool, flipY:Bool,color:FlxColor)
+	function drawCircleCornerOnSelector(panel:FlxSprite, flipX:Bool, flipY:Bool, color:FlxColor)
 	{
-		var antiX:Float = (panel.width - cornerSize);
+		final antiX:Float = (panel.width - cornerSize);
 		var antiY:Float = flipY ? (panel.height - 1) : 0;
-		if(flipY) antiY -= 2;
+		if (flipY) antiY -= 2;
 		panel.pixels.fillRect(new Rectangle((flipX ? antiX : 1), Std.int(Math.abs(antiY - 8)), 10, 3), color);
-		if(flipY) antiY += 1;
+		if (flipY) antiY += 1;
 		panel.pixels.fillRect(new Rectangle((flipX ? antiX : 2), Std.int(Math.abs(antiY - 6)),  9, 2), color);
-		if(flipY) antiY += 1;
+		if (flipY) antiY += 1;
 		panel.pixels.fillRect(new Rectangle((flipX ? antiX : 3), Std.int(Math.abs(antiY - 5)),  8, 1), color);
 		panel.pixels.fillRect(new Rectangle((flipX ? antiX : 4), Std.int(Math.abs(antiY - 4)),  7, 1), color);
 		panel.pixels.fillRect(new Rectangle((flipX ? antiX : 5), Std.int(Math.abs(antiY - 3)),  6, 1), color);

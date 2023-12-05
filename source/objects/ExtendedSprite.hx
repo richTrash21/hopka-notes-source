@@ -141,6 +141,12 @@ class ExtendedSprite extends FlxSprite
 	inline public function setScale(?X:Float, ?Y:Float):FlxPoint
 		return X == null && Y == null ? scale : scale.set(X ?? Y, Y ?? X);
 
+	public function addPosition(?AddX:Float, ?AddY:Float)
+	{
+		if (AddX != null) x += AddX;
+		if (AddY != null) y += AddY;
+	}
+
 	inline public function addOffset(Name:String, X:Float, Y:Float):FlxPoint
 	{
 		if (animOffsets.exists(Name))

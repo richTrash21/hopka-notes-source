@@ -27,15 +27,10 @@ class GameCamera extends FlxCamera
 	**/
 	public var updateLerp(default, set):Bool;
 
-	/**
-		Global game speed. Can be controlled outside of PlatState.
-	**/
-	@:isVar public static var globalSpeed(get, set):Float = 1.0;
-
 	// internal values
 	@:allow(substates.GameOverSubstate)
 	var _speed:Float = 2.4;
-	var _zoomSpeed:Float = 3.125;
+	var _zoomSpeed:Float = 3.2;
 
 	public function new(?Zoom:Float = 0.0, ?BGAlpha:Float = 1.0, UpdateLerp:Bool = false, UpdateZoom:Bool = false):Void
 	{
@@ -66,6 +61,7 @@ class GameCamera extends FlxCamera
 	{
 		if (!active) return;
 
+		final globalSpeed = CoolUtil.globalSpeed;
 		if (target != null && updateLerp)
 			followLerp = elapsed * _speed * cameraSpeed * globalSpeed * (FlxG.updateFramerate / 60);
 
@@ -86,10 +82,4 @@ class GameCamera extends FlxCamera
 		if (!bool) followLerp = 0;
 		return updateLerp = bool;
 	}
-
-	@:noCompletion inline static function get_globalSpeed():Float
-		return (PlayState.instance != null ? PlayState.instance.playbackRate : globalSpeed);
-
-	@:noCompletion inline static function set_globalSpeed(speed:Float):Float
-		return (PlayState.instance != null ? PlayState.instance.playbackRate : globalSpeed = speed); // won't allow to set variable if camera placed in PlayState
 }
