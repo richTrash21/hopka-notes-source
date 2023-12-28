@@ -1,5 +1,6 @@
 package objects;
 
+import flixel.FlxObject;
 import flixel.util.FlxDestroyUtil;
 import flixel.math.FlxRect;
 import flixel.system.FlxAssets.FlxGraphicAsset;
@@ -16,6 +17,9 @@ class ExtendedSprite extends FlxSprite
 
 	public var deltaX(default, null):Float;
 	public var deltaY(default, null):Float;
+
+	public var RIGHT(get, never):Float;
+	public var BOTTOM(get, never):Float;
 
 	public var inBounds(default, null):Bool;
 	public var boundBox(default, set):FlxRect;
@@ -40,11 +44,11 @@ class ExtendedSprite extends FlxSprite
 		deltaY = y - last.y;
 
 		super.update(elapsed);
-		if (boundBox == null)
-			return; // no bound box - skip whole shit
+		if (boundBox == null || !moves)
+			return; // no bound box/movement flag - skip whole shit
 	
 		final lastInBounds = inBounds;
-		inBounds = spriteInRect(this, boundBox);
+		inBounds = objectInRect(this, boundBox);
 		if (lastInBounds != inBounds)
 		{
 			if (inBounds && onEnterBounds != null)
@@ -55,24 +59,17 @@ class ExtendedSprite extends FlxSprite
 	}
 
 	/**
-		Checks if sprite is in the rectangles bounds.
+		Checks if object is in the rectangles bounds.
 
-		@param    Sprite   Sprite to check.
+		@param    Object   Object to check.
 		@param    Rect     Rectangle to check.
 
 		@return   Is sprite in the rectangle.
 	**/
-	inline public static function spriteInRect(Sprite:FlxSprite, Rect:FlxRect):Bool
+	inline public static function objectInRect(Object:FlxObject, Rect:FlxRect):Bool
 	{
-		final RIGHT  = Sprite.x + Sprite.width;
-		final BOTTOM = Sprite.y + Sprite.height;
-
-		final topLeft	  = FlxMath.pointInFlxRect(Sprite.x, Sprite.y, Rect);
-		final topRight	  = FlxMath.pointInFlxRect(RIGHT,    Sprite.y, Rect);
-		final bottomLeft  = FlxMath.pointInFlxRect(Sprite.x, BOTTOM,   Rect);
-		final bottomRight = FlxMath.pointInFlxRect(RIGHT,    BOTTOM,   Rect);
-
-		return topLeft || topRight || bottomLeft || bottomRight;
+		final Hitbox = Object.getHitbox(FlxRect.weak());
+		return Rect.overlaps(Hitbox);
 	}
 
 	override public function destroy():Void
@@ -102,7 +99,7 @@ class ExtendedSprite extends FlxSprite
 			offset.copyFrom(animOffsets.get(Name));
 	}
 
-	//quick n' easy animation setup
+	// quick n' easy animation setup
 	inline public function addAnim(Name:String, ?Prefix:String, ?Indices:Array<Int>, FrameRate:Int = 24, Looped:Bool = true, ?FlipX:Bool = false, ?FlipY:Bool = false,
 			?LoopPoint:Int = 0):FlxAnimation
 	{
@@ -147,6 +144,13 @@ class ExtendedSprite extends FlxSprite
 		if (AddY != null) y += AddY;
 	}
 
+	/**
+		A part from updateHitbox() that gives sprites propper offset.
+		@return Adjusted offset.
+	**/
+	inline public function updateOfssets():FlxPoint
+		return offset.set(-0.5 * (width - frameWidth), -0.5 * (height - frameHeight));
+
 	inline public function addOffset(Name:String, X:Float, Y:Float):FlxPoint
 	{
 		if (animOffsets.exists(Name))
@@ -157,10 +161,16 @@ class ExtendedSprite extends FlxSprite
 		return point;
 	}
 
-	@:noCompletion function set_boundBox(Rect:FlxRect):FlxRect
+	@:noCompletion inline function set_boundBox(Rect:FlxRect):FlxRect
 	{
 		if (Rect != null)
-			inBounds = spriteInRect(this, Rect);
+			inBounds = objectInRect(this, Rect);
 		return boundBox = Rect;
 	}
+
+	@:noCompletion inline function get_RIGHT():Float
+		return x + width;
+
+	@:noCompletion inline function get_BOTTOM():Float
+		return y + height;
 }

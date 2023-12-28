@@ -42,11 +42,11 @@ import llua.Lua;
 
 class FunkinLua
 {
-	public static final Function_Stop:Dynamic = "##PSYCHLUA_FUNCTIONSTOP";
-	public static final Function_Continue:Dynamic = "##PSYCHLUA_FUNCTIONCONTINUE";
-	public static final Function_StopLua:Dynamic = "##PSYCHLUA_FUNCTIONSTOPLUA";
+	public static final Function_Stop:Dynamic		 = "##PSYCHLUA_FUNCTIONSTOP";
+	public static final Function_Continue:Dynamic	 = "##PSYCHLUA_FUNCTIONCONTINUE";
+	public static final Function_StopLua:Dynamic	 = "##PSYCHLUA_FUNCTIONSTOPLUA";
 	public static final Function_StopHScript:Dynamic = "##PSYCHLUA_FUNCTIONSTOPHSCRIPT";
-	public static final Function_StopAll:Dynamic = "##PSYCHLUA_FUNCTIONSTOPALL";
+	public static final Function_StopAll:Dynamic	 = "##PSYCHLUA_FUNCTIONSTOPALL";
 
 	#if LUA_ALLOWED
 	public var lua:State = null;
@@ -55,11 +55,8 @@ class FunkinLua
 	public var closed:Bool = false;
 	public var hscript:HScript = null;
 	
-	public var callbacks:Map<String, Dynamic> = new Map<String, Dynamic>();
-	public static var customFunctions:Map<String, Dynamic> = new Map<String, Dynamic>();
-
-	// for functions taht get point from stuff (aka optimisation)
-	final _lePoint:FlxPoint = FlxPoint.get();
+	public var callbacks:Map<String, Dynamic> = [];
+	public static var customFunctions:Map<String, Dynamic> = [];
 
 	public function new(scriptName:String)
 	{
@@ -73,43 +70,45 @@ class FunkinLua
 		game.luaArray.push(this);
 
 		// Lua shit
-		set('Function_StopLua', Function_StopLua);
-		set('Function_StopHScript', Function_StopHScript);
-		set('Function_StopAll', Function_StopAll);
-		set('Function_Stop', Function_Stop);
-		set('Function_Continue', Function_Continue);
-		set('luaDebugMode', false);
+		set('Function_StopLua',		 Function_StopLua);
+		set('Function_StopHScript',	 Function_StopHScript);
+		set('Function_StopAll',		 Function_StopAll);
+		set('Function_Stop',		 Function_Stop);
+		set('Function_Continue',	 Function_Continue);
+		set('luaDebugMode',			 false);
 		set('luaDeprecatedWarnings', true);
-		set('inChartEditor', PlayState.chartingMode); // made it actually usefull now
+		set('inChartEditor',		 PlayState.chartingMode); // made it actually usefull now
 
 		// Song/Week shit
-		set('curBpm', Conductor.bpm);
-		set('bpm', PlayState.SONG.bpm);
-		set('scrollSpeed', PlayState.SONG.speed);
-		set('crochet', Conductor.crochet);
-		set('stepCrochet', Conductor.stepCrochet);
-		set('songLength', FlxG.sound.music.length);
-		set('songName', PlayState.SONG.song);
-		set('songPath', Paths.formatToSongPath(PlayState.SONG.song));
-		set('startedCountdown', false);
-		set('curStage', PlayState.SONG.stage);
+		set('curBpm',		Conductor.bpm);
+		set('bpm',			PlayState.SONG.bpm);
+		set('scrollSpeed',	PlayState.SONG.speed);
+		set('crochet',		Conductor.crochet);
+		set('stepCrochet',	Conductor.stepCrochet);
+		set('songLength',	FlxG.sound.music.length);
+
+		set('songName',			PlayState.SONG.song);
+		set('songPath',			Paths.formatToSongPath(PlayState.SONG.song));
+		set('startedCountdown',	false);
+		set('curStage',			PlayState.SONG.stage);
 
 		set('isStoryMode', PlayState.isStoryMode);
-		set('difficulty', PlayState.storyDifficulty);
+		set('difficulty',  PlayState.storyDifficulty);
 
-		set('difficultyName', Difficulty.getString());
-		set('difficultyPath', Paths.formatToSongPath(Difficulty.getString()));
-		set('weekRaw', PlayState.storyWeek);
-		set('week', WeekData.weeksList[PlayState.storyWeek]);
-		set('seenCutscene', PlayState.seenCutscene);
-		set('hasVocals', PlayState.SONG.needsVoices);
+		final _diff:String = Difficulty.getString();
+		set('difficultyName',	_diff);
+		set('difficultyPath',	Paths.formatToSongPath(_diff));
+		set('weekRaw',			PlayState.storyWeek);
+		set('week',				WeekData.weeksList[PlayState.storyWeek]);
+		set('seenCutscene',		PlayState.seenCutscene);
+		set('hasVocals',		PlayState.SONG.needsVoices);
 
 		// Camera poo
 		set('cameraX', 0);
 		set('cameraY', 0);
 
 		// Screen stuff
-		set('screenWidth', FlxG.width);
+		set('screenWidth',  FlxG.width);
 		set('screenHeight', FlxG.height);
 
 		// PlayState cringe ass nae nae bullcrap
@@ -129,18 +128,20 @@ class FunkinLua
 		set('ratingFC', '');
 		set('version', MainMenuState.psychEngineVersion);
 
-		set('inGameOver', false);
-		set('mustHitSection', false);
-		set('altAnim', false);
-		set('gfSection', false);
+		set('inGameOver',		false);
+		set('mustHitSection',	false);
+		set('altAnim',			false);
+		set('gfSection',		false);
 
 		// Gameplay settings
-		set('healthGainMult', game.healthGain);
-		set('healthLossMult', game.healthLoss);
-		#if FLX_PITCH set('playbackRate', game.playbackRate); #end
-		set('instakillOnMiss', game.instakillOnMiss);
-		set('botPlay', game.cpuControlled);
-		set('practice', game.practiceMode);
+		set('healthGainMult',	game.healthGain);
+		set('healthLossMult',	game.healthLoss);
+		#if FLX_PITCH
+		set('playbackRate',		game.playbackRate);
+		#end
+		set('instakillOnMiss',	game.instakillOnMiss);
+		set('botPlay',			game.cpuControlled);
+		set('practice',			game.practiceMode);
 
 		for (i in 0...4) {
 			set('defaultPlayerStrumX$i', 0);
@@ -159,37 +160,36 @@ class FunkinLua
 
 		// Character shit
 		set('boyfriendName', PlayState.SONG.player1);
-		set('dadName', PlayState.SONG.player2);
-		set('gfName', PlayState.SONG.gfVersion);
+		set('dadName',		 PlayState.SONG.player2);
+		set('gfName',		 PlayState.SONG.gfVersion);
 
 		// Some settings, no jokes
-		set('downscroll', ClientPrefs.data.downScroll);
-		set('middlescroll', ClientPrefs.data.middleScroll);
-		set('camScript', ClientPrefs.data.camScript);
-		set('camScriptNote', ClientPrefs.data.camScriptNote);
-		set('framerate', ClientPrefs.data.framerate);
-		set('ghostTapping', ClientPrefs.data.ghostTapping);
-		set('hideHud', ClientPrefs.data.hideHud);
-		set('timeBarType', ClientPrefs.data.timeBarType);
-		set('scoreZoom', ClientPrefs.data.scoreZoom);
-		set('cameraZoomOnBeat', ClientPrefs.data.camZooms);
-		set('flashingLights', ClientPrefs.data.flashing);
-		set('noteOffset', ClientPrefs.data.noteOffset);
-		set('healthBarAlpha', ClientPrefs.data.healthBarAlpha);
-		set('noResetButton', ClientPrefs.data.noReset);
-		set('lowQuality', ClientPrefs.data.lowQuality);
-		set('shadersEnabled', ClientPrefs.data.shaders);
-		set('scriptName', scriptName);
-		set('currentModDirectory', Mods.currentModDirectory);
+		set('downscroll', 			ClientPrefs.data.downScroll);
+		set('middlescroll',			ClientPrefs.data.middleScroll);
+		set('camScript',			ClientPrefs.data.camScript);
+		set('camScriptNote',		ClientPrefs.data.camScriptNote);
+		set('framerate',			ClientPrefs.data.framerate);
+		set('ghostTapping',			ClientPrefs.data.ghostTapping);
+		set('hideHud',				ClientPrefs.data.hideHud);
+		set('timeBarType',			ClientPrefs.data.timeBarType);
+		set('scoreZoom',			ClientPrefs.data.scoreZoom);
+		set('cameraZoomOnBeat',		ClientPrefs.data.camZooms);
+		set('flashingLights',		ClientPrefs.data.flashing);
+		set('noteOffset',			ClientPrefs.data.noteOffset);
+		set('healthBarAlpha',		ClientPrefs.data.healthBarAlpha);
+		set('noResetButton',		ClientPrefs.data.noReset);
+		set('lowQuality',			ClientPrefs.data.lowQuality);
+		set('shadersEnabled', 		ClientPrefs.data.shaders);
+		set('scriptName',			scriptName);
+		set('currentModDirectory',	Mods.currentModDirectory);
 
 		// Noteskin/Splash
-		set('noteSkin', ClientPrefs.data.noteSkin);
-		set('noteSkinPostfix', Note.getNoteSkinPostfix());
-		set('splashSkin', ClientPrefs.data.splashSkin);
+		set('noteSkin',			 ClientPrefs.data.noteSkin);
+		set('noteSkinPostfix',	 Note.getNoteSkinPostfix());
+		set('splashSkin',		 ClientPrefs.data.splashSkin);
 		set('splashSkinPostfix', NoteSplash.getSplashSkinPostfix());
-		set('splashAlpha', ClientPrefs.data.splashAlpha);
-
-		set('buildTarget', getBuildTarget());
+		set('splashAlpha',		 ClientPrefs.data.splashAlpha);
+		set('buildTarget',		 LuaUtils.getBuildTarget());
 
 		for (name => func in customFunctions) if(func != null) set(name, func);
 
@@ -458,8 +458,9 @@ class FunkinLua
 				: LuaUtils.getObjectDirectly(split[0]);
 
 			if(leObj != null) {
-				LuaUtils.getTargetInstance().remove(leObj, true);
-				LuaUtils.getTargetInstance().insert(position, leObj);
+				final instance = LuaUtils.getTargetInstance();
+				instance.remove(leObj, true);
+				instance.insert(position, leObj);
 				return;
 			}
 			luaTrace("setObjectOrder: Object " + obj + " doesn't exist!", false, false, FlxColor.RED);
@@ -630,7 +631,7 @@ class FunkinLua
 		set("precacheMusic", Paths.music);
 
 		// others
-		set("triggerEvent", function(name:String, arg1:Any, arg2:Any) game.triggerEvent(name, Std.string(arg1), Std.string(arg2)));
+		set("triggerEvent", function(name:String, arg1:Any, arg2:Any) game.triggerEvent(name, arg1, arg2));
 
 		set("startCountdown", game.startCountdown);
 		set("endSong", function() {
@@ -645,10 +646,7 @@ class FunkinLua
 		});
 		set("exitSong", function(?skipTransition:Bool = false) {
 			if(skipTransition)
-			{
-				FlxTransitionableState.skipNextTransIn = true;
-				FlxTransitionableState.skipNextTransOut = true;
-			}
+				FlxTransitionableState.skipNextTransIn = FlxTransitionableState.skipNextTransOut = true;
 
 			PlayState.cancelMusicFadeTween();
 			CustomFadeTransition.nextCamera = !FlxTransitionableState.skipNextTransIn ? game.camOther : null;
@@ -713,15 +711,15 @@ class FunkinLua
 		set("setRatingName",	function(value:String)	return game.ratingName = value);
 		set("setRatingFC",		function(value:String)	return game.ratingFC = value);
 
-		set("getMouseX", function(camera:String) return getMousePoint(camera, 'x'));
-		set("getMouseY", function(camera:String) return getMousePoint(camera, 'y'));
+		set("getMouseX", function(camera:String) return LuaUtils.getMousePoint(camera, 'x'));
+		set("getMouseY", function(camera:String) return LuaUtils.getMousePoint(camera, 'y'));
 
-		set("getMidpointX",			function(variable:String)					return getPoint(variable, 'midpoint', 'x'));
-		set("getMidpointY",			function(variable:String)					return getPoint(variable, 'midpoint', 'y'));
-		set("getGraphicMidpointX",	function(variable:String)					return getPoint(variable, 'graphic', 'x'));
-		set("getGraphicMidpointY",	function(variable:String)					return getPoint(variable, 'graphic', 'y'));
-		set("getScreenPositionX",	function(variable:String, ?camera:String)	return getPoint(variable, 'screen', 'x', camera));
-		set("getScreenPositionY",	function(variable:String, ?camera:String)	return getPoint(variable, 'screen', 'y', camera));
+		set("getMidpointX",			function(variable:String)					return LuaUtils.getPoint(variable, 'midpoint', 'x'));
+		set("getMidpointY",			function(variable:String)					return LuaUtils.getPoint(variable, 'midpoint', 'y'));
+		set("getGraphicMidpointX",	function(variable:String)					return LuaUtils.getPoint(variable, 'graphic', 'x'));
+		set("getGraphicMidpointY",	function(variable:String)					return LuaUtils.getPoint(variable, 'graphic', 'y'));
+		set("getScreenPositionX",	function(variable:String, ?camera:String)	return LuaUtils.getPoint(variable, 'screen', 'x', camera));
+		set("getScreenPositionY",	function(variable:String, ?camera:String)	return LuaUtils.getPoint(variable, 'screen', 'y', camera));
 
 		set("characterDance", function(character:String, force:Bool = false) {
 			switch(character.toLowerCase()) {
@@ -786,9 +784,7 @@ class FunkinLua
 			return false;
 		});
 
-		set("addAnimationByIndices", function(obj:String, name:String, prefix:String, indices:Any = null, framerate:Int = 24, loop:Bool = false)
-			return LuaUtils.addAnimByIndices(obj, name, prefix, indices, framerate, loop)
-		);
+		set("addAnimationByIndices", LuaUtils.addAnimByIndices);
 
 		set("playAnim", function(obj:String, name:String, forced:Bool = false, ?reverse:Bool = false, ?startFrame:Int = 0)
 		{
@@ -833,7 +829,7 @@ class FunkinLua
 		});
 		set("addLuaSprite", function(tag:String, front:Bool = false) {
 			if(game.modchartSprites.exists(tag)) {
-				var shit:ExtendedSprite = game.modchartSprites.get(tag);
+				final shit:ExtendedSprite = game.modchartSprites.get(tag);
 				(front)
 					? LuaUtils.getTargetInstance().add(shit)
 					: (!game.isDead)
@@ -921,8 +917,8 @@ class FunkinLua
 		set("luaTextExists",	game.modchartTexts.exists);
 		set("luaSoundExists",	game.modchartSounds.exists);
 
-		set("setHealthBarColors",	function(left:String, right:String) game.healthBar.setColors(CoolUtil.colorFromString(left), CoolUtil.colorFromString(right)));
-		set("setTimeBarColors",		function(left:String, right:String) game.timeBar.setColors(CoolUtil.colorFromString(left), CoolUtil.colorFromString(right)));
+		set("setHealthBarColors", function(left:String, right:String) game.healthBar.setColors(CoolUtil.colorFromString(left), CoolUtil.colorFromString(right)));
+		set("setTimeBarColors",	  function(left:String, right:String) game.timeBar.setColors(CoolUtil.colorFromString(left), CoolUtil.colorFromString(right))); 
 
 		set("setObjectCamera", function(obj:String, camera:String = '') {
 			final real = game.getLuaObject(obj);
@@ -974,14 +970,10 @@ class FunkinLua
 
 			if(spr != null)
 			{
-				final axis:FlxAxes = switch(pos.trim().toLowerCase())
-					{
-						case 'x':	X;
-						case 'y':	Y;
-						default:	XY;
-					}
-				spr.screenCenter(axis);
+				try { spr.screenCenter(FlxAxes.fromString(pos.trim().toLowerCase())); }
+				catch(e) trace("screenCenter: " + e.message);
 			}
+
 			luaTrace("screenCenter: Object " + obj + " doesn't exist!", false, false, FlxColor.RED);
 		});
 		set("objectsOverlap", function(obj1:String, obj2:String) {
@@ -1034,20 +1026,10 @@ class FunkinLua
 			}
 			return false;
 		});
-		set("startVideo", function(videoFile:String, subtitles:Bool = false, antialias:Bool = true) {
-			#if VIDEOS_ALLOWED
-			if(FileSystem.exists(Paths.video(videoFile))) {
-				game.startVideo(videoFile, subtitles, antialias);
-				return true;
-			} else {
-				luaTrace('startVideo: Video file not found: $videoFile', false, false, FlxColor.RED);
-			}
-			return false;
-
-			#else
-			(game.endingSong) ? game.endSong() : game.startCountdown();
-			return true;
-			#end
+		set("startVideo", function(videoFile:String, antialias:Bool = true) {
+			final ret:Bool = game.startVideo(videoFile, antialias);
+			#if VIDEOS_ALLOWED if (!ret) luaTrace('startVideo: Video file not found: $videoFile', false, false, FlxColor.RED); #end
+			return ret;
 		});
 
 		set("playMusic", function(sound:String, volume:Float = 1, loop:Bool = false) FlxG.sound.playMusic(Paths.music(sound), volume, loop));
@@ -1197,32 +1179,6 @@ class FunkinLua
 		#end
 	}
 
-	inline function getMousePoint(camera:String, axis:String):Float
-	{
-		FlxG.mouse.getScreenPosition(LuaUtils.cameraFromString(camera), _lePoint);
-		return axis == 'y' ? _lePoint.y : _lePoint.x;
-	}
-
-	inline function getPoint(leVar:String, type:String, axis:String, ?camera:String):Float
-	{
-		final split:Array<String> = leVar.split('.');
-		final obj:FlxSprite = (split.length > 1)
-			? LuaUtils.getVarInArray(LuaUtils.getPropertyLoop(split), split[split.length-1])
-			: LuaUtils.getObjectDirectly(split[0]);
-
-		if (obj != null)
-		{
-			switch(type)
-			{
-				case 'graphic':	obj.getGraphicMidpoint(_lePoint);
-				case 'screen':	obj.getScreenPosition(_lePoint, LuaUtils.cameraFromString(camera));
-				default:		obj.getMidpoint(_lePoint);
-			};
-			return axis == 'y' ? _lePoint.y : _lePoint.x;
-		}
-		return 0;
-	}
-
 	//main
 	public var lastCalledFunction:String = '';
 	public static var lastCalledScript:FunkinLua = null;
@@ -1264,7 +1220,7 @@ class FunkinLua
 			if(closed) stop();
 			return result;
 		}
-		catch (e:Dynamic) trace(e);
+		catch (e) trace(e);
 		#end
 		return Function_Continue;
 	}
@@ -1300,18 +1256,7 @@ class FunkinLua
 			hscript = null;
 		}
 		#end
-		_lePoint.put();
 	}
-
-	//clone functions
-	inline public static function getBuildTarget():String
-		return	#if windows		'windows'
-				#elseif linux	'linux'
-				#elseif mac		'mac'
-				#elseif html5	'browser'
-				#elseif android	'android'
-				#elseif switch	'switch'
-				#else			'unknown' #end;
 
 	function oldTweenFunction(tag:String, vars:String, tweenValue:Any, duration:Float, ease:String, funcName:String)
 	{

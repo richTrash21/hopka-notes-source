@@ -3,27 +3,17 @@ package backend;
 #if !sys
 import openfl.utils.Assets;
 #end
+import objects.ISortable;
+
+using flixel.util.FlxArrayUtil;
 
 class CoolUtil
 {
-	/**
-		Global game speed. Can be controlled outside of PlatState.
-	**/
-	public static var globalSpeed(get, set):Float;
-	static var _globalSpeed:Float = 1.0; // internal tracker, for use outside of PlayState
-
-	@:noCompletion inline static function get_globalSpeed():Float
-		return (PlayState.instance != null ? PlayState.instance.playbackRate : _globalSpeed);
-
-	@:noCompletion inline static function set_globalSpeed(speed:Float):Float
-		return (PlayState.instance != null ? PlayState.instance.playbackRate : _globalSpeed = speed); // won't allow to set variable if camera placed in PlayState
-
 	inline public static function quantize(f:Float, snap:Float):Float
 	{
 		// changed so this actually works lol
-		final m:Float = Math.fround(f * snap);
 		trace(snap);
-		return (m / snap);
+		return (Math.fround(f * snap) / snap);
 	}
 
 	inline public static function capitalize(text:String):String
@@ -33,20 +23,20 @@ class CoolUtil
 	{
 		var daList:String = null;
 		#if (sys && MODS_ALLOWED)
-		final formatted:Array<String> = path.split(':'); //prevent "shared:", "preload:" and other library names on file path
-		path = formatted[formatted.length-1];
+		final colonIndex:Int = path.indexOf(":"); //prevent "shared:", "preload:" and other library names on file path
+		if (colonIndex != -1) path = path.substring(colonIndex+1);
 		if (sys.FileSystem.exists(path)) daList = sys.io.File.getContent(path);
 		#else
 		if (Assets.exists(path)) daList = Assets.getText(path);
 		#end
-		return daList != null ? listFromString(daList) : [];
+		return daList == null ? [] : listFromString(daList);
 	}
 
 	inline public static function colorFromString(color:String):FlxColor
 	{
 		final hideChars:EReg = ~/[\t\n\r]/;
-		var color:String = hideChars.split(color).join('').trim();
-		if (color.startsWith('0x')) color = color.substring(color.length - 6);
+		var color:String = hideChars.split(color).join("").trim();
+		if (color.startsWith('0x')) color = color.substring(color.length-6);
 
 		final colorNum:Null<FlxColor> = FlxColor.fromString(color) ?? FlxColor.fromString('#$color');
 		return colorNum ?? FlxColor.WHITE;
@@ -66,10 +56,12 @@ class CoolUtil
 		var tempMult:Float = 1;
 		for (i in 0...decimals) tempMult *= 10;
 
-		final newValue:Float = Math.floor(value * tempMult);
-		return newValue / tempMult;
+		return Math.floor(value * tempMult) / tempMult;
 	}
-	
+
+	static final IDK:Int = 13520687;
+	static final IDK2:Int = 2*IDK;
+
 	inline public static function dominantColor(sprite:flixel.FlxSprite):Int
 	{
 		final countByColor:Map<Int, Int> = [];
@@ -81,7 +73,7 @@ class CoolUtil
 				{
 					if (countByColor.exists(colorOfThisPixel))
 						countByColor[colorOfThisPixel] = countByColor[colorOfThisPixel] + 1;
-					else if (countByColor[colorOfThisPixel] != 13520687 - (2*13520687))
+					else if (countByColor[colorOfThisPixel] != IDK - IDK2)
 						countByColor[colorOfThisPixel] = 1;
 				}
 			}
@@ -110,6 +102,42 @@ class CoolUtil
 	}
 
 	/**
+		Returns the amount of digits a `Float` has (ignores decimals!).
+	**/
+	inline public static function getDigits(n:Float):Int
+		return Std.string(Math.ceil(Math.abs(n))).length;
+
+	/**
+		Formats hours, minutes and seconds to just seconds.
+	**/
+	inline public static function timeToSeconds(h:Float, m:Float, s:Float):Float
+		return h * 3600 + m * 60 + s;
+
+	/**
+		Formats hours, minutes and seconds to miliseconds.
+	**/
+	inline public static function timeToMiliseconds(h:Float, m:Float, s:Float):Float
+		return timeToSeconds(h, m, s) * 1000;
+
+	/**
+		Simple function oriented for sorting ISortableSprites by their order.
+	**/
+	inline public static function sortByOrder(Index:Int, Obj1:ISortable, Obj2:ISortable):Int
+		return Obj1.order > Obj2.order ? -Index : Obj2.order > Obj1.order ? Index : 0;
+
+	inline public static function clearMapArray(maps:Array<Map<Any, Any>>)
+	{
+		if (maps != null)
+		{
+			for (map in maps)
+				if (map != null)
+					map.clear();
+			maps.splice(0, maps.length);
+		}
+		return null;
+	}
+
+	/**
 		Helper Function to Fix Save Files for Flixel 5
 		-- EDIT: [November 29, 2023] --
 		this function is used to get the save path, period.
@@ -120,6 +148,6 @@ class CoolUtil
 	inline public static function getSavePath():String
 	{
 		final company:String = FlxG.stage.application.meta.get('company');
-		return '${company}/${flixel.util.FlxSave.validate(FlxG.stage.application.meta.get('file'))}';
+		return '$company/${flixel.util.FlxSave.validate(FlxG.stage.application.meta.get('file'))}';
 	}
 }

@@ -38,9 +38,9 @@ class Alphabet extends FlxSpriteGroup
 		this.text = text;
 	}
 
-	public function setAlignmentFromString(align:String)
+	public function setAlignmentFromString(align:String):Alignment
 	{
-		alignment = switch(align.toLowerCase().trim())
+		return alignment = switch(align.toLowerCase().trim())
 			{
 				case 'right':				RIGHT;
 				case 'center' | 'centered':	CENTERED;

@@ -75,7 +75,7 @@ class StrumNote extends FlxSprite
 			loadGraphic(graphic, true, Math.floor(graphic.width / 4), Math.floor(graphic.height / 5));
 
 			antialiasing = false;
-			setGraphicSize(Std.int(width * pixelScale));
+			setGraphicSize(width * pixelScale);
 
 			animation.add('green', [6]);
 			animation.add('red', [7]);
@@ -110,7 +110,7 @@ class StrumNote extends FlxSprite
 			animation.addByPrefix('red', 'arrowRIGHT');
 
 			antialiasing = ClientPrefs.data.antialiasing;
-			setGraphicSize(Std.int(width * 0.7));
+			setGraphicSize(width * 0.7);
 
 			switch (Math.abs(noteData) % 4)
 			{

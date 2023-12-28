@@ -1,5 +1,7 @@
 package objects;
 
+import flixel.util.FlxDestroyUtil;
+import flixel.util.helpers.FlxBounds;
 import flixel.math.FlxPoint;
 import flixel.math.FlxRect;
 
@@ -9,13 +11,15 @@ class Bar extends FlxSpriteGroup
 	public var rightBar:FlxSprite;
 	public var bg:FlxSprite;
 	
-	public var bounds:{min:Float, max:Float} = {min: 0, max: 1};
-	public var percent(default, set):Float = 0;
+	public var bounds:FlxBounds<Float> = new FlxBounds<Float>(0.0);
+	public var percent(default, set):Float = 0.0;
 	public var leftToRight(default, set):Bool = true;
+	public var smooth:Bool = true;
 
 	// DEPRECATED!!!
 	public var barCenter(get, never):Float;
 	public var centerPoint(default, null):FlxPoint = FlxPoint.get();
+	@:noCompletion inline function get_barCenter():Float return centerPoint.x;
 
 	// you might need to change this if you want to use a custom bar
 	public var barWidth(default, set):Int = 1;
@@ -25,24 +29,29 @@ class Bar extends FlxSpriteGroup
 	public var valueFunction:() -> Float;
 	public var updateCallback:(value:Float, percent:Float) -> Void;
 
-	public function new(x:Float, y:Float, image:String = 'healthBar', valueFunction:()->Float = null, boundMin:Float = 0, boundMax:Float = 1)
+	// internal value tracker
+	var _value:Float;
+
+	public function new(x:Float, y:Float, image:String = 'healthBar', ?valueFunction:()->Float, boundMin:Float = 0.0, boundMax:Float = 1.0)
 	{
 		super(x, y);
 
-		this.valueFunction = valueFunction != null ? valueFunction : function() return 0;
+		this.valueFunction = valueFunction ?? function() return 0.0;
 		setBounds(boundMin, boundMax);
+
+		_value = FlxMath.bound(this.valueFunction(), bounds.min, bounds.max);
+		percent = FlxMath.remapToRange(_value, bounds.min, bounds.max, 0.0, 100.0);
 		
-		bg = new FlxSprite(0, 0, Paths.image(image));
-		bg.antialiasing = ClientPrefs.data.antialiasing;
+		bg = new FlxSprite(Paths.image(image));
 		barWidth = Std.int(bg.width - barOffset.x * 2);
 		barHeight = Std.int(bg.height - barOffset.y * 2);
 
 		leftBar = new FlxSprite().makeGraphic(Std.int(bg.width), Std.int(bg.height));
-		leftBar.antialiasing = antialiasing = ClientPrefs.data.antialiasing;
 
 		rightBar = new FlxSprite().makeGraphic(Std.int(bg.width), Std.int(bg.height));
 		rightBar.color = FlxColor.BLACK;
-		rightBar.antialiasing = ClientPrefs.data.antialiasing;
+
+		antialiasing = ClientPrefs.data.antialiasing;
 
 		add(leftBar);
 		add(rightBar);
@@ -50,26 +59,27 @@ class Bar extends FlxSpriteGroup
 		regenerateClips();
 	}
 
+	public function setBounds(min:Float = 0, max:Float = 1):FlxBounds<Float>
+		return bounds.set(min, max);
+
 	override function update(elapsed:Float)
 	{
-		var value:Null<Float> = FlxMath.remapToRange(FlxMath.bound(valueFunction(), bounds.min, bounds.max), bounds.min, bounds.max, 0, 100);
-		percent = (value != null ? value : 0);
-		//if(rightBar != null) rightBar.setPosition(bg.x, bg.y);
-		//if(leftBar != null) leftBar.setPosition(bg.x, bg.y);
+		_value = FlxMath.bound(valueFunction(), bounds.min, bounds.max);
+		final percentValue:Float = FlxMath.remapToRange(_value, bounds.min, bounds.max, 0, 100);
+		percent = smooth ? FlxMath.lerp(percent, percentValue, elapsed * 25) : percentValue;
+		//if (rightBar != null) rightBar.setPosition(bg.x, bg.y);
+		//if (leftBar != null)  leftBar.setPosition(bg.x, bg.y);
 		super.update(elapsed);
 	}
 
 	override public function destroy()
 	{
-		barOffset.put();
-		centerPoint.put();
+		bounds = null;
+		barOffset = FlxDestroyUtil.put(barOffset);
+		centerPoint = FlxDestroyUtil.put(centerPoint);
+		leftBar.clipRect = FlxDestroyUtil.put(leftBar.clipRect);
+		rightBar.clipRect = FlxDestroyUtil.put(rightBar.clipRect);
 		super.destroy();
-	}
-
-	public function setBounds(min:Float = 0, max:Float = 1)
-	{
-		bounds.min = min;
-		bounds.max = max;
 	}
 
 	public function setColors(?left:FlxColor, ?right:FlxColor)
@@ -80,17 +90,17 @@ class Bar extends FlxSpriteGroup
 
 	public function updateBar()
 	{
-		if(leftBar == null || rightBar == null) return;
+		if (leftBar == null || rightBar == null) return;
 
-		var leftSize:Float = FlxMath.lerp(0, barWidth, (leftToRight ? percent * 0.01 : 1 - percent * 0.01));
+		final leftSize:Float = FlxMath.lerp(0, barWidth, (leftToRight ? percent * 0.01 : 1 - percent * 0.01));
 
-		var rectRight:FlxRect = rightBar.clipRect;
+		final rectRight:FlxRect = rightBar.clipRect;
 		rectRight.width = barWidth - leftSize;
 		rectRight.height = barHeight;
 		rectRight.x = barOffset.x + leftSize;
 		rectRight.y = barOffset.y;
 
-		var rectLeft:FlxRect = leftBar.clipRect;
+		final rectLeft:FlxRect = leftBar.clipRect;
 		rectLeft.width = leftSize;
 		rectLeft.height = barHeight;
 		rectLeft.x = barOffset.x;
@@ -102,78 +112,87 @@ class Bar extends FlxSpriteGroup
 
 		centerPoint.set(leftBar.x + leftSize + barOffset.x, leftBar.y + leftBar.clipRect.height * 0.5 + barOffset.y);
 
-		if(updateCallback != null)
-		{
-			var val:Null<Float> = valueFunction();
-			updateCallback(val != null ? val : 0, percent);
-		}
+		if (updateCallback != null)
+			updateCallback(_value, percent);
 	}
 
-	public function regenerateClips(backInPool:Bool = false)
+	public function regenerateClips()
 	{
-		if(leftBar != null)
+		if (leftBar == null && rightBar == null) return;
+
+		final width = Std.int(bg.width);
+		final height = Std.int(bg.height);
+		if (leftBar != null)
 		{
-			leftBar.setGraphicSize(Std.int(bg.width), Std.int(bg.height));
+			leftBar.setGraphicSize(width, height);
 			leftBar.updateHitbox();
-			if (backInPool) leftBar.clipRect.put();
-			leftBar.clipRect = FlxRect.get(0, 0, Std.int(bg.width), Std.int(bg.height));
+			if (leftBar.clipRect == null)
+				leftBar.clipRect = FlxRect.get(0, 0, width, height);
+			else
+				leftBar.clipRect.set(0, 0, width, height);
 		}
-		if(rightBar != null)
+		if (rightBar != null)
 		{
-			rightBar.setGraphicSize(Std.int(bg.width), Std.int(bg.height));
+			rightBar.setGraphicSize(width, height);
 			rightBar.updateHitbox();
-			if (backInPool) rightBar.clipRect.put();
-			rightBar.clipRect = FlxRect.get(0, 0, Std.int(bg.width), Std.int(bg.height));
+			if (rightBar.clipRect == null)
+				rightBar.clipRect = FlxRect.get(0, 0, width, height);
+			else
+				rightBar.clipRect.set(0, 0, width, height);
 		}
 		updateBar();
 	}
 
-	private function set_percent(value:Float)
+	@:noCompletion inline function set_percent(value:Float)
 	{
-		var doUpdate:Bool = value != percent;
+		final doUpdate:Bool = value != percent;
 		percent = value;
-		if(doUpdate) updateBar();
+		if (doUpdate) updateBar();
 		return value;
 	}
 
-	private function set_leftToRight(value:Bool)
+	@:noCompletion inline function set_leftToRight(value:Bool)
 	{
 		leftToRight = value;
 		updateBar();
 		return value;
 	}
 
-	private function set_barWidth(value:Int)
+	@:noCompletion inline function set_barWidth(value:Int)
 	{
 		barWidth = value;
-		regenerateClips(true);
+		regenerateClips();
 		return value;
 	}
 
-	private function set_barHeight(value:Int)
+	@:noCompletion inline function set_barHeight(value:Int)
 	{
 		barHeight = value;
-		regenerateClips(true);
+		regenerateClips();
 		return value;
 	}
 
-	function get_barCenter():Float return centerPoint.x;
-
-	override function set_x(Value:Float):Float // for dynamic center point update
+	@:noCompletion override inline function set_x(Value:Float):Float // for dynamic center point update
 	{
-		var prevX:Float = x;
+		final prevX:Float = x;
 		super.set_x(Value);
-		if (leftBar != null && exists && prevX != Value)
-			centerPoint.x = leftBar.x + FlxMath.lerp(0, barWidth, leftToRight ? percent * 0.01 : 1 - percent * 0.01) + barOffset.x;
+		centerPoint.x += Value - prevX;
 		return Value;
 	}
 
-	override function set_y(Value:Float):Float
+	@:noCompletion override inline function set_y(Value:Float):Float
 	{
-		var prevY:Float = y;
+		final prevY:Float = y;
 		super.set_y(Value);
-		if (leftBar != null && exists && prevY != Value)
-			centerPoint.y = leftBar.y + leftBar.clipRect.height * 0.5 + barOffset.y;
+		centerPoint.y += Value - prevY;
 		return Value;
+	}
+
+	@:noCompletion override inline function set_antialiasing(Antialiasing:Bool):Bool
+	{
+		for (member in members)
+			member.antialiasing = Antialiasing;
+
+		return antialiasing = Antialiasing;
 	}
 }

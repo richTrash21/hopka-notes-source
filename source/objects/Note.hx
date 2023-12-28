@@ -3,19 +3,11 @@ package objects;
 // If you want to make a custom note type, you should search for:
 // "function set_noteType"
 
+import flixel.util.FlxSort;
 import shaders.RGBPalette;
 import objects.StrumNote;
 
 import flixel.math.FlxRect;
-
-using StringTools;
-
-typedef EventNote = {
-	strumTime:Float,
-	event:String,
-	value1:String,
-	value2:String
-}
 
 typedef NoteSplashData = {
 	disabled:Bool,
@@ -29,9 +21,9 @@ typedef NoteSplashData = {
 	a:Float
 }
 
-class Note extends FlxSprite
+class Note extends FlxSprite implements INote
 {
-	public var extraData:Map<String, Dynamic> = new Map<String, Dynamic>();
+	public var extraData:Map<String, Dynamic> = [];
 
 	public var strumTime:Float = 0;
 	public var mustPress:Bool = false;
@@ -479,4 +471,28 @@ class Note extends FlxSprite
 			clipRect = swagRect;
 		}
 	}
+
+	inline public static function sortByTime(Note1:INote, Note2:INote):Int
+		return FlxSort.byValues(FlxSort.ASCENDING, Note1.strumTime, Note2.strumTime);
+}
+
+class EventNote implements INote
+{
+	public var strumTime:Float;
+	public var event:String;
+	public var value1:String;
+	public var value2:String;
+
+	public function new(strumTime:Float, event:String, ?value1:String, ?value2:String)
+	{
+		this.strumTime = strumTime;
+		this.event  = event;
+		this.value1 = value1;
+		this.value2 = value2;
+	}
+}
+
+interface INote
+{
+	var strumTime:Float;
 }

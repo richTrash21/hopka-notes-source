@@ -926,7 +926,9 @@ class CharacterEditorState extends backend.MusicBeatUIState
 
 		ClientPrefs.toggleVolumeKeys(true);
 
-		final onChar:Bool = FlxMath.pointInCoordinates(FlxG.mouse.screenX, FlxG.mouse.screenY, char.x - char.offset.x, char.y - char.offset.y, char.width, char.height);
+		final propperPosX = char.x - (char.offset.x + 0.5 * (char.width - char.frameWidth));
+		final propperPosY = char.y - (char.offset.y + 0.5 * (char.height - char.frameHeight));
+		final onChar:Bool = FlxMath.pointInCoordinates(FlxG.mouse.screenX, FlxG.mouse.screenY, propperPosX, propperPosY, char.width, char.height);
 		FlxG.mouse.getScreenPosition(camMenu, __point);
 		final onUI:Bool = FlxMath.pointInCoordinates(__point.x, __point.y, UI_box.x, UI_box.y, UI_box.width, UI_box.height)
 					   || FlxMath.pointInCoordinates(__point.x, __point.y, UI_characterbox.x, UI_characterbox.y, UI_characterbox.width, UI_characterbox.height);
@@ -936,7 +938,7 @@ class CharacterEditorState extends backend.MusicBeatUIState
 			moveChar = true;
 			char.alpha = 0.8;
 		}
-		if (FlxG.mouse.justReleased) // mouse up event
+		if (FlxG.mouse.justReleased && moveChar) // mouse up event
 		{
 			moveChar = false;
 			char.alpha = 1;
@@ -1049,6 +1051,9 @@ class CharacterEditorState extends backend.MusicBeatUIState
 
 				if (FlxG.keys.justPressed.S || FlxG.keys.justPressed.W || FlxG.keys.justPressed.SPACE)
 				{
+					// спасибо фус <3
+					moveOffset = moveChar = false;
+					char.alpha = 1;
 					char.playAnim(_curAnim.anim, true);
 					genBoyOffsets();
 				}
@@ -1068,7 +1073,7 @@ class CharacterEditorState extends backend.MusicBeatUIState
 					{
 						final multiplier = FlxG.keys.pressed.SHIFT ? 10 : 1;
 						final arrayVal = i > 1 ? 1 : 0;
-						final negaMult:Int = i % 2 == 1 ? -1 : 1;
+						final negaMult:Int = FlxMath.isOdd(i) ? -1 : 1;
 						_curAnim.offsets[arrayVal] += negaMult * multiplier;
 
 						char.addOffset(_curAnim.anim, _curAnim.offsets[0], _curAnim.offsets[1]);

@@ -7,7 +7,7 @@ import backend.Song;
 import flixel.group.FlxGroup;
 import flixel.graphics.FlxGraphic;
 
-import objects.MenuItem;
+import objects.MenuItem.StoryMenuItem;
 import objects.MenuCharacter;
 
 import substates.GameplayChangersSubstate;
@@ -29,7 +29,7 @@ class StoryMenuState extends MusicBeatState
 
 	var txtTracklist:FlxText;
 
-	var grpWeekText:FlxTypedGroup<MenuItem>;
+	var grpWeekText:FlxTypedGroup<StoryMenuItem>;
 	var grpWeekCharacters:FlxTypedGroup<MenuCharacter>;
 
 	var grpLocks:FlxTypedGroup<FlxSprite>;
@@ -62,7 +62,7 @@ class StoryMenuState extends MusicBeatState
 		final bgYellow:FlxSprite = new FlxSprite(0, 56).makeGraphic(FlxG.width, 386, 0xFFF9CF51);
 		bgSprite = new FlxSprite(0, 56);
 
-		grpWeekText = new FlxTypedGroup<MenuItem>();
+		grpWeekText = new FlxTypedGroup<StoryMenuItem>();
 		add(grpWeekText);
 
 		add(new FlxSprite().makeGraphic(FlxG.width, 56, FlxColor.BLACK));
@@ -86,7 +86,7 @@ class StoryMenuState extends MusicBeatState
 			{
 				loadedWeeks.push(weekFile);
 				WeekData.setDirectoryFromWeek(weekFile);
-				final weekThing:MenuItem = new MenuItem(0, bgSprite.y + 396, WeekData.weeksList[i]);
+				final weekThing:StoryMenuItem = new StoryMenuItem(0, bgSprite.y + 396, WeekData.weeksList[i]);
 				weekThing.y += ((weekThing.height + 20) * num);
 				weekThing.targetY = num++;
 				grpWeekText.add(weekThing);
@@ -350,7 +350,8 @@ class StoryMenuState extends MusicBeatState
 		Difficulty.loadFromWeek();
 		difficultySelectors.visible = unlocked;
 
-		curDifficulty = Difficulty.list.contains(Difficulty.getDefault()) ? Math.round(Math.max(0, Difficulty.defaultList.indexOf(Difficulty.getDefault()))) : 0;
+		final _default:String = Difficulty.getDefault();
+		curDifficulty = Difficulty.list.contains(_default) ? Math.round(Math.max(0, Difficulty.defaultList.indexOf(_default))) : 0;
 
 		final newPos:Int = Difficulty.list.indexOf(lastDifficultyName);
 		if (newPos > -1) curDifficulty = newPos;

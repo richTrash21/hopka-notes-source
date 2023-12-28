@@ -277,7 +277,7 @@ class NotesSubState extends MusicBeatSubstate
 				}
 				FlxG.sound.play(Paths.sound('scrollMenu'), 0.6);
 			}
-			if(!end) hexTypeLine.visible = Math.floor(hexTypeVisibleTimer * 2) % 2 == 0;
+			if(!end) hexTypeLine.visible = FlxMath.isEven(Math.floor(hexTypeVisibleTimer * 2));
 		}
 		else
 		{

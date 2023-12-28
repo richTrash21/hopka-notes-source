@@ -33,31 +33,47 @@ typedef SwagSong =
 
 class Song
 {
-	public var song:String;
-	public var notes:Array<SwagSection>;
-	public var events:Array<Dynamic>;
-	public var bpm:Float;
+	// IDFK WHAT THESE ARE BUT APARENTLY THEY WERE IN VS FORDICK'S CHARTS LMAO
+	//public static final invalidFields:Array<String> = ['player3', 'validScore', 'isHey', 'cutsceneType', 'isSpooky', 'isMoody', 'uiType', 'sectionLengths'];
+	public static final validFields:Array<String> = Type.getInstanceFields(Song);
+
+	public var song:String = '';
+	public var notes:Array<SwagSection> = [];
+	public var events:Array<Dynamic> = [];
+	public var bpm:Float = 100;
 	public var needsVoices:Bool = true;
-	public var arrowSkin:String;
-	public var splashSkin:String;
-	public var gameOverChar:String;
-	public var gameOverSound:String;
-	public var gameOverLoop:String;
-	public var gameOverEnd:String;
-	public var disableNoteRGB:Bool = false;
 	public var speed:Float = 1;
-	public var stage:String;
+
 	public var player1:String = 'bf';
 	public var player2:String = 'dad';
 	public var gfVersion:String = 'gf';
+	public var stage:String = 'stage';
 
-	private static function onLoadJson(songJson:Dynamic) // Convert old charts to newest format
+	public var gameOverChar:String = null;
+	public var gameOverSound:String = null;
+	public var gameOverLoop:String = null;
+	public var gameOverEnd:String = null;
+
+	public var disableNoteRGB:Bool = false;
+
+	public var arrowSkin:String = null;
+	public var splashSkin:String = null;
+
+	public function new(SONG:SwagSong)
+	{
+		for (field in Reflect.fields(SONG))
+		{
+			if (validFields.contains(field))
+				Reflect.setField(this, field, Reflect.field(SONG, field));
+			else
+				trace('WARNING!! This chart have invalid field "$field"');
+		}
+	}
+
+	private static function onLoadJson(songJson:Dynamic):SwagSong // Convert old charts to newest format
 	{
 		if (songJson.gfVersion == null)
-		{
 			songJson.gfVersion = songJson.player3;
-			songJson.player3 = null;
-		}
 
 		if (songJson.events == null)
 		{
@@ -82,16 +98,16 @@ class Song
 				}
 			}
 		}
+
+		// yeet the garbage!!
+		for (field in Reflect.fields(songJson))
+			if (!validFields.contains(field))
+				Reflect.deleteField(songJson, field);
+
+		return songJson;
 	}
 
-	public function new(song, notes, bpm)
-	{
-		this.song  = song;
-		this.notes = notes;
-		this.bpm   = bpm;
-	}
-
-	public static function loadFromJson(jsonInput:String, ?folder:String):SwagSong
+	inline public static function loadFromJson(jsonInput:String, ?folder:String):Song
 	{
 		var rawJson = null;
 		
@@ -111,34 +127,18 @@ class Song
 			#end
 		}
 
+		/*var len = rawJson.length;
 		while (!rawJson.endsWith("}"))
 		{
-			rawJson = rawJson.substr(0, rawJson.length - 1);
+			rawJson = rawJson.substr(0, --len);
 			// LOL GOING THROUGH THE BULLSHIT TO CLEAN IDK WHATS STRANGE
-		}
+		}*/
 
-		// FIX THE CASTING ON WINDOWS/NATIVE
-		// Windows???
-		// trace(songData);
-
-		// trace('LOADED FROM JSON: ' + songData.notes);
-		/* 
-			for (i in 0...songData.notes.length)
-			{
-				trace('LOADED FROM JSON: ' + songData.notes[i].sectionNotes);
-				// songData.notes[i].sectionNotes = songData.notes[i].sectionNotes
-			}
-
-				daNotes = songData.notes;
-				daSong = songData.song;
-				daBpm = songData.bpm; */
-
-		final songJson:SwagSong = parseJSONshit(rawJson);
+		final songJson:Song = new Song(onLoadJson(parseJSONshit(rawJson)));
 		if (jsonInput != 'events') StageData.loadDirectory(songJson);
-		onLoadJson(songJson);
 		return songJson;
 	}
 
-	public static function parseJSONshit(rawJson:String):SwagSong
+	inline public static function parseJSONshit(rawJson:String):SwagSong
 		return cast haxe.Json.parse(rawJson).song;
 }

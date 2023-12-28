@@ -1,5 +1,6 @@
 package psychlua;
 
+import flixel.math.FlxPoint;
 import openfl.display.BlendMode;
 import animateatlas.AtlasFrameMaker;
 
@@ -21,7 +22,7 @@ class LuaUtils
 {
 	public static function getLuaTween(options:Dynamic):LuaTweenOptions
 	{
-		return cast {
+		return {
 			type: getTweenTypeByString(options.type),
 			startDelay: options.startDelay,
 			onUpdate: options.onUpdate,
@@ -213,6 +214,50 @@ class LuaUtils
 		}
 		return false;
 	}
+
+	// for functions taht get point from stuff (aka optimisation)
+	static final _lePoint:FlxPoint = FlxPoint.get();
+
+	inline public static function getMousePoint(camera:String, axis:String):Float
+	{
+		FlxG.mouse.getScreenPosition(cameraFromString(camera), _lePoint);
+		return axis == 'y' ? _lePoint.y : _lePoint.x;
+	}
+
+	inline public static function getPoint(leVar:String, type:String, axis:String, ?camera:String):Float
+	{
+		final split:Array<String> = leVar.split('.');
+		final obj:FlxSprite = (split.length > 1)
+			? getVarInArray(getPropertyLoop(split), split[split.length-1])
+			: getObjectDirectly(split[0]);
+
+		if (obj != null)
+		{
+			switch(type)
+			{
+				case 'graphic':	obj.getGraphicMidpoint(_lePoint);
+				case 'screen':	obj.getScreenPosition(_lePoint, cameraFromString(camera));
+				default:		obj.getMidpoint(_lePoint);
+			};
+			return axis == 'y' ? _lePoint.y : _lePoint.x;
+		}
+		return 0;
+	}
+
+	inline public static function keyJustPressed(key:String):Bool
+		return keyUtil(FlxG.keys.justPressed, key.toUpperCase().trim());
+
+	inline public static function keyPressed(key:String):Bool
+		return keyUtil(FlxG.keys.pressed, key.toUpperCase().trim());
+
+	inline public static function keyJustReleased(key:String):Bool
+		return keyUtil(FlxG.keys.justReleased, key.toUpperCase().trim());
+
+	inline public static function keyReleased(key:String):Bool
+		return keyUtil(FlxG.keys.released, key.toUpperCase().trim());
+
+	inline static function keyUtil(keyList:flixel.input.keyboard.FlxKeyList, key:String):Bool
+		return Reflect.getProperty(keyList, key) ?? false;
 	
 	inline public static function loadFrames(image:String, spriteType:String)
 	{
@@ -295,7 +340,7 @@ class LuaUtils
 			}
 	}
 
-	inline public static function getTweenEaseByString(?ease:String):Float->Float
+	inline public static function getTweenEaseByString(?ease:String):EaseFunction
 	{
 		return switch(ease.toLowerCase().trim())
 			{
@@ -340,26 +385,7 @@ class LuaUtils
 	}
 
 	inline public static function blendModeFromString(blend:String):BlendMode
-	{
-		return switch(blend.toLowerCase().trim())
-			{
-				case 'add':			ADD;
-				case 'alpha':		ALPHA;
-				case 'darken':		DARKEN;
-				case 'difference':	DIFFERENCE;
-				case 'erase':		ERASE;
-				case 'hardlight':	HARDLIGHT;
-				case 'invert':		INVERT;
-				case 'layer':		LAYER;
-				case 'lighten':		LIGHTEN;
-				case 'multiply':	MULTIPLY;
-				case 'overlay':		OVERLAY;
-				case 'screen':		SCREEN;
-				case 'shader':		SHADER;
-				case 'subtract':	SUBTRACT;
-				default:			NORMAL;
-			}
-	}
+		return cast (blend.toLowerCase().trim() : BlendMode);
 	
 	inline public static function typeToString(type:Int):String
 	{
@@ -386,4 +412,14 @@ class LuaUtils
 				case 'camother' | 'other':	PlayState.instance.camOther;
 				default:					PlayState.instance.camGame;
 			}
+
+	//clone functions
+	inline public static function getBuildTarget():String
+		return	#if windows		'windows'
+				#elseif linux	'linux'
+				#elseif mac		'mac'
+				#elseif html5	'browser'
+				#elseif android	'android'
+				#elseif switch	'switch'
+				#else			'unknown' #end;
 }

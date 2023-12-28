@@ -225,7 +225,7 @@ class TitleState extends MusicBeatState
 
 	override function beatHit():Void
 	{
-		gf.animation.play(curBeat % 2 == 0 ? 'left' : 'right', true);
+		gf.animation.play(FlxMath.isEven(curBeat) ? 'left' : 'right', true);
 		logo.animation.play('bump', true);
 
 		if (!skippedIntro)
@@ -246,7 +246,7 @@ class TitleState extends MusicBeatState
 				case 15:  addMoreText('Funkin');
 				case 16:  skipIntro();
 			}
-			ngSpr.visible = curBeat == 7;
+			ngSpr.visible = (curBeat == 7);
 	  }
   }
 

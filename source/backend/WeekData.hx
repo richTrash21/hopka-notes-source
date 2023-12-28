@@ -65,26 +65,16 @@ class WeekData
 
 	inline public static function createWeekFile():WeekFile return DEFAULT_WEEK;
 
-	// HELP: Is there any way to convert a WeekFile to WeekData without having to put all variables there manually? I'm kind of a noob in haxe lmao
 	public function new(weekFile:WeekFile, fileName:String)
 	{
-		songs = weekFile.songs;
-		weekCharacters = weekFile.weekCharacters;
-		weekBackground = weekFile.weekBackground;
-		weekBefore = weekFile.weekBefore;
-		storyName = weekFile.storyName;
-		weekName = weekFile.weekName;
-		freeplayColor = weekFile.freeplayColor;
-		startUnlocked = weekFile.startUnlocked;
-		hiddenUntilUnlocked = weekFile.hiddenUntilUnlocked;
-		hideStoryMode = weekFile.hideStoryMode;
-		hideFreeplay = weekFile.hideFreeplay;
-		difficulties = weekFile.difficulties;
+		// by MiguelItsOut
+		for (field in Reflect.fields(weekFile))
+			Reflect.setField(this, field, Reflect.field(weekFile, field));
 
 		this.fileName = fileName;
 	}
 
-	public static function reloadWeekFiles(isStoryMode:Null<Bool> = false)
+	public static function reloadWeekFiles(?isStoryMode:Bool = false)
 	{
 		weeksList = [];
 		weeksLoaded.clear();
@@ -185,10 +175,7 @@ class WeekData
 			rawJson = lime.utils.Assets.getText(path);
 		#end
 
-		if (rawJson != null && rawJson.length > 0)
-			return cast haxe.Json.parse(rawJson);
-
-		return null;
+		return rawJson != null && rawJson.length > 0 ? cast haxe.Json.parse(rawJson) : null;
 	}
 
 	//   FUNCTIONS YOU WILL PROBABLY NEVER NEED TO USE
@@ -202,5 +189,5 @@ class WeekData
 		return weeksLoaded.get(weeksList[PlayState.storyWeek]);
 
 	inline public static function setDirectoryFromWeek(?data:WeekData)
-		return Mods.currentModDirectory = data != null && data.folder != null && data.folder.length > 0 ? data.folder : '';
+		return Mods.currentModDirectory = (data != null && data.folder != null && data.folder.length > 0) ? data.folder : '';
 }

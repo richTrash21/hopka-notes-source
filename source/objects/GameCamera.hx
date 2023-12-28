@@ -61,12 +61,11 @@ class GameCamera extends FlxCamera
 	{
 		if (!active) return;
 
-		final globalSpeed = CoolUtil.globalSpeed;
 		if (target != null && updateLerp)
-			followLerp = elapsed * _speed * cameraSpeed * globalSpeed * (FlxG.updateFramerate / 60);
+			followLerp = elapsed * _speed * cameraSpeed * (FlxG.updateFramerate / 60);
 
 		if (updateZoom && !tweeningZoom)
-			zoom = FlxMath.lerp(targetZoom, zoom, Math.max(1 - (elapsed * _zoomSpeed * zoomDecay * globalSpeed), 0));
+			zoom = FlxMath.lerp(targetZoom, zoom, Math.max(1 - (elapsed * _zoomSpeed * zoomDecay), 0));
 
 		super.update(elapsed);
 	}

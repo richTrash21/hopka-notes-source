@@ -30,7 +30,7 @@ class Main extends Sprite
 		startFullscreen: false			  // if the game should start at fullscreen mode
 	};
 
-	public static var fpsVar:FPSCounter;
+	public static var fpsVar(default, null):FPSCounter;
 	public static var fpsShadow:FPSCounter;
 	@:noCompletion private static var _focusVolume(default, null):Float = 1; // ignore
 
@@ -70,8 +70,7 @@ class Main extends Sprite
 
 		#if !mobile
 		fpsVar = new FPSCounter(10, 3, 0xFFFFFF);
-		fpsShadow = new FPSCounter(11, 4);
-		fpsShadow.changeColor = false;
+		fpsShadow = new FPSCounter(11, 4, false);
 		addChild(fpsShadow);
 		addChild(fpsVar);
 

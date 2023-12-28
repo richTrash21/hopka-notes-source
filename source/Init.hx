@@ -2,6 +2,7 @@ package;
 
 import flixel.addons.transition.FlxTransitionableState;
 import states.FlashingState;
+import backend.Subtitles;
 
 // THIS IS FOR INITIALIZING STUFF BECAUSE FLIXEL HATES INITIALIZING STUFF IN MAIN
 // GO TO MAIN FOR GLOBAL PROJECT/OPENFL STUFF
@@ -10,6 +11,19 @@ class Init extends flixel.FlxState
 {
 	override function create():Void
 	{
+		// sexy subtitle markups
+		Subtitles._markup = [
+			// standart fonts doesn't have those so why bother?
+			/*new FlxTextFormatMarkerPair(new FlxTextFormat(null, true), "<b>"),
+			new FlxTextFormatMarkerPair(new FlxTextFormat(null, null, true), "<i>")*/
+		];
+		for (name => color in FlxColor.colorLookup)
+		{
+			name = name.toLowerCase();
+			Subtitles._markup.push(new FlxTextFormatMarkerPair(new FlxTextFormat(color), '<$name>'));
+			Subtitles._markup.push(new FlxTextFormatMarkerPair(new FlxTextFormat(null, null, null, color), '<border-$name>'));
+		}
+
 		FlxTransitionableState.skipNextTransOut = true;
 		Paths.clearStoredMemory();
 
@@ -41,8 +55,7 @@ class Init extends flixel.FlxState
 
 		if (FlxG.save.data.flashing == null && !FlashingState.leftState)
 		{
-			FlxTransitionableState.skipNextTransIn = true;
-			FlxTransitionableState.skipNextTransOut = true;
+			FlxTransitionableState.skipNextTransIn = FlxTransitionableState.skipNextTransOut = true;
 			MusicBeatState.switchState(new FlashingState());
 		}
 		else FlxG.switchState(Type.createInstance(Main.game.initialState, []));

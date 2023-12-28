@@ -17,19 +17,22 @@ class CustomFadeTransition extends flixel.FlxSubState
 
 		super();
 
-		final zoom:Float = FlxMath.bound(FlxG.camera.zoom, 0.05, 1);
-		final width:Int  = Std.int(FlxG.width / zoom);
-		final height:Int = Std.int(FlxG.height / zoom);
+		final daCamera:FlxCamera = nextCamera ?? FlxG.cameras.list[FlxG.cameras.list.length - 1];
+		cameras = [daCamera]; // actually uses nextCamera now WOW!!!!
+		nextCamera = null;
+
+		final width:Float  = daCamera.width  / daCamera.scaleX;
+		final height:Float = daCamera.height / daCamera.scaleY;
 		final realColors:Array<Int> = colors.copy();
 		if (isTransIn) realColors.reverse();
 
-		final transGradient:FlxSprite = flixel.util.FlxGradient.createGradientFlxSprite(1, height * 2, realColors);
-		transGradient.setPosition((-width + FlxG.width) * 0.5, isTransIn ? -height : -height * 2);
+		final deltaHeight:Float = daCamera.height - height;
+		final transGradient:FlxSprite = flixel.util.FlxGradient.createGradientFlxSprite(1, Std.int(height) * 2, realColors);
+		transGradient.setPosition((daCamera.width - width) * 0.5, isTransIn ? -(height + deltaHeight) : -(height + deltaHeight) * 2);
 		transGradient.scrollFactor.set();
 		transGradient.scale.x = width;
 		transGradient.updateHitbox();
-		add(transGradient).cameras = [nextCamera ?? FlxG.cameras.list[FlxG.cameras.list.length - 1]]; // actually uses nextCamera now WOW!!!!
-		nextCamera = null;
+		add(transGradient);
 
 		FlxTween.tween(transGradient, {y: (isTransIn ? height : 0)}, duration, {onComplete: function(_) finish(isTransIn)});
 	}

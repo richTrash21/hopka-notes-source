@@ -141,11 +141,7 @@ class VisualsUISubState extends BaseOptionsMenu
 			'If unchecked, hides FPS Counter.',
 			'showFPS',
 			'bool');
-		option.change = function()
-			if (Main.fpsVar != null) {
-				Main.fpsVar.visible = ClientPrefs.data.showFPS;
-				Main.fpsShadow.visible = ClientPrefs.data.showFPS;
-			};
+		option.change = function() Main.fpsVar.visible = Main.fpsShadow.visible = ClientPrefs.data.showFPS;
 		addOption(option);
 		#end
 		

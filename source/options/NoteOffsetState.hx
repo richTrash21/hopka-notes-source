@@ -382,7 +382,7 @@ class NoteOffsetState extends MusicBeatState
 
 		if (lastBeatHit == curBeat) return;
 
-		if (curBeat % 2 == 0)
+		if (FlxMath.isEven(curBeat))
 		{
 			boyfriend.dance();
 			gf.dance();

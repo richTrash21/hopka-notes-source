@@ -94,7 +94,7 @@ class Paths
 	}
 
 	static public var currentLevel(default, set):String;
-	inline static public function set_currentLevel(level:String):String return currentLevel = level.toLowerCase();
+	inline static function set_currentLevel(level:String):String return currentLevel = level.toLowerCase();
 
 	public static function getPath(file:String, ?type:AssetType = TEXT, ?library:Null<String> = null, ?modsAllowed:Bool = false):String
 	{
@@ -122,43 +122,52 @@ class Paths
 		return getPreloadPath(file);
 	}
 
-	inline static public function getLibraryPath(file:String, library = "preload")
+	inline static public function getLibraryPath(file:String, library = "preload"):String
 		return (library == "preload" || library == "default") ? getPreloadPath(file) : getLibraryPathForce(file, library);
 
-	inline static function getLibraryPathForce(file:String, library:String, ?level:String)
+	inline static function getLibraryPathForce(file:String, library:String, ?level:String):String
 		return '$library:assets/${level ?? library}/$file';
 
-	inline public static function getSharedPath(file:String = '')
+	inline public static function getSharedPath(file:String = ''):String
 		return 'assets/shared/$file';
 
-	inline public static function getPreloadPath(file:String = '')
+	inline public static function getPreloadPath(file:String = ''):String
 		return 'assets/$file';
 
-	inline static public function txt(key:String, ?library:String)
+	inline static public function txt(key:String, ?library:String):String
 		return getPath('data/$key.txt', TEXT, library);
 
-	inline static public function xml(key:String, ?library:String)
+	inline static public function xml(key:String, ?library:String):String
 		return getPath('data/$key.xml', TEXT, library);
 
-	inline static public function json(key:String, ?library:String)
+	inline static public function json(key:String, ?library:String):String
 		return getPath('data/$key.json', TEXT, library);
 
-	inline static public function shaderFragment(key:String, ?library:String)
+	inline static public function shaderFragment(key:String, ?library:String):String
 		return getPath('shaders/$key.frag', TEXT, library);
 
-	inline static public function shaderVertex(key:String, ?library:String)
+	inline static public function shaderVertex(key:String, ?library:String):String
 		return getPath('shaders/$key.vert', TEXT, library);
 
-	inline static public function lua(key:String, ?library:String)
+	inline static public function lua(key:String, ?library:String):String
 		return getPath('$key.lua', TEXT, library);
 
-	static public function video(key:String)
+	inline static public function video(key:String):String
 	{
 		#if MODS_ALLOWED
 		final file:String = modsVideo(key);
 		if (FileSystem.exists(file)) return file;
 		#end
 		return 'assets/videos/$key.$VIDEO_EXT';
+	}
+
+	inline static public function srt(key:String, ?library:String):String
+	{
+		#if MODS_ALLOWED
+		final file:String = modFolders('data/$key.srt');
+		if (FileSystem.exists(file)) return file;
+		#end
+		return 'assets/data/$key.srt';
 	}
 
 	static public function sound(key:String, ?library:String):Sound
@@ -284,7 +293,7 @@ class Paths
 		return 'assets/fonts/$key';
 	}
 
-	public static function fileExists(key:String, type:AssetType, ?ignoreMods:Bool = false, ?library:String = null)
+	public static function fileExists(key:String, type:AssetType, ?ignoreMods:Bool = false, ?library:String = null):Bool
 	{
 		#if MODS_ALLOWED
 		if (!ignoreMods)
@@ -293,7 +302,7 @@ class Paths
 				if (FileSystem.exists(mods('$mod/$key')))
 					return true;
 
-			if (FileSystem.exists(mods(Mods.currentModDirectory + '/' + key)) || FileSystem.exists(mods(key)))
+			if (FileSystem.exists(mods('${Mods.currentModDirectory}/$key')) || FileSystem.exists(mods(key)))
 				return true;
 		}
 		#end

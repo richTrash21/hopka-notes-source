@@ -7,8 +7,6 @@ import openfl.display.BitmapData;
  */
 class VideoSprite extends flixel.FlxSprite
 {
-	static final _placeholder:BitmapData = new BitmapData(FlxG.width, FlxG.height, true, FlxColor.BLACK);
-
 	public var readyCallback:()->Void;
 	public var finishCallback:()->Void;
 	public var isPlaying(get, never):Bool;
@@ -19,30 +17,18 @@ class VideoSprite extends flixel.FlxSprite
 
 	public function new(VideoWidth:Float = 320, VideoHeight:Float = 240, AutoScale:Bool = true)
 	{
-		super(_placeholder); // so that stupid haxeflixel graphic won't show up
-		setupVideo(VideoWidth, VideoHeight, AutoScale);
-	}
-
-	override public function draw()
-	{
-		if (isPlaying && autoScale)
-		{
-			setGraphicSize(FlxG.width / camera.zoom, FlxG.height / camera.zoom);
-			updateHitbox();
-			screenCenter();
-		}
-		super.draw();
-	}
-
-	// for sprite reusing
-	public function setupVideo(Width:Float = 320, Height:Float = 240, AutoScale:Bool = true)
-	{
-		video = new VideoHandler(Width, Height, autoScale = AutoScale);
+		super(); // so that stupid haxeflixel graphic won't show up
+		visible = false;
+		
+		video = new VideoHandler(VideoWidth, VideoHeight, autoScale = AutoScale);
 		video.visible = false;
+		//FlxG.game.removeChild(video);
 
 		video.readyCallback = function()
 		{
+			visible = true;
 			loadGraphic(video.bitmapData);
+			FlxG.cameras.cameraResized.add(cameraResized);
 
 			if (readyCallback != null)
 				readyCallback();
@@ -53,8 +39,28 @@ class VideoSprite extends flixel.FlxSprite
 			if (finishCallback != null)
 				finishCallback();
 
+			FlxG.cameras.cameraResized.remove(cameraResized);
 			destroy();
 		};
+		scrollFactor.set();
+	}
+
+	function cameraResized(camera:FlxCamera)
+	{
+		if (autoScale && camera == this.camera)
+		{
+			setGraphicSize(camera.width / camera.scaleX, camera.height / camera.scaleY);
+			updateHitbox();
+			screenCenter();
+		}
+	}
+
+	override public function destroy()
+	{
+		readyCallback = null;
+		finishCallback = null;
+		video = null;
+		super.destroy();
 	}
 
 	/**

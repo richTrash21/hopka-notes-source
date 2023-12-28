@@ -32,7 +32,7 @@ class TypedAlphabet extends Alphabet
 			while(_timeToUpdate >= delay)
 			{
 				showCharacterUpTo(_curLetter + 1);
-				if (!playedSound && sound != '' && (delay > 0.025 || _curLetter % 2 == 0))
+				if (!playedSound && sound != '' && (delay > 0.025 || FlxMath.isEven(_curLetter)))
 					FlxG.sound.play(Paths.sound(sound), volume);
 
 				playedSound = true;

@@ -1,10 +1,12 @@
 package objects;
 
+import flixel.util.FlxDestroyUtil;
+import flixel.util.FlxArrayUtil;
+import flixel.util.FlxSort;
+
 import flixel.animation.FlxAnimation;
 import flixel.math.FlxPoint;
-import flixel.util.FlxDestroyUtil;
 import flixel.FlxObject;
-import flixel.util.FlxSort;
 
 #if MODS_ALLOWED
 import sys.FileSystem;
@@ -272,6 +274,7 @@ class Character extends objects.ExtendedSprite
 		}
 		animation.play(AnimName, Force, Reversed, Frame);
 		
+		//updateOfssets();
 		if (animOffsets.exists(AnimName))
 			offset.copyFrom(animOffsets.get(AnimName));
 		else
@@ -375,5 +378,61 @@ class Character extends objects.ExtendedSprite
 		#end
 		camFollow.y += (height - Height) * 0.5;
 		return height = Height;
+	}
+}
+
+/**
+	A group that stores a bunch of idiots (привет Алик!!). 
+**/
+class CharacterGroup extends FlxTypedSpriteGroup<Character>
+{
+	/**
+		So every character can have a unique string key through which they can be pulled.
+	**/
+	public var membersMap(default, null):Map<String, Character>;
+
+	/**
+		List of active characters that can be used in game.
+	**/
+	public var activeList(default, null):Array<Character>;
+
+	public function new(X:Float = 0, Y:Float = 0)
+	{
+		super(X, Y);
+		membersMap = [];
+		activeList = [];
+	}
+
+	public function setActiveByKey(Keys:Array<String>)
+	{
+		var char:Character = null;
+		while (activeList.length > 0)
+		{
+			char = activeList.pop();
+			diactivate(char);
+		}
+
+		for (key in Keys)
+			addActiveByKey(key);
+	}
+
+	public function addActiveByKey(Key:String)
+	{
+		if (membersMap.exists(Key))
+			activeList.push(membersMap.get(Key));
+	}
+
+	inline function diactivate(char:Character):Character
+	{
+		char.alpha = 0.00001;
+		char.active = false; // for optimisation!!
+		return char;
+	}
+
+	inline function activate(char:Character):Character
+	{
+		char.alpha = 1;
+		char.active = true;
+		return char;
 	}
 }

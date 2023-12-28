@@ -10,7 +10,7 @@ typedef NoteSplashConfig = {
 	offsets:Array<Array<Float>>
 }
 
-class NoteSplash extends FlxSprite
+class NoteSplash extends FlxSprite implements ISortable
 {
 	public var rgbShader:PixelSplashShaderRef;
 	var _textureLoaded:String = null;
@@ -18,6 +18,8 @@ class NoteSplash extends FlxSprite
 
 	inline public static final defaultNoteSplash:String = 'noteSplashes/noteSplashes';
 	public static var configs:Map<String, NoteSplashConfig> = [];
+
+	public var order:Int = 0;
 
 	public function new(x:Float = 0, y:Float = 0)
 	{

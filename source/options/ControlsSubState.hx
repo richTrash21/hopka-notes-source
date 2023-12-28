@@ -236,7 +236,7 @@ class ControlsSubState extends MusicBeatSubstate
 	function updateBind(num:Int, text:String)
 	{
 		final bind:Alphabet = grpBinds.members[num];
-		final attach:Alphabet = new Alphabet(350 + (num % 2) * 300, 248, text, false);
+		final attach:Alphabet = new Alphabet(350 + (num & 1) * 300, 248, text, false);
 		attach.isMenuItem = true;
 		attach.changeX = false;
 		attach.distancePerItem.y = 60;

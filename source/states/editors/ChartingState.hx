@@ -133,7 +133,7 @@ class ChartingState extends MusicBeatUIState
 	var curEventSelected:Int = 0;
 	var curUndoIndex = 0;
 	var curRedoIndex = 0;
-	var _song:SwagSong;
+	var _song:Song;
 	/*
 	 * WILL BE THE CURRENT / LAST PLACED NOTE
 	**/
@@ -179,7 +179,7 @@ class ChartingState extends MusicBeatUIState
 		else
 		{
 			Difficulty.resetList();
-			_song = {
+			_song = new Song({
 				song: 'Test',
 				notes: [],
 				events: [],
@@ -190,7 +190,7 @@ class ChartingState extends MusicBeatUIState
 				gfVersion: 'gf',
 				speed: 1,
 				stage: 'stage'
-			};
+			});
 			addSection();
 			PlayState.SONG = _song;
 		}
@@ -391,23 +391,23 @@ class ChartingState extends MusicBeatUIState
 
 		var loadAutosaveBtn:FlxButton = new FlxButton(reloadSongJson.x, reloadSongJson.y + 30, 'Load Autosave', function()
 		{
-			PlayState.SONG = Song.parseJSONshit(FlxG.save.data.autosave);
+			PlayState.SONG = new Song(Song.parseJSONshit(FlxG.save.data.autosave));
 			MusicBeatState.resetState();
 		});
 
 		var loadEventJson:FlxButton = new FlxButton(loadAutosaveBtn.x, loadAutosaveBtn.y + 30, 'Load Events', function()
 		{
-			var songName:String = Paths.formatToSongPath(_song.song);
-			var file:String = Paths.json(songName + '/events');
+			final songName:String = Paths.formatToSongPath(_song.song);
+			final file:String = Paths.json('$songName/events');
 			#if sys
-			if (#if MODS_ALLOWED FileSystem.exists(Paths.modsJson(songName + '/events')) || #end FileSystem.exists(file))
+			if (#if MODS_ALLOWED FileSystem.exists(Paths.modsJson('$songName/events')) || #end FileSystem.exists(file))
 			#else
 			if (OpenFlAssets.exists(file))
 			#end
 			{
 				clearEvents();
-				var events:SwagSong = Song.loadFromJson('events', songName);
-				_song.events = events.events;
+				final events:SwagSong = Song.loadFromJson('events', songName);
+				_song.events = _song.events.concat(events.events);
 				changeSection(curSec);
 			}
 		});
@@ -2805,15 +2805,11 @@ class ChartingState extends MusicBeatUIState
 		//make it look sexier if possible
 		try {
 			if(altLoad) {
-				var rawJson = #if sys
-					File.getContent(song).trim();
-					#else
-					lime.utils.Assets.getText(song).trim();
-					#end
+				var rawJson = #if sys File.getContent(song).trim() #else lime.utils.Assets.getText(song).trim() #end;
 				while (!rawJson.endsWith("}")) rawJson = rawJson.substr(0, rawJson.length - 1);
-				PlayState.SONG = Song.parseJSONshit(rawJson);
+				PlayState.SONG = new Song(Song.parseJSONshit(rawJson));
 			} else {
-				var diff:String = Difficulty.getString();
+				final diff:String = Difficulty.getString();
 				PlayState.SONG = Song.loadFromJson(song.toLowerCase() + ((diff != null && diff != Difficulty.getDefault()) ? "-" + diff : ""), song.toLowerCase());
 			}
 			MusicBeatState.resetState();

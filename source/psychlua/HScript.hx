@@ -55,10 +55,7 @@ class HScript #if HSCRIPT_ALLOWED extends Interp #end
 		#if HSCRIPT_ALLOWED
 		super();
 
-		var content:String = null;
-		if (file != null)
-			content = Paths.getTextFromFile(file, false, true);
-
+		final content:String = (file == null ? null : Paths.getTextFromFile(file, false, true));
 		parentLua = parent;
 		if (parent != null)
 			origin = parent.scriptName;
@@ -81,44 +78,43 @@ class HScript #if HSCRIPT_ALLOWED extends Interp #end
 		setVar('close', function() active = false);
 
 		// classes from SScript (rip)
-		setVar('Date', Date);
-		setVar('DateTools', DateTools);
-		setVar('Math', Math);
-		setVar('Reflect', Reflect);
-		setVar('Std', Std);
-		setVar('HScript', HScript);
-		setVar('StringTools', StringTools);
-		setVar('Type', Type);
+		setVar('Date',			Date);
+		setVar('DateTools',		DateTools);
+		setVar('Math',			Math);
+		setVar('Reflect',		Reflect);
+		setVar('Std',			Std);
+		setVar('HScript',		HScript);
+		setVar('StringTools',	StringTools);
+		setVar('Type',			Type);
 		#if sys
-		setVar('File', sys.io.File);
-		setVar('FileSystem', sys.FileSystem);
-		setVar('Sys', Sys);
+		setVar('File',			sys.io.File);
+		setVar('FileSystem',	sys.FileSystem);
+		setVar('Sys',			Sys);
 		#end
-		setVar('Assets', openfl.Assets);
+		setVar('Assets',		openfl.Assets);
 
 		// Some very commonly used classes
-		setVar('FlxG', flixel.FlxG);
-		setVar('FlxSprite', flixel.FlxSprite);
-		setVar('FlxCamera', flixel.FlxCamera);
-		setVar('FlxTimer', flixel.util.FlxTimer);
-		setVar('FlxTween', flixel.tweens.FlxTween);
-		setVar('FlxEase', flixel.tweens.FlxEase);
-		setVar('FlxColor', CustomFlxColor);
-		setVar('PlayState', PlayState);
-		setVar('Paths', Paths);
-		setVar('Conductor', Conductor);
-		setVar('ClientPrefs', ClientPrefs);
-		setVar('ExtendedSprite', objects.ExtendedSprite);
-		setVar('Character', objects.Character);
-		setVar('Alphabet', Alphabet);
-		setVar('Note', objects.Note);
-		setVar('CustomSubstate', CustomSubstate);
-		setVar('Countdown', backend.BaseStage.Countdown);
+		setVar('FlxG',				flixel.FlxG);
+		setVar('FlxSprite',			flixel.FlxSprite);
+		setVar('FlxCamera',			flixel.FlxCamera);
+		setVar('FlxTimer',			flixel.util.FlxTimer);
+		setVar('FlxTween',			flixel.tweens.FlxTween);
+		setVar('FlxEase',			flixel.tweens.FlxEase);
+		setVar('FlxColor',			CustomFlxColor);
+		setVar('PlayState',			PlayState);
+		setVar('Paths',				Paths);
+		setVar('Conductor',			Conductor);
+		setVar('ClientPrefs',		ClientPrefs);
+		setVar('ExtendedSprite',	objects.ExtendedSprite);
+		setVar('Character',			objects.Character);
+		setVar('Alphabet',			Alphabet);
+		setVar('Note',				objects.Note);
+		setVar('CustomSubstate',	CustomSubstate);
+		setVar('Countdown',			backend.BaseStage.Countdown);
 		#if (!flash && sys)
-		setVar('FlxRuntimeShader', flixel.addons.display.FlxRuntimeShader);
+		setVar('FlxRuntimeShader',	flixel.addons.display.FlxRuntimeShader);
 		#end
-		setVar('ShaderFilter', openfl.filters.ShaderFilter);
-		setVar('StringTools', StringTools);
+		setVar('ShaderFilter',		openfl.filters.ShaderFilter);
 
 		// Functions & Variables
 		setVar('setVar',	 PlayState.instance.variables.set);
@@ -133,14 +129,14 @@ class HScript #if HSCRIPT_ALLOWED extends Interp #end
 		{
 			#if LUA_ALLOWED
 			for (script in PlayState.instance.luaArray)
-				if(script != null && script.lua != null && !script.closed)
+				if (script != null && script.lua != null && !script.closed)
 					script.set(name, func);
 			#end
 			FunkinLua.customFunctions.set(name, func);
 		});
 
 		// tested
-		setVar('createCallback', function(name:String, func:Dynamic, ?funk:FunkinLua = null)
+		setVar('createCallback', function(name:String, func:Dynamic, ?funk:FunkinLua)
 		{
 			if (funk == null) funk = parentLua;
 			if (parentLua != null) funk.addLocalCallback(name, func);
@@ -148,21 +144,21 @@ class HScript #if HSCRIPT_ALLOWED extends Interp #end
 		});
 
 		setVar('addHaxeLibrary', function(libName:String, ?libPackage:String = '') {
-			var str:String = libPackage.length > 0 ? libPackage + '.' : '';
+			final str:String = libPackage.length > 0 ? libPackage + '.' : '';
 			setVar(libName, resolveClassOrEnum(str + libName));
 		});
-		setVar('parentLua', parentLua);
-		setVar('this', this);
-		setVar('game', PlayState.instance); // useless cuz u can get vars directly, backward compatibility ig
-		setVar('buildTarget', FunkinLua.getBuildTarget());
-		setVar('customSubstate', CustomSubstate.instance);
-		setVar('customSubstateName', CustomSubstate.name);
+		setVar('parentLua',				parentLua);
+		setVar('this',					this);
+		setVar('game',					PlayState.instance); // useless cuz u can get vars directly, backward compatibility ig
+		setVar('buildTarget',			LuaUtils.getBuildTarget());
+		setVar('customSubstate',		CustomSubstate.instance);
+		setVar('customSubstateName',	CustomSubstate.name);
 
-		setVar('Function_Stop', FunkinLua.Function_Stop);
-		setVar('Function_Continue', FunkinLua.Function_Continue);
-		setVar('Function_StopLua', FunkinLua.Function_StopLua); //doesnt do much cuz HScript has a lower priority than Lua
-		setVar('Function_StopHScript', FunkinLua.Function_StopHScript);
-		setVar('Function_StopAll', FunkinLua.Function_StopAll);
+		setVar('Function_Stop',			FunkinLua.Function_Stop);
+		setVar('Function_Continue',		FunkinLua.Function_Continue);
+		setVar('Function_StopLua',		FunkinLua.Function_StopLua); //doesnt do much cuz HScript has a lower priority than Lua
+		setVar('Function_StopHScript',	FunkinLua.Function_StopHScript);
+		setVar('Function_StopAll',		FunkinLua.Function_StopAll);
 		#end
 	}
 
@@ -182,20 +178,20 @@ class HScript #if HSCRIPT_ALLOWED extends Interp #end
 	public function executeFunction(?funcToRun:String, ?funcArgs:Array<Dynamic>):Dynamic
 	{
 		#if HSCRIPT_ALLOWED
-		if (funcToRun == null || !active) return null;
+		if (funcToRun == null || !active) return FunkinLua.Function_Continue;
 
 		if (variables.exists(funcToRun))
 		{
 			if (funcArgs == null) funcArgs = [];
 			try
 			{
-				return Reflect.callMethod(null, variables.get(funcToRun), funcArgs);
+				final ret:Dynamic = Reflect.callMethod(null, variables.get(funcToRun), funcArgs);
+				return ret ?? FunkinLua.Function_Continue;
 			}
-			catch(e)
-				exception = e;
+			catch(e) exception = e;
 		}
 		#end
-		return null;
+		return FunkinLua.Function_Continue;
 	}
 
 	public static function implement(funk:FunkinLua)
@@ -218,7 +214,7 @@ class HScript #if HSCRIPT_ALLOWED extends Interp #end
 			var retVal:Dynamic = funk.hscript.executeCode(codeToRun);
 			if (funcToRun != null)
 			{
-				var retFunc:Dynamic = funk.hscript.executeFunction(funcToRun, funcArgs);
+				final retFunc:Dynamic = funk.hscript.executeFunction(funcToRun, funcArgs);
 				if (retFunc != null)
 					retVal = retFunc;
 			}
@@ -236,7 +232,7 @@ class HScript #if HSCRIPT_ALLOWED extends Interp #end
 		{
 			if (!funk.hscript.active) return null;
 
-			var retVal:Dynamic = funk.hscript.executeFunction(funcToRun, funcArgs);
+			final retVal:Dynamic = funk.hscript.executeFunction(funcToRun, funcArgs);
 
 			if (funk.hscript.exception != null)
 			{
@@ -258,7 +254,7 @@ class HScript #if HSCRIPT_ALLOWED extends Interp #end
 			else if(libName == null)
 				libName = '';
 
-			var c:Dynamic = funk.hscript.resolveClassOrEnum(str + libName);
+			final c:Dynamic = resolveClassOrEnum(str + libName);
 
 			try
 			{
@@ -273,12 +269,10 @@ class HScript #if HSCRIPT_ALLOWED extends Interp #end
 		#end
 	}
 
-	function resolveClassOrEnum(name:String):Dynamic
+	inline public static function resolveClassOrEnum(name:String):Dynamic
 	{
-		var c:Dynamic = Type.resolveClass(name);
-		if (c == null)
-			c = Type.resolveEnum(name);
-		return c;
+		final c:Dynamic = Type.resolveClass(name);
+		return c ?? Type.resolveEnum(name);
 	}
 
 	public function destroy()
@@ -302,22 +296,22 @@ class HScript #if HSCRIPT_ALLOWED extends Interp #end
 #if HSCRIPT_ALLOWED
 class CustomFlxColor
 {
-	public static var TRANSPARENT(default, null):Int = FlxColor.TRANSPARENT;
-	public static var BLACK(default, null):Int = FlxColor.BLACK;
-	public static var WHITE(default, null):Int = FlxColor.WHITE;
-	public static var GRAY(default, null):Int = FlxColor.GRAY;
+	public static final TRANSPARENT:Int	 = FlxColor.TRANSPARENT;
+	public static final BLACK:Int		 = FlxColor.BLACK;
+	public static final WHITE:Int		 = FlxColor.WHITE;
+	public static final GRAY:Int		 = FlxColor.GRAY;
 
-	public static var GREEN(default, null):Int = FlxColor.GREEN;
-	public static var LIME(default, null):Int = FlxColor.LIME;
-	public static var YELLOW(default, null):Int = FlxColor.YELLOW;
-	public static var ORANGE(default, null):Int = FlxColor.ORANGE;
-	public static var RED(default, null):Int = FlxColor.RED;
-	public static var PURPLE(default, null):Int = FlxColor.PURPLE;
-	public static var BLUE(default, null):Int = FlxColor.BLUE;
-	public static var BROWN(default, null):Int = FlxColor.BROWN;
-	public static var PINK(default, null):Int = FlxColor.PINK;
-	public static var MAGENTA(default, null):Int = FlxColor.MAGENTA;
-	public static var CYAN(default, null):Int = FlxColor.CYAN;
+	public static final GREEN:Int		 = FlxColor.GREEN;
+	public static final LIME:Int		 = FlxColor.LIME;
+	public static final YELLOW:Int		 = FlxColor.YELLOW;
+	public static final ORANGE:Int		 = FlxColor.ORANGE;
+	public static final RED:Int			 = FlxColor.RED;
+	public static final PURPLE:Int		 = FlxColor.PURPLE;
+	public static final BLUE:Int		 = FlxColor.BLUE;
+	public static final BROWN:Int		 = FlxColor.BROWN;
+	public static final PINK:Int		 = FlxColor.PINK;
+	public static final MAGENTA:Int		 = FlxColor.MAGENTA;
+	public static final CYAN:Int		 = FlxColor.CYAN;
 
 	public static function fromInt(Value:Int):Int
 		return cast FlxColor.fromInt(Value);

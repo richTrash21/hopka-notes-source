@@ -174,7 +174,7 @@ class MusicBeatState extends FlxTransitionableState implements IMusicBeatState
 		});
 	}
 
-	function stagesFunc(func:BaseStage->Void)
+	function stagesFunc(func:StageFunction)
 	{
 		for (stage in stages)
 			if(stage != null && stage.exists && stage.active)
@@ -184,6 +184,8 @@ class MusicBeatState extends FlxTransitionableState implements IMusicBeatState
 	function getBeatsOnSection()
 	{
 		final val:Null<Float> = PlayState.SONG?.notes[curSection]?.sectionBeats;
-		return val == null ? 4 : val;
+		return val ?? 4;
 	}
 }
+
+typedef StageFunction = BaseStage->Void

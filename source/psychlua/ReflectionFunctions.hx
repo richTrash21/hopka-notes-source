@@ -174,19 +174,17 @@ class ReflectionFunctions
 		});
 	}
 
-	static function callMethodFromObject(classObj:Dynamic, funcStr:String, args:Array<Dynamic> = null)
+	inline static function callMethodFromObject(classObj:Dynamic, funcStr:String, args:Array<Dynamic> = null):Dynamic
 	{
 		if(args == null) args = [];
 
-		var split:Array<String> = funcStr.split('.');
-		var funcToRun:haxe.Constraints.Function = null;
 		var obj:Dynamic = classObj;
 		if(obj == null) return null;
 
-		for (i in 0...split.length)
-			obj = LuaUtils.getVarInArray(obj, split[i].trim());
+		for (f in funcStr.split('.'))
+			obj = LuaUtils.getVarInArray(obj, f.trim());
 
-		funcToRun = cast obj;
-		return funcToRun != null ? Reflect.callMethod(obj, funcToRun, args) : null;
+		final funcToRun:haxe.Constraints.Function = cast obj;
+		return funcToRun == null ? null : Reflect.callMethod(obj, funcToRun, args);
 	}
 }

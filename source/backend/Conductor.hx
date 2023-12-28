@@ -1,7 +1,5 @@
 package backend;
 
-import backend.Song.SwagSong;
-
 typedef BPMChangeEvent =
 {
 	var stepTime:Int;
@@ -94,7 +92,7 @@ class Conductor
 	public static function getBeatRounded(time:Float):Int
 		return Math.floor(getStepRounded(time) / 4);
 
-	public static function mapBPMChanges(song:SwagSong)
+	public static function mapBPMChanges(song:Song)
 	{
 		bpmChangeMap = [];
 
@@ -122,7 +120,7 @@ class Conductor
 		trace("new BPM map BUDDY " + bpmChangeMap);
 	}
 
-	static function getSectionBeats(song:SwagSong, section:Int)
+	static function getSectionBeats(song:Song, section:Int)
 	{
 		final val:Null<Float> = song.notes[section]?.sectionBeats;
 		return val != null ? val : 4;
