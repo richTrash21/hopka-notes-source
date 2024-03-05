@@ -178,16 +178,14 @@ class MainMenuState extends MusicBeatState
 				{
 					selectedSomethin = true;
 					FlxG.sound.play(Paths.sound('confirmMenu'));
-					if(ClientPrefs.data.flashing) FlxFlicker.flicker(magenta, 1.1, 0.15, false);
+					if (ClientPrefs.data.flashing) FlxFlicker.flicker(magenta, 1.1, 0.15, false);
 
 					menuItems.forEach(function(spr:FlxSprite)
 					{
 						if (curSelected == spr.ID)
-						{
 							FlxFlicker.flicker(spr, 1, 0.06, false, false, function(flick:FlxFlicker) switchShit(optionShit[curSelected]));
-							return;
-						}
-						FlxTween.num(1, 0, 0.4, {ease: FlxEase.quadOut, onComplete: function(_) spr.destroy()}, function(value:Float) spr.alpha = value);
+						else
+							FlxTween.num(1, 0, 0.4, {ease: FlxEase.quadOut, onComplete: function(_) spr.destroy()}, function(value:Float) spr.alpha = value);
 					});
 				}
 			}
@@ -237,20 +235,17 @@ class MainMenuState extends MusicBeatState
 	function changeItem(huh:Int = 0)
 	{
 		if (huh != 0) FlxG.sound.play(Paths.sound('scrollMenu'));
+
+		var spr = menuItems.members[curSelected];
+		spr.animation.play('idle');
+		spr.centerOffsets();
+	
 		curSelected = FlxMath.wrap(curSelected + huh, 0, menuItems.length-1);
 
-		menuItems.forEach(function(spr:FlxSprite)
-		{
-			if (spr.ID == curSelected)
-			{
-				FlxG.camera.follow(spr, null, 0);
-				spr.animation.play('selected');
-				spr.centerOffsets();
-				return;
-			}
-			spr.animation.play('idle');
-			spr.updateHitbox();
-		});
+		spr = menuItems.members[curSelected];
+		FlxG.camera.follow(spr, 0.0);
+		spr.animation.play('selected');
+		spr.centerOffsets();
 	}
 	
 	function switchShit(name:String)

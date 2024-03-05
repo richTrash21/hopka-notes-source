@@ -13,8 +13,7 @@ class Difficulty
 	inline public static function getFilePath(?num:Int)
 	{
 		if (num == null) num = PlayState.storyDifficulty;
-		final fileSuffix:String = list[num] != defaultDifficulty ? '-' + list[num] : '';
-		return Paths.formatToSongPath(fileSuffix);
+		return Paths.formatToSongPath(list[num] == defaultDifficulty ? '' : '-${list[num]}');
 	}
 
 	inline public static function loadFromWeek(?week:WeekData)
@@ -28,10 +27,11 @@ class Difficulty
 			var i:Int = diffs.length - 1;
 			while (i > 0)
 			{
-				if (diffs[i] != null)
+				final _diff:String = diffs[i];
+				if (_diff != null)
 				{
-					diffs[i] = diffs[i].trim();
-					if (diffs[i].length < 1) diffs.remove(diffs[i]);
+					diffs[i] = _diff.trim();
+					if (_diff.length == 0) diffs.remove(_diff);
 				}
 				--i;
 			}

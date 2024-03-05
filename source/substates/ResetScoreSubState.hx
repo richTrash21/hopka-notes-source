@@ -32,6 +32,7 @@ class ResetScoreSubState extends MusicBeatSubstate
 		bg = new FlxSprite().makeGraphic(FlxG.width, FlxG.height, FlxColor.BLACK);
 		bg.alpha = 0;
 		bg.scrollFactor.set();
+		bg.active = false;
 		add(bg);
 
 		final tooLong:Float = (name.length > 18) ? 0.8 : 1; //Fucking Winter Horrorland
@@ -39,6 +40,8 @@ class ResetScoreSubState extends MusicBeatSubstate
 		text.screenCenter(X);
 		alphabetArray.push(text);
 		text.alpha = 0;
+		text.active = false;
+		text.scrollFactor.set();
 		add(text);
 		final text:Alphabet = new Alphabet(0, text.y + 90, name, true);
 		text.scaleX = tooLong;
@@ -46,6 +49,8 @@ class ResetScoreSubState extends MusicBeatSubstate
 		if(week == -1) text.x += 60 * tooLong;
 		alphabetArray.push(text);
 		text.alpha = 0;
+		text.active = false;
+		text.scrollFactor.set();
 		add(text);
 		if (week == -1)
 		{
@@ -54,16 +59,22 @@ class ResetScoreSubState extends MusicBeatSubstate
 			icon.updateHitbox();
 			icon.setPosition(text.x - icon.width + (10 * tooLong), text.y - 30);
 			icon.alpha = 0;
+			icon.active = false;
+			icon.scrollFactor.set();
 			add(icon);
 		}
 
 		yesText = new Alphabet(0, text.y + 150, 'Yes', true);
 		yesText.screenCenter(X);
 		yesText.x -= 200;
+		yesText.scrollFactor.set();
+		yesText.active = false;
 		add(yesText);
 		noText = new Alphabet(0, text.y + 150, 'No', true);
 		noText.screenCenter(X);
 		noText.x += 200;
+		noText.scrollFactor.set();
+		noText.active = false;
 		add(noText);
 		updateOptions();
 	}

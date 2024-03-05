@@ -42,6 +42,41 @@ class Main extends Sprite
 
 	public function new()
 	{
+		// based log by richTrash21 yeah
+		haxe.Log.trace = (v:Dynamic, ?pos:haxe.PosInfos) ->
+		{
+			// based on haxe.Log.formatOutput()
+			inline function formatOutput(v:Dynamic, pos:haxe.PosInfos):String
+			{
+				final t = "<" + Date.now().toString().substr(11) + ">";
+				var s = " > " + Std.string(v);
+				if (pos == null)
+					return t + s;
+				var p = pos.fileName + ":" + pos.lineNumber;
+				if (pos.methodName != null && pos.methodName.length > 0)
+				{
+					final t = pos.className != null && pos.className.length > 0 ? pos.className + "." + pos.methodName : pos.methodName;
+					p += " - " + t + "()";
+				}
+				if (pos.customParams != null)
+					for (_v in pos.customParams)
+						s += ", " + Std.string(_v);
+				return t + " [" + p + "]" + s;
+			}
+
+			var str = formatOutput(v, pos);
+			#if js
+			if (js.Syntax.typeof(untyped console) != "undefined" && (untyped console).log != null)
+				(untyped console).log(str);
+			#elseif lua
+			untyped __define_feature__("use._hx_print", _hx_print(str));
+			#elseif sys
+			Sys.println(str);
+			#else
+			throw new haxe.exceptions.NotImplementedException()
+			#end
+		}
+
 		super();
 		setupGame();
 

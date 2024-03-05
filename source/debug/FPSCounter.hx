@@ -8,6 +8,7 @@ import flixel.FlxG;
 
 	from: https://github.com/ShadowMario/FNF-PsychEngine/pull/13591 (merged with new psych lmao)
 	UPD: added fix https://github.com/ShadowMario/FNF-PsychEngine/pull/13865
+	UPDD: reverted fix to standart OpenFl FPS class
 **/
 class FPSCounter extends openfl.text.TextField
 {
@@ -19,13 +20,13 @@ class FPSCounter extends openfl.text.TextField
 	/**
 		The current memory usage (WARNING: this is NOT your total program memory usage, rather it shows the garbage collector memory)
 	**/
-	public var memoryMegas(get, never):Float;
+	public var memoryMegas(get, never):Int;
 
 	@:noCompletion private var times:Array<Float>;
 	@:noCompletion private var changeColor:Bool;
 	@:noCompletion private var _color:Int;
 
-	public function new(x:Float = 10.0, y:Float = 10.0, ?color:Int = 0x000000, ?_changeColor:Bool = true):Void
+	public function new(x = 10.0, y = 10.0, ?color = 0x000000, ?_changeColor = true):Void
 	{
 		super();
 
@@ -45,76 +46,42 @@ class FPSCounter extends openfl.text.TextField
 		times = [];
 	}
 
-	@:noCompletion private var deltaTimeout:Float = 0.0;
-	//@:noCompletion private var cacheCount:Int;
+	@:noCompletion private var deltaTimeout = 0;
+	@:noCompletion private var currentTime = 0;
+	@:noCompletion private var cacheCount = 0;
 
 	// Event Handlers
-	@:noCompletion override function __enterFrame(deltaTime:Float):Void
+	@:noCompletion override function __enterFrame(deltaTime:Int):Void
 	{
-		if (!visible || alpha == 0.0) return;
+		if (!visible || alpha == 0.0)
+			return;
 
-		/*deltaTimeout += deltaTime;
-		times.push(deltaTimeout);
-
-		while (times[0] < deltaTimeout - 1000)
+		currentTime += deltaTime;
+		times.push(currentTime);
+		while (times[0] < currentTime - 1000)
 			times.shift();
 
 		final currentCount = times.length;
-		final roundedCount = Math.round((currentCount + cacheCount) * 0.5);
-		currentFPS = (roundedCount < FlxG.updateFramerate) ? roundedCount : FlxG.updateFramerate;
-		updateText();
-		cacheCount = currentCount;*/
-		
-		// prevents the overlay from updating every frame, why would you need to anyways
-		if (deltaTimeout > 1000.0)
+		if (currentCount != cacheCount)
 		{
-			deltaTimeout = 0.0;
-			return;
+			final newFPS = Std.int((currentCount + cacheCount) * .5);
+			// caping new framerate to the maximum fps possible so it wont go above
+			currentFPS = FlxMath.minInt(newFPS, FlxG.updateFramerate);
+			cacheCount = currentCount;
 		}
 
-		final now:Float = haxe.Timer.stamp() * 1000;
-		times.push(now);
-		while (times[0] < now - 1000.0) times.shift();
-
-		currentFPS = FlxMath.minInt(times.length, FlxG.updateFramerate);
 		updateText();
-		deltaTimeout += deltaTime;
 	}
-
-	/** i was tired of fps text not having a shadow cuz can't see a thing in bright areas **/
-	/*@:noCompletion override private function __update(transformOnly:Bool, updateChildren:Bool):Void
-	{
-		final realColor:Int = textColor;
-		final posX:Float = x;
-		final posY:Float = y;
-
-		var i:Int = 4;
-		var multX:Int = 0;
-		var multY:Int = 0;
-		textColor = 0x000000;
-		while (i-- > 0) // drawing shadow, prob hella expensive but idk (MEMORY LEAKS [✔])
-		{
-			multX = (i == 3 || i == 1) ? -1 : 1;
-			multY = (i == 2 || i == 0) ? -1 : 1;
-
-			x = posX + multX;
-			y = posY + multY;
-			super.__update(transformOnly, updateChildren);
-		}
-		x = posX;
-		y = posY;
-		textColor = realColor;
-		super.__update(transformOnly, updateChildren);
-	}*/
 
 	public dynamic function updateText():Void // so people can override it in hscript
 	{
-		text = 'FPS: $currentFPS\nMemory: ${flixel.util.FlxStringUtil.formatBytes(memoryMegas)}';
+		text = 'FPS: $currentFPS\n';
+		text += "Memory: " + flixel.util.FlxStringUtil.formatBytes(memoryMegas);
 		
 		if (changeColor)
-			textColor = (currentFPS < FlxG.drawFramerate * 0.5) ? 0xFFFF0000 : _color;
+			textColor = (currentFPS < 30 /*FlxG.drawFramerate * 0.5*/) ? 0xFFFF0000 : _color;
 	}
 
-	inline function get_memoryMegas():Float
+	inline function get_memoryMegas():Int
 		return cast(openfl.system.System.totalMemory, UInt);
 }

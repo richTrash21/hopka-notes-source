@@ -1,6 +1,7 @@
 package backend;
 
 import flixel.addons.transition.FlxTransitionableState;
+import flixel.util.typeLimit.NextState;
 import flixel.FlxState;
 
 class MusicBeatState extends FlxTransitionableState implements IMusicBeatState
@@ -10,23 +11,26 @@ class MusicBeatState extends FlxTransitionableState implements IMusicBeatState
 	// substates that transition can land onto
 	public static final substatesToTrans:Array<Class<flixel.FlxSubState>> = [substates.PauseSubState, substates.GameOverSubstate, psychlua.CustomSubstate];
 
-	private var curSection:Int = 0;
-	private var stepsToDo:Int = 0;
+	var curSection:Int = 0;
+	var stepsToDo:Int = 0;
 
-	private var curStep:Int = 0;
-	private var curBeat:Int = 0;
+	var curStep:Int = 0;
+	var curBeat:Int = 0;
 
-	private var curDecStep:Float = 0;
-	private var curDecBeat:Float = 0;
+	var curDecStep:Float = 0;
+	var curDecBeat:Float = 0;
+
 	public var controls(get, never):Controls;
-	private function get_controls():Controls return Controls.instance;
 
-	override function create() {
+	public function new() { super(); }
+
+	override function create()
+	{
 		#if MODS_ALLOWED Mods.updatedOnState = false; #end
 
 		super.create();
 
-		if(!FlxTransitionableState.skipNextTransOut)
+		if (!FlxTransitionableState.skipNextTransOut)
 			openSubState(new CustomFadeTransition(transTime * 1.1, true));
 
 		FlxTransitionableState.skipNextTransOut = false;
@@ -36,7 +40,7 @@ class MusicBeatState extends FlxTransitionableState implements IMusicBeatState
 	public static var timePassedOnState:Float = 0;
 	override function update(elapsed:Float)
 	{
-		final oldStep:Int = curStep;
+		final oldStep = curStep;
 		timePassedOnState += elapsed;
 
 		updateCurStep();
@@ -44,55 +48,64 @@ class MusicBeatState extends FlxTransitionableState implements IMusicBeatState
 
 		if (oldStep != curStep)
 		{
-			if (curStep > 0) stepHit();
+			if (curStep > 0)
+				stepHit();
+
 			if (PlayState.SONG != null)
-				(oldStep < curStep) ? updateSection() : rollbackSection();
+			{
+				if (oldStep < curStep) 
+					updateSection();
+				else
+					rollbackSection();
+			}
 		}
 
-		//if(FlxG.save.data != null) FlxG.save.data.fullscreen = FlxG.fullscreen;
+		// if (FlxG.save.data != null)
+		//	FlxG.save.data.fullscreen = FlxG.fullscreen;
 		
-		stagesFunc(function(stage:BaseStage) stage.update(elapsed));
-
+		stagesFunc((stage) -> stage.update(elapsed));
 		super.update(elapsed);
 	}
 
 	private function updateSection():Void
 	{
-		if(stepsToDo < 1) stepsToDo = Math.round(getBeatsOnSection() * 4);
-		while(curStep >= stepsToDo)
+		if (stepsToDo < 1)
+			stepsToDo = Math.round(getBeatsOnSection() * 4);
+		while (curStep >= stepsToDo)
 		{
 			curSection++;
-			var beats:Float = getBeatsOnSection();
-			stepsToDo += Math.round(beats * 4);
+			stepsToDo += Math.round(getBeatsOnSection() * 4);
 			sectionHit();
 		}
 	}
 
 	private function rollbackSection():Void
 	{
-		if(curStep < 0) return;
+		if (curStep < 0)
+			return;
 
-		final lastSection:Int = curSection;
+		final lastSection = curSection;
 		curSection = 0;
 		stepsToDo = 0;
 		for (i in 0...PlayState.SONG.notes.length)
 		{
 			if (PlayState.SONG.notes[i] != null)
 			{
-				stepsToDo += Math.round(getBeatsOnSection() * 4);
-				if(stepsToDo > curStep) break;
+				if ((stepsToDo += Math.round(getBeatsOnSection() * 4)) > curStep)
+					break;
 				
 				curSection++;
 			}
 		}
 
-		if(curSection > lastSection) sectionHit();
+		if (curSection > lastSection)
+			sectionHit();
 	}
 
 	private function updateBeat():Void
 	{
-		curBeat = Math.floor(curStep / 4);
-		curDecBeat = curDecStep/4;
+		curBeat = Math.floor(curStep * 0.25);
+		curDecBeat = curDecStep * 0.25;
 	}
 
 	private function updateCurStep():Void
@@ -104,9 +117,9 @@ class MusicBeatState extends FlxTransitionableState implements IMusicBeatState
 		curStep = lastChange.stepTime + Math.floor(shit);
 	}
 
-	public static function switchState(?nextState:FlxState)
+	public static function switchState(?nextState:NextState)
 	{
-		if(nextState == null || nextState == FlxG.state)
+		if (nextState == null || nextState == FlxG.state)
 		{
 			resetState();
 			return;
@@ -123,41 +136,47 @@ class MusicBeatState extends FlxTransitionableState implements IMusicBeatState
 	}
 
 	// Custom made Trans in
-	public static function startTransition(?nextState:FlxState)
+	public static function startTransition(?nextState:NextState)
 	{
-		if (nextState == null) nextState = FlxG.state;
-
 		getStateWithSubState().openSubState(new CustomFadeTransition(transTime, false));
-		CustomFadeTransition.finishCallback = function() nextState == FlxG.state ? FlxG.resetState() : FlxG.switchState(nextState);
+		CustomFadeTransition.finishCallback = nextState == null ? FlxG.resetState : FlxG.switchState.bind(nextState);
 	}
 
-	public static function getState():FlxState
+	inline public static function getState():FlxState
+	{
 		return cast FlxG.state;
+	}
 
-	public static function getSubState():FlxState
+	inline public static function getSubState():FlxState
+	{
 		return cast FlxG.state.subState;
+	}
 
-	public static function getStateWithSubState():FlxState
-		return (FlxG.state.subState != null && substatesToTrans.contains(Type.getClass(FlxG.state.subState)))
-			? getSubState()
-			: getState();
+	inline public static function getStateWithSubState():FlxState
+	{
+		if (FlxG.state.subState == null || !substatesToTrans.contains(Type.getClass(FlxG.state.subState)))
+			return getState();
+
+		return getSubState();
+	}
 
 	public function stepHit():Void
 	{
-		stagesFunc(function(stage:BaseStage)
+		stagesFunc((stage) ->
 		{
 			stage.curStep = curStep;
 			stage.curDecStep = curDecStep;
 			stage.stepHit();
 		});
 
-		if (curStep % 4 == 0) beatHit();
+		if (curStep % 4 == 0)
+			beatHit();
 	}
 
 	public var stages:Array<BaseStage> = [];
 	public function beatHit():Void
 	{
-		stagesFunc(function(stage:BaseStage)
+		stagesFunc((stage) ->
 		{
 			stage.curBeat = curBeat;
 			stage.curDecBeat = curDecBeat;
@@ -167,7 +186,7 @@ class MusicBeatState extends FlxTransitionableState implements IMusicBeatState
 
 	public function sectionHit():Void
 	{
-		stagesFunc(function(stage:BaseStage)
+		stagesFunc((stage) ->
 		{
 			stage.curSection = curSection;
 			stage.sectionHit();
@@ -177,14 +196,18 @@ class MusicBeatState extends FlxTransitionableState implements IMusicBeatState
 	function stagesFunc(func:StageFunction)
 	{
 		for (stage in stages)
-			if(stage != null && stage.exists && stage.active)
+			if (stage != null && stage.exists && stage.active)
 				func(stage);
 	}
 
-	function getBeatsOnSection()
+	function getBeatsOnSection():Float
 	{
-		final val:Null<Float> = PlayState.SONG?.notes[curSection]?.sectionBeats;
-		return val ?? 4;
+		return PlayState.SONG?.notes[curSection]?.sectionBeats ?? 4;
+	}
+
+	@:noCompletion inline function get_controls():Controls
+	{
+		return Controls.instance;
 	}
 }
 

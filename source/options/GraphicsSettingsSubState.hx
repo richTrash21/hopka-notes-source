@@ -49,28 +49,22 @@ class GraphicsSettingsSubState extends BaseOptionsMenu
 			"[!] EXPERIMENTAL [!]\n\nNot really a V-Sync, but something similar.",
 			'fixedTimestep',
 			'bool');
-		option.change = function() FlxG.fixedTimestep = ClientPrefs.data.fixedTimestep;
+		option.change = () -> FlxG.fixedTimestep = ClientPrefs.data.fixedTimestep;
 		addOption(option);
 
 		final option:Option = new Option('Framerate',
 			"Pretty self explanatory, isn't it?",
 			'framerate',
 			'int');
-		option.minValue = 60;
-		option.maxValue = 360;
+		option.minValue = ClientPrefs.MIN_FPS;
+		option.maxValue = ClientPrefs.MAX_FPS;
 		option.displayFormat = '%v FPS';
-		option.change = function()
+		option.change = () ->
 		{
-			if(ClientPrefs.data.framerate > FlxG.drawFramerate)
-			{
-				FlxG.updateFramerate = ClientPrefs.data.framerate;
-				FlxG.drawFramerate = ClientPrefs.data.framerate;
-			}
+			if (ClientPrefs.data.framerate > FlxG.drawFramerate)
+				FlxG.drawFramerate = FlxG.updateFramerate = ClientPrefs.data.framerate;
 			else
-			{
-				FlxG.drawFramerate = ClientPrefs.data.framerate;
-				FlxG.updateFramerate = ClientPrefs.data.framerate;
-			}
+				FlxG.updateFramerate = FlxG.drawFramerate = ClientPrefs.data.framerate;
 		}
 		addOption(option);
 		#end

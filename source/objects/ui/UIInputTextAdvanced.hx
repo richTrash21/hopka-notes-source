@@ -13,16 +13,15 @@ import flixel.addons.ui.FlxUI;
 class UIInputTextAdvanced extends InputTextAdvanced implements IResizable implements IFlxUIWidget implements IHasParams
 {
 	public var name:String;
+	public var broadcastToFlxUI = true;
 
-	public var broadcastToFlxUI:Bool = true;
-
-	public static inline var CHANGE_EVENT:String = FlxUIInputText.CHANGE_EVENT; // change in any way
-	public static inline var ENTER_EVENT:String  = FlxUIInputText.ENTER_EVENT; // hit enter in this text field
-	public static inline var DELETE_EVENT:String = FlxUIInputText.DELETE_EVENT; // delete text in this text field
-	public static inline var INPUT_EVENT:String  = FlxUIInputText.INPUT_EVENT; // input text in this text field
-	public static inline var COPY_EVENT:String   = "copy_input_text"; // copy text in this text field
-	public static inline var PASTE_EVENT:String  = "paste_input_text"; // paste text in this text field
-	public static inline var CUT_EVENT:String    = "cut_input_text"; // cut text in this text field
+	public static inline final CHANGE_EVENT = FlxUIInputText.CHANGE_EVENT; // change in any way
+	public static inline final ENTER_EVENT  = FlxUIInputText.ENTER_EVENT; // hit enter in this text field
+	public static inline final DELETE_EVENT = FlxUIInputText.DELETE_EVENT; // delete text in this text field
+	public static inline final INPUT_EVENT  = FlxUIInputText.INPUT_EVENT; // input text in this text field
+	public static inline final COPY_EVENT   = "copy_input_text"; // copy text in this text field
+	public static inline final PASTE_EVENT  = "paste_input_text"; // paste text in this text field
+	public static inline final CUT_EVENT    = "cut_input_text"; // cut text in this text field
 
 	public function resize(w:Float, h:Float):Void
 	{

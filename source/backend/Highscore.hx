@@ -6,41 +6,41 @@ class Highscore
 	public static var songScores:Map<String, Int> = [];
 	public static var songRating:Map<String, Float> = [];
 
-	public static function resetSong(song:String, diff:Int = 0):Void
+	inline public static function resetSong(song:String, diff:Int = 0):Void
 	{
-		final daSong:String = formatSong(song, diff);
+		final daSong = formatSong(song, diff);
 		setScore(daSong, 0);
 		setRating(daSong, 0);
 	}
 
-	public static function resetWeek(week:String, diff:Int = 0):Void
+	inline public static function resetWeek(week:String, diff:Int = 0):Void
 	{
-		final daWeek:String = formatSong(week, diff);
-		setWeekScore(daWeek, 0);
+		setWeekScore(formatSong(week, diff), 0);
 	}
 
 	public static function saveScore(song:String, score:Int = 0, ?diff:Int = 0, ?rating:Float = -1):Void
 	{
-		final daSong:String = formatSong(song, diff);
+		inline function __set(n:String, s:Int, r:Float)
+		{
+			setScore(n, s);
+			if (r >= 0)
+				setRating(n, r);
+		}
+
+		final daSong = formatSong(song, diff);
 
 		if (songScores.exists(daSong))
 		{
 			if (songScores.get(daSong) < score)
-			{
-				setScore(daSong, score);
-				if (rating >= 0) setRating(daSong, rating);
-			}
+				__set(daSong, score, rating);
 		}
 		else
-		{
-			setScore(daSong, score);
-			if (rating >= 0) setRating(daSong, rating);
-		}
+			__set(daSong, score, rating);
 	}
 
 	public static function saveWeekScore(week:String, score:Int = 0, ?diff:Int = 0):Void
 	{
-		final daWeek:String = formatSong(week, diff);
+		final daWeek = formatSong(week, diff);
 
 		if (weekScores.exists(daWeek))
 		{
@@ -54,14 +54,15 @@ class Highscore
 	/**
 	 * YOU SHOULD FORMAT SONG WITH formatSong() BEFORE TOSSING IN SONG VARIABLE
 	 */
-	static function setScore(song:String, score:Int):Void
+	inline static function setScore(song:String, score:Int):Void
 	{
 		// Reminder that I don't need to format this song, it should come formatted!
 		songScores.set(song, score);
 		FlxG.save.data.songScores = songScores;
 		FlxG.save.flush();
 	}
-	static function setWeekScore(week:String, score:Int):Void
+
+	inline static function setWeekScore(week:String, score:Int):Void
 	{
 		// Reminder that I don't need to format this song, it should come formatted!
 		weekScores.set(week, score);
@@ -69,7 +70,7 @@ class Highscore
 		FlxG.save.flush();
 	}
 
-	static function setRating(song:String, rating:Float):Void
+	inline static function setRating(song:String, rating:Float):Void
 	{
 		// Reminder that I don't need to format this song, it should come formatted!
 		songRating.set(song, rating);
@@ -77,30 +78,32 @@ class Highscore
 		FlxG.save.flush();
 	}
 
-	public static function formatSong(song:String, diff:Int):String
-		return Paths.formatToSongPath(song) + Difficulty.getFilePath(diff);
-
-	public static function getScore(song:String, diff:Int):Int
+	inline public static function formatSong(song:String, diff:Int):String
 	{
-		final daSong:String = formatSong(song, diff);
+		return Paths.formatToSongPath(song) + Difficulty.getFilePath(diff);
+	}
+
+	inline public static function getScore(song:String, diff:Int):Int
+	{
+		final daSong = formatSong(song, diff);
 		if (!songScores.exists(daSong))
 			setScore(daSong, 0);
 
 		return songScores.get(daSong);
 	}
 
-	public static function getRating(song:String, diff:Int):Float
+	inline public static function getRating(song:String, diff:Int):Float
 	{
-		final daSong:String = formatSong(song, diff);
+		final daSong = formatSong(song, diff);
 		if (!songRating.exists(daSong))
 			setRating(daSong, 0);
 
 		return songRating.get(daSong);
 	}
 
-	public static function getWeekScore(week:String, diff:Int):Int
+	inline public static function getWeekScore(week:String, diff:Int):Int
 	{
-		final daWeek:String = formatSong(week, diff);
+		final daWeek = formatSong(week, diff);
 		if (!weekScores.exists(daWeek))
 			setWeekScore(daWeek, 0);
 

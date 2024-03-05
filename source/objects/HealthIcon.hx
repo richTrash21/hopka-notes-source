@@ -10,16 +10,21 @@ class HealthIcon extends ExtendedSprite
 	public var isPlayer(default, null):Bool = false;
 	public var baseScale(default, set):Float = 1;
 	public var char(default, null):String = null;
+
 	public var sprTracker:FlxSprite;
+	public var copyX:Bool = true;
+	public var copyY:Bool = true;
 
 	public var lerpScale:Bool = false;
 	public var lerpSpeed:Float = 1.0;
 	var _speed:Float = 9.0;
 
 	inline function set_baseScale(Scale:Float):Float
+	{
 		return (baseScale == Scale ? Scale : baseScale = setScale(Scale).x);
+	}
 
-	public function new(char:String = 'bf', isPlayer:Bool = false, allowGPU:Bool = true)
+	public function new(char:String = "bf", isPlayer:Bool = false, allowGPU:Bool = true)
 	{
 		super();
 		this.isPlayer = isPlayer;
@@ -41,13 +46,14 @@ class HealthIcon extends ExtendedSprite
 		super.update(elapsed);
 	}
 
-	public var iconOffsets:FlxPoint = FlxPoint.get();
+	// public var iconOffsets:FlxPoint = FlxPoint.get();
 	public function changeIcon(char:String, allowGPU:Bool = true)
 	{
-		if (this.char == char) return;
+		if (this.char == char)
+			return;
 
-		var prevFrame:Int = 0;
-		var flip:Bool = isPlayer;
+		var prevFrame = 0;
+		var flip = isPlayer;
 		if (animation.curAnim != null)
 		{
 			prevFrame = animation.curAnim.curFrame;
@@ -57,24 +63,30 @@ class HealthIcon extends ExtendedSprite
 		var name = Paths.fileExists('images/icons/$char.png', IMAGE) ? 'icons/$char' : 'icons/icon-$char'; // Older versions of psych engine's support
 		if (!Paths.fileExists('images/$name.png', IMAGE))
 		{
-			name = 'icons/icon-face'; // Prevents crash from missing icon
-			char = 'face'; // so it will create a default config for face aka. null (LMAO THATS NOT HOW IT SHOULD WORK BUT IDC) - richTrash21
+			name = "icons/icon-face"; // Prevents crash from missing icon
+			char = "face"; // so it will create a default config for face aka. null (LMAO THATS NOT HOW IT SHOULD WORK BUT IDC) - richTrash21
 		}
 
-		final json:HealthIconConfig = getConfig(char);
+		final json = getConfig(char);
 		final graphic = Paths.image(name, allowGPU);
 		loadGraphic(graphic, true, (graphic.width > graphic.height) ? Math.floor(graphic.width * 0.5) : graphic.width, graphic.height);
 
-		iconOffsets.copyFrom(animOffsets.exists(char) ? animOffsets.get(char) : addOffset(char, (width - 150) * 0.5, (height - 150) * 0.5));
-		if (json.offset != null && json.offset.length > 1) iconOffsets.add(json.offset[0], json.offset[1]);
+		/*iconOffsets.copyFrom(animOffsets.exists(char) ? animOffsets.get(char) : addOffset(char, (width - 150) * 0.5, (height - 150) * 0.5));
+		if (json.offset != null && json.offset.length > 1)
+			iconOffsets.add(json.offset[0], json.offset[1]);*/
+		if (!animOffsets.exists(char))
+		{
+			final o = addOffset(char, (width - 150) * 0.5, (height - 150) * 0.5);
+			if (json.offset != null && json.offset.length > 1)
+				o.add(json.offset[0], json.offset[1]);
+		}
 
 		// seems messy but should work just fiiine (not sure if it's optimised tho but idc its 2:30AM and im still up)
 		flipX	  = json.flip_x ?? false;
 		baseScale = json.scale ?? 1;
 		updateHitbox();
 
-		final _antialias:Bool = ClientPrefs.data.antialiasing ? json.antialias ?? true : false;
-		antialiasing = char.endsWith('-pixel') ? false : _antialias;
+		antialiasing = char.endsWith("-pixel") ? false : (ClientPrefs.data.antialiasing ? json.antialias ?? true : false);
 
 		if (!animExists(char))
 			addAnim(char, [for (i in 0...numFrames) i], 0, false, flip);
@@ -106,14 +118,16 @@ class HealthIcon extends ExtendedSprite
 	override function updateHitbox()
 	{
 		super.updateHitbox();
-		offset.copyFrom(iconOffsets);
+		// offset.copyFrom(iconOffsets);
+		// offset.subtract(-0.5 * (width - frameWidth), -0.5 * (height - frameHeight));
+		offset.set();
 	}
 
-	override function destroy()
+	/*override function destroy()
 	{
 		super.destroy();
 		iconOffsets = flixel.util.FlxDestroyUtil.put(iconOffsets);
-	}
+	}*/
 
 	inline public function getCharacter():String return char;
 }

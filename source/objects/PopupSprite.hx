@@ -41,21 +41,21 @@ class PopupSprite extends ExtendedSprite implements ISortable
 		setAcceleration(minAccelerationX, maxAccelerationX, minAccelerationY, maxAccelerationY);
 	}
 
-	// NOT UPDATE???? HOWWWW😱😱
-	// nvmd
 	override public function update(elapsed:Float):Void
 	{
 		super.update(elapsed);
 
-		if (alive && !isOnScreen(camera))
+		if (!isOnScreen(camera))
 		{
-			cancelFade();
+			finishFade();
 			killOrDestroy();
 		}
 	}
 
-	function killOrDestroy():Void
+	inline function killOrDestroy():Void
+	{
 		autoDestroy ? destroy() : kill();
+	}
 
 	override public function revive():Void
 	{
@@ -82,43 +82,51 @@ class PopupSprite extends ExtendedSprite implements ISortable
 		resetAngleAcceleration();
 	}
 
-	inline public function setVelocity(minVelocityX:Float = 0, maxVelocityX:Float = 0, minVelocityY:Float = 0, maxVelocityY:Float = 0):FlxPoint
+	/*inline*/ public function setVelocity(minVelocityX:Float = 0, maxVelocityX:Float = 0, minVelocityY:Float = 0, maxVelocityY:Float = 0):FlxPoint
 	{
 		_speed.start.min.set(minVelocityX, minVelocityY);
 		_speed.start.max.set(maxVelocityX, maxVelocityY);
 		return resetVelocity();
 	}
 
-	inline public function setAcceleration(minAccelerationX:Float = 0, maxAccelerationX:Float = 0, minAccelerationY:Float = 0, maxAccelerationY:Float = 0):FlxPoint
+	/*inline*/ public function setAcceleration(minAccelerationX:Float = 0, maxAccelerationX:Float = 0, minAccelerationY:Float = 0, maxAccelerationY:Float = 0):FlxPoint
 	{
 		_speed.end.min.set(minAccelerationX, minAccelerationY);
 		_speed.end.max.set(maxAccelerationX, maxAccelerationY);
 		return resetAcceleration();
 	}
 
-	inline public function setAngleVelocity(min:Float = 0, max:Float = 0):Float
+	/*inline*/ public function setAngleVelocity(min:Float = 0, max:Float = 0):Float
 	{
 		_angleSpeed.min.set(min, max);
 		return resetAngleVelocity();
 	}
 
-	inline public function setAngleAcceleration(min:Float = 0, max:Float = 0):Float
+	/*inline*/ public function setAngleAcceleration(min:Float = 0, max:Float = 0):Float
 	{
 		_angleSpeed.max.set(min, max);
 		return resetAngleAcceleration();
 	}
 
 	inline public function resetVelocity():FlxPoint
+	{
 		return velocity.set(FlxG.random.float(_speed.start.min.x, _speed.start.max.x), FlxG.random.float(_speed.start.min.y, _speed.start.max.y));
+	}
 
 	inline public function resetAcceleration():FlxPoint
+	{
 		return acceleration.set(FlxG.random.float(_speed.end.min.x, _speed.end.max.x), FlxG.random.float(_speed.end.min.y, _speed.end.max.y));
+	}
 
 	inline public function resetAngleVelocity():Float
+	{
 		return angularVelocity = FlxG.random.float(_angleSpeed.min.x, _angleSpeed.min.y);
+	}
 
 	inline public function resetAngleAcceleration():Float
+	{
 		return angularAcceleration = FlxG.random.float(_angleSpeed.max.x, _angleSpeed.max.y);
+	}
 
 	/**
 		Simple fade out tween that kills/destroys (controlled via `autoDestroy`) this sprite after it's completion.
@@ -126,10 +134,10 @@ class PopupSprite extends ExtendedSprite implements ISortable
 		@param    Delay - Delay of this tween.
 		@return   This sprite, for chaining stuff.
 	**/
-	inline public function fadeOut(Duration:Float = 1, ?Delay:Float = 0):PopupSprite
+	public function fadeOut(Duration:Float = 1, ?Delay:Float = 0):PopupSprite
 	{
 		cancelFade();
-		fadeTween = FlxTween.num(1, 0, Duration, {startDelay: Delay, onComplete: function(_) 
+		fadeTween = FlxTween.num(1, 0, Duration, {startDelay: Delay, onComplete: (_) ->
 			{
 				killOrDestroy();
 				fadeTween = null;
@@ -142,7 +150,7 @@ class PopupSprite extends ExtendedSprite implements ISortable
 	/**
 		Helper function to get rid of the tween.
 	**/
-	public function cancelFade():Void
+	inline public function cancelFade():Void
 	{
 		if (fadeTween != null)
 		{
@@ -152,12 +160,9 @@ class PopupSprite extends ExtendedSprite implements ISortable
 	}
 
 	@:access(flixel.tweens.FlxTween.finish)
-	public function finishFade():Void
+	inline public function finishFade():Void
 	{
 		if (fadeTween != null)
-		{
 			fadeTween.finish();
-			fadeTween = null;
-		}
 	}
 }

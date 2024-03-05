@@ -1,7 +1,9 @@
 package;
 
 import flixel.addons.transition.FlxTransitionableState;
+
 import states.FlashingState;
+import psychlua.LuaUtils;
 import backend.Subtitles;
 
 // THIS IS FOR INITIALIZING STUFF BECAUSE FLIXEL HATES INITIALIZING STUFF IN MAIN
@@ -23,6 +25,12 @@ class Init extends flixel.FlxState
 			Subtitles._markup.push(new FlxTextFormatMarkerPair(new FlxTextFormat(color), '<$name>'));
 			Subtitles._markup.push(new FlxTextFormatMarkerPair(new FlxTextFormat(null, null, null, color), '<border-$name>'));
 		}
+
+		// don't need these
+		final __exclude = ["PI2", "EL", "B1", "B2", "B3", "B4", "B5", "B6", "ELASTIC_AMPLITUDE", "ELASTIC_PERIOD"];
+		for (f in Type.getClassFields(FlxEase))
+			if (!__exclude.contains(f))
+				LuaUtils.__easeMap.set(f.toLowerCase(), cast Reflect.getProperty(FlxEase, f));
 
 		FlxTransitionableState.skipNextTransOut = true;
 		Paths.clearStoredMemory();

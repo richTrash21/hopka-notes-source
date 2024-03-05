@@ -2,47 +2,44 @@ package objects;
 
 class TypedAlphabet extends Alphabet
 {
-	public var onFinish:Void->Void = null;
-	public var finishedText:Bool = false;
-	public var delay:Float = 0.05;
-	public var sound:String = 'dialogue';
-	public var volume:Float = 1;
+	public var onFinish:()->Void;
+	public var finishedText = false;
+	public var sound(default, set):String = "dialogue";
+	public var volume(get, set):Float;
+	public var delay = .05;
 
-	public function new(x:Float, y:Float, text:String = "", ?delay:Float = 0.05, ?bold:Bool = false)
+	@:noCompletion var _sound:FlxSound;
+	// @:noCompletion var _textLen = 0;
+	@:noCompletion var _curLetter = -1;
+	@:noCompletion var _timeToUpdate = 0.;
+	
+	@:noCompletion static final IGNORE_REGEX = ~/\s/;
+
+	public function new(x:Float, y:Float, text = "", delay = .05, bold = false)
 	{
 		super(x, y, text, bold);
 		this.delay = delay;
+		_sound = FlxG.sound.load(Paths.sound(sound));
 	}
 
-	override private function set_text(newText:String)
-	{
-		super.set_text(newText);
-		resetDialogue();
-		return newText;
-	}
-
-	private var _curLetter:Int = -1;
-	private var _timeToUpdate:Float = 0;
-	override function update(elapsed:Float)
+	override public function update(elapsed:Float)
 	{
 		if (!finishedText)
 		{
-			var playedSound:Bool = false;
-			_timeToUpdate += elapsed;
-			while(_timeToUpdate >= delay)
+			var playedSound = false;
+			while ((_timeToUpdate += elapsed) >= delay)
 			{
 				showCharacterUpTo(_curLetter + 1);
-				if (!playedSound && sound != '' && (delay > 0.025 || FlxMath.isEven(_curLetter)))
-					FlxG.sound.play(Paths.sound(sound), volume);
+				if (!playedSound && (delay > .025 || FlxMath.isEven(_curLetter)) && !IGNORE_REGEX.match(members[_curLetter].character))
+				{
+					// _sound.pitch = FlxG.random.float(.9, 1.1); // omori
+					_sound.play(true);
+				}
 
 				playedSound = true;
-
-				_curLetter++;
-				if (_curLetter >= letters.length - 1)
+				if (++_curLetter >= lettersLength)
 				{
-					finishedText = true;
-					if(onFinish != null) onFinish();
-					_timeToUpdate = 0;
+					__finish();
 					break;
 				}
 				_timeToUpdate = 0;
@@ -54,25 +51,51 @@ class TypedAlphabet extends Alphabet
 
 	public function showCharacterUpTo(upTo:Int)
 	{
-		final start:Int = _curLetter < 0 ? 0 : _curLetter;
-		for (i in start...(upTo+1)) if (letters[i] != null) letters[i].visible = true;
+		if (_curLetter < 0)
+			_curLetter = 0;
+		forEachAlive((letter) -> if (FlxMath.inBounds(letter.ID, _curLetter, upTo)) letter.visible = true);
 	}
 
 	public function resetDialogue()
 	{
 		_curLetter = -1;
-		finishedText = false;
 		_timeToUpdate = 0;
-		for (letter in letters) letter.visible = false;
+		finishedText = false;
+		forEachAlive((letter) -> letter.visible = false);
 	}
 
 	public function finishText()
 	{
-		if (finishedText) return;
-		showCharacterUpTo(letters.length - 1);
-		if (sound != '') FlxG.sound.play(Paths.sound(sound), volume);
+		if (finishedText)
+			return;
+
+		showCharacterUpTo(lettersLength - 1);
+		_sound.play(true);
+		__finish();
+	}
+
+	@:noCompletion inline function __finish()
+	{
 		finishedText = true;
-		if (onFinish != null) onFinish();
+		if (onFinish != null)
+			onFinish();
 		_timeToUpdate = 0;
 	}
+
+	@:noCompletion override function set_text(newText:String):String
+	{
+		newText = super.set_text(newText);
+		// _textLen = FlxMath.maxInt(0, countLiving());
+		resetDialogue();
+		return newText;
+	}
+
+	@:noCompletion function set_sound(value:String):String
+	{
+		_sound.loadEmbedded(Paths.sound(value));
+		return sound = value;
+	}
+
+	@:noCompletion inline function set_volume(value:Float):Float  return _sound.volume = value;
+	@:noCompletion inline function get_volume():Float			  return _sound.volume;
 }

@@ -715,10 +715,10 @@ class WeekEditorFreeplayState extends backend.MusicBeatUIState
 		FlxG.sound.play(Paths.sound('scrollMenu'), 0.4);
 		curSelected = FlxMath.wrap(curSelected + change, 0, weekFile.songs.length-1);
 
-		var bullShit:Int = 0;
 		for (i in 0...iconArray.length)
 			iconArray[i].alpha = curSelected == i ? 1 : 0.6;
 
+		var bullShit:Int = 0;
 		for (item in grpSongs.members)
 		{
 			item.targetY = bullShit++ - curSelected;

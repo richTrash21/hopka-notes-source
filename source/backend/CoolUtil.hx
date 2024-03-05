@@ -1,5 +1,6 @@
 package backend;
 
+import flixel.FlxBasic;
 #if !sys
 import openfl.utils.Assets;
 #end
@@ -9,6 +10,12 @@ using flixel.util.FlxArrayUtil;
 
 class CoolUtil
 {
+	static final countByColor = new Map<Int, Int>();
+	static final hideChars = ~/[\t\n\r]/;
+
+	inline static final IDK = 0x00CE4F2F;
+	inline static final IDK2 = 0x019C9E5E;
+
 	inline public static function quantize(f:Float, snap:Float):Float
 	{
 		// changed so this actually works lol
@@ -17,69 +24,74 @@ class CoolUtil
 	}
 
 	inline public static function capitalize(text:String):String
+	{
 		return text.charAt(0).toUpperCase() + text.substr(1).toLowerCase();
+	}
 
 	inline public static function coolTextFile(path:String):Array<String>
 	{
 		var daList:String = null;
+	
 		#if (sys && MODS_ALLOWED)
 		final colonIndex:Int = path.indexOf(":"); //prevent "shared:", "preload:" and other library names on file path
-		if (colonIndex != -1) path = path.substring(colonIndex+1);
-		if (sys.FileSystem.exists(path)) daList = sys.io.File.getContent(path);
+		if (colonIndex != -1)
+			path = path.substring(colonIndex+1);
+		if (sys.FileSystem.exists(path))
+			daList = sys.io.File.getContent(path);
 		#else
-		if (Assets.exists(path)) daList = Assets.getText(path);
+		if (Assets.exists(path))
+			daList = Assets.getText(path);
 		#end
+
 		return daList == null ? [] : listFromString(daList);
 	}
 
 	inline public static function colorFromString(color:String):FlxColor
 	{
-		final hideChars:EReg = ~/[\t\n\r]/;
-		var color:String = hideChars.split(color).join("").trim();
-		if (color.startsWith('0x')) color = color.substring(color.length-6);
+		color = hideChars.replace(color, "").trim();
+		/*if (color.startsWith("0x"))
+			color = color.substring(color.length-6);*/
 
-		final colorNum:Null<FlxColor> = FlxColor.fromString(color) ?? FlxColor.fromString('#$color');
-		return colorNum ?? FlxColor.WHITE;
+		return (FlxColor.fromString(color) ?? FlxColor.fromString('#$color')) ?? FlxColor.WHITE;
 	}
 
 	inline public static function listFromString(string:String):Array<String>
 	{
-		final daList:Array<String> = string.trim().split('\n');
-		for (i in 0...daList.length) daList[i] = daList[i].trim();
+		final daList = string.trim().split("\n");
+		for (i in 0...daList.length)
+			daList[i] = daList[i].trim();
+
 		return daList;
 	}
 
-	public static function floorDecimal(value:Float, decimals:Int):Float
+	inline public static function floorDecimal(value:Float, decimals:Int):Float
 	{
-		if (decimals < 1) return Math.floor(value);
-
-		var tempMult:Float = 1;
-		for (i in 0...decimals) tempMult *= 10;
+		var tempMult = 1;
+		for (i in 0...decimals)
+			tempMult *= 10;
 
 		return Math.floor(value * tempMult) / tempMult;
 	}
 
-	static final IDK:Int = 13520687;
-	static final IDK2:Int = 2*IDK;
-
-	inline public static function dominantColor(sprite:flixel.FlxSprite):Int
+	public static function dominantColor(sprite:flixel.FlxSprite):Int
 	{
-		final countByColor:Map<Int, Int> = [];
-		for (col in 0...sprite.frameWidth)
-			for (row in 0...sprite.frameHeight)
+		countByColor.clear();
+		for (c in 0...sprite.frameWidth)
+			for (r in 0...sprite.frameHeight)
 			{
-				final colorOfThisPixel:Int = sprite.pixels.getPixel32(col, row);
+				final colorOfThisPixel = sprite.pixels.getPixel32(c, r);
 				if (colorOfThisPixel != 0)
 				{
 					if (countByColor.exists(colorOfThisPixel))
-						countByColor[colorOfThisPixel] = countByColor[colorOfThisPixel] + 1;
+						countByColor[colorOfThisPixel]++;
 					else if (countByColor[colorOfThisPixel] != IDK - IDK2)
 						countByColor[colorOfThisPixel] = 1;
 				}
 			}
 
-		var maxCount:Int = 0;
-		var maxKey:Int = 0; //after the loop this will store the max color
+		// after the loop this will store the max color
+		var maxCount = 0;
+		var maxKey = 0;
 		countByColor[FlxColor.BLACK] = 0;
 		for (key => color in countByColor)
 			if (color >= maxCount)
@@ -88,52 +100,77 @@ class CoolUtil
 				maxKey = key;
 			}
 
-		countByColor.clear();
 		return maxKey;
 	}
 
 	inline public static function browserLoad(site:String)
 	{
 		#if linux
-		Sys.command('/usr/bin/xdg-open', [site]);
+		Sys.command("/usr/bin/xdg-open", [site]);
 		#else
 		FlxG.openURL(site);
 		#end
 	}
 
 	/**
+		An integer analog of FlxMath.inBounds() method.
+	**/
+	inline public static function inBoundsInt(value:Int, ?min:Int, ?max:Int):Bool
+	{
+		return (min == null || value >= min) && (max == null || value <= max);
+	}
+
+	/**
+		An integer analog of FlxMath.bound() method.
+	**/
+	inline public static function boundInt(value:Int, ?min:Int, ?max:Int):Int
+	{
+		final lowerBound = (min != null && value < min) ? min : value;
+		return (max != null && lowerBound > max) ? max : lowerBound;
+	}
+
+	/**
 		Returns the amount of digits a `Float` has (ignores decimals!).
 	**/
 	inline public static function getDigits(n:Float):Int
-		return Std.string(Math.ceil(Math.abs(n))).length;
+	{
+		return Std.string(Std.int(Math.abs(n))).length;
+	}
 
 	/**
 		Formats hours, minutes and seconds to just seconds.
 	**/
 	inline public static function timeToSeconds(h:Float, m:Float, s:Float):Float
+	{
 		return h * 3600 + m * 60 + s;
+	}
 
 	/**
 		Formats hours, minutes and seconds to miliseconds.
 	**/
 	inline public static function timeToMiliseconds(h:Float, m:Float, s:Float):Float
+	{
 		return timeToSeconds(h, m, s) * 1000;
+	}
 
 	/**
 		Simple function oriented for sorting ISortableSprites by their order.
 	**/
-	inline public static function sortByOrder(Index:Int, Obj1:ISortable, Obj2:ISortable):Int
-		return Obj1.order > Obj2.order ? -Index : Obj2.order > Obj1.order ? Index : 0;
-
-	inline public static function clearMapArray(maps:Array<Map<Any, Any>>)
+	inline public static function sortByOrder(index:Int, obj1:ISortable, obj2:ISortable):Int
 	{
-		if (maps != null)
-		{
-			for (map in maps)
-				if (map != null)
-					map.clear();
-			maps.splice(0, maps.length);
-		}
+		return obj1.order > obj2.order ? -index : obj2.order > obj1.order ? index : 0;
+	}
+
+	inline public static function sortByID(index:Int, basic1:FlxBasic, basic2:FlxBasic):Int
+	{
+		return basic1.ID > basic2.ID ? -index : basic2.ID > basic1.ID ? index : 0;
+	}
+
+	public static function clear<K:Any, V:Any>(map:Map<K, V>):Map<K, V>
+	{
+		if (map != null)
+			map.clear();
+
 		return null;
 	}
 
@@ -147,7 +184,6 @@ class CoolUtil
 	@:access(flixel.util.FlxSave.validate)
 	inline public static function getSavePath():String
 	{
-		final company:String = FlxG.stage.application.meta.get('company');
-		return '$company/${flixel.util.FlxSave.validate(FlxG.stage.application.meta.get('file'))}';
+		return FlxG.stage.application.meta.get("company") + "/" + flixel.util.FlxSave.validate(FlxG.stage.application.meta.get("file"));
 	}
 }

@@ -402,7 +402,7 @@ class NotesSubState extends MusicBeatSubstate
 					Math.abs(pointerX() - 1000) <= 84)
 			{
 				hexTypeNum = 0;
-				for (letter in alphabetHex.letters)
+				for (letter in alphabetHex.members)
 				{
 					if(letter.x - letter.offset.x + letter.width <= pointerX()) hexTypeNum++;
 					else break;
@@ -497,14 +497,14 @@ class NotesSubState extends MusicBeatSubstate
 	function centerHexTypeLine()
 	{
 		//trace(hexTypeNum);
-		if(hexTypeNum > 0)
+		if (hexTypeNum > 0)
 		{
-			var letter = alphabetHex.letters[hexTypeNum-1];
+			var letter = alphabetHex.members[hexTypeNum-1];
 			hexTypeLine.x = letter.x - letter.offset.x + letter.width;
 		}
 		else
 		{
-			var letter = alphabetHex.letters[0];
+			var letter = alphabetHex.members[0];
 			hexTypeLine.x = letter.x - letter.offset.x;
 		}
 		hexTypeLine.x += hexTypeLine.width;
@@ -651,7 +651,7 @@ class NotesSubState extends MusicBeatSubstate
 		alphabetG.text = Std.string(color.green);
 		alphabetB.text = Std.string(color.blue);
 		alphabetHex.text = color.toHexString(false, false);
-		for (letter in alphabetHex.letters) letter.color = color;
+		for (letter in alphabetHex.members) letter.color = color;
 
 		colorWheel.color = FlxColor.fromHSB(0, 0, color.brightness);
 		colorWheelSelector.setPosition(colorWheel.x + colorWheel.width/2, colorWheel.y + colorWheel.height/2);
