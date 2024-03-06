@@ -195,7 +195,7 @@ class ClientPrefs
 				Reflect.setField(data, key, Reflect.field(FlxG.save.data, key));
 		
 		if (Main.fpsVar != null)
-			Main.fpsVar.visible = Main.fpsShadow.visible = ClientPrefs.data.showFPS;
+			Main.fpsVar.visible = ClientPrefs.data.showFPS;
 
 		#if (!html5 && !switch)
 		FlxG.autoPause = ClientPrefs.data.autoPause;

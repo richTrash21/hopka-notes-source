@@ -198,7 +198,9 @@ class FunkinLua
 		set("splashAlpha",		 ClientPrefs.data.splashAlpha);
 		set("buildTarget",		 LuaUtils.getBuildTarget());
 
-		for (name => func in customFunctions) if (func != null) set(name, func);
+		for (name => func in customFunctions)
+			if (func != null)
+				set(name, func);
 
 		set("getRunningScripts", () -> [for (script in game.luaArray) script.scriptName]);
 		
@@ -241,8 +243,8 @@ class FunkinLua
 			game.callOnScripts(funcName, args, ignoreStops, excludeScripts, excludeValues);
 			return true;
 		});
-		addLocalCallback("callOnLuas", function(funcName:String, ?args:Array<Dynamic> = null, ?ignoreStops=false, ?ignoreSelf:Bool = true,
-				?excludeScripts:Array<String> = null, ?excludeValues:Array<Dynamic> = null)
+		addLocalCallback("callOnLuas", (funcName:String, ?args:Array<Dynamic>, ?ignoreStops = false, ?ignoreSelf = true,
+				?excludeScripts:Array<String>, ?excludeValues:Array<Dynamic>) ->
 		{
 			if (excludeScripts == null)
 				excludeScripts = [];
@@ -252,8 +254,8 @@ class FunkinLua
 			game.callOnLuas(funcName, args, ignoreStops, excludeScripts, excludeValues);
 			return true;
 		});
-		addLocalCallback("callOnHScript", (funcName:String, ?args:Array<Dynamic> = null, ?ignoreStops=false, ?ignoreSelf:Bool = true,
-				?excludeScripts:Array<String> = null, ?excludeValues:Array<Dynamic> = null) ->
+		addLocalCallback("callOnHScript", (funcName:String, ?args:Array<Dynamic>, ?ignoreStops = false, ?ignoreSelf = true,
+				?excludeScripts:Array<String>, ?excludeValues:Array<Dynamic>) ->
 		{
 			if (excludeScripts == null)
 				excludeScripts = [];
@@ -269,7 +271,7 @@ class FunkinLua
 			if (args == null)
 				args = [];
 
-			final foundScript:String = findScript(script);
+			final foundScript = findScript(script);
 			if (foundScript != null)
 				for (luaInstance in game.luaArray)
 					if (luaInstance.scriptName == foundScript)
@@ -311,7 +313,8 @@ class FunkinLua
 					if(luaInstance.scriptName == foundScript)
 						luaInstance.set(global, val);
 		});
-		/*set("getGlobals", function(luaFile:String) { // returns a copy of the specified file's globals
+		/*set("getGlobals", (luaFile:String) -> // returns a copy of the specified file's globals
+		{
 			var foundScript:String = findScript(luaFile);
 			if(foundScript != null)
 			{
@@ -597,19 +600,19 @@ class FunkinLua
 		}
 
 		// Tween shit, but for strums
-		/*set("noteTweenX", function(tag:String, note:Int, value:Dynamic, duration:Float, ease:String)
+		/*set("noteTweenX", (tag:String, note:Int, value:Dynamic, duration:Float, ease:String) ->
 			noteTweenFunction(tag, note, {x: value}, duration, ease)
 		);
-		set("noteTweenY", function(tag:String, note:Int, value:Dynamic, duration:Float, ease:String) 
+		set("noteTweenY", (tag:String, note:Int, value:Dynamic, duration:Float, ease:String)  ->
 			noteTweenFunction(tag, note, {y: value}, duration, ease)
 		);
-		set("noteTweenAngle", function(tag:String, note:Int, value:Dynamic, duration:Float, ease:String)
+		set("noteTweenAngle", (tag:String, note:Int, value:Dynamic, duration:Float, ease:String) ->
 			noteTweenFunction(tag, note, {angle: value}, duration, ease)
 		);
-		set("noteTweenDirection", function(tag:String, note:Int, value:Dynamic, duration:Float, ease:String)
+		set("noteTweenDirection", (tag:String, note:Int, value:Dynamic, duration:Float, ease:String) ->
 			noteTweenFunction(tag, note, {direction: value}, duration, ease)
 		);
-		set("noteTweenAlpha", function(tag:String, note:Int, value:Dynamic, duration:Float, ease:String)
+		set("noteTweenAlpha", (tag:String, note:Int, value:Dynamic, duration:Float, ease:String) ->
 			noteTweenFunction(tag, note, {alpha: value}, duration, ease)
 		);*/
 		set("cancelTween", LuaUtils.cancelTween);
@@ -715,23 +718,26 @@ class FunkinLua
 		set("triggerEvent", (name:String, arg1:Any, arg2:Any) -> game.triggerEvent(name, arg1, arg2));
 
 		set("startCountdown", game.startCountdown);
-		set("endSong", function() {
+		set("endSong", () ->
+		{
 			game.KillNotes();
 			return game.endSong();
 		});
-		set("restartSong", function(?skipTransition:Bool = false) {
+		set("restartSong", (?skipTransition:Bool = false) ->
+		{
 			game.persistentUpdate = false;
 			FlxG.camera.followLerp = 0;
 			PauseSubState.restartSong(skipTransition);
 			return true;
 		});
-		set("exitSong", function(?skipTransition:Bool = false) {
+		set("exitSong", (?skipTransition:Bool = false) ->
+		{
 			if(skipTransition)
 				FlxTransitionableState.skipNextTransIn = FlxTransitionableState.skipNextTransOut = true;
 
 			PlayState.cancelMusicFadeTween();
 			CustomFadeTransition.nextCamera = !FlxTransitionableState.skipNextTransIn ? game.camOther : null;
-			MusicBeatState.switchState(PlayState.isStoryMode ? new StoryMenuState() : new FreeplayState());
+			MusicBeatState.switchState(PlayState.isStoryMode ? StoryMenuState.new : FreeplayState.new);
 			
 			#if desktop DiscordClient.resetClientID(); #end
 
@@ -869,7 +875,7 @@ class FunkinLua
 			return true;
 		});
 
-		set("addAnimation", function(obj:String, name:String, frames:Array<Int>, framerate:Int = 24, loop:Bool = true)
+		set("addAnimation", (obj:String, name:String, frames:Array<Int>, framerate:Int = 24, loop:Bool = true) ->
 		{
 			final obj:FlxSprite = LuaUtils.getObjectDirectly(obj, false);
 			if (obj == null)
@@ -902,7 +908,7 @@ class FunkinLua
 			obj.addOffset(anim, x, y);
 			return true;
 		});
-		set("setOffset", function(obj:String, ?x:Float, ?y:Float)
+		set("setOffset", (obj:String, ?x:Float, ?y:Float) ->
 		{
 			final obj:FlxSprite = LuaUtils.getObjectDirectly(obj, false);
 			if (obj == null)
@@ -1114,11 +1120,10 @@ class FunkinLua
 
 			luaTrace('screenCenter: Object $obj doesn\'t exist!', false, false, FlxColor.RED);
 		});
-		set("objectsOverlap", function(obj1:String, obj2:String)
+		set("objectsOverlap", (obj1:String, obj2:String) ->
 		{
 			final real1:FlxBasic = game.getLuaObject(obj1) ?? Reflect.getProperty(LuaUtils.getTargetInstance(), obj1);
 			final real2:FlxBasic = game.getLuaObject(obj2) ?? Reflect.getProperty(LuaUtils.getTargetInstance(), obj2);
-
 			return (!(real1 == null || real2 == null) && FlxG.overlap(real1, real2));
 		});
 		set("getPixelColor", (obj:String, x:Int, y:Int) ->
@@ -1130,7 +1135,7 @@ class FunkinLua
 
 			return spr == null ? FlxColor.BLACK : spr.pixels.getPixel32(x, y);
 		});
-		set("startDialogue", function(dialogueFile:String, music:String = null)
+		set("startDialogue", (dialogueFile:String, ?music:String) ->
 		{
 			var path:String;
 			#if MODS_ALLOWED

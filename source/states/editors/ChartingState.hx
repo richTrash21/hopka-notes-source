@@ -1616,7 +1616,7 @@ class ChartingState extends MusicBeatUIState
 
 				//if(_song.stage == null) _song.stage = stageDropDown.selectedLabel;
 				StageData.loadDirectory(_song);
-				LoadingState.loadAndSwitchState(new PlayState());
+				LoadingState.loadAndSwitchState(PlayState.new);
 			}
 
 			if(curSelectedNote != null && curSelectedNote[1] > -1) {
@@ -1629,7 +1629,7 @@ class ChartingState extends MusicBeatUIState
 				// Protect against lost data when quickly leaving the chart editor.
 				autosaveSong();
 				PlayState.chartingMode = false;
-				MusicBeatState.switchState(new states.editors.MasterEditorMenu());
+				MusicBeatState.switchState(states.editors.MasterEditorMenu.new);
 				FlxG.sound.playMusic(Paths.music('freakyMenu'));
 				//FlxG.mouse.visible = false;
 				return;
@@ -1922,7 +1922,8 @@ class ChartingState extends MusicBeatUIState
 		if(vocals != null) vocals.pause();
 	}*/
 
-	function updateZoom() {
+	function updateZoom()
+	{
 		final daZoom:Float = zoomList[curZoom];
 		final zoomThing:String = daZoom < 1 ? '${Math.round(1 / daZoom)} / 1' : '1 / $daZoom';
 		zoomTxt.text = 'Zoom: $zoomThing';
@@ -1931,7 +1932,9 @@ class ChartingState extends MusicBeatUIState
 
 	override function destroy()
 	{
-		Note.globalRgbShaders = [];
+		while (Note.globalRgbShaders.length > 0)
+			Note.globalRgbShaders.pop();
+
 		backend.NoteTypesConfig.clearNoteTypesData();
 		lime.app.Application.current.window.onDropFile.remove(LoadFromFile);
 		super.destroy();

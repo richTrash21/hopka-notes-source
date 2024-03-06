@@ -335,7 +335,7 @@ class ModsMenuState extends MusicBeatState
 			saveTxt();
 			if(needaReset)
 			{
-				//MusicBeatState.switchState(new TitleState());
+				// MusicBeatState.switchState(TitleState.new);
 				TitleState.skippedIntro = false;
 				FlxG.sound.music.fadeOut(0.3);
 				if(FreeplayState.vocals != null)
@@ -346,7 +346,7 @@ class ModsMenuState extends MusicBeatState
 				FlxG.camera.fade(FlxColor.BLACK, 0.5, false, FlxG.resetGame, false);
 			}
 			else
-				MusicBeatState.switchState(new MainMenuState());
+				MusicBeatState.switchState(MainMenuState.new);
 		}
 
 		if (controls.UI_UP_P)	changeSelection(-1);

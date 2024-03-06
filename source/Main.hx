@@ -23,7 +23,7 @@ class Main extends Sprite
 	{
 		width: 1280,					  // WINDOW width
 		height: 720,					  // WINDOW height
-		initialState: states.TitleState,  // initial game state
+		initialState: states.TitleState.new,  // initial game state
 		zoom: -1.0,						  // game state bounds
 		framerate: 60,					  // default framerate
 		skipSplash: true,				  // if the default flixel splash screen should be skipped
@@ -31,8 +31,7 @@ class Main extends Sprite
 	};
 
 	public static var fpsVar(default, null):FPSCounter;
-	public static var fpsShadow:FPSCounter;
-	@:noCompletion private static var _focusVolume(default, null):Float = 1; // ignore
+	@:noCompletion static var _focusVolume:Float = 1; // ignore
 
 	public static var muteKeys:Array<FlxKey> = [FlxKey.ZERO];
 	public static var volumeDownKeys:Array<FlxKey> = [FlxKey.NUMPADMINUS, FlxKey.MINUS];
@@ -101,15 +100,12 @@ class Main extends Sprite
 
 	private function setupGame():Void
 	{
-		addChild(new FlxGame(game.width, game.height, Init, game.framerate, game.framerate, game.skipSplash, game.startFullscreen));
+		final g = new FlxGame(game.width, game.height, Init, game.framerate, game.framerate, game.skipSplash, game.startFullscreen);
+		addChild(g);
 
 		#if !mobile
-		fpsVar = new FPSCounter(10, 3, 0xFFFFFF);
-		fpsShadow = new FPSCounter(11, 4, false);
-		addChild(fpsShadow);
-		addChild(fpsVar);
-
-		if (fpsVar != null) fpsVar.visible = fpsShadow.visible = ClientPrefs.data.showFPS;
+		g.addChild(fpsVar = new FPSCounter(10, 3, 0xFFFFFF));
+		fpsVar.visible = ClientPrefs.data.showFPS;
 
 		Lib.current.stage.align = "tl";
 		Lib.current.stage.scaleMode = openfl.display.StageScaleMode.NO_SCALE;
@@ -137,25 +133,20 @@ class Main extends Sprite
 		#end
 
 		// shader coords fix
-		FlxG.signals.gameResized.add(function (w, h)
+		FlxG.signals.gameResized.add((w, h) ->
 		{
-			if (FlxG.cameras != null)
-				for (cam in FlxG.cameras.list)
-					if (cam != null && cam.filters != null)
-						resetSpriteCache(cam.flashSprite);
+			for (cam in FlxG.cameras.list)
+				if (cam != null && cam.filters != null)
+					resetSpriteCache(cam.flashSprite);
 
-			if (FlxG.game != null)
-				resetSpriteCache(FlxG.game);
+			resetSpriteCache(FlxG.game);
 		});
 	}
 
-	static function resetSpriteCache(sprite:Sprite):Void
+	@:access(openfl.display.DisplayObject.__cleanup)
+	inline static function resetSpriteCache(sprite:Sprite):Void
 	{
-		@:privateAccess
-		{
-				sprite.__cacheBitmap = null;
-			sprite.__cacheBitmapData = null;
-		}
+		sprite.__cleanup();
 	}
 
 	// Code was entirely made by sqirra-rng for their fnf engine named "Izzy Engine", big props to them!!!
@@ -164,16 +155,14 @@ class Main extends Sprite
 	#if CRASH_HANDLER
 	function onCrash(e:UncaughtErrorEvent):Void
 	{
-		final callStack:Array<StackItem> = CallStack.exceptionStack(true);
-		final dateNow:String = Date.now().toString().replace(" ", "_").replace(":", "'");
-		final path = "./crash/" + "PsychEngine_" + dateNow + ".txt";
-		var errMsg:String = "";
+		final path = "./crash/PsychEngine_" + Date.now().toString().replace(" ", "_").replace(":", "'") + ".txt";
+		var errMsg = "";
 
-		for (stackItem in callStack)
+		for (stackItem in CallStack.exceptionStack(true))
 			switch (stackItem)
 			{
 				case FilePos(s, file, line, column):
-					errMsg += file + " (line " + line + ")\n";
+					errMsg += '$file (line $line)\n';
 				default:
 					Sys.println(stackItem);
 			}
@@ -182,8 +171,9 @@ class Main extends Sprite
 			\nUncaught Error: " + e.error + "\n\ntl;dr" + #if RELESE_BUILD_FR " - i messed up whoops (richTrash21)" #else " - you done goofed (richTrash21)" #end
 			/*"\nPlease report this error to the GitHub page: https://github.com/ShadowMario/FNF-PsychEngine\n\n> Crash Handler written by: sqirra-rng"*/;
 
-		if (!FileSystem.exists("./crash/")) FileSystem.createDirectory("./crash/");
-		sys.io.File.saveContent(path, errMsg + "\n");
+		if (!FileSystem.exists("./crash/"))
+			FileSystem.createDirectory("./crash/");
+		sys.io.File.saveContent(path, '$errMsg\n');
 
 		Sys.println(errMsg);
 		Sys.println("Crash dump saved in " + haxe.io.Path.normalize(path));

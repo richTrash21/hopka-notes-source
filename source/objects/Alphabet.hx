@@ -38,6 +38,8 @@ enum abstract Alignment(String) from String to Alignment to String
 class Alphabet extends FlxTypedSpriteGroup<AlphaCharacter>
 {
 	inline static final Y_PER_ROW:Float = 85;
+	inline static final SPACE_SIZE = 28;
+	inline static final TAB_LEN = 4; // in spaces
 
 	public var text(default, set):String;
 	public var bold:Bool = false;
@@ -51,6 +53,7 @@ class Alphabet extends FlxTypedSpriteGroup<AlphaCharacter>
 	public var scaleX(get, set):Float;
 	public var scaleY(get, set):Float;
 
+	public var fieldWidth:Float = FlxG.width * .65;
 	public var lettersLength(default, null):Int = 0;
 	public var rows(default, null):Int = 0;
 
@@ -134,10 +137,10 @@ class Alphabet extends FlxTypedSpriteGroup<AlphaCharacter>
 
 	@:noCompletion function createLetters(newText:String)
 	{
-		var consecutiveSpaces = 0;
-
 		rows = lettersLength = 0;
+
 		var xPos = 0.;
+		var consecutiveSpaces = 0;
 		var rowData = new Array<Float>();
 
 		var i = -1;
@@ -157,15 +160,19 @@ class Alphabet extends FlxTypedSpriteGroup<AlphaCharacter>
 				final spaceChar = (character == " " || (bold && character == "_"));
 				if (spaceChar)
 					consecutiveSpaces++;
+				else if (character == "\t") // tabulation support yaay!!!
+				{
+					final TAB_SIZE = SPACE_SIZE * TAB_LEN * scale.x;
+					xPos += TAB_SIZE - (xPos % TAB_SIZE);
+				}
 
-				// final isAlphabet = AlphaCharacter.isTypeAlphabet(character.toLowerCase());
-				if (AlphaCharacter.allLetters.exists(character.toLowerCase()) && (!bold || !spaceChar))
+				if (AlphaCharacter.allLetters.exists(character.toLowerCase()) && !(bold && spaceChar))
 				{
 					if (consecutiveSpaces > 0)
 					{
-						xPos += 28 * consecutiveSpaces * scale.x;
+						xPos += SPACE_SIZE * consecutiveSpaces * scale.x;
 						rowData[rows] = xPos;
-						if (!bold && xPos >= FlxG.width * .65)
+						if (!bold && xPos >= fieldWidth)
 						{
 							xPos = 0;
 							rows++;

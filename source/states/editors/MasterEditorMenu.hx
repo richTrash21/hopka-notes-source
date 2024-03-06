@@ -84,29 +84,32 @@ class MasterEditorMenu extends MusicBeatState
 		if(controls.UI_RIGHT_P)	changeDirectory(1);
 		#end
 
-		if (controls.BACK) MusicBeatState.switchState(new MainMenuState());
+		if (controls.BACK)
+			MusicBeatState.switchState(MainMenuState.new);
 
 		if (controls.ACCEPT)
 		{
-			switch(options[curSelected]) {
+			switch (options[curSelected])
+			{
 				case 'Chart Editor'://felt it would be cool maybe
-					LoadingState.loadAndSwitchState(new ChartingState(), false);
+					LoadingState.loadAndSwitchState(ChartingState.new, false);
 				case 'Character Editor':
-					LoadingState.loadAndSwitchState(new CharacterEditorState(Character.DEFAULT_CHARACTER, false));
+					LoadingState.loadAndSwitchState(CharacterEditorState.new.bind(Character.DEFAULT_CHARACTER, false));
 				case 'Week Editor':
-					MusicBeatState.switchState(new WeekEditorState());
+					MusicBeatState.switchState(WeekEditorState.new.bind(null));
 				case 'Menu Character Editor':
-					MusicBeatState.switchState(new MenuCharacterEditorState());
+					MusicBeatState.switchState(MenuCharacterEditorState.new);
 				case 'Dialogue Editor':
-					LoadingState.loadAndSwitchState(new DialogueEditorState(), false);
+					LoadingState.loadAndSwitchState(DialogueEditorState.new, false);
 				case 'Dialogue Portrait Editor':
-					LoadingState.loadAndSwitchState(new DialogueCharacterEditorState(), false);
+					LoadingState.loadAndSwitchState(DialogueCharacterEditorState.new, false);
 				case 'Note Splash Debug':
-					LoadingState.loadAndSwitchState(new NoteSplashDebugState());
+					LoadingState.loadAndSwitchState(NoteSplashDebugState.new);
 				case 'Mods Menu':
-					MusicBeatState.switchState(new ModsMenuState());
+					MusicBeatState.switchState(ModsMenuState.new);
 			}
-			if(options[curSelected] != 'Mods Menu') FlxG.sound.music.volume = 0;
+			if (options[curSelected] != 'Mods Menu')
+				FlxG.sound.music.volume = 0;
 			#if PRELOAD_ALL
 			FreeplayState.stopVocals();
 			#end
@@ -116,15 +119,15 @@ class MasterEditorMenu extends MusicBeatState
 
 	function changeSelection(change:Int = 0)
 	{
-		if(change != 0) FlxG.sound.play(Paths.sound('scrollMenu'), 0.4);
+		if (change != 0)
+			FlxG.sound.play(Paths.sound('scrollMenu'), 0.4);
 
 		curSelected = FlxMath.wrap(curSelected + change, 0, options.length-1);
 
-		var bullShit:Int = 0;
+		var bullShit = 0;
 		for (item in grpTexts.members)
 		{
-			item.targetY = bullShit - curSelected;
-			bullShit++;
+			item.targetY = bullShit++ - curSelected;
 			item.alpha = item.targetY == 0 ? 1 : 0.6;
 		}
 	}
@@ -132,7 +135,8 @@ class MasterEditorMenu extends MusicBeatState
 	#if MODS_ALLOWED
 	function changeDirectory(change:Int = 0)
 	{
-		if(change != 0) FlxG.sound.play(Paths.sound('scrollMenu'), 0.4);
+		if(change != 0)
+			FlxG.sound.play(Paths.sound('scrollMenu'), 0.4);
 
 		curDirectory = FlxMath.wrap(curDirectory + change, 0, directories.length-1);
 	

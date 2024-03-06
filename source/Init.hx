@@ -13,6 +13,8 @@ class Init extends flixel.FlxState
 {
 	override function create():Void
 	{
+		super.create();
+
 		// sexy subtitle markups
 		Subtitles._markup = [
 			// standart fonts doesn't have those so why bother?
@@ -55,17 +57,30 @@ class Init extends flixel.FlxState
 		#if ACHIEVEMENTS_ALLOWED Achievements.load(); #end
 		backend.Highscore.load();
 
-		if (FlxG.save.data.weekCompleted != null) states.StoryMenuState.weekCompleted = FlxG.save.data.weekCompleted;
+		if (FlxG.save.data.weekCompleted != null)
+			states.StoryMenuState.weekCompleted = FlxG.save.data.weekCompleted;
 
-		super.create();
+		if (FlxG.save.data != null && FlxG.save.data.fullscreen)
+			FlxG.fullscreen = FlxG.save.data.fullscreen;
 
-		if (FlxG.save.data != null && FlxG.save.data.fullscreen) FlxG.fullscreen = FlxG.save.data.fullscreen;
+		#if debug
+		FlxG.console.registerClass(Main);
+		FlxG.console.registerClass(Paths);
+		FlxG.console.registerClass(PlayState);
+		FlxG.console.registerClass(ClientPrefs);
+		#if ACHIEVEMENTS_ALLOWED
+		FlxG.console.registerClass(Achievements);
+		#end
+		FlxG.console.registerClass(MusicBeatState);
+		FlxG.console.registerObject("controls", Controls.instance);
+		#end
 
 		if (FlxG.save.data.flashing == null && !FlashingState.leftState)
 		{
-			FlxTransitionableState.skipNextTransIn = FlxTransitionableState.skipNextTransOut = true;
-			MusicBeatState.switchState(new FlashingState());
+			FlxTransitionableState.skipNextTransIn = true;
+			FlxG.switchState(FlashingState.new);
 		}
-		else FlxG.switchState(Type.createInstance(Main.game.initialState, []));
+		else
+			FlxG.switchState(Main.game.initialState);
 	}
 }

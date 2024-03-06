@@ -6,7 +6,7 @@ class Option
 	public var text(get, set):String;
 	//public var onChange:()->Void;					// Pressed enter (on Bool type options) or pressed/held left/right (on other types)
 
-	public var type(get, default):String = 'bool';	// bool, int (or integer), float (or fl), percent, string (or str)
+	public var type(get, default):String = "bool";	// bool, int (or integer), float (or fl), percent, string (or str)
 													// Bool will use checkboxes
 													// Everything else will use a text
 
@@ -21,13 +21,13 @@ class Option
 	public var maxValue:Dynamic;					// Only used in int/float/percent type
 	public var decimals:Int = 1;					// Only used in float/percent type
 
-	public var displayFormat:String = '%v';			// How String/Float/Percent/Int values are shown, %v = Current value, %d = Default value
-	public var description:String = '';
-	public var name:String = 'Unknown';
+	public var displayFormat:String = "%v";			// How String/Float/Percent/Int values are shown, %v = Current value, %d = Default value
+	public var description:String = "";
+	public var name:String = "Unknown";
 
 	public var value(get, set):Dynamic;
 
-	public function new(name:String, description:String = '', variable:String, type:String = 'bool', ?options:Array<String>)
+	public function new(name:String, description:String = "", variable:String, type:String = "bool", ?options:Array<String>)
 	{
 		this.name = name;
 		this.description = description;
@@ -36,14 +36,14 @@ class Option
 		this.defaultValue = Reflect.getProperty(ClientPrefs.defaultData, variable);
 		this.options = options;
 
-		if (defaultValue == 'null variable value')
+		if (defaultValue == "null variable value")
 		{
 			switch(type)
 			{
-				case 'bool':		  defaultValue = false;
-				case 'int' | 'float': defaultValue = 0;
-				case 'percent':		  defaultValue = 1;
-				case 'string':		  defaultValue = (options.length > 0) ? options[0] : '';
+				case "bool":		  defaultValue = false;
+				case "int" | "float": defaultValue = 0;
+				case "percent":		  defaultValue = 1;
+				case "string":		  defaultValue = (options.length > 0) ? options[0] : "";
 			}
 		}
 
@@ -51,12 +51,12 @@ class Option
 
 		switch(type)
 		{
-			case 'string':
+			case "string":
 				final num:Int = options.indexOf(value);
 				if(num > -1) curOption = num;
 	
-			case 'percent':
-				displayFormat = '%v%';
+			case "percent":
+				displayFormat = "%v%";
 				changeValue = 0.01;
 				minValue = 0;
 				maxValue = 1;
@@ -68,7 +68,9 @@ class Option
 	dynamic public function change() {}
 
 	public function get_value():Dynamic
+	{
 		return Reflect.getProperty(ClientPrefs.data, variable);
+	}
 
 	public function set_value(val:Dynamic):Dynamic
 	{
@@ -77,20 +79,24 @@ class Option
 	}
 
 	function get_text():String
+	{
 		return child?.text;
 
-	function set_text(newValue:String = ''):String
+	}
+	function set_text(newValue:String):String
+	{
 		return child == null ? null : child.text = newValue;
+	}
 
 	function get_type()
 	{
 		final newValue:String = switch(type.toLowerCase().trim())
 			{
-				case 'int' | 'float' | 'percent' | 'string': type;
-				case 'integer':	'int';
-				case 'str':		'string';
-				case 'fl':		'float';
-				default:		'bool';
+				case "int" | "float" | "percent" | "string": type;
+				case "integer":	"int";
+				case "str":		"string";
+				case "fl":		"float";
+				default:		"bool";
 			}
 		return type = newValue;
 	}

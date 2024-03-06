@@ -2,37 +2,41 @@ package backend;
 
 class MusicBeatSubstate extends flixel.FlxSubState implements IMusicBeatState
 {
-	public function new(/*BGColor:FlxColor = FlxColor.TRANSPARENT*/) {super(/*BGColor*/);}
+	// public function new() { super(); }
 
-	private var curSection:Int = 0;
-	private var stepsToDo:Int = 0;
+	var curSection:Int = 0;
+	var stepsToDo:Int = 0;
 
-	private var lastBeat:Float = 0;
-	private var lastStep:Float = 0;
+	var lastBeat:Float = 0;
+	var lastStep:Float = 0;
 
-	private var curStep:Int = 0;
-	private var curBeat:Int = 0;
+	var curStep:Int = 0;
+	var curBeat:Int = 0;
 
-	private var curDecStep:Float = 0;
-	private var curDecBeat:Float = 0;
-	private var controls(get, never):Controls;
-
-	inline function get_controls():Controls
-		return Controls.instance;
+	var curDecStep:Float = 0;
+	var curDecBeat:Float = 0;
+	var controls(get, never):Controls;
 
 	override function update(elapsed:Float)
 	{
-		if(!persistentUpdate) MusicBeatState.timePassedOnState += elapsed;
-		var oldStep:Int = curStep;
+		if (!persistentUpdate)
+			MusicBeatState.timePassedOnState += elapsed;
 
+		final oldStep = curStep;
 		updateCurStep();
 		updateBeat();
 
 		if (oldStep != curStep)
 		{
-			if(curStep > 0) stepHit();
-			if(PlayState.SONG != null)
-				(oldStep < curStep) ? updateSection() : rollbackSection();
+			if (curStep > 0)
+				stepHit();
+			if (PlayState.SONG != null)
+			{
+				if (oldStep < curStep)
+					updateSection()
+				else
+					rollbackSection();
+			}
 		}
 
 		super.update(elapsed);
@@ -40,58 +44,72 @@ class MusicBeatSubstate extends flixel.FlxSubState implements IMusicBeatState
 
 	private function updateSection():Void
 	{
-		if(stepsToDo < 1) stepsToDo = Math.round(getBeatsOnSection() * 4);
-		while(curStep >= stepsToDo)
+		if (stepsToDo < 1)
+			stepsToDo = Math.round(getBeatsOnSection() * 4);
+
+		while (curStep >= stepsToDo)
 		{
 			curSection++;
-			var beats:Float = getBeatsOnSection();
-			stepsToDo += Math.round(beats * 4);
+			stepsToDo += Math.round(getBeatsOnSection() * 4);
 			sectionHit();
 		}
 	}
 
 	private function rollbackSection():Void
 	{
-		if(curStep < 0) return;
+		if (curStep < 0)
+			return;
 
-		var lastSection:Int = curSection;
+		final lastSection = curSection;
 		curSection = 0;
 		stepsToDo = 0;
 		for (i in 0...PlayState.SONG.notes.length)
 		{
-			if (PlayState.SONG.notes[i] != null)
-			{
-				stepsToDo += Math.round(getBeatsOnSection() * 4);
-				if(stepsToDo > curStep) break;
-				
-				curSection++;
-			}
+			if (PlayState.SONG.notes[i] == null)
+				continue;
+
+			stepsToDo += Math.round(getBeatsOnSection() * 4);
+			if (stepsToDo > curStep)
+				break;
+			
+			curSection++;
 		}
 
-		if(curSection > lastSection) sectionHit();
+		if (curSection > lastSection)
+			sectionHit();
 	}
 
 	private function updateBeat():Void
 	{
-		curBeat = Math.floor(curStep / 4);
-		curDecBeat = curDecStep/4;
+		curBeat = Math.floor(curStep * .25);
+		curDecBeat = curDecStep * .25;
 	}
 
 	private function updateCurStep():Void
 	{
-		var lastChange = Conductor.getBPMFromSeconds(Conductor.songPosition);
-		var shit = ((Conductor.songPosition - ClientPrefs.data.noteOffset) - lastChange.songTime) / lastChange.stepCrochet;
+		final lastChange = Conductor.getBPMFromSeconds(Conductor.songPosition);
+		final shit = ((Conductor.songPosition - ClientPrefs.data.noteOffset) - lastChange.songTime) / lastChange.stepCrochet;
 		curDecStep = lastChange.stepTime + shit;
 		curStep = lastChange.stepTime + Math.floor(shit);
 	}
 
-	public function stepHit():Void { if (curStep % 4 == 0) beatHit(); }
+	public function stepHit():Void
+	{
+		if (curStep % 4 == 0)
+			beatHit();
+	}
+
 	public function beatHit():Void { /* do literally nothing dumbass */ }
 	public function sectionHit():Void { /* yep, you guessed it, nothing again, dumbass */ }
+	// rich: ur mean😭
 	
 	function getBeatsOnSection()
 	{
-		var val:Null<Float> = (PlayState.SONG != null && PlayState.SONG.notes[curSection] != null) ? PlayState.SONG.notes[curSection].sectionBeats : 4;
-		return val == null ? 4 : val;
+		return PlayState.SONG?.notes[curSection]?.sectionBeats ?? 4;
+	}
+
+	@:noCompletion inline function get_controls():Controls
+	{
+		return Controls.instance;
 	}
 }

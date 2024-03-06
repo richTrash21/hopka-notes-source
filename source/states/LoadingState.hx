@@ -1,5 +1,6 @@
 package states;
 
+import flixel.util.typeLimit.NextState;
 import lime.app.Promise;
 import lime.app.Future;
 
@@ -24,13 +25,13 @@ class LoadingState extends MusicBeatState
 	
 	// TO DO: Make this easier
 	
-	var target:FlxState;
+	var target:NextState;
 	var stopMusic = false;
 	var directory:String;
 	var callbacks:MultiCallback;
 	var targetShit:Float = 0.0;
 
-	function new(target:FlxState, stopMusic:Bool, directory:String)
+	function new(target:NextState, stopMusic:Bool, directory:String)
 	{
 		super();
 		this.target = target;
@@ -132,10 +133,12 @@ class LoadingState extends MusicBeatState
 	static function getSongPath()	return Paths.inst(PlayState.SONG.song);
 	static function getVocalPath()	return Paths.voices(PlayState.SONG.song);
 	
-	inline static public function loadAndSwitchState(target:FlxState, stopMusic = false)
+	inline static public function loadAndSwitchState(target:NextState, stopMusic = false)
+	{
 		MusicBeatState.switchState(getNextState(target, stopMusic));
+	}
 	
-	static function getNextState(target:FlxState, stopMusic = false):FlxState
+	static function getNextState(target:NextState, stopMusic = false):NextState
 	{
 		final weekDir:String = StageData.forceNextDirectory;
 		StageData.forceNextDirectory = null;
@@ -145,12 +148,14 @@ class LoadingState extends MusicBeatState
 		trace('Setting asset folder to $directory');
 
 		#if NO_PRELOAD_ALL
-		final loaded:Bool = PlayState.SONG != null
-			? isSoundLoaded(getSongPath()) && (!PlayState.SONG.needsVoices || isSoundLoaded(getVocalPath())) && isLibraryLoaded("shared") && isLibraryLoaded('week_assets')
-			: false;	
-		if (!loaded) return new LoadingState(target, stopMusic, directory);
+		final loaded = PlayState.SONG == null
+			? false
+			: isSoundLoaded(getSongPath()) && (!PlayState.SONG.needsVoices || isSoundLoaded(getVocalPath())) && isLibraryLoaded("shared") && isLibraryLoaded('week_assets');	
+		if (!loaded)
+			return LoadingState.new.bind(target, stopMusic, directory);
 		#end
-		if (stopMusic && FlxG.sound.music != null) FlxG.sound.music.stop();
+		if (stopMusic && FlxG.sound.music != null)
+			FlxG.sound.music.stop();
 		return target;
 	}
 	

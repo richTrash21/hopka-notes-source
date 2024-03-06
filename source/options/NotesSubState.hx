@@ -49,11 +49,11 @@ class NotesSubState extends MusicBeatSubstate
 	public function new() {
 		super();
 		
-		final bg:FlxSprite = new FlxSprite().loadGraphic(Paths.image('menuDesat'));
-		bg.color = 0xFFEA71FD;
+		/*final bg:FlxSprite = new FlxSprite().loadGraphic(Paths.image('menuDesat'));
+		bg.color = OptionsState.BG_COLOR;
 		bg.screenCenter();
 		bg.antialiasing = ClientPrefs.data.antialiasing;
-		add(bg);
+		add(bg);*/
 
 		final grid:FlxBackdrop = new FlxBackdrop(FlxGridOverlay.createGrid(80, 80, 160, 160, true, 0x33FFFFFF, 0x0));
 		grid.velocity.set(40, 40);
@@ -600,7 +600,9 @@ class NotesSubState extends MusicBeatSubstate
 			modeNotes.add(newNote);
 		}
 
-		Note.globalRgbShaders = [];
+		while (Note.globalRgbShaders.length > 0)
+			Note.globalRgbShaders.pop();
+
 		for (i in 0...dataArray.length)
 		{
 			Note.initializeGlobalRGBShader(i);

@@ -334,6 +334,7 @@ class CharacterEditorState extends backend.MusicBeatUIState
 
 	var check_player:FlxUICheckBox;
 	var charDropDown:DropDownAdvanced;
+	var templateCharacter:FlxButton;
 	function addSettingsUI()
 	{
 		final tab_group = new FlxUI(null, UI_box);
@@ -357,7 +358,7 @@ class CharacterEditorState extends backend.MusicBeatUIState
 			reloadCharacterDropDown();
 		});
 
-		final templateCharacter = new FlxButton(140, 50, "Load Template", () ->
+		templateCharacter = new FlxButton(140, 50, "Load Template", () ->
 		{
 			final _template:CharacterFile =
 			{
@@ -832,6 +833,7 @@ class CharacterEditorState extends backend.MusicBeatUIState
 	var undoOffsets:Array<Float> = null;
 
 	var __mousePos = FlxPoint.get();
+	var __dragging = false;
 
 	override function update(elapsed:Float)
 	{
@@ -857,21 +859,18 @@ class CharacterEditorState extends backend.MusicBeatUIState
 
 		// CAMERA CONTROLS
 		final CAM_LEFT	= FlxG.keys.pressed.J;
-		final CAM_RIGHT	= FlxG.keys.pressed.L;
-		final CAM_UP	= FlxG.keys.pressed.K;
 		final CAM_DOWN	= FlxG.keys.pressed.I;
 
-		if (CAM_LEFT || CAM_RIGHT)
+		if (CAM_LEFT || FlxG.keys.pressed.L)
 			FlxG.camera.scroll.x += (CAM_LEFT ? -elapsed : elapsed) * 500 * shiftMult * ctrlMult;
-		if (CAM_UP || CAM_DOWN)
+		if (FlxG.keys.pressed.K || CAM_DOWN)
 			FlxG.camera.scroll.y += (CAM_DOWN ? -elapsed : elapsed) * 500 * shiftMult * ctrlMult;
 
 		final lastZoom = FlxG.camera.zoom;
 		final ADD_ZOOM = FlxG.keys.pressed.E;
-		final DECREASE_ZOOM = FlxG.keys.pressed.Q;
 		if (FlxG.keys.justPressed.R && !FlxG.keys.pressed.CONTROL)
 			FlxG.camera.zoom = 1;
-		else if (ADD_ZOOM || DECREASE_ZOOM)
+		else if (ADD_ZOOM || FlxG.keys.pressed.Q)
 			FlxG.camera.zoom = FlxMath.bound(FlxG.camera.zoom + (ADD_ZOOM ? elapsed : -elapsed) * FlxG.camera.zoom * shiftMult * ctrlMult, 0.1, 3);
 		else if (FlxG.mouse.wheel != 0 && !(charDropDown.dropPanel.visible || animationDropDown.dropPanel.visible))
 			FlxG.camera.zoom = FlxMath.bound(FlxG.camera.zoom + FlxG.camera.zoom * FlxG.mouse.wheel * 0.1 * shiftMult * ctrlMult, 0.1, 3);
@@ -929,17 +928,29 @@ class CharacterEditorState extends backend.MusicBeatUIState
 			holdingArrowsTime = 0;
 
 		FlxG.mouse.getScreenPosition(camHUD, __mousePos);
-		var inUIBox = FlxMath.pointInCoordinates(__mousePos.x, __mousePos.y, UI_box.x, UI_box.y, UI_box.width, UI_box.height) ||
-				   	  FlxMath.pointInCoordinates(__mousePos.x, __mousePos.y, UI_characterbox.x, UI_characterbox.y, UI_characterbox.width, UI_characterbox.height);
+		// yeah, this is a mess...
+		final inUIBox = FlxMath.pointInCoordinates(__mousePos.x, __mousePos.y, UI_box.x, UI_box.y, UI_box.width, UI_box.height) ||
+						FlxMath.pointInCoordinates(__mousePos.x, __mousePos.y, UI_characterbox.x, UI_characterbox.y, UI_characterbox.width, UI_characterbox.height) ||
+						(charDropDown.dropPanel.visible &&
+							FlxMath.pointInCoordinates(__mousePos.x, __mousePos.y, charDropDown.x, charDropDown.y, charDropDown.dropPanel.width, charDropDown.dropPanel.height)) ||
+						(animationDropDown.dropPanel.visible &&
+							FlxMath.pointInCoordinates(__mousePos.x, __mousePos.y, animationDropDown.x, animationDropDown.y, animationDropDown.dropPanel.width, animationDropDown.dropPanel.height));
 		#if debug
 		FlxG.watch.addQuick("inUIBox", inUIBox);
 		#end
+
+		if (FlxG.mouse.justPressed && !inUIBox && offset != null)
+			fadeUI(__dragging = true);
+
 		if (FlxG.mouse.justMoved)	
 		{
-			if (FlxG.mouse.pressed && !inUIBox && offset != null)
+			if (FlxG.mouse.pressed)
 			{
-				offset.subtract(FlxG.mouse.deltaScreenX, FlxG.mouse.deltaScreenY);
-				changedOffset = true;
+				if ((!inUIBox || __dragging) && offset != null)
+				{
+					offset.subtract(FlxG.mouse.deltaScreenX, FlxG.mouse.deltaScreenY);
+					changedOffset = true;
+				}
 			}
 			else if (FlxG.mouse.pressedRight)
 				FlxG.camera.scroll.subtract(FlxG.mouse.deltaScreenX, FlxG.mouse.deltaScreenY);
@@ -987,6 +998,9 @@ class CharacterEditorState extends backend.MusicBeatUIState
 			// animsTxtGroup.members[curAnim].text = anim.anim + ": " + anim.offsets;
 			character.addOffset(anim.anim, offset.x, offset.y);
 		}
+
+		if (FlxG.mouse.justReleased)
+			fadeUI(__dragging = false);
 
 		var txt = "ERROR: No Animation Found";
 		var clr = FlxColor.RED;
@@ -1039,13 +1053,33 @@ class CharacterEditorState extends backend.MusicBeatUIState
 		{
 			FlxG.mouse.visible = false;
 			if (_goToPlayState)
-				MusicBeatState.switchState(new PlayState());
+				MusicBeatState.switchState(PlayState.new);
 			else
 			{
-				MusicBeatState.switchState(new states.editors.MasterEditorMenu());
+				MusicBeatState.switchState(states.editors.MasterEditorMenu.new);
 				FlxG.sound.playMusic(Paths.music("freakyMenu"));
 			}
 		}
+	}
+
+	@:access(flixel.addons.ui.FlxInputText.backgroundSprite)
+	inline function fadeUI(_in = false)
+	{
+		UI_box.alpha = UI_characterbox.alpha = _in ? .6 : 1;
+		UI_box.color = UI_characterbox.color = _in ? FlxColor.GRAY : FlxColor.WHITE;
+		UI_box.active = UI_characterbox.active = !_in;
+
+		// fix some shit (i hate flixel ui)
+		templateCharacter.color = _in ? FlxColor.interpolate(FlxColor.GRAY, FlxColor.RED, .6) : FlxColor.RED;
+
+		animationInputText.color = animationNameInputText.color = animationIndicesInputText.color =
+		imageInputText.color     = healthIconInputText.color    = charDropDown.header.text.color  =
+		animationDropDown.header.text.color = _in ? FlxColor.interpolate(FlxColor.GRAY, FlxColor.BLACK, .6) : FlxColor.BLACK;
+
+		// animationInputText.backgroundSprite.color = animationNameInputText.backgroundSprite.color = animationIndicesInputText.backgroundSprite.color =
+		// imageInputText.backgroundSprite.color     = healthIconInputText.backgroundSprite.color    = _in ? FlxColor.interpolate(FlxColor.GRAY, FlxColor.WHITE, .6) : FlxColor.WHITE;
+		animationInputText.backgroundSprite.alpha = animationNameInputText.backgroundSprite.alpha = animationIndicesInputText.backgroundSprite.alpha =
+		imageInputText.backgroundSprite.alpha     = healthIconInputText.backgroundSprite.alpha    = _in ? .4 : 1;
 	}
 
 	final __point = FlxPoint.get();

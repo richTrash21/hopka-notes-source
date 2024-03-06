@@ -34,7 +34,7 @@ class DropDownAdvanced extends FlxUIDropDownMenu
 		dropDirection = Down;
 	}
 
-	override private function updateButtonPositions()
+	override function updateButtonPositions()
 	{
 		var buttonHeight:Float = header.background.height;
 
@@ -59,17 +59,19 @@ class DropDownAdvanced extends FlxUIDropDownMenu
 		}
 	}
 
-	public override function update(elapsed:Float)
+	override public function update(elapsed:Float)
 	{
 		// cuz the main method needs to be overriden duhh
-		FlxSpriteGroupUpdate(elapsed);
+		group.update(elapsed);
+		if (moves)
+			updateMotion(elapsed);
 
 		#if FLX_MOUSE
 		if (dropPanel.visible)
 		{
 			if (canScroll && list.length > 1)
 			{
-				var wheel:Int = FlxG.mouse.wheel;
+				final wheel = FlxG.mouse.wheel;
 				if (wheel > 0 || FlxG.keys.justPressed.UP)
 					--currentScroll; // Go up
 				else if (wheel < 0 || FlxG.keys.justPressed.DOWN)
@@ -82,15 +84,7 @@ class DropDownAdvanced extends FlxUIDropDownMenu
 		#end
 	}
 
-	private function FlxSpriteGroupUpdate(elapsed:Float)
-	{
-		group.update(elapsed);
-
-		if (moves)
-			updateMotion(elapsed);
-	}
-
-	override private function showList(b:Bool)
+	override function showList(b:Bool)
 	{
 		super.showList(b);
 		currentScroll = 0;

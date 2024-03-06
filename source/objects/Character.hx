@@ -290,7 +290,7 @@ class Character extends objects.ExtendedSprite
 
 	public function recalculateDanceIdle()
 	{
-		final lastDanceIdle:Bool = danceIdle;
+		final lastDanceIdle = danceIdle;
 		danceIdle = (animation.exists('danceLeft$idleSuffix') && animation.exists('danceRight$idleSuffix'));
 
 		if (settingCharacterUp)

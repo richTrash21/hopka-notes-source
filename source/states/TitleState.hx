@@ -6,8 +6,7 @@ import flixel.group.FlxSpriteGroup;
 import flixel.addons.transition.FlxTransitionableState;
 import shaders.ColorSwap;
 
-@:structInit
-class TitleData
+@:structInit class TitleData
 {
 	public var titlex:Float = -150;
 	public var titley:Float = -100;
@@ -196,7 +195,7 @@ class TitleState extends MusicBeatState
 					new FlxTimer().start(1, function(okFlixel:FlxTimer)
 					{
 						FlxTransitionableState.skipNextTransIn = false;
-						MusicBeatState.switchState(new MainMenuState());
+						MusicBeatState.switchState(MainMenuState.new);
 					});
 				}
 			} else skipIntro();

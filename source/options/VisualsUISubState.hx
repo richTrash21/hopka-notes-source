@@ -12,70 +12,74 @@ class VisualsUISubState extends BaseOptionsMenu
 	var changedMusic:Bool = false;
 	public function new()
 	{
-		title = 'Visuals and UI';
-		rpcTitle = 'Visuals & UI Settings Menu'; //for Discord Rich Presence
+		title = "Visuals and UI";
+		rpcTitle = "Visuals & UI Settings Menu"; //for Discord Rich Presence
 
 		// for note skins
 		notes = new FlxTypedGroup<StrumNote>();
 		for (i in 0...Note.colArray.length)
 		{
-			var note:StrumNote = new StrumNote(370 + (560 / Note.colArray.length) * i, -200, i, 0);
+			final note = new StrumNote(370 + (560 / Note.colArray.length) * i, -200, i, 0);
 			note.centerOffsets();
 			note.centerOrigin();
-			note.playAnim('static');
+			note.playAnim("static");
 			notes.add(note);
 		}
 
 		// options
 
-		final noteSkins:Array<String> = Mods.mergeAllTextsNamed('images/noteSkins/list.txt', 'shared');
+		final noteSkins = Mods.mergeAllTextsNamed("images/noteSkins/list.txt", "shared");
 		if (noteSkins.length > 0)
 		{
 			if (!noteSkins.contains(ClientPrefs.data.noteSkin))
-				ClientPrefs.data.noteSkin = ClientPrefs.defaultData.noteSkin; //Reset to default if saved noteskin couldnt be found
+				ClientPrefs.data.noteSkin = ClientPrefs.defaultData.noteSkin; // Reset to default if saved noteskin couldnt be found
 
-			noteSkins.insert(0, ClientPrefs.defaultData.noteSkin); //Default skin always comes first
-			final option:Option = new Option('Note Skins:',
+			noteSkins.insert(0, ClientPrefs.defaultData.noteSkin); // Default skin always comes first
+			final option = new Option("Note Skins:",
 				"Select your prefered Note skin.",
-				'noteSkin',
-				'string',
+				"noteSkin",
+				"string",
 				noteSkins);
-			option.change = function()
-				notes.forEachAlive(function(note:StrumNote) {
-					var skin:String = Note.defaultNoteSkin;
-					final customSkin:String = skin + Note.getNoteSkinPostfix();
-					if (Paths.fileExists('images/$customSkin.png', IMAGE)) skin = customSkin;
-			
-					note.texture = skin; //Load texture and anims
+			option.change = () ->
+			{
+				var skin = Note.defaultNoteSkin;
+				final customSkin = skin + Note.getNoteSkinPostfix();
+				if (Paths.fileExists('images/$customSkin.png', IMAGE))
+					skin = customSkin;
+
+				notes.forEachAlive((note) ->
+				{
+					note.texture = skin; // Load texture and anims
 					note.reloadNote();
-					note.playAnim('static');
+					note.playAnim("static");
 					note.centerOffsets();
 					note.centerOrigin();
 				});
+			}
 			addOption(option);
 		
 			noteOptionID = optionsArray.length - 1;
 		}
 		
-		final noteSplashes:Array<String> = Mods.mergeAllTextsNamed('images/noteSplashes/list.txt', 'shared');
+		final noteSplashes = Mods.mergeAllTextsNamed("images/noteSplashes/list.txt", "shared");
 		if (noteSplashes.length > 0)
 		{
 			if (!noteSplashes.contains(ClientPrefs.data.splashSkin))
 				ClientPrefs.data.splashSkin = ClientPrefs.defaultData.splashSkin; //Reset to default if saved splashskin couldnt be found
 
 			noteSplashes.insert(0, ClientPrefs.defaultData.splashSkin); //Default skin always comes first
-			addOption(new Option('Note Splashes:',
+			addOption(new Option("Note Splashes:",
 				"Select your prefered Note Splash variation or turn it off.",
-				'splashSkin',
-				'string',
+				"splashSkin",
+				"string",
 				noteSplashes
 			));
 		}
 
-		final option:Option = new Option('Note Splash Opacity',
-			'How much transparent should the Note Splashes be.',
-			'splashAlpha',
-			'percent');
+		final option = new Option("Note Splash Opacity",
+			"How much transparent should the Note Splashes be.",
+			"splashAlpha",
+			"percent");
 		option.scrollSpeed = 1.6;
 		option.minValue = 0.0;
 		option.maxValue = 1;
@@ -83,10 +87,10 @@ class VisualsUISubState extends BaseOptionsMenu
 		option.decimals = 1;
 		addOption(option);
 
-		final option:Option = new Option('Sustain Note Opacity',
-			'How much transparent should the Sustain Notes be.',
-			'susAlpha', //i want to kms
-			'percent');
+		final option = new Option("Sustain Note Opacity",
+			"How much transparent should the Sustain Notes be.",
+			"susAlpha", //i want to kms
+			"percent");
 		option.scrollSpeed = 1.6;
 		option.minValue = 0.0;
 		option.maxValue = 1;
@@ -94,10 +98,10 @@ class VisualsUISubState extends BaseOptionsMenu
 		option.decimals = 1;
 		addOption(option);
 		
-		final option:Option = new Option('Health Bar Opacity',
-			'How much transparent should the health bar and icons be.',
-			'healthBarAlpha',
-			'percent');
+		final option = new Option("Health Bar Opacity",
+			"How much transparent should the health bar and icons be.",
+			"healthBarAlpha",
+			"percent");
 		option.scrollSpeed = 1.6;
 		option.minValue = 0.0;
 		option.maxValue = 1;
@@ -105,86 +109,88 @@ class VisualsUISubState extends BaseOptionsMenu
 		option.decimals = 1;
 		addOption(option);
 
-		addOption(new Option('Hide HUD',
-			'If checked, hides most HUD elements.',
-			'hideHud',
-			'bool'
+		addOption(new Option("Hide HUD",
+			"If checked, hides most HUD elements.",
+			"hideHud",
+			"bool"
 		));
 		
-		addOption(new Option('Time Bar:',
+		addOption(new Option("Time Bar:",
 			"What should the Time Bar display?",
-			'timeBarType',
-			'string',
-			['Time Left', 'Time Elapsed', 'Song Name', 'Disabled']
+			"timeBarType",
+			"string",
+			["Time Left", "Time Elapsed", "Song Name", "Disabled"]
 		));
 
-		addOption(new Option('Flashing Lights',
+		addOption(new Option("Flashing Lights",
 			"Uncheck this if you're sensitive to flashing lights!",
-			'flashing',
-			'bool'
+			"flashing",
+			"bool"
 		));
 
-		addOption(new Option('Camera Zooms',
+		addOption(new Option("Camera Zooms",
 			"If unchecked, the camera won't zoom in on a beat hit.",
-			'camZooms',
-			'bool'
+			"camZooms",
+			"bool"
 		));
 
-		addOption(new Option('Score Text Zoom on Hit',
+		addOption(new Option("Score Text Zoom on Hit",
 			"If unchecked, disables the Score text zooming\neverytime you hit a note.",
-			'scoreZoom',
-			'bool'
+			"scoreZoom",
+			"bool"
 		));
 		
 		#if !mobile
-		final option:Option = new Option('FPS Counter',
-			'If unchecked, hides FPS Counter.',
-			'showFPS',
-			'bool');
-		option.change = function() Main.fpsVar.visible = Main.fpsShadow.visible = ClientPrefs.data.showFPS;
+		final option = new Option("FPS Counter",
+			"If unchecked, hides FPS Counter.",
+			"showFPS",
+			"bool");
+		option.change = () -> Main.fpsVar.visible = ClientPrefs.data.showFPS;
 		addOption(option);
 		#end
 		
-		final option:Option = new Option('Pause Screen Song:',
+		final option = new Option("Pause Screen Song:",
 			"What song do you prefer for the Pause Screen?",
-			'pauseMusic',
-			'string',
-			['None', 'Noodles', 'Breakfast', 'Tea Time']);
-		option.change = function() {
-			(ClientPrefs.data.pauseMusic == 'None')
-				? FlxG.sound.music.volume = 0
-				: FlxG.sound.playMusic(Paths.music(Paths.formatToSongPath(ClientPrefs.data.pauseMusic)));
+			"pauseMusic",
+			"string",
+			["None", "Noodles", "Breakfast", "Tea Time"]);
+		option.change = () ->
+		{
+			if (ClientPrefs.data.pauseMusic == "None")
+				FlxG.sound.music.volume = 0;
+			else
+				FlxG.sound.playMusic(Paths.music(Paths.formatToSongPath(ClientPrefs.data.pauseMusic)));
 	
 			changedMusic = true;
 		};
 		addOption(option);
 		
 		#if CHECK_FOR_UPDATES
-		addOption(new Option('Check for Updates',
-			'On Release builds, turn this on to check for updates when you start the game.',
-			'checkForUpdates',
-			'bool'
+		addOption(new Option("Check for Updates",
+			"On Release builds, turn this on to check for updates when you start the game.",
+			"checkForUpdates",
+			"bool"
 		));
 		#end
 
 		#if desktop
-		addOption(new Option('Discord Rich Presence',
+		addOption(new Option("Discord Rich Presence",
 			"Uncheck this to prevent accidental leaks, it will hide the Application from your \"Playing\" box on Discord.",
-			'discordRPC',
-			'bool'
+			"discordRPC",
+			"bool"
 		));
 		#end
 
-		addOption(new Option('Show Ratings and Combo',
+		addOption(new Option("Show Ratings and Combo",
 			"If unchecked, Ratings and Combo won't popup. Good for those who don't want anything to obscure their vision.", // or for pussies
-			'enableCombo', // sice showCombo was already taken lmao
-			'bool'
+			"enableCombo", // sice showCombo was already taken lmao
+			"bool"
 		));
 
-		addOption(new Option('Combo Stacking',
-			"If unchecked, Ratings and Combo won't stack, saving on System Memory and making them easier to read.\nNOTE: Will have no effect if 'Show Ratings and Combo' is unchecked.",
-			'comboStacking',
-			'bool'
+		addOption(new Option("Combo Stacking",
+			"If unchecked, Ratings and Combo won't stack, saving on System Memory and making them easier to read.\nNOTE: Will have no effect if \"Show Ratings and Combo\" is unchecked.",
+			"comboStacking",
+			"bool"
 		));
 
 		super();
@@ -195,19 +201,22 @@ class VisualsUISubState extends BaseOptionsMenu
 	{
 		super.changeSelection(change);
 		
-		if (noteOptionID < 0) return;
+		if (noteOptionID < 0)
+			return;
 
 		for (i in 0...Note.colArray.length)
 		{
-			final note:StrumNote = notes.members[i];
-			if (notesTween[i] != null) notesTween[i].cancel();
+			final note = notes.members[i];
+			if (notesTween[i] != null)
+				notesTween[i].cancel();
 			notesTween[i] = FlxTween.tween(note, {y: curSelected == noteOptionID ? 90 : -200}, Math.abs(note.y / 290) / 3, {ease: FlxEase.quadInOut});
 		}
 	}
 
 	override function destroy()
 	{
-		if (changedMusic && !OptionsState.onPlayState) FlxG.sound.playMusic(Paths.music('freakyMenu'), 1, true);
+		if (changedMusic && !OptionsState.onPlayState)
+			FlxG.sound.playMusic(Paths.music("freakyMenu"), 1, true);
 		super.destroy();
 	}
 }

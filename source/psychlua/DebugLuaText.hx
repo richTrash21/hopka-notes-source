@@ -2,24 +2,28 @@ package psychlua;
 
 class DebugLuaText extends FlxText
 {
-	public var disableTime:Float = 6;
-	public function new() {
-		super(10, 10, FlxG.width - 20, '', 16);
-		setFormat(Paths.font("vcr.ttf"), 16, FlxColor.WHITE, LEFT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
-		//scrollFactor.set();
-		borderSize = 1;
+	inline static final __lifespan = 6.;
+	var disableTime = __lifespan;
+
+	public function new()
+	{
+		super(10, 10, FlxG.width - 20, "", 16);
+		setBorderStyle(OUTLINE_FAST, FlxColor.BLACK, 1).font = Paths.font("vcr.ttf");
 	}
 
-	override function update(elapsed:Float) {
+	override function update(elapsed:Float)
+	{
+		if ((disableTime -= elapsed) < 1)
+			alpha = disableTime;
 		super.update(elapsed);
-		disableTime = Math.max(disableTime - elapsed, 0);
-		if (disableTime < 1) alpha = disableTime;
-		if (alpha == 0 || !isOnScreen(camera)) kill();
+		if (alpha == 0 || !isOnScreen(camera))
+			kill();
 	}
 
-	override function revive() {
+	override function revive()
+	{
 		super.revive();
-		disableTime = 6;
+		disableTime = __lifespan;
 		alpha = 1;
 	}
 }

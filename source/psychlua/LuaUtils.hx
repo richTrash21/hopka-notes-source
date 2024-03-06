@@ -201,7 +201,7 @@ class LuaUtils
 		return false;
 	}
 
-	inline public static function boolCkeck(value:String):Null<Any> // should fix bool values
+	inline public static function boolCkeck(value:String):Any // should fix bool values
 	{
 		if (value == null)
 			return value;
@@ -211,11 +211,13 @@ class LuaUtils
 	}
 	
 	public static inline function getTargetInstance()
-		return PlayState.instance.isDead ? substates.GameOverSubstate.instance : PlayState.instance;
-
-	public static inline function getLowestCharacterGroup():FlxSpriteGroup
 	{
-		var group:FlxSpriteGroup = PlayState.instance.gfGroup;
+		return PlayState.instance.isDead ? substates.GameOverSubstate.instance : PlayState.instance;
+	}
+
+	public static inline function getLowestCharacterGroup():FlxTypedSpriteGroup<objects.Character>
+	{
+		var group = PlayState.instance.gfGroup;
 		var pos = PlayState.instance.members.indexOf(group);
 
 		var newPos = PlayState.instance.members.indexOf(PlayState.instance.boyfriendGroup);

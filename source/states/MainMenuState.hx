@@ -126,15 +126,21 @@ class MainMenuState extends MusicBeatState
 		#if ACHIEVEMENTS_ALLOWED
 		Achievements.loadAchievements();
 		final leDate = Date.now();
-		if (leDate.getDay() == 5 && leDate.getHours() >= 18) {
-			final achieveID:Int = Achievements.getAchievementIndex('friday_night_play');
-			if(!Achievements.isAchievementUnlocked(Achievements.achievementsStuff[achieveID][2])) { //It's a friday night. WEEEEEEEEEEEEEEEEEE
+		if (leDate.getDay() == 5 && leDate.getHours() >= 18)
+		{
+			final achieveID = Achievements.getAchievementIndex('friday_night_play');
+			if (!Achievements.isAchievementUnlocked(Achievements.achievementsStuff[achieveID][2])) //It's a friday night. WEEEEEEEEEEEEEEEEEE
+			{
 				Achievements.achievementsMap.set(Achievements.achievementsStuff[achieveID][2], true);
 				giveAchievement();
 				ClientPrefs.saveSettings();
 			}
 		}
 		#end
+
+		// TABULATION TEST
+		// final test = new Alphabet(10, 40, "TEST\n\tTEST\n\t\tTEST\n\t\tTE\tST\nT\tE\tS\tT", true);
+		// add(test);
 
 		super.create();
 	}
@@ -168,24 +174,26 @@ class MainMenuState extends MusicBeatState
 			{
 				selectedSomethin = true;
 				FlxG.sound.play(Paths.sound('cancelMenu'));
-				MusicBeatState.switchState(new TitleState());
+				MusicBeatState.switchState(TitleState.new);
 			}
 
 			if (controls.ACCEPT)
 			{
-				if (optionShit[curSelected] == 'donate') CoolUtil.browserLoad('https://t.me/hopka_notes');
+				if (optionShit[curSelected] == 'donate')
+					CoolUtil.browserLoad('https://t.me/hopka_notes');
 				else
 				{
 					selectedSomethin = true;
 					FlxG.sound.play(Paths.sound('confirmMenu'));
-					if (ClientPrefs.data.flashing) FlxFlicker.flicker(magenta, 1.1, 0.15, false);
+					if (ClientPrefs.data.flashing)
+						FlxFlicker.flicker(magenta, 1.1, 0.15, false);
 
-					menuItems.forEach(function(spr:FlxSprite)
+					menuItems.forEach((spr) ->
 					{
 						if (curSelected == spr.ID)
-							FlxFlicker.flicker(spr, 1, 0.06, false, false, function(flick:FlxFlicker) switchShit(optionShit[curSelected]));
+							FlxFlicker.flicker(spr, 1, 0.06, false, false, (_) -> switchShit(optionShit[curSelected]));
 						else
-							FlxTween.num(1, 0, 0.4, {ease: FlxEase.quadOut, onComplete: function(_) spr.destroy()}, function(value:Float) spr.alpha = value);
+							FlxTween.num(1, 0, 0.4, {ease: FlxEase.quadOut, onComplete: (_) -> spr.destroy()}, (a) -> spr.alpha = a);
 					});
 				}
 			}
@@ -194,7 +202,7 @@ class MainMenuState extends MusicBeatState
 			else if (controls.justPressed('debug_1'))
 			{
 				selectedSomethin = true;
-				MusicBeatState.switchState(new states.editors.MasterEditorMenu());
+				MusicBeatState.switchState(states.editors.MasterEditorMenu.new);
 			}
 			#end
 			else if (controls.justPressed('reset')) // garbage begone!!!
@@ -205,7 +213,7 @@ class MainMenuState extends MusicBeatState
 				massage.scrollFactor.set();
 				massage.borderSize = 1.2;
 				add(massage);
-				FlxTween.num(1, 0, 0.4, {startDelay: 0.8, onComplete: function(_) massage.destroy()}, function(a:Float) massage.alpha = a);
+				FlxTween.num(1, 0, 0.4, {startDelay: 0.8, onComplete: (_) -> massage.destroy()}, (a) -> massage.alpha = a);
 
 				FlxG.sound.play(Paths.sound('cancelMenu'));
 				Paths.clearUnusedMemory();
@@ -232,9 +240,10 @@ class MainMenuState extends MusicBeatState
 	
 	static var pizzaTime:Bool;
 
-	function changeItem(huh:Int = 0)
+	function changeItem(huh = 0)
 	{
-		if (huh != 0) FlxG.sound.play(Paths.sound('scrollMenu'));
+		if (huh != 0)
+			FlxG.sound.play(Paths.sound('scrollMenu'));
 
 		var spr = menuItems.members[curSelected];
 		spr.animation.play('idle');
@@ -248,20 +257,22 @@ class MainMenuState extends MusicBeatState
 		spr.centerOffsets();
 	}
 	
-	function switchShit(name:String)
-		switch (name) {
+	inline function switchShit(name:String)
+	{
+		switch (name)
+		{
 			case 'story_mode':
-				MusicBeatState.switchState(new StoryMenuState());
+				MusicBeatState.switchState(StoryMenuState.new);
 			case 'freeplay':
-				MusicBeatState.switchState(new FreeplayState());
+				MusicBeatState.switchState(FreeplayState.new);
 			#if MODS_ALLOWED
 			case 'mods':
-				MusicBeatState.switchState(new ModsMenuState());
+				MusicBeatState.switchState(ModsMenuState.new);
 			#end
 			case 'credits':
-				MusicBeatState.switchState(new CreditsState());
+				MusicBeatState.switchState(CreditsState.new);
 			case 'options':
-				LoadingState.loadAndSwitchState(new OptionsState());
+				LoadingState.loadAndSwitchState(OptionsState.new);
 				OptionsState.onPlayState = false;
 				if (PlayState.SONG != null)
 				{
@@ -269,4 +280,5 @@ class MainMenuState extends MusicBeatState
 					PlayState.SONG.splashSkin = null;
 				}
 		}
+	}
 }

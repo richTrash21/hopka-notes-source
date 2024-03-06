@@ -1,55 +1,56 @@
 package options;
 
+import flixel.FlxSubState;
+
 class OptionsState extends MusicBeatState
 {
-	final options:Array<String> = ['Note Colors', 'Controls', 'Adjust Delay and Combo', 'Graphics', 'Visuals and UI', 'Gameplay'];
-	private var grpOptions:FlxTypedGroup<Alphabet>;
-	private static var curSelected:Int = 0;
-	public static var onPlayState:Bool = false;
+	static final menuOptions = ["Note Colors", "Controls", "Adjust Delay and Combo", "Graphics", "Visuals and UI", "Gameplay"];
+	static var curSelected = 0;
 
-	function openSelectedSubstate(label:String) {
-		switch(label) {
-			case 'Note Colors':				openSubState(new options.NotesSubState());
-			case 'Controls':				openSubState(new options.ControlsSubState());
-			case 'Graphics':				openSubState(new options.GraphicsSettingsSubState());
-			case 'Visuals and UI':			openSubState(new options.VisualsUISubState());
-			case 'Gameplay':				openSubState(new options.GameplaySettingsSubState());
-			case 'Adjust Delay and Combo':	MusicBeatState.switchState(new options.NoteOffsetState());
+	public static var onPlayState = false;
+	public static final BG_COLOR:FlxColor = 0xFFEA71FD;
+
+	inline function openSelectedSubstate(label:String)
+	{
+		switch (label)
+		{
+			case "Note Colors":				openSubState(new options.NotesSubState());
+			case "Controls":				openSubState(new options.ControlsSubState());
+			case "Graphics":				openSubState(new options.GraphicsSettingsSubState());
+			case "Visuals and UI":			openSubState(new options.VisualsUISubState());
+			case "Gameplay":				openSubState(new options.GameplaySettingsSubState());
+			case "Adjust Delay and Combo":	MusicBeatState.switchState(options.NoteOffsetState.new);
 		}
 	}
 
+	var grpOptions:FlxTypedGroup<Alphabet>;
 	var selectorLeft:Alphabet;
 	var selectorRight:Alphabet;
+	var __genocide = false; // UNDERTALE REFERENCE!!!!!!!
 
-	override function create() {
+	override function create()
+	{
 		#if desktop
 		DiscordClient.changePresence("Options Menu", null);
 		#end
 
-		final bg:FlxSprite = new FlxSprite().loadGraphic(Paths.image('menuDesat'));
+		final bg = new FlxSprite(Paths.image("menuDesat"));
 		bg.antialiasing = ClientPrefs.data.antialiasing;
-		bg.color = 0xFFea71fd;
+		bg.color = BG_COLOR;
 		bg.active = false;
-		bg.updateHitbox();
+		add(bg.screenCenter());
 
-		bg.screenCenter();
-		add(bg);
+		add(grpOptions = new FlxTypedGroup<Alphabet>());
 
-		grpOptions = new FlxTypedGroup<Alphabet>();
-		add(grpOptions);
-
-		for (i in 0...options.length)
+		for (i in 0...menuOptions.length)
 		{
-			final optionText:Alphabet = new Alphabet(0, 0, options[i], true);
-			optionText.screenCenter();
-			optionText.y += (100 * (i - (options.length / 2))) + 50;
+			final optionText = new Alphabet(0, 0, menuOptions[i], true);
+			optionText.screenCenter().y += (100 * (i - (menuOptions.length * .5))) + 50;
 			grpOptions.add(optionText);
 		}
 
-		selectorLeft = new Alphabet(0, 0, '>', true);
-		add(selectorLeft);
-		selectorRight = new Alphabet(0, 0, '<', true);
-		add(selectorRight);
+		add(selectorLeft = new Alphabet(0, 0, ">", true));
+		add(selectorRight = new Alphabet(0, 0, "<", true));
 
 		changeSelection();
 		ClientPrefs.saveSettings();
@@ -57,39 +58,70 @@ class OptionsState extends MusicBeatState
 		super.create();
 	}
 
-	override function closeSubState() {
+	override function closeSubState()
+	{
 		super.closeSubState();
 		ClientPrefs.saveSettings();
+		if (__genocide)
+		{
+			grpOptions.forEach((option) -> option.revive());
+			selectorRight.revive();
+			selectorLeft.revive();
+		}
 	}
 
-	override function update(elapsed:Float) {
+	override function openSubState(SubState:FlxSubState)
+	{
+		super.openSubState(SubState);
+		if (__genocide)
+		{
+			grpOptions.forEach((option) -> option.kill());
+			selectorRight.kill();
+			selectorLeft.kill();
+		}
+	}
+
+	override function update(elapsed:Float)
+	{
 		super.update(elapsed);
 
-		if (controls.UI_UP_P || controls.UI_DOWN_P)
-			changeSelection(controls.UI_UP_P ? -1 : 1);
+		final UP = controls.UI_UP_P;
+		if (UP || controls.UI_DOWN_P)
+			changeSelection(UP ? -1 : 1);
 
-		if (controls.BACK) {
-			FlxG.sound.play(Paths.sound('cancelMenu'));
-			if(onPlayState)
+		if (controls.BACK)
+		{
+			__genocide = false;
+			FlxG.sound.play(Paths.sound("cancelMenu"));
+			if (onPlayState)
 			{
 				backend.StageData.loadDirectory(PlayState.SONG);
-				LoadingState.loadAndSwitchState(new PlayState());
+				LoadingState.loadAndSwitchState(PlayState.new);
 				FlxG.sound.music.volume = 0;
 			}
-			else MusicBeatState.switchState(new states.MainMenuState());
+			else
+				MusicBeatState.switchState(states.MainMenuState.new);
 		}
-		else if (controls.ACCEPT) openSelectedSubstate(options[curSelected]);
+		else if (controls.ACCEPT)
+		{
+			final option = menuOptions[curSelected];
+			__genocide = option != "Adjust Delay and Combo";
+			openSelectedSubstate(option);
+		}
 	}
 	
-	function changeSelection(change:Int = 0) {
-		curSelected = FlxMath.wrap(curSelected + change, 0, options.length-1);
+	function changeSelection(change:Int = 0)
+	{
+		curSelected = FlxMath.wrap(curSelected + change, 0, menuOptions.length-1);
 
-		var bullShit:Int = 0;
-		for (item in grpOptions.members) {
+		var bullShit = 0;
+		for (item in grpOptions.members)
+		{
 			item.targetY = bullShit++ - curSelected;
 
 			item.alpha = 0.6;
-			if (item.targetY == 0) {
+			if (item.targetY == 0)
+			{
 				item.alpha = 1;
 				selectorLeft.x = item.x - 63;
 				selectorLeft.y = item.y;
@@ -97,7 +129,7 @@ class OptionsState extends MusicBeatState
 				selectorRight.y = item.y;
 			}
 		}
-		FlxG.sound.play(Paths.sound('scrollMenu'));
+		FlxG.sound.play(Paths.sound("scrollMenu"));
 	}
 
 	override function destroy()

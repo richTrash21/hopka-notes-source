@@ -54,6 +54,8 @@ class NoteSplash extends FlxSprite implements ISortable
 							songSkin;
 						else
 							defaultNoteSplash + getSplashSkinPostfix();
+		// rich: i hate how note splashes work
+		// trace('texture to load - "$texture"');
 		
 		final config = _textureLoaded == texture ? precacheConfig(_configLoaded) : loadAnims(texture);
 
@@ -110,7 +112,7 @@ class NoteSplash extends FlxSprite implements ISortable
 
 	inline public static function getSplashSkinPostfix()
 	{
-		return (ClientPrefs.data.splashSkin == ClientPrefs.defaultData.splashSkin) ? "" : "-" + ClientPrefs.data.splashSkin.trim().toLowerCase().replace(" ", "_");
+		return ClientPrefs.data.splashSkin == ClientPrefs.defaultData.splashSkin ? "" : "-" + ClientPrefs.data.splashSkin.toLowerCase().replace(" ", "_");
 	}
 
 	function loadAnims(skin:String, ?animName:String):NoteSplashConfig
@@ -119,12 +121,12 @@ class NoteSplash extends FlxSprite implements ISortable
 		frames = Paths.getSparrowAtlas(skin);
 		if (frames == null)
 		{
-			skin = defaultNoteSplash + getSplashSkinPostfix();
-			frames = Paths.getSparrowAtlas(skin);
-			if (frames == null) //if you really need this, you really fucked something up
+			trace('skin "$skin" failed to load!!');
+			frames = Paths.getSparrowAtlas(skin = defaultNoteSplash + getSplashSkinPostfix());
+			if (frames == null) // if you really need this, you really fucked something up
 			{
-				skin = defaultNoteSplash;
-				frames = Paths.getSparrowAtlas(skin);
+				trace('skin "$skin" failed to load!! (AGAIN)');
+				frames = Paths.getSparrowAtlas(skin = defaultNoteSplash);
 			}
 		}
 		final config = precacheConfig(skin);
@@ -149,7 +151,7 @@ class NoteSplash extends FlxSprite implements ISortable
 		if (configs.exists(skin))
 			return configs.get(skin);
 
-		final path:String = Paths.getPath('images/$skin.txt', TEXT, true);
+		final path = Paths.getPath('images/$skin.txt', TEXT, true);
 		final configFile = CoolUtil.coolTextFile(path);
 		if (configFile.length < 1)
 			return null;

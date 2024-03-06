@@ -6,19 +6,35 @@ import flixel.addons.ui.FlxInputText;
 
 class InputTextAdvanced extends FlxInputText
 {
-	public static inline var BACKSPACE_ACTION:String = FlxInputText.BACKSPACE_ACTION; // press backspace
-	public static inline var DELETE_ACTION:String	 = FlxInputText.DELETE_ACTION; // press delete
-	public static inline var ENTER_ACTION:String	 = FlxInputText.ENTER_ACTION; // press enter
-	public static inline var INPUT_ACTION:String	 = FlxInputText.INPUT_ACTION; // manually edit
-	public static inline var PASTE_ACTION:String	 = "paste"; // text paste
-	public static inline var COPY_ACTION:String		 = "copy"; // text copy
-	public static inline var CUT_ACTION:String		 = "cut"; // text copy
+	public static inline final BACKSPACE_ACTION	= FlxInputText.BACKSPACE_ACTION; // press backspace
+	public static inline final DELETE_ACTION	= FlxInputText.DELETE_ACTION; // press delete
+	public static inline final ENTER_ACTION	 	= FlxInputText.ENTER_ACTION; // press enter
+	public static inline final INPUT_ACTION	 	= FlxInputText.INPUT_ACTION; // manually edit
+	public static inline final PASTE_ACTION	 	= "paste"; // text paste
+	public static inline final COPY_ACTION		= "copy"; // text copy
+	public static inline final CUT_ACTION		= "cut"; // text copy
 
+	@:access(flixel.FlxBasic.activeCount)
 	override function update(elapsed:Float)
 	{
 		//super.update(elapsed);
 		// cuz the main method needs to be overriden duhh
-		FlxSpriteUpdate(elapsed);
+		#if FLX_DEBUG
+		// this just increments FlxBasic.activeCount, no need to waste a function call on release
+		flixel.FlxBasic.activeCount++;
+		#end
+
+		last.set(x, y);
+
+		if (path != null && path.active)
+			path.update(elapsed);
+
+		if (moves)
+			updateMotion(elapsed);
+
+		wasTouching = touching;
+		touching = flixel.util.FlxDirectionFlags.NONE;
+		updateAnimation(elapsed);
 
 		#if FLX_MOUSE
 		// Set focus and caretIndex as a response to mouse press
@@ -40,32 +56,6 @@ class InputTextAdvanced extends FlxInputText
 			}
 		}
 		#end
-	}
-
-	// added these to skip super.update() since it will fuck everything up
-	private function FlxSpriteUpdate(elapsed:Float)
-	{
-		FlxObjectUpdate(elapsed);
-		updateAnimation(elapsed);
-	}
-
-	private function FlxObjectUpdate(elapsed:Float)
-	{
-		#if FLX_DEBUG
-		// this just increments FlxBasic.activeCount, no need to waste a function call on release
-		@:privateAccess flixel.FlxBasic.activeCount++;
-		#end
-
-		last.set(x, y);
-
-		if (path != null && path.active)
-			path.update(elapsed);
-
-		if (moves)
-			updateMotion(elapsed);
-
-		wasTouching = touching;
-		touching = flixel.util.FlxDirectionFlags.NONE;
 	}
 
 	override private function onKeyDown(e:flash.events.KeyboardEvent)

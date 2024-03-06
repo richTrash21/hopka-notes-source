@@ -44,6 +44,8 @@ class FPSCounter extends openfl.text.TextField
 		_color = color;
 
 		times = [];
+
+		shader = new shaders.OutlineShader();
 	}
 
 	@:noCompletion private var deltaTimeout = 0;
@@ -82,6 +84,8 @@ class FPSCounter extends openfl.text.TextField
 			textColor = (currentFPS < 30 /*FlxG.drawFramerate * 0.5*/) ? 0xFFFF0000 : _color;
 	}
 
-	inline function get_memoryMegas():Int
+	@:noCompletion inline function get_memoryMegas():Int
+	{
 		return cast(openfl.system.System.totalMemory, UInt);
+	}
 }
