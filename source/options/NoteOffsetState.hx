@@ -1,9 +1,9 @@
 package options;
 
+import flixel.util.FlxDestroyUtil;
 import substates.PauseSubState;
 import flixel.math.FlxPoint;
 
-import objects.GameCamera;
 import objects.Character;
 import objects.Bar;
 
@@ -14,7 +14,6 @@ class NoteOffsetState extends MusicBeatState
 
 	public var camHUD:FlxCamera;
 	public var camGame:FlxCamera;
-	public var camOther:FlxCamera;
 
 	final placement:Float = FlxG.width * 0.35;
 	var rating:ExtendedSprite;
@@ -42,16 +41,13 @@ class NoteOffsetState extends MusicBeatState
 		// Cameras
 		camGame = new FlxCamera();
 		camHUD = new FlxCamera();
-		camOther = new FlxCamera();
-		camHUD.bgColor.alpha = camOther.bgColor.alpha = 0;
-		camGame.active = camHUD.active = camOther.active = false;
+		camHUD.bgColor.alpha = 0;
+		camGame.active = camHUD.active = false;
 
 		FlxG.cameras.reset(camGame);
 		FlxG.cameras.add(camHUD, false);
-		FlxG.cameras.add(camOther, false);
-
 		FlxG.cameras.setDefaultDrawTarget(camGame, true);
-		CustomFadeTransition.nextCamera = camOther;
+		CustomFadeTransition.nextCamera = camHUD;
 		FlxG.camera.scroll.set(120, 130);
 
 		persistentUpdate = true;
@@ -84,11 +80,9 @@ class NoteOffsetState extends MusicBeatState
 		comboNums.cameras = [camHUD];
 		add(comboNums);
 
-		final seperatedScore:Array<Int> = [for (i in 0...3) FlxG.random.int(0, 9)];
-		var daLoop:Int = 0;
-		for (i in seperatedScore)
+		for (i in 0...3)
 		{
-			final numScore:ExtendedSprite = new ExtendedSprite(43 * daLoop++, Paths.image('num$i'));
+			final numScore = new ExtendedSprite(43 * i, Paths.image("num" + FlxG.random.int(0, 9)));
 			numScore.cameras = [camHUD];
 			numScore.antialiasing = ClientPrefs.data.antialiasing;
 			numScore.setScale(0.5);
@@ -123,13 +117,13 @@ class NoteOffsetState extends MusicBeatState
 		barPercent = ClientPrefs.data.noteOffset;
 		updateNoteDelay();
 		
-		timeBar = new Bar(0, timeTxt.y + (timeTxt.height / 3), 'healthBar', function() return barPercent, delayMin, delayMax);
+		timeBar = new Bar(0, timeTxt.y + (timeTxt.height / 3), 'healthBar', () -> barPercent, delayMin, delayMax);
 		//timeBar.scrollFactor.set();
 		timeBar.screenCenter(X);
 		timeBar.visible = false;
 		timeBar.cameras = [camHUD];
 		timeBar.leftBar.color = FlxColor.LIME;
-		timeBar.updateCallback = function(p, v) updateNoteDelay();
+		timeBar.updateCallback = (_, _) -> updateNoteDelay();
 
 		add(timeBar);
 		add(timeTxt);
@@ -349,7 +343,7 @@ class NoteOffsetState extends MusicBeatState
 			if (beatTween != null) beatTween.cancel();
 
 			persistentUpdate = false;
-			CustomFadeTransition.nextCamera = camOther;
+			CustomFadeTransition.nextCamera = camHUD;
 			MusicBeatState.switchState(options.OptionsState.new);
 			if (OptionsState.onPlayState)
 			{
@@ -372,7 +366,22 @@ class NoteOffsetState extends MusicBeatState
 		startMousePos.put();
 		startComboOffset.put();
 		__point.put();
+
 		super.destroy();
+		beatTween = null;
+		zoomTween = null;
+		boyfriend = null;
+		gf = null;
+		rating = null;
+		comboNums = null;
+		dumbTexts = null;
+		timeBar = null;
+		timeTxt = null;
+		beatText = null;
+		changeModeText = null;
+		controllerPointer = null;
+		camHUD = null;
+		camGame = null;
 	}
 
 	var zoomTween:FlxTween;
@@ -394,13 +403,13 @@ class NoteOffsetState extends MusicBeatState
 			FlxG.camera.zoom = 1.15;
 
 			if (zoomTween != null) zoomTween.cancel();
-			zoomTween = FlxTween.tween(FlxG.camera, {zoom: 1}, 1, {ease: FlxEase.circOut, onComplete: function(twn:FlxTween) zoomTween = null});
+			zoomTween = FlxTween.tween(FlxG.camera, {zoom: 1}, 1, {ease: FlxEase.circOut, onComplete: (_) -> zoomTween = null});
 
 			beatText.alpha = 1;
 			beatText.y = 320;
 			beatText.velocity.y = -150;
 			if (beatTween != null) beatTween.cancel();
-			beatTween = FlxTween.num(1, 0, 1, {ease: FlxEase.sineIn, onComplete: function(twn:FlxTween) beatTween = null}, function(a:Float) beatText.alpha = a);
+			beatTween = FlxTween.num(1, 0, 1, {ease: FlxEase.sineIn, onComplete: (_) -> beatTween = null}, (a) -> beatText.alpha = a);
 		}
 
 		lastBeatHit = curBeat;

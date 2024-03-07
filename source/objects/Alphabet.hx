@@ -440,6 +440,8 @@ class AlphaCharacter extends FlxSprite
 	override public function destroy()
 	{
 		letterOffset = FlxDestroyUtil.put(letterOffset);
+		curLetter = null;
+		parent = null;
 		super.destroy();
 	}
 

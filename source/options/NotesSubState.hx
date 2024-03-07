@@ -1,5 +1,6 @@
 package options;
 
+import flixel.util.FlxDestroyUtil;
 import flixel.addons.display.FlxBackdrop;
 import flixel.addons.display.FlxGridOverlay;
 import flixel.addons.display.shapes.FlxShapeCircle;
@@ -674,7 +675,41 @@ class NotesSubState extends MusicBeatSubstate
 		}
 	}
 
-	function setShaderColor(value:FlxColor) dataArray[curSelectedNote][curSelectedMode] = value;
-	function getShaderColor() return dataArray[curSelectedNote][curSelectedMode];
-	function getShader() return Note.globalRgbShaders[curSelectedNote];
+	inline function setShaderColor(value:FlxColor) dataArray[curSelectedNote][curSelectedMode] = value;
+	inline function getShaderColor() return dataArray[curSelectedNote][curSelectedMode];
+	inline function getShader() return Note.globalRgbShaders[curSelectedNote];
+
+	override function destroy()
+	{
+		/*var t:Array<FlxColor>;
+		while (dataArray.length > 0)
+		{
+			t = dataArray.pop();
+			while (t.length > 0)
+				t.pop();
+		}*/
+		dataArray = null;
+		
+		hexTypeLine = FlxDestroyUtil.destroy(hexTypeLine);
+		copyButton = FlxDestroyUtil.destroy(copyButton);
+		pasteButton = FlxDestroyUtil.destroy(pasteButton);
+		colorGradient = FlxDestroyUtil.destroy(colorGradient);
+		colorGradientSelector = FlxDestroyUtil.destroy(colorGradientSelector);
+		colorPalette = FlxDestroyUtil.destroy(colorPalette);
+		colorWheel = FlxDestroyUtil.destroy(colorWheel);
+		colorWheelSelector = FlxDestroyUtil.destroy(colorWheelSelector);
+		alphabetR = FlxDestroyUtil.destroy(alphabetR);
+		alphabetG = FlxDestroyUtil.destroy(alphabetG);
+		alphabetB = FlxDestroyUtil.destroy(alphabetB);
+		alphabetHex = FlxDestroyUtil.destroy(alphabetHex);
+		modeBG = FlxDestroyUtil.destroy(modeBG);
+		notesBG = FlxDestroyUtil.destroy(notesBG);
+		controllerPointer = FlxDestroyUtil.destroy(controllerPointer);
+		tipTxt = FlxDestroyUtil.destroy(tipTxt);
+		skinNote = FlxDestroyUtil.destroy(skinNote);
+		modeNotes = FlxDestroyUtil.destroy(modeNotes);
+		myNotes = FlxDestroyUtil.destroy(myNotes);
+		bigNote = FlxDestroyUtil.destroy(bigNote);
+		super.destroy();
+	}
 }

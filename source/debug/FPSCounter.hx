@@ -1,5 +1,8 @@
 package debug;
 
+import openfl.events.MouseEvent;
+import openfl.events.FocusEvent;
+
 import flixel.FlxG;
 
 /**
@@ -22,35 +25,38 @@ class FPSCounter extends openfl.text.TextField
 	**/
 	public var memoryMegas(get, never):Int;
 
-	@:noCompletion private var times:Array<Float>;
-	@:noCompletion private var changeColor:Bool;
-	@:noCompletion private var _color:Int;
+	@:noCompletion var times:Array<Float>;
 
-	public function new(x = 10.0, y = 10.0, ?color = 0x000000, ?_changeColor = true):Void
+	public function new(x = 10.0, y = 10.0):Void
 	{
 		super();
 
 		this.x = x;
 		this.y = y;
 
-		changeColor = _changeColor;
 		currentFPS = 0;
-		selectable = false;
-		mouseEnabled = false;
-		defaultTextFormat = new openfl.text.TextFormat("_sans", 12, color, true);
+		selectable = mouseEnabled = false;
+		defaultTextFormat = new openfl.text.TextFormat("_sans", 12, 0xFFFFFF, true);
 		autoSize = LEFT;
 		multiline = true;
 		text = "FPS: ";
-		_color = color;
 
 		times = [];
 
 		shader = new shaders.OutlineShader();
+
+		// i think it is optimization -Redar
+		removeEventListener(FocusEvent.FOCUS_IN, this_onFocusIn);
+		removeEventListener(FocusEvent.FOCUS_OUT, this_onFocusOut);
+		removeEventListener(MouseEvent.MOUSE_DOWN, this_onMouseDown);
+		removeEventListener(MouseEvent.MOUSE_WHEEL, this_onMouseWheel);
+		removeEventListener(MouseEvent.DOUBLE_CLICK, this_onDoubleClick);
+		removeEventListener(openfl.events.KeyboardEvent.KEY_DOWN, this_onKeyDown);
 	}
 
-	@:noCompletion private var deltaTimeout = 0;
-	@:noCompletion private var currentTime = 0;
-	@:noCompletion private var cacheCount = 0;
+	@:noCompletion var deltaTimeout = 0;
+	@:noCompletion var currentTime = 0;
+	@:noCompletion var cacheCount = 0;
 
 	// Event Handlers
 	@:noCompletion override function __enterFrame(deltaTime:Int):Void
@@ -71,7 +77,6 @@ class FPSCounter extends openfl.text.TextField
 			currentFPS = FlxMath.minInt(newFPS, FlxG.updateFramerate);
 			cacheCount = currentCount;
 		}
-
 		updateText();
 	}
 
@@ -79,13 +84,11 @@ class FPSCounter extends openfl.text.TextField
 	{
 		text = 'FPS: $currentFPS\n';
 		text += "Memory: " + flixel.util.FlxStringUtil.formatBytes(memoryMegas);
-		
-		if (changeColor)
-			textColor = (currentFPS < 30 /*FlxG.drawFramerate * 0.5*/) ? 0xFFFF0000 : _color;
+		textColor = (currentFPS < 30 /*FlxG.drawFramerate * 0.5*/) ? 0xFF0000 : 0xFFFFFF;
 	}
 
 	@:noCompletion inline function get_memoryMegas():Int
 	{
-		return cast(openfl.system.System.totalMemory, UInt);
+		return cast (openfl.system.System.totalMemory, UInt);
 	}
 }

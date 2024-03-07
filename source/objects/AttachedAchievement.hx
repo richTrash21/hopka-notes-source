@@ -26,10 +26,17 @@ class AttachedAchievement extends FlxSprite
 		updateHitbox();
 	}
 
-	override function draw()
+	override function update(elapsed:Float)
 	{
-		if (sprTracker != null) setPosition(sprTracker.x - 130, sprTracker.y + 25);
-		super.draw();
+		if (sprTracker != null)
+			setPosition(sprTracker.x - 130, sprTracker.y + 25);
+		super.update(elapsed);
+	}
+
+	override function destroy()
+	{
+		sprTracker = null;
+		super.destroy();
 	}
 }
 #end

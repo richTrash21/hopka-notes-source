@@ -1,5 +1,6 @@
 package options;
 
+import flixel.util.FlxDestroyUtil;
 import flixel.FlxSubState;
 
 class OptionsState extends MusicBeatState
@@ -134,6 +135,9 @@ class OptionsState extends MusicBeatState
 
 	override function destroy()
 	{
+		grpOptions = FlxDestroyUtil.destroy(grpOptions);
+		selectorLeft = FlxDestroyUtil.destroy(selectorLeft);
+		selectorRight = FlxDestroyUtil.destroy(selectorRight);
 		ClientPrefs.loadPrefs();
 		super.destroy();
 	}

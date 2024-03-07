@@ -74,8 +74,8 @@ class Bar extends FlxSpriteGroup
 		bounds = null;
 		barOffset = FlxDestroyUtil.put(barOffset);
 		centerPoint = FlxDestroyUtil.put(centerPoint);
-		leftBar.clipRect = FlxDestroyUtil.put(leftBar.clipRect);
-		rightBar.clipRect = FlxDestroyUtil.put(rightBar.clipRect);
+		valueFunction = null;
+		updateCallback = null;
 		super.destroy();
 	}
 
@@ -230,16 +230,17 @@ class BarSprite extends FlxSprite
 		scale.scalePoint(__scale);
 		super.updateHitbox();
 		scale.copyFrom(__originalScale);
-	}
+	}*/
 
 	override public function destroy():Void
 	{
+		clipRect = FlxDestroyUtil.put(clipRect);
 		super.destroy();
-		__scale = FlxDestroyUtil.put(__scale);
-		__originalScale = FlxDestroyUtil.put(__originalScale);
+		// __scale = FlxDestroyUtil.put(__scale);
+		// __originalScale = FlxDestroyUtil.put(__originalScale);
 	}
 
-	@:noCompletion override function drawComplex(camera:FlxCamera):Void
+	/*@:noCompletion override function drawComplex(camera:FlxCamera):Void
 	{
 		if (!__fakeScale)
 			return super.drawComplex(camera);

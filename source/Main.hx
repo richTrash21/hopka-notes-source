@@ -37,6 +37,8 @@ class Main extends Sprite
 	public static var volumeDownKeys:Array<FlxKey> = [FlxKey.NUMPADMINUS, FlxKey.MINUS];
 	public static var volumeUpKeys:Array<FlxKey> = [FlxKey.NUMPADPLUS, FlxKey.PLUS];
 
+	static var __log = "";
+
 	// You can pretty much ignore everything from here on - your code should go in your states.
 
 	public function new()
@@ -52,18 +54,16 @@ class Main extends Sprite
 				if (pos == null)
 					return t + s;
 				var p = pos.fileName + ":" + pos.lineNumber;
-				if (pos.methodName != null && pos.methodName.length > 0)
-				{
-					final t = pos.className != null && pos.className.length > 0 ? pos.className + "." + pos.methodName : pos.methodName;
-					p += " - " + t + "()";
-				}
+				if (pos.methodName?.length > 0)
+					p += " - " + (pos.className?.length > 0 ? pos.className + "." + pos.methodName : pos.methodName) + "()";
 				if (pos.customParams != null)
 					for (_v in pos.customParams)
 						s += ", " + Std.string(_v);
 				return t + " [" + p + "]" + s;
 			}
 
-			var str = formatOutput(v, pos);
+			final str = formatOutput(v, pos);
+			__log += '$str\n';
 			#if js
 			if (js.Syntax.typeof(untyped console) != "undefined" && (untyped console).log != null)
 				(untyped console).log(str);
@@ -104,7 +104,7 @@ class Main extends Sprite
 		addChild(g);
 
 		#if !mobile
-		g.addChild(fpsVar = new FPSCounter(10, 3, 0xFFFFFF));
+		g.addChild(fpsVar = new FPSCounter(10, 3));
 		fpsVar.visible = ClientPrefs.data.showFPS;
 
 		Lib.current.stage.align = "tl";
@@ -113,11 +113,11 @@ class Main extends Sprite
 
 		_focusVolume = FlxG.sound.volume;
 		#if debug // это рофлс
-		FlxG.game.soundTray.volumeUpSound = 'assets/sounds/metal';
-		FlxG.game.soundTray.volumeDownSound = 'assets/sounds/lego';
+		FlxG.game.soundTray.volumeUpSound = "assets/sounds/metal";
+		FlxG.game.soundTray.volumeDownSound = "assets/sounds/lego";
 		#else
-		FlxG.game.soundTray.volumeUpSound = 'assets/sounds/up_volume';
-		FlxG.game.soundTray.volumeDownSound = 'assets/sounds/down_volume';
+		FlxG.game.soundTray.volumeUpSound = "assets/sounds/up_volume";
+		FlxG.game.soundTray.volumeDownSound = "assets/sounds/down_volume";
 		#end
 
 		#if !html5
@@ -155,7 +155,7 @@ class Main extends Sprite
 	#if CRASH_HANDLER
 	function onCrash(e:UncaughtErrorEvent):Void
 	{
-		final path = "./crash/PsychEngine_" + Date.now().toString().replace(" ", "_").replace(":", "'") + ".txt";
+		final path = "./crash/CrashLog_" + Date.now().toString().replace(" ", "_").replace(":", "'") + ".txt";
 		var errMsg = "";
 
 		for (stackItem in CallStack.exceptionStack(true))
@@ -167,18 +167,19 @@ class Main extends Sprite
 					Sys.println(stackItem);
 			}
 
-		errMsg += "
-			\nUncaught Error: " + e.error + "\n\ntl;dr" + #if RELESE_BUILD_FR " - i messed up whoops (richTrash21)" #else " - you done goofed (richTrash21)" #end
-			/*"\nPlease report this error to the GitHub page: https://github.com/ShadowMario/FNF-PsychEngine\n\n> Crash Handler written by: sqirra-rng"*/;
+		final devMsg = " - " + #if RELESE_BUILD_FR "i messed up, whoops" #else "you done goofed" #end + " (richTrash21)";
+		errMsg += "\nUncaught Error: " + e.error + '\n\ntl;dr$devMsg';
+		// "\nPlease report this error to the GitHub page: https://github.com/ShadowMario/FNF-PsychEngine\n\n> Crash Handler written by: sqirra-rng";
 
 		if (!FileSystem.exists("./crash/"))
 			FileSystem.createDirectory("./crash/");
-		sys.io.File.saveContent(path, '$errMsg\n');
+		sys.io.File.saveContent(path, '$errMsg\n\nFull session log:\n$__log');
 
+		final savedIn = "Crash dump saved in " + haxe.io.Path.normalize(path);
 		Sys.println(errMsg);
-		Sys.println("Crash dump saved in " + haxe.io.Path.normalize(path));
+		Sys.println(savedIn);
 
-		Application.current.window.alert(errMsg, "Error!");
+		Application.current.window.alert('$errMsg\n$savedIn', "Uncaught Error!");
 		DiscordClient.shutdown();
 		Sys.exit(1);
 	}

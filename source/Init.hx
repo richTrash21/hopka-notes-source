@@ -27,6 +27,7 @@ class Init extends flixel.FlxState
 			Subtitles._markup.push(new FlxTextFormatMarkerPair(new FlxTextFormat(color), '<$name>'));
 			Subtitles._markup.push(new FlxTextFormatMarkerPair(new FlxTextFormat(null, null, null, color), '<border-$name>'));
 		}
+		Subtitles.__posY = FlxG.height * 0.75;
 
 		// don't need these
 		final __exclude = ["PI2", "EL", "B1", "B2", "B3", "B4", "B5", "B6", "ELASTIC_AMPLITUDE", "ELASTIC_PERIOD"];
@@ -42,7 +43,7 @@ class Init extends flixel.FlxState
 		#end
 		Mods.loadTopMod();
 
-		FlxG.save.bind('funkin', CoolUtil.getSavePath());
+		FlxG.save.bind("funkin", CoolUtil.getSavePath());
 		ClientPrefs.loadPrefs();
 
 		FlxG.fixedTimestep = ClientPrefs.data.fixedTimestep;
@@ -52,7 +53,8 @@ class Init extends flixel.FlxState
 		FlxG.updateFramerate = FlxG.drawFramerate = ClientPrefs.data.framerate;
 
 		#if LUA_ALLOWED llua.Lua.set_callbacks_function(cpp.Callable.fromStaticFunction(psychlua.CallbackHandler.call)); #end
-		Controls.instance = new Controls();
+		if (Controls.instance == null)
+			new Controls();
 		ClientPrefs.loadDefaultKeys();
 		#if ACHIEVEMENTS_ALLOWED Achievements.load(); #end
 		backend.Highscore.load();
@@ -73,6 +75,7 @@ class Init extends flixel.FlxState
 		#end
 		FlxG.console.registerClass(MusicBeatState);
 		FlxG.console.registerObject("controls", Controls.instance);
+		FlxG.console.registerFunction("switchState", (name:String) -> MusicBeatState.switchState(Type.createInstance(Type.resolveClass(name), [])));
 		#end
 
 		if (FlxG.save.data.flashing == null && !FlashingState.leftState)

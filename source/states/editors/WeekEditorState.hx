@@ -114,7 +114,7 @@ class WeekEditorState extends MusicBeatUIState
 		addEditorBox();
 		reloadAllShit();
 
-		//FlxG.mouse.visible = true;
+		// FlxG.mouse.visible = true;
 
 		super.create();
 	}

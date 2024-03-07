@@ -1,6 +1,6 @@
 package options;
 
-class Option
+class Option implements flixel.util.FlxDestroyUtil.IFlxDestroyable
 {
 	public var child:Alphabet;
 	public var text(get, set):String;
@@ -66,6 +66,19 @@ class Option
 	}
 
 	dynamic public function change() {}
+
+	public function destroy()
+	{
+		while (options?.length > 0)
+			options.pop();
+
+		options = null;
+		child = null;
+		defaultValue = null;
+		changeValue = null;
+		minValue = null;
+		maxValue = null;
+	}
 
 	public function get_value():Dynamic
 	{

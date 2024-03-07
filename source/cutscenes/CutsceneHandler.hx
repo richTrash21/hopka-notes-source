@@ -11,19 +11,20 @@ class CutsceneHandler extends FlxBasic
 	public var onStart:Void->Void = null;
 	public var endTime:Float = 0;
 	public var objects:Array<FlxSprite> = [];
-	public var music:String = null;
+	public var music:String;
 	public function new()
 	{
 		super();
 
-		timer(0, function()
+		timer(0, () ->
 		{
-			if(music != null)
+			if (music != null)
 			{
 				FlxG.sound.playMusic(Paths.music(music), 0, false);
 				FlxG.sound.music.fadeIn();
 			}
-			if(onStart != null) onStart();
+			if (onStart != null)
+				onStart();
 		});
 		PlayState.instance.add(this);
 	}
@@ -34,7 +35,7 @@ class CutsceneHandler extends FlxBasic
 	{
 		super.update(elapsed);
 
-		if(FlxG.state != PlayState.instance || !firstFrame)
+		if (FlxG.state != PlayState.instance || !firstFrame)
 		{
 			firstFrame = true;
 			return;
@@ -44,7 +45,8 @@ class CutsceneHandler extends FlxBasic
 		if(endTime <= cutsceneTime)
 		{
 			finishCallback();
-			if(finishCallback2 != null) finishCallback2();
+			if (finishCallback2 != null)
+				finishCallback2();
 
 			for (spr in objects)
 			{
@@ -52,8 +54,6 @@ class CutsceneHandler extends FlxBasic
 				PlayState.instance.remove(spr);
 				spr.destroy();
 			}
-			
-			kill();
 			destroy();
 			PlayState.instance.remove(this);
 		}
@@ -65,14 +65,40 @@ class CutsceneHandler extends FlxBasic
 		}
 	}
 
-	public function push(spr:FlxSprite) objects.push(spr);
+	override function destroy()
+	{
+		while (objects.length > 0)
+			objects.pop();
+		objects = null;
 
-	public function timer(time:Float, func:Void->Void)
+		var event:Array<Dynamic>;
+		while (timedEvents.length > 0)
+		{
+			event = timedEvents.pop();
+			while (event.length > 0)
+				event.pop();
+		}
+		timedEvents = null;
+
+		finishCallback = null;
+		finishCallback2 = null;
+		onStart = null;
+		super.destroy();
+	}
+
+	inline public function push(spr:FlxSprite)
+	{
+		objects.push(spr);
+	}
+
+	inline public function timer(time:Float, func:Void->Void)
 	{
 		timedEvents.push([time, func]);
 		timedEvents.sort(sortByTime);
 	}
 
-	function sortByTime(Obj1:Array<Dynamic>, Obj2:Array<Dynamic>):Int
+	inline function sortByTime(Obj1:Array<Dynamic>, Obj2:Array<Dynamic>):Int
+	{
 		return FlxSort.byValues(FlxSort.ASCENDING, Obj1[0], Obj2[0]);
+	}
 }

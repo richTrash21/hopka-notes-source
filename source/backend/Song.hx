@@ -31,46 +31,42 @@ typedef SwagSong =
 	@:optional var splashSkin:String;
 }
 
-class Song
+@:structInit class Song
 {
 	// IDFK WHAT THESE ARE BUT APARENTLY THEY WERE IN VS FORDICK'S CHARTS LMAO
-	//public static final invalidFields:Array<String> = ['player3', 'validScore', 'isHey', 'cutsceneType', 'isSpooky', 'isMoody', 'uiType', 'sectionLengths'];
-	public static final validFields:Array<String> = Type.getInstanceFields(Song);
+	//public static final invalidFields = ["player3", "validScore", "isHey", "cutsceneType", "isSpooky", "isMoody", "uiType", "sectionLengths"];
+	public static final validFields = Type.getInstanceFields(Song);
 
-	public var song:String = '';
-	public var notes:Array<SwagSection> = [];
-	public var events:Array<Dynamic> = [];
-	public var bpm:Float = 100;
-	public var needsVoices:Bool = true;
-	public var speed:Float = 1;
-
-	public var player1:String = 'bf';
-	public var player2:String = 'dad';
-	public var gfVersion:String = 'gf';
-	public var stage:String = 'stage';
-
-	public var gameOverChar:String = null;
-	public var gameOverSound:String = null;
-	public var gameOverLoop:String = null;
-	public var gameOverEnd:String = null;
-
-	public var disableNoteRGB:Bool = false;
-
-	public var arrowSkin:String = null;
-	public var splashSkin:String = null;
-
-	public function new(SONG:SwagSong)
+	public static function loadFromJson(jsonInput:String, ?folder:String):Song
 	{
-		for (field in Reflect.fields(SONG))
+		var rawJson:String = null;
+		
+		final formattedFolder = Paths.formatToSongPath(folder);
+		final formattedSong = Paths.formatToSongPath(jsonInput);
+		#if MODS_ALLOWED
+		final moddyFile = Paths.modsJson('$formattedFolder/$formattedSong');
+		if (sys.FileSystem.exists(moddyFile))
+			rawJson = File.getContent(moddyFile);
+		#end
+
+		if (rawJson == null)
 		{
-			if (validFields.contains(field))
-				Reflect.setField(this, field, Reflect.field(SONG, field));
-			else
-				trace('WARNING!! This chart have invalid field "$field"');
+			final json = Paths.json('$formattedFolder/$formattedSong');
+			rawJson = #if sys File.getContent(json) #else lime.utils.Assets.getText(json) #end;
 		}
+
+		final songJson = new Song(onLoadJson(parseJSONshit(rawJson)));
+		if (jsonInput != "events")
+			StageData.loadDirectory(songJson);
+		return songJson;
 	}
 
-	private static function onLoadJson(songJson:Dynamic):SwagSong // Convert old charts to newest format
+	inline public static function parseJSONshit(rawJson:String):SwagSong
+	{
+		return cast haxe.Json.parse(rawJson).song;
+	}
+
+	static function onLoadJson(songJson:Dynamic):SwagSong // Convert old charts to newest format
 	{
 		if (songJson.gfVersion == null)
 			songJson.gfVersion = songJson.player3;
@@ -80,11 +76,9 @@ class Song
 			songJson.events = [];
 			for (secNum in 0...songJson.notes.length)
 			{
-				final sec:SwagSection = songJson.notes[secNum];
-
-				var i:Int = 0;
-				final notes:Array<Dynamic> = sec.sectionNotes;
-				var len:Int = notes.length;
+				final notes:Array<Dynamic> = songJson.notes[secNum].sectionNotes;
+				var len = notes.length;
+				var i = 0;
 				while(i < len)
 				{
 					final note:Array<Dynamic> = notes[i];
@@ -94,7 +88,8 @@ class Song
 						notes.remove(note);
 						len = notes.length;
 					}
-					else i++;
+					else
+						i++;
 				}
 			}
 		}
@@ -107,38 +102,39 @@ class Song
 		return songJson;
 	}
 
-	inline public static function loadFromJson(jsonInput:String, ?folder:String):Song
+	public var song:String = "";
+	public var notes:Array<SwagSection> = [];
+	public var events:Array<Dynamic> = [];
+	public var bpm:Float = 100;
+	public var needsVoices:Bool = true;
+	public var speed:Float = 1;
+
+	public var player1:String = "bf";
+	public var player2:String = "dad";
+	public var gfVersion:String = "gf";
+	public var stage:String = "stage";
+
+	public var gameOverChar:String;
+	public var gameOverSound:String;
+	public var gameOverLoop:String;
+	public var gameOverEnd:String;
+
+	public var disableNoteRGB:Bool = false;
+
+	public var arrowSkin:String;
+	public var splashSkin:String;
+
+	public function new(SONG:SwagSong)
 	{
-		var rawJson = null;
-		
-		final formattedFolder:String = Paths.formatToSongPath(folder);
-		final formattedSong:String = Paths.formatToSongPath(jsonInput);
-		#if MODS_ALLOWED
-		final moddyFile:String = Paths.modsJson('$formattedFolder/$formattedSong');
-		if (sys.FileSystem.exists(moddyFile)) rawJson = File.getContent(moddyFile).trim();
-		#end
-
-		if (rawJson == null)
+		for (field in Reflect.fields(SONG))
 		{
-			#if sys
-			rawJson = File.getContent(Paths.json('$formattedFolder/$formattedSong')).trim();
-			#else
-			rawJson = lime.utils.Assets.getText(Paths.json('$formattedFolder/$formattedSong')).trim();
-			#end
+			if (validFields.contains(field))
+				Reflect.setField(this, field, Reflect.field(SONG, field));
+			else
+			{
+				trace('WARNING!! This chart have invalid field "$field"');
+				Reflect.deleteField(SONG, field);
+			}
 		}
-
-		/*var len = rawJson.length;
-		while (!rawJson.endsWith("}"))
-		{
-			rawJson = rawJson.substr(0, --len);
-			// LOL GOING THROUGH THE BULLSHIT TO CLEAN IDK WHATS STRANGE
-		}*/
-
-		final songJson:Song = new Song(onLoadJson(parseJSONshit(rawJson)));
-		if (jsonInput != 'events') StageData.loadDirectory(songJson);
-		return songJson;
 	}
-
-	inline public static function parseJSONshit(rawJson:String):SwagSong
-		return cast haxe.Json.parse(rawJson).song;
 }

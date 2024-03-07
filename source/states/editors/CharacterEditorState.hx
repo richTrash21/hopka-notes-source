@@ -21,7 +21,7 @@ class CharacterEditorState extends backend.MusicBeatUIState
 	static final dadPosition = FlxPoint.get(100, 100);
 	static final bfPosition = FlxPoint.get(770, 100);
 	static final textMarkup = [
-		// new FlxTextFormatMarkerPair(new FlxTextFormat(FlxColor.RED), "<r>"),
+		new FlxTextFormatMarkerPair(new FlxTextFormat(FlxColor.RED), "<r>"),
 		new FlxTextFormatMarkerPair(new FlxTextFormat(FlxColor.LIME), "<l>")
 	];
 
@@ -42,7 +42,6 @@ class CharacterEditorState extends backend.MusicBeatUIState
 	var _goToPlayState:Bool = true;
 
 	var anims:Array<AnimArray> = null;
-	// var animsTxtGroup:FlxTypedGroup<FlxText>;
 	var animsTxt:FlxText;
 	var curAnim = 0;
 
@@ -96,7 +95,6 @@ class CharacterEditorState extends backend.MusicBeatUIState
 
 		Paths.currentLevel = lastLoaded;
 
-		// animsTxtGroup = new FlxTypedGroup<FlxText>();
 		animsTxt = new FlxText(10, 32, 0, "", 16);
 		animsTxt.setBorderStyle(OUTLINE_FAST, FlxColor.BLACK, 1);
 
@@ -150,8 +148,6 @@ class CharacterEditorState extends backend.MusicBeatUIState
 			(icon) -> icon.scale.set(icon.baseScale, icon.baseScale)
 		);
 
-		// animsTxtGroup.cameras = [camHUD];
-		// add(animsTxtGroup);
 		animsTxt.cameras = [camHUD];
 		add(animsTxt);
 
@@ -180,7 +176,7 @@ class CharacterEditorState extends backend.MusicBeatUIState
 		frameAdvanceText.cameras = [camHUD];
 		add(frameAdvanceText);
 
-		FlxG.mouse.visible = true;
+		// FlxG.mouse.visible = true;
 		FlxG.camera.zoom = 1;
 
 		makeUIMenu();
@@ -535,13 +531,13 @@ class CharacterEditorState extends backend.MusicBeatUIState
 			for (anim in character.animationsArray)
 				if (animationInputText.text == anim.anim)
 				{
-					var resetAnim = anim.anim == character.animation.name;
+					final resetAnim = anim.anim == character.animation.name;
 					if (character.animOffsets.exists(anim.anim))
 					{
 						character.animation.remove(anim.anim);
+						character.animationsArray.remove(anim);
 						character.animOffsets.get(anim.anim).put();
 						character.animOffsets.remove(anim.anim);
-						character.animationsArray.remove(anim);
 					}
 
 					if (resetAnim && character.animationsArray.length > 0)
@@ -656,11 +652,11 @@ class CharacterEditorState extends backend.MusicBeatUIState
 			character.noAntialiasing = noAntialiasingCheckBox.checked;
 		};
 
-		positionXStepper = new FlxUINumericStepper(flipXCheckBox.x + 120, flipXCheckBox.y, 10, character.positionArray[0], -9999, 9999, 0);
-		positionYStepper = new FlxUINumericStepper(positionXStepper.x + 60, positionXStepper.y, 10, character.positionArray[1], -9999, 9999, 0);
+		positionXStepper = new FlxUINumericStepper(flipXCheckBox.x + 120, flipXCheckBox.y, 10, character.position.x, -9999, 9999, 0);
+		positionYStepper = new FlxUINumericStepper(positionXStepper.x + 60, positionXStepper.y, 10, character.position.y, -9999, 9999, 0);
 
-		positionCameraXStepper = new FlxUINumericStepper(positionXStepper.x, positionXStepper.y + 40, 10, character.cameraPosition[0], -9999, 9999, 0);
-		positionCameraYStepper = new FlxUINumericStepper(positionYStepper.x, positionYStepper.y + 40, 10, character.cameraPosition[1], -9999, 9999, 0);
+		positionCameraXStepper = new FlxUINumericStepper(positionXStepper.x, positionXStepper.y + 40, 10, character.cameraOffset.x, -9999, 9999, 0);
+		positionCameraYStepper = new FlxUINumericStepper(positionYStepper.x, positionYStepper.y + 40, 10, character.cameraOffset.y, -9999, 9999, 0);
 
 		var saveCharacterButton = new FlxButton(reloadImage.x, noAntialiasingCheckBox.y + 55, "Save Character", saveCharacter);
 
@@ -732,13 +728,13 @@ class CharacterEditorState extends backend.MusicBeatUIState
 			}
 			else if (sender == positionXStepper)
 			{
-				character.positionArray[0] = positionXStepper.value;
+				character.position.x = positionXStepper.value;
 				updateCharacterPositions();
 				updatePointerPos();
 			}
 			else if (sender == positionYStepper)
 			{
-				character.positionArray[1] = positionYStepper.value;
+				character.position.y = positionYStepper.value;
 				updateCharacterPositions();
 				updatePointerPos();
 			}
@@ -748,12 +744,12 @@ class CharacterEditorState extends backend.MusicBeatUIState
 			}
 			else if (sender == positionCameraXStepper)
 			{
-				character.cameraPosition[0] = positionCameraXStepper.value;
+				character.cameraOffset.x = positionCameraXStepper.value;
 				updatePointerPos();
 			}
 			else if (sender == positionCameraYStepper)
 			{
-				character.cameraPosition[1] = positionCameraYStepper.value;
+				character.cameraOffset.y = positionCameraYStepper.value;
 				updatePointerPos();
 			}
 			else if (sender == healthColorStepperR)
@@ -816,10 +812,10 @@ class CharacterEditorState extends backend.MusicBeatUIState
 		flipXCheckBox.checked = character.originalFlipX;
 		flipYCheckBox.checked = character.originalFlipY;
 		noAntialiasingCheckBox.checked = character.noAntialiasing;
-		positionXStepper.value = character.positionArray[0];
-		positionYStepper.value = character.positionArray[1];
-		positionCameraXStepper.value = character.cameraPosition[0];
-		positionCameraYStepper.value = character.cameraPosition[1];
+		positionXStepper.value = character.position.x;
+		positionYStepper.value = character.position.y;
+		positionCameraXStepper.value = character.cameraOffset.x;
+		positionCameraYStepper.value = character.cameraOffset.y;
 		reloadAnimationDropDown();
 		updateHealthBar();
 	}
@@ -995,7 +991,6 @@ class CharacterEditorState extends backend.MusicBeatUIState
 
 			animsTxt.text = animsTxt.text.replace(animsTxt.text.substring(textPos, breakPos), anim.anim + ": " + anim.offsets);
 			updateTextColors();
-			// animsTxtGroup.members[curAnim].text = anim.anim + ": " + anim.offsets;
 			character.addOffset(anim.anim, offset.x, offset.y);
 		}
 
@@ -1051,7 +1046,7 @@ class CharacterEditorState extends backend.MusicBeatUIState
 			openSubState(helpSubstate);
 		else if (FlxG.keys.justPressed.ESCAPE)
 		{
-			FlxG.mouse.visible = false;
+			// FlxG.mouse.visible = false;
 			if (_goToPlayState)
 				MusicBeatState.switchState(PlayState.new);
 			else
@@ -1087,9 +1082,9 @@ class CharacterEditorState extends backend.MusicBeatUIState
 	{
 		character.getMidpoint(__point);
 		if (character.isPlayer)
-			__point.add(-100 - character.cameraPosition[0], -100 + character.cameraPosition[1]);
+			__point.add(-100 - character.cameraOffset.x, -100 + character.cameraOffset.y);
 		else
-			__point.add(150 + character.cameraPosition[0], -100 + character.cameraPosition[1]);
+			__point.add(150 + character.cameraOffset.x, -100 + character.cameraOffset.y);
 
 		cameraFollowPointer.setPosition(__point.x, __point.y);
 
@@ -1105,7 +1100,7 @@ class CharacterEditorState extends backend.MusicBeatUIState
 		healthColorStepperR.value = character.healthColor.red;
 		healthColorStepperG.value = character.healthColor.green;
 		healthColorStepperB.value = character.healthColor.blue;
-		healthBar.leftBar.color = healthBar.rightBar.color = character.healthColor; // FlxColor.fromRGB(character.healthColorArray[0], character.healthColorArray[1], character.healthColorArray[2]);
+		healthBar.leftBar.color = healthBar.rightBar.color = character.healthColor;
 		healthIcon.changeIcon(character.healthIcon, false);
 		updatePresence();
 	}
@@ -1121,32 +1116,18 @@ class CharacterEditorState extends backend.MusicBeatUIState
 	inline function reloadAnimList()
 	{
 		anims = character.animationsArray;
-		if (anims.length > 0)
+		if (anims.length == 0) // it still crashes :(
+			animsTxt.applyMarkup("<r>NO ANIMATIONS!<r>", textMarkup);
+		else
+		{
 			character.playAnim(anims[0].anim, true);
+			var newText = "";
+			for (anim in anims)
+				newText += anim.anim + ": " + anim.offsets + "\n";
+			animsTxt.text = newText.substr(0, newText.length-1);
+		}
 		curAnim = 0;
 
-		// for (text in animsTxtGroup)
-		//	text.kill();
-
-		/*var daLoop = 0;
-		for (anim in anims)
-		{
-			final text = animsTxtGroup.recycle(FlxText);
-			text.x = 10;
-			text.y = 32 + (20 * daLoop++);
-			text.fieldWidth = 400;
-			text.fieldHeight = 20;
-			text.text = anim.anim + ": " + anim.offsets;
-			text.setFormat(null, 16, FlxColor.WHITE, LEFT, OUTLINE_FAST, FlxColor.BLACK);
-			text.scrollFactor.set();
-			text.borderSize = 1;
-			animsTxtGroup.add(text);
-		}*/
-		var newText = "";
-		for (anim in anims)
-			newText += anim.anim + ": " + anim.offsets + "\n";
-
-		animsTxt.text = newText.substr(0, newText.length-1);
 		updateTextColors();
 		if (animationDropDown != null)
 			reloadAnimationDropDown();
@@ -1154,19 +1135,9 @@ class CharacterEditorState extends backend.MusicBeatUIState
 
 	inline function updateTextColors()
 	{
-		/*var daLoop = 0;
-		var updatedText = "";
-		for (text in animsTxt.text.split("\n"))
-		{
-			final markup = daLoop++ == curAnim ? "<l>" : "";
-			updatedText += markup + text + markup + "\n";
-		}*/
-		/*for (text in animsTxtGroup)
-		{
-			text.color = FlxColor.WHITE;
-			if (daLoop++ == curAnim)
-				text.color = FlxColor.LIME;
-		}*/
+		if (anims.length == 0)
+			return;
+
 		final anim = anims[curAnim];
 		final textPos = animsTxt.text.indexOf(anim.anim);
 		var breakPos = animsTxt.text.indexOf("\n", textPos);
@@ -1174,15 +1145,13 @@ class CharacterEditorState extends backend.MusicBeatUIState
 			breakPos = animsTxt.text.length;
 
 		final t = animsTxt.text.substring(textPos, breakPos);		
-		animsTxt.applyMarkup(animsTxt.text.replace(t, '<l>$t<l>'), textMarkup); // updatedText.substr(0, updatedText.length-1)
+		animsTxt.applyMarkup(animsTxt.text.replace(t, '<l>$t<l>'), textMarkup);
 	}
 
 	inline function updateCharacterPositions()
 	{
-		final p = (character != null && !character.isPlayer) || (character == null && predictCharacterIsNotPlayer(_char))
-			? dadPosition : bfPosition;
-
-		character.setPosition(p.x + character.positionArray[0], p.y + character.positionArray[1]);
+		final p = (!character?.isPlayer) || (character == null && predictCharacterIsNotPlayer(_char)) ? dadPosition : bfPosition;
+		character.setPosition(p.x + character.position.x, p.y + character.position.y);
 	}
 
 	inline function predictCharacterIsNotPlayer(name:String)
@@ -1290,19 +1259,19 @@ class CharacterEditorState extends backend.MusicBeatUIState
 			return;
 
 		final json:CharacterFile = {
-			animations: character.animationsArray,
-			image: character.imageFile,
-			scale: character.jsonScale,
-			sing_duration: character.singDuration,
-			healthicon: character.healthIcon,
+			animations:			character.animationsArray,
+			image:				character.imageFile,
+			scale:				character.jsonScale,
+			sing_duration:		character.singDuration,
+			healthicon:			character.healthIcon,
 
-			position:	character.positionArray,
-			camera_position: character.cameraPosition,
+			position:			character.positionArray,
+			camera_position:	character.cameraPosition,
 
-			flip_x: character.originalFlipX,
-			flip_y: character.originalFlipY,
-			no_antialiasing: character.noAntialiasing,
-			healthbar_colors: character.healthColorArray
+			flip_x:				character.originalFlipX,
+			flip_y:				character.originalFlipY,
+			no_antialiasing:	character.noAntialiasing,
+			healthbar_colors:	character.healthColorArray
 		};
 
 		final data = haxe.Json.stringify(json, optimizeJsonBox.checked ? null : "\t");

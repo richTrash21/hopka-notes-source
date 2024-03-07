@@ -26,14 +26,20 @@ class CheckboxThingie extends FlxSprite
 		daValue = checked;
 	}
 
-	override function draw()
+	override function update(elapsed:Float)
 	{
 		if (sprTracker != null)
 		{
 			setPosition(sprTracker.x - 130 + offsetX, sprTracker.y + 30 + offsetY);
 			if (copyAlpha) alpha = sprTracker.alpha;
 		}
-		super.draw();
+		super.update(elapsed);
+	}
+
+	override function destroy()
+	{
+		sprTracker = null;
+		super.destroy();
 	}
 
 	private function set_daValue(check:Bool):Bool

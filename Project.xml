@@ -65,38 +65,40 @@
 	<define name="NO_PRELOAD_ALL"		unless="PRELOAD_ALL"/>
 
 	<assets path="assets/fonts" />
-	<assets path="assets/preload"		rename="assets"			exclude="*.ogg" if="web"/>
-	<assets path="assets/preload"		rename="assets"			exclude="*.mp3" unless="web"/>
 
 	<!-- DONT ENABLE THIS -->
-	<define name="CHECK_FOR_UPDATES" if="desktop officialBuild"/>
+	<!-- <define name="CHECK_FOR_UPDATES" if="desktop officialBuild"/> -->
 
 	<!-- Week Assets -->
 	<library name="videos"				preload="true" />
 	<section if="PRELOAD_ALL">
 		<library name="songs"			preload="true" />
-		<library name="shared"			preload="true" />
+		<!-- <library name="shared"			preload="true" /> -->
+		<assets path="assets/preload"	rename="assets"		preload="true"/>
 		<library name="week_assets"		preload="true" />
 	</section>
 	
 	<section if="NO_PRELOAD_ALL">
 		<library name="songs"			preload="false" />
-		<library name="shared"			preload="false" />
+		<!-- <library name="shared"			preload="false" /> -->
+		<assets path="assets/preload"	rename="assets"		preload="false"/>
 		<library name="week_assets"		preload="false" />
 	</section>
 	
 	<assets path="assets/videos"        library="videos"        if="VIDEOS_ALLOWED"/>
 	<assets path="assets/songs"         library="songs"         exclude="*.ogg" if="web"/>
 	<assets path="assets/songs"         library="songs"         exclude="*.mp3" unless="web"/>
-	<assets path="assets/shared"        library="shared"        exclude="*.ogg" if="web"/>
-	<assets path="assets/shared"        library="shared"        exclude="*.mp3" unless="web"/>
+	<!-- <assets path="assets/shared"        library="shared"        exclude="*.ogg" if="web"/> -->
+	<!-- <assets path="assets/shared"        library="shared"        exclude="*.mp3" unless="web"/> -->
 	<assets path="assets/week_assets"   library="week_assets"   rename="assets" exclude="*.ogg" if="web"/>
 	<assets path="assets/week_assets"   library="week_assets"   rename="assets" exclude="*.mp3" unless="web"/>
+	<assets path="assets/preload"		library="default"		rename="assets"	exclude="*.ogg" if="web"/>
+	<assets path="assets/preload"		library="default"		rename="assets"	exclude="*.mp3" unless="web"/>
 	
 	<section if="MODS_ALLOWED">
 		<assets path='example_mods'		rename='mods' embed='false'/>
 	</section>
-	<assets path='art/readme.txt'		rename='do NOT readme.txt' />
+	<!-- <assets path='art/readme.txt'		rename='do NOT readme.txt' /> -->
 
 	<!-- _______________________________ Libraries ______________________________ -->
 

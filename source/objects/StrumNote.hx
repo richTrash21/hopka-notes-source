@@ -4,6 +4,8 @@ import shaders.RGBPalette.RGBShaderReference;
 
 class StrumNote extends FlxSprite
 {
+	public static final defaultNoteSkin:String = Note.defaultNoteSkin;
+
 	public var rgbShader:RGBShaderReference;
 	public var resetAnim:Float = 0;
 	private var noteData:Int = 0;
@@ -15,7 +17,6 @@ class StrumNote extends FlxSprite
 	// better pixel note handeling
 	public var isPixelNote:Bool = false;
 	public var pixelScale:Float = 6;
-	public static final defaultNoteSkin:String = Note.defaultNoteSkin;
 	
 	public var texture(default, set):String = null;
 	private function set_texture(value:String):String
@@ -165,6 +166,13 @@ class StrumNote extends FlxSprite
 			centerOffsets();
 			centerOrigin();
 		}
-		if (useRGBShader) rgbShader.enabled = (animation.curAnim != null && animation.curAnim.name != 'static');
+		if (useRGBShader)
+			rgbShader.enabled = (animation.curAnim != null && animation.curAnim.name != 'static');
+	}
+
+	override function destroy()
+	{
+		rgbShader = null;
+		super.destroy();
 	}
 }

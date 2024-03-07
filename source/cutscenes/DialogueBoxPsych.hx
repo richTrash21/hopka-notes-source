@@ -1,5 +1,6 @@
 package cutscenes;
 
+import flixel.util.FlxDestroyUtil;
 import haxe.Json;
 import openfl.utils.Assets;
 
@@ -33,9 +34,11 @@ class DialogueBoxPsych extends FlxSpriteGroup
 	public static final DEFAULT_TEXT_X = 175;
 	public static final DEFAULT_TEXT_Y = 460;
 	public static final LONG_TEXT_ADD = 24;
+	static var textBoxTypes = ['normal', 'angry'];
+
 	var scrollSpeed = 4000;
 
-	var dialogue:TypedAlphabet;
+	// var dialogue:TypedAlphabet;
 	var dialogueList:DialogueFile = null;
 
 	public var finishThing:Void->Void;
@@ -49,8 +52,6 @@ class DialogueBoxPsych extends FlxSpriteGroup
 
 	var currentText:Int = 0;
 	var offsetPos:Float = -600;
-
-	var textBoxTypes:Array<String> = ['normal', 'angry'];
 	
 	var curCharacter:String = "";
 	//var charPositionList:Array<String> = ['left', 'center', 'right'];
@@ -374,6 +375,23 @@ class DialogueBoxPsych extends FlxSpriteGroup
 		if(nextDialogueThing != null) {
 			nextDialogueThing();
 		}
+	}
+
+	override function destroy()
+	{
+		daText = FlxDestroyUtil.destroy(daText);
+		bgFade = FlxDestroyUtil.destroy(bgFade);
+		box = FlxDestroyUtil.destroy(box);
+	
+		dialogueList = null;
+		finishThing = null;
+		nextDialogueThing = null;
+		skipDialogueThing = null;
+
+		while (arrayCharacters.length > 0)
+			FlxDestroyUtil.destroy(arrayCharacters.pop());
+		arrayCharacters = null;
+		super.destroy();
 	}
 
 	public static function parseDialogue(path:String):DialogueFile {

@@ -10,7 +10,6 @@ class VideoSprite extends flixel.FlxSprite
 	public var readyCallback:()->Void;
 	public var finishCallback:()->Void;
 	public var isPlaying(get, never):Bool;
-	@:noCompletion inline function get_isPlaying() return (video == null ? false : video.isPlaying);
 
 	public var autoScale:Bool;
 	var video:VideoHandler;
@@ -24,7 +23,7 @@ class VideoSprite extends flixel.FlxSprite
 		video.visible = false;
 		//FlxG.game.removeChild(video);
 
-		video.readyCallback = function()
+		video.readyCallback = () ->
 		{
 			visible = true;
 			loadGraphic(video.bitmapData);
@@ -34,7 +33,7 @@ class VideoSprite extends flixel.FlxSprite
 				readyCallback();
 		}
 
-		video.finishCallback = function()
+		video.finishCallback = () ->
 		{
 			if (finishCallback != null)
 				finishCallback();
@@ -59,6 +58,7 @@ class VideoSprite extends flixel.FlxSprite
 	{
 		readyCallback = null;
 		finishCallback = null;
+		// video.finishVideo();
 		video = null;
 		super.destroy();
 	}
@@ -69,9 +69,23 @@ class VideoSprite extends flixel.FlxSprite
 	 * @param repeat Repeat the video.
 	 * @param pauseMusic Pause music until done video.
 	 */
-	public function playVideo(path:String, ?repeat:Bool = false, pauseMusic:Bool = false)
+	inline public function playVideo(path:String, ?repeat:Bool = false, pauseMusic:Bool = false)
+	{
 		video.playVideo(path, repeat, pauseMusic);
+	}
 
-	public function pause()  video.pause();
-	public function resume() video.resume();
+	inline public function pause()
+	{
+		video.pause();
+	}
+
+	inline public function resume()
+	{
+		video.resume();
+	}
+
+	@:noCompletion inline function get_isPlaying()
+	{
+		return video?.isPlaying;
+	}
 }

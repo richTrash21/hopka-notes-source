@@ -41,7 +41,7 @@ class ControlsSubState extends MusicBeatSubstate
 	var curAlt:Bool = false;
 
 	// Show on gamepad - Display name - Save file key - Rebind display name
-	final options:Array<ControlsOption> = [
+	static final defaultOptions:Array<ControlsOption> = [
 		[true, "NOTES"],
 		[true, "Left", "note_left", "Note Left"],
 		[true, "Down", "note_down", "Note Down"],
@@ -70,6 +70,7 @@ class ControlsSubState extends MusicBeatSubstate
 		[false, "Key 2", "debug_2", "Debug Key #2"]
 		#end
 	];
+	var options:Array<ControlsOption>;
 	var curOptions:Array<Int>;
 	var curOptionsValid:Array<Int>;
 	static final defaultKey:String = "Reset to Default Keys";
@@ -93,6 +94,7 @@ class ControlsSubState extends MusicBeatSubstate
 		destroySubStates = false;
 		rebindScreen = new RemapKeybindScreen(this);
 
+		options = defaultOptions.copy();
 		options.push([true]);
 		options.push([true]);
 		options.push([true, defaultKey]);
@@ -297,8 +299,6 @@ class ControlsSubState extends MusicBeatSubstate
 
 		if ((FlxG.keys.justPressed.ESCAPE || FlxG.keys.justPressed.BACKSPACE) || FlxG.gamepads.anyJustPressed(B))
 		{
-			rebindScreen.destroy();
-			bg.color = OptionsState.BG_COLOR;
 			close();
 			FlxG.sound.play(Paths.sound("cancelMenu"));
 			return;
@@ -383,6 +383,37 @@ class ControlsSubState extends MusicBeatSubstate
 		}
 		selectSpr.sprTracker = grpBlacks.members[Math.floor(curSelected * 2) + (curAlt ? 1 : 0)];
 		selectSpr.visible = (selectSpr.sprTracker != null);
+	}
+
+	override function destroy()
+	{		
+		/*var option:Array<EitherType<Bool, String>>;
+		while (options.length > 0)
+		{
+			option = options.pop();
+			while (option.length > 0)
+				option.pop();
+		}*/
+		options = null;
+
+		/*while (curOptions.length > 0)
+			curOptions.pop();
+		while (curOptionsValid.length > 0)
+			curOptionsValid.pop();*/
+		curOptions = null;
+		curOptionsValid = null;
+
+		rebindScreen = FlxDestroyUtil.destroy(rebindScreen);
+		grpDisplay = FlxDestroyUtil.destroy(grpDisplay);
+		grpBlacks = FlxDestroyUtil.destroy(grpBlacks);
+		grpOptions = FlxDestroyUtil.destroy(grpOptions);
+		grpBinds = FlxDestroyUtil.destroy(grpBinds);
+		selectSpr = FlxDestroyUtil.destroy(selectSpr);
+		controllerSpr = FlxDestroyUtil.destroy(controllerSpr);
+		colorTween = FlxDestroyUtil.destroy(colorTween);
+		super.destroy();
+		bg.color = OptionsState.BG_COLOR;
+		bg = null;
 	}
 }
 
@@ -587,6 +618,13 @@ private class RemapKeybindScreen extends flixel.FlxSubState
 		remove(bindingText2).destroy();
 		ClientPrefs.reloadVolumeKeys();
 		super.close();
+	}
+
+	override function destroy()
+	{
+		bindingText = FlxDestroyUtil.destroy(bindingText);
+		bindingText2 = FlxDestroyUtil.destroy(bindingText2);
+		super.destroy();
 	}
 
 	function updateBind(num:Int, text:String)

@@ -1,5 +1,6 @@
 package options;
 
+import flixel.util.FlxDestroyUtil;
 import objects.Note;
 import objects.StrumNote;
 
@@ -215,6 +216,11 @@ class VisualsUISubState extends BaseOptionsMenu
 
 	override function destroy()
 	{
+		while (notesTween.length > 0)
+			FlxDestroyUtil.destroy(notesTween.pop());
+		notesTween = null;
+		notes = FlxDestroyUtil.destroy(notes);
+
 		if (changedMusic && !OptionsState.onPlayState)
 			FlxG.sound.playMusic(Paths.music("freakyMenu"), 1, true);
 		super.destroy();

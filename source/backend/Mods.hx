@@ -41,7 +41,8 @@ class Mods
 		for (mod in parseList().enabled)
 		{
 			final pack:Dynamic = getPack(mod);
-			if (pack != null && pack.runsGlobally) globalMods.push(mod);
+			if (pack != null && pack.runsGlobally)
+				globalMods.push(mod);
 		}
 		return globalMods;
 	}
@@ -103,7 +104,7 @@ class Mods
 		if (mods)
 		{
 			// Global mods first
-			for (mod in getGlobalMods())
+			for (mod in globalMods)
 			{
 				final folder:String = Paths.mods('$mod/$fileToFind');
 				if (FileSystem.exists(folder)) foldersToCheck.push(folder);
@@ -115,7 +116,7 @@ class Mods
 
 			// And lastly, the loaded mod's folder
 			if (currentModDirectory != null && currentModDirectory.length > 0
-				&& !getGlobalMods().contains(currentModDirectory)) // IGNORES CURRENT MOD IF IT'S LOADED AS GLOBAL I WANT TO KYS
+				&& !globalMods.contains(currentModDirectory)) // IGNORES CURRENT MOD IF IT'S LOADED AS GLOBAL I WANT TO KYS
 			{
 				final folder:String = Paths.mods('$currentModDirectory/$fileToFind');
 				if (FileSystem.exists(folder)) foldersToCheck.push(folder);
@@ -128,19 +129,19 @@ class Mods
 	public static function getPack(?folder:String):Dynamic
 	{
 		#if MODS_ALLOWED
-		if (folder == null) folder = currentModDirectory;
+		if (folder == null)
+			folder = currentModDirectory;
 
-		final path = Paths.mods(folder + '/pack.json');
+		final path = Paths.mods('$folder/pack.json');
 		if(FileSystem.exists(path)) {
 			try
 			{
-				final rawJson:String = #if sys File.getContent(path) #else lime.utils.Assets.getText(path) #end;
-				if (rawJson != null && rawJson.length > 0) return haxe.Json.parse(rawJson);
+				final rawJson = #if sys File.getContent(path) #else lime.utils.Assets.getText(path) #end;
+				if (rawJson?.length > 0)
+					return haxe.Json.parse(rawJson);
 			}
-			catch(e:Dynamic)
-			{
+			catch(e)
 				trace(e);
-			}
 		}
 		#end
 		return null;
@@ -149,7 +150,8 @@ class Mods
 	public static var updatedOnState:Bool = false;
 	inline public static function parseList():ModsList
 	{
-		if (!updatedOnState) updateModList();
+		if (!updatedOnState)
+			updateModList();
 		final list:ModsList = {enabled: [], disabled: [], all: []};
 
 		#if MODS_ALLOWED
@@ -158,7 +160,8 @@ class Mods
 			for (mod in CoolUtil.coolTextFile('modsList.txt'))
 			{
 				//trace('Mod: $mod');
-				if (mod.trim().length < 1) continue;
+				if (mod.trim().length < 1)
+					continue;
 
 				final dat = mod.split("|");
 				list.all.push(dat[0]);
@@ -169,9 +172,7 @@ class Mods
 			}
 		}
 		catch(e)
-		{
 			trace(e);
-		}
 		#end
 		return list;
 	}
@@ -196,9 +197,7 @@ class Mods
 			}
 		}
 		catch(e)
-		{
 			trace(e);
-		}
 		
 		// Scan for folders that aren't on modsList.txt yet
 		for (folder in getModDirectories())
@@ -216,7 +215,8 @@ class Mods
 		var fileStr:String = '';
 		for (values in list)
 		{
-			if (fileStr.length > 0) fileStr += '\n';
+			if (fileStr.length > 0)
+				fileStr += '\n';
 			fileStr += values[0] + '|' + (values[1] ? '1' : '0');
 		}
 
@@ -229,8 +229,9 @@ class Mods
 	{
 		currentModDirectory = '';
 		#if MODS_ALLOWED
-		final list:Array<String> = parseList().enabled;
-		if (list != null && list[0] != null) currentModDirectory = list[0];
+		final list = parseList().enabled;
+		if (list != null && list[0] != null)
+			currentModDirectory = list[0];
 		#end
 	}
 }

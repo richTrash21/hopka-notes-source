@@ -1,5 +1,7 @@
 package objects;
 
+import flixel.util.FlxDestroyUtil;
+
 class TypedAlphabet extends Alphabet
 {
 	public var onFinish:()->Void;
@@ -72,6 +74,13 @@ class TypedAlphabet extends Alphabet
 		showCharacterUpTo(lettersLength - 1);
 		_sound.play(true);
 		__finish();
+	}
+
+	override public function destroy()
+	{
+		_sound = FlxDestroyUtil.destroy(_sound);
+		onFinish = null;
+		super.destroy();
 	}
 
 	@:noCompletion inline function __finish()

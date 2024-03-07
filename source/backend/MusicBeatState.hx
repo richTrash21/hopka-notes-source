@@ -37,12 +37,12 @@ class MusicBeatState extends FlxTransitionableState implements IMusicBeatState
 
 	inline public static function getState():FlxState
 	{
-		return cast FlxG.state;
+		return FlxG.state;
 	}
 
 	inline public static function getSubState():FlxState
 	{
-		return cast FlxG.state.subState;
+		return FlxG.state.subState;
 	}
 
 	// thx redar
@@ -61,13 +61,15 @@ class MusicBeatState extends FlxTransitionableState implements IMusicBeatState
 	var curDecBeat:Float = 0;
 
 	public var controls(get, never):Controls;
+	public var stages:Array<BaseStage> = [];
 
 	public function new() { super(); }
 
-	override function create()
+	override public function create()
 	{
-		#if MODS_ALLOWED Mods.updatedOnState = false; #end
-
+		#if MODS_ALLOWED
+		Mods.updatedOnState = false;
+		#end
 		super.create();
 
 		if (!FlxTransitionableState.skipNextTransOut)
@@ -77,7 +79,7 @@ class MusicBeatState extends FlxTransitionableState implements IMusicBeatState
 		timePassedOnState = 0;
 	}
 
-	override function update(elapsed:Float)
+	override public function update(elapsed:Float)
 	{
 		final oldStep = curStep;
 		timePassedOnState += elapsed;
@@ -106,57 +108,6 @@ class MusicBeatState extends FlxTransitionableState implements IMusicBeatState
 		super.update(elapsed);
 	}
 
-	function updateSection():Void
-	{
-		if (stepsToDo < 1)
-			stepsToDo = Math.round(getBeatsOnSection() * 4);
-
-		while (curStep >= stepsToDo)
-		{
-			curSection++;
-			stepsToDo += Math.round(getBeatsOnSection() * 4);
-			sectionHit();
-		}
-	}
-
-	function rollbackSection():Void
-	{
-		if (curStep < 0)
-			return;
-
-		final lastSection = curSection;
-		curSection = 0;
-		stepsToDo = 0;
-		for (i in 0...PlayState.SONG.notes.length)
-		{
-			if (PlayState.SONG.notes[i] != null)
-			{
-				if ((stepsToDo += Math.round(getBeatsOnSection() * 4)) > curStep)
-					break;
-				
-				curSection++;
-			}
-		}
-
-		if (curSection > lastSection)
-			sectionHit();
-	}
-
-	function updateBeat():Void
-	{
-		curBeat = Math.floor(curStep * 0.25);
-		curDecBeat = curDecStep * 0.25;
-	}
-
-	function updateCurStep():Void
-	{
-		final lastChange = Conductor.getBPMFromSeconds(Conductor.songPosition);
-
-		final shit = ((Conductor.songPosition - ClientPrefs.data.noteOffset) - lastChange.songTime) / lastChange.stepCrochet;
-		curDecStep = lastChange.stepTime + shit;
-		curStep = lastChange.stepTime + Math.floor(shit);
-	}
-
 	public function stepHit():Void
 	{
 		stagesFunc((stage) ->
@@ -170,7 +121,6 @@ class MusicBeatState extends FlxTransitionableState implements IMusicBeatState
 			beatHit();
 	}
 
-	public var stages:Array<BaseStage> = [];
 	public function beatHit():Void
 	{
 		stagesFunc((stage) ->
@@ -190,14 +140,63 @@ class MusicBeatState extends FlxTransitionableState implements IMusicBeatState
 		});
 	}
 
-	function stagesFunc(func:StageFunction)
+	inline function stagesFunc(func:StageFunction)
 	{
 		for (stage in stages)
 			if (stage != null && stage.exists && stage.active)
 				func(stage);
 	}
 
-	function getBeatsOnSection():Float
+	@:noCompletion function updateSection():Void
+	{
+		if (stepsToDo < 1)
+			stepsToDo = Math.round(getBeatsOnSection() * 4);
+
+		while (curStep >= stepsToDo)
+		{
+			curSection++;
+			stepsToDo += Math.round(getBeatsOnSection() * 4);
+			sectionHit();
+		}
+	}
+
+	@:noCompletion function rollbackSection():Void
+	{
+		if (curStep < 0)
+			return;
+
+		final lastSection = curSection;
+		curSection = stepsToDo = 0;
+		for (i in 0...PlayState.SONG.notes.length)
+		{
+			if (PlayState.SONG.notes[i] != null)
+			{
+				if ((stepsToDo += Math.round(getBeatsOnSection() * 4)) > curStep)
+					break;
+				
+				curSection++;
+			}
+		}
+
+		if (curSection > lastSection)
+			sectionHit();
+	}
+
+	@:noCompletion function updateBeat():Void
+	{
+		curBeat = Math.floor(curStep * 0.25);
+		curDecBeat = curDecStep * 0.25;
+	}
+
+	@:noCompletion function updateCurStep():Void
+	{
+		final lastChange = Conductor.getBPMFromSeconds(Conductor.songPosition);
+		final shit = ((Conductor.songPosition - ClientPrefs.data.noteOffset) - lastChange.songTime) / lastChange.stepCrochet;
+		curDecStep = lastChange.stepTime + shit;
+		curStep = lastChange.stepTime + Math.floor(shit);
+	}
+
+	@:noCompletion inline function getBeatsOnSection():Float
 	{
 		return PlayState.SONG?.notes[curSection]?.sectionBeats ?? 4;
 	}

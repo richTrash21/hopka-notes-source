@@ -12,12 +12,46 @@ typedef NoteSplashConfig = {
 
 class NoteSplash extends FlxSprite implements ISortable
 {
+	inline public static final defaultNoteSplash = "noteSplashes/noteSplashes";
+	public static var configs = new Map<String, NoteSplashConfig>();
+	inline static final buggedKillTime = 0.5; // automatically kills note splashes if they break to prevent it from flooding your HUD
+	
+	inline public static function getSplashSkinPostfix()
+	{
+		return ClientPrefs.data.splashSkin == ClientPrefs.defaultData.splashSkin ? "" : "-" + ClientPrefs.data.splashSkin.toLowerCase().replace(" ", "_");
+	}
+
+	public static function precacheConfig(skin:String):NoteSplashConfig
+	{
+		if (configs.exists(skin))
+			return configs.get(skin);
+
+		final path = Paths.getPath('images/$skin.txt', TEXT, true);
+		final configFile = CoolUtil.coolTextFile(path);
+		if (configFile.length < 1)
+			return null;
+		
+		final framerates = configFile[1].split(" ");
+		final offs:Array<Array<Float>> = [];
+		for (i in 2...configFile.length)
+		{
+			final animOffs = configFile[i].split(" ");
+			offs.push([Std.parseFloat(animOffs[0]), Std.parseFloat(animOffs[1])]);
+		}
+
+		final config:NoteSplashConfig = {
+			anim: configFile[0],
+			minFps: Std.parseInt(framerates[0]),
+			maxFps: Std.parseInt(framerates[1]),
+			offsets: offs
+		};
+		configs.set(skin, config);
+		return config;
+	}
+
 	public var rgbShader:PixelSplashShaderRef;
 	var _textureLoaded:String = null;
 	var _configLoaded:String = null;
-
-	inline public static final defaultNoteSplash:String = "noteSplashes/noteSplashes";
-	public static var configs:Map<String, NoteSplashConfig> = [];
 
 	public var order:Int = 0;
 
@@ -35,11 +69,12 @@ class NoteSplash extends FlxSprite implements ISortable
 		// scrollFactor.set();
 	}
 
-	/*override function destroy()
+	override function destroy()
 	{
-		configs.clear();
+		// configs.clear();
+		rgbShader = null;
 		super.destroy();
-	}*/
+	}
 
 	var maxAnims:Int = 2;
 	public function setupNoteSplash(x:Float, y:Float, direction:Int = 0, ?note:Note)
@@ -110,11 +145,6 @@ class NoteSplash extends FlxSprite implements ISortable
 			animation.curAnim.frameRate = FlxG.random.int(minFps, maxFps);
 	}
 
-	inline public static function getSplashSkinPostfix()
-	{
-		return ClientPrefs.data.splashSkin == ClientPrefs.defaultData.splashSkin ? "" : "-" + ClientPrefs.data.splashSkin.toLowerCase().replace(" ", "_");
-	}
-
 	function loadAnims(skin:String, ?animName:String):NoteSplashConfig
 	{
 		maxAnims = 0;
@@ -146,34 +176,6 @@ class NoteSplash extends FlxSprite implements ISortable
 		}
 	}
 
-	public static function precacheConfig(skin:String):NoteSplashConfig
-	{
-		if (configs.exists(skin))
-			return configs.get(skin);
-
-		final path = Paths.getPath('images/$skin.txt', TEXT, true);
-		final configFile = CoolUtil.coolTextFile(path);
-		if (configFile.length < 1)
-			return null;
-		
-		final framerates = configFile[1].split(" ");
-		final offs:Array<Array<Float>> = [];
-		for (i in 2...configFile.length)
-		{
-			final animOffs = configFile[i].split(" ");
-			offs.push([Std.parseFloat(animOffs[0]), Std.parseFloat(animOffs[1])]);
-		}
-
-		final config:NoteSplashConfig = {
-			anim: configFile[0],
-			minFps: Std.parseInt(framerates[0]),
-			maxFps: Std.parseInt(framerates[1]),
-			offsets: offs
-		};
-		configs.set(skin, config);
-		return config;
-	}
-
 	function addAnimAndCheck(name:String, anim:String, ?framerate:Int = 24, ?loop:Bool = false)
 	{
 		if (!frames.framesHash.exists(anim + "0000"))
@@ -183,8 +185,7 @@ class NoteSplash extends FlxSprite implements ISortable
 		return true;
 	}
 
-	static var aliveTime:Float = 0;
-	static final buggedKillTime:Float = 0.5; //automatically kills note splashes if they break to prevent it from flooding your HUD
+	var aliveTime:Float = 0;
 	override function update(elapsed:Float)
 	{
 		if (alive && (aliveTime += elapsed) >= buggedKillTime)

@@ -9,9 +9,10 @@ import sys.FileSystem;
 #end
 import openfl.utils.Assets;
 
+@:allow(states.editors.CharacterEditorState)
 class Character extends objects.ExtendedSprite
 {
-	inline public static final DEFAULT_CHARACTER:String = "bf"; //In case a character is missing, it will use BF on its place
+	inline public static final DEFAULT_CHARACTER = "bf"; //In case a character is missing, it will use BF on its place
 
 	public static function resolveCharacterData(data:CharacterData):CharacterFile
 	{
@@ -38,12 +39,12 @@ class Character extends objects.ExtendedSprite
 		return cast data;
 	}
 
-	public var debugMode:Bool = false;
-
+	public var hasMissAnimations(default, null):Bool = false;
+	public var animationsArray:Array<AnimArray> = [];
 	public var isPlayer(default, set):Bool;
 	public var curCharacter:String;
 
-	public var colorTween:FlxTween;
+	// public var colorTween:FlxTween;
 	public var holdTimer:Float = 0;
 	public var heyTimer:Float = 0;
 	public var specialAnim:Bool = false;
@@ -54,29 +55,31 @@ class Character extends objects.ExtendedSprite
 	public var skipDance:Bool = false;
 
 	public var healthIcon:String = "face";
-	public var animationsArray:Array<AnimArray> = [];
+	public var healthColor:FlxColor = FlxColor.RED;
 
-	public var positionArray:Array<Float> = [0, 0];
-	public var cameraPosition:Array<Float> = [0, 0];
-	public var hasMissAnimations(default, null):Bool = false;
+	public var camFollow(default, null):FlxObject = new FlxObject(0, 0, 1, 1);
+	public var cameraOffset:FlxPoint = FlxPoint.get();
+	public var position:FlxPoint = FlxPoint.get();
 
 	// Used on Character Editor
-	public var imageFile:String = "";
-	public var jsonScale:Float = 1;
-	public var noAntialiasing:Bool = false;
-	public var originalFlipX:Bool = false;
-	public var originalFlipY:Bool = false;
-	public var healthColor:FlxColor = FlxColor.RED;
-	public var healthColorArray(get, set):Array<Int>;
+	var imageFile = "";
+	var jsonScale = 1.;
+	var noAntialiasing = false;
+	var originalFlipX = false;
+	var originalFlipY = false;
 
-	public var camFollow(default, null):FlxObject;
-	public var camFollowOffset(default, null):FlxPoint;
+	@:allow(states.PlayState)
+	var camFollowOffset(default, null):FlxPoint;
+	var debugMode = false;
+
+	// DEPRECATED!!!!!
+	public var positionArray(get, set):Array<Float>;
+	public var cameraPosition(get, set):Array<Float>;
+	public var healthColorArray(get, set):Array<Int>;
 
 	public function new(x:Float, y:Float, ?character = DEFAULT_CHARACTER, ?isPlayer = false, ?allowGPU = true)
 	{
-		camFollow = new FlxObject(0, 0, 1, 1);
 		super(x, y);
-
 		camFollowOffset = new FlxCallbackPoint(updateCamFollow);
 		curCharacter = character;
 
@@ -109,13 +112,14 @@ class Character extends objects.ExtendedSprite
 		// if (json.scale != 1)
 		// {
 		jsonScale = json.scale;
-		setGraphicSize(Math.floor(width * jsonScale));
+		// setGraphicSize(width * jsonScale);
+		setScale(jsonScale);
 		updateHitbox();
 		// }
 
 		// positioning
-		positionArray = json.position;
-		cameraPosition = json.camera_position;
+		position.set(json.position[0], json.position[1]);
+		cameraOffset.set(json.camera_position[0], json.camera_position[1]);
 
 		// data
 		healthIcon = json.healthicon;
@@ -218,17 +222,20 @@ class Character extends objects.ExtendedSprite
 	{
 		getMidpoint(__midpoint);
 		camFollow.setPosition(
-			__midpoint.x + (isPlayer ? -cameraPosition[0] : cameraPosition[0]) + camFollowOffset.x,
-			__midpoint.y + cameraPosition[1] + camFollowOffset.y
+			__midpoint.x + (isPlayer ? -cameraOffset.x : cameraOffset.x) + camFollowOffset.x,
+			__midpoint.y + cameraOffset.y + camFollowOffset.y
 		);
 	}
 
 	override public function destroy()
 	{
 		super.destroy();
-		__midpoint = FlxDestroyUtil.destroy(__midpoint);
-		camFollow = FlxDestroyUtil.destroy(camFollow);
 		camFollowOffset = FlxDestroyUtil.destroy(camFollowOffset);
+		camFollow = FlxDestroyUtil.destroy(camFollow);
+
+		cameraOffset = FlxDestroyUtil.put(cameraOffset);
+		__midpoint = FlxDestroyUtil.put(__midpoint);
+		position = FlxDestroyUtil.put(position);
 	}
 
 	public var danced:Bool = false;
@@ -263,12 +270,6 @@ class Character extends objects.ExtendedSprite
 			return;
 		}
 		animation.play(animName, force, reversed, frame);
-		
-		// updateOfssets();
-		/*if (animOffsets.exists(animName))
-			offset.copyFrom(animOffsets.get(animName));
-		else
-			offset.set();*/
 
 		if (curCharacter.startsWith("gf") || danceIdle) // idk
 			switch (animName)
@@ -278,12 +279,6 @@ class Character extends objects.ExtendedSprite
 				case "singUP" | "singDOWN":	 danced = !danced;
 			}
 	}
-	
-	// кто тут насрал????😬😬😱
-	/*inline function sortAnims(obj1:Array<Dynamic>, obj2:Array<Dynamic>):Int
-	{
-		return FlxSort.byValues(FlxSort.ASCENDING, obj1[0], obj2[0]);
-	}*/
 
 	var settingCharacterUp = true;
 	public var danceEveryNumBeats:Int = 2;
@@ -389,6 +384,38 @@ class Character extends objects.ExtendedSprite
 	@:noCompletion inline function set_healthColorArray(value:Array<Int>):Array<Int>
 	{
 		healthColor = FlxColor.fromRGB(value[0], value[1], value[2]);
+		return value;
+	}
+
+	@:noCompletion inline function get_positionArray():Array<Float>
+	{
+		return [position.x, position.y];
+	}
+
+	@:noCompletion inline function set_positionArray(value:Array<Float>):Array<Float>
+	{
+		if (value != null)
+		{
+			position.x = value[0];
+			if (value.length > 1)
+				position.y = value[1];
+		}
+		return value;
+	}
+
+	@:noCompletion inline function get_cameraPosition():Array<Float>
+	{
+		return [cameraOffset.x, cameraOffset.y];
+	}
+
+	@:noCompletion inline function set_cameraPosition(value:Array<Float>):Array<Float>
+	{
+		if (value != null)
+		{
+			cameraOffset.x = value[0];
+			if (value.length > 1)
+				cameraOffset.y = value[1];
+		}
 		return value;
 	}
 }

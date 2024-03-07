@@ -242,7 +242,7 @@ class ChartingState extends MusicBeatUIState
 		nextRenderedSustains = new FlxTypedGroup<FlxSprite>();
 		nextRenderedNotes = new FlxTypedGroup<Note>();
 
-		//FlxG.mouse.visible = true;
+		// FlxG.mouse.visible = true;
 
 		currentSongName = Paths.formatToSongPath(_song.song);
 		loadSong();
@@ -1609,7 +1609,7 @@ class ChartingState extends MusicBeatUIState
 			if (FlxG.keys.justPressed.ENTER)
 			{
 				autosaveSong();
-				//FlxG.mouse.visible = false;
+				// FlxG.mouse.visible = false;
 				PlayState.SONG = _song;
 				FlxG.sound.music.stop();
 				if(vocals != null) vocals.stop();
@@ -1631,7 +1631,7 @@ class ChartingState extends MusicBeatUIState
 				PlayState.chartingMode = false;
 				MusicBeatState.switchState(states.editors.MasterEditorMenu.new);
 				FlxG.sound.playMusic(Paths.music('freakyMenu'));
-				//FlxG.mouse.visible = false;
+				// FlxG.mouse.visible = false;
 				return;
 			}
 

@@ -15,9 +15,6 @@ class VideoHandler extends vlc.bitmap.VlcBitmap
 
 	var pauseMusic:Bool;
 
-	var controls(get, never):Controls;
-	@:noCompletion inline function get_controls():Controls return Controls.instance;
-
 	public function new(width:Float = 320, height:Float = 240, autoScale:Bool = true)
 	{
 		super(width, height, autoScale);
@@ -39,7 +36,7 @@ class VideoHandler extends vlc.bitmap.VlcBitmap
 
 	function update(e:Event)
 	{
-		if ((controls.ACCEPT || controls.PAUSE) && isPlaying)
+		if ((Controls.instance.ACCEPT || Controls.instance.PAUSE) && isPlaying)
 			finishVideo();
 
 		volume = (FlxG.sound.muted || FlxG.sound.volume <= 0 ? 0 : FlxG.sound.volume + 0.4);
@@ -94,6 +91,8 @@ class VideoHandler extends vlc.bitmap.VlcBitmap
 			if (finishCallback != null)
 				finishCallback();
 		}
+		readyCallback = null;
+		finishCallback = null;
 	}
 
 	/**

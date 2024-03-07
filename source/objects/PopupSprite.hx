@@ -67,11 +67,11 @@ class PopupSprite extends ExtendedSprite implements ISortable
 
 	override public function destroy():Void
 	{
-		super.destroy();
-		//_spawnPos = FlxDestroyUtil.put(_spawnPos);
-		_speed = FlxDestroyUtil.destroy(_speed);
 		FlxDestroyUtil.putArray([_angleSpeed.min, _angleSpeed.max]);
+		fadeTween = FlxDestroyUtil.destroy(fadeTween);
+		_speed = FlxDestroyUtil.destroy(_speed);
 		_angleSpeed = null;
+		super.destroy();
 	}
 
 	public function resetMovement():Void

@@ -448,7 +448,7 @@ class Note extends FlxSprite implements INote
 
 		clipRect = FlxDestroyUtil.put(clipRect);
 		extraData = CoolUtil.clear(extraData);
-		// noteSplashData = null; // fucks up notesplashes (lmao)
+		noteSplashData = null; // fucks up notesplashes (lmao)
 		rgbShader = null;
 		prevNote = null;
 		nextNote = null;

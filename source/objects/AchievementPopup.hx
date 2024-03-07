@@ -48,7 +48,8 @@ class AchievementPopup extends FlxSpriteGroup
 					{
 						alphaTween = null;
 						remove(this);
-						if (onFinish != null) onFinish();
+						if (onFinish != null)
+							onFinish();
 					}
 				});
 			}});
@@ -56,7 +57,12 @@ class AchievementPopup extends FlxSpriteGroup
 
 	override function destroy()
 	{
-		if (alphaTween != null) alphaTween.cancel();
+		if (alphaTween != null)
+		{
+			alphaTween.cancel();
+			alphaTween = flixel.util.FlxDestroyUtil.destroy(alphaTween);
+		}
+		onFinish = null;
 		super.destroy();
 	}
 }

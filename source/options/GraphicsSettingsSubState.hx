@@ -78,4 +78,10 @@ class GraphicsSettingsSubState extends BaseOptionsMenu
 		super.changeSelection(change);
 		spr.visible = (antialiasingOption == curSelected);
 	}
+
+	override function destroy()
+	{
+		spr = flixel.util.FlxDestroyUtil.destroy(spr);
+		super.destroy();
+	}
 }

@@ -23,26 +23,22 @@ class GameCamera extends FlxCamera
 	public var cameraSpeed:Float = 1.0;
 
 	/**
-		Should camera lerp be updated via `update()`.
+		Should camera lerp be abjusted via `update()`.
 	**/
 	public var updateLerp(default, set):Bool;
 
 	/**
 		Awfull for optimisation, better for the eyes.
 	**/
-	public var tweeningZoom(get, never):Bool;
-
-	// okay i actually optimized it???? (kinda)
-	var __prevTweening = false;
-	var __updateTimer = true;
-	var __tweenTimer = 0.;
+	public var tweeningZoom(default, null):Bool;
+	@:noCompletion var __tweenTimer = 0.; // okay i actually optimized it???? (kinda)
 
 	// internal values
 	@:allow(substates.GameOverSubstate)
-	var _speed:Float = 2.4;
-	var _zoomSpeed:Float = 3.2;
+	@:noCompletion var _speed = 2.4;
+	@:noCompletion var _zoomSpeed = 3.2;
 
-	public function new(zoom = 0.0, bgAlpha = 1.0, updateLerp = false, updateZoom = false):Void
+	public function new(zoom = 0., bgAlpha = 1., updateLerp = false, updateZoom = false):Void
 	{
 		super(0, 0, 0, 0, zoom);
 		bgColor.alphaFloat = bgAlpha;
@@ -50,13 +46,20 @@ class GameCamera extends FlxCamera
 		this.updateZoom = updateZoom;
 	}
 
+	@:access(flixel.tweens.FlxTweenManager.forEachTweensOf)
 	override public function update(elapsed:Float):Void
 	{
 		if (!active)
 			return;
 
-		// update tween timer once per frame
-		__updateTimer = true;
+		// once per half of current framerate (hope it won't backfire tho)
+		final delay = 1 / (Main.fpsVar.currentFPS * .5);
+		if ((__tweenTimer += FlxG.elapsed) > delay)
+		{
+			__tweenTimer -= delay;
+			tweeningZoom = false;
+			FlxTween.globalManager.forEachTweensOf(this, ["zoom"], (_) -> tweeningZoom = true);
+		}
 
 		if (target != null && updateLerp)
 			followLerp = elapsed * _speed * cameraSpeed * (FlxG.updateFramerate / 60);
@@ -67,36 +70,23 @@ class GameCamera extends FlxCamera
 		super.update(elapsed);
 	}
 
-	@:access(flixel.tweens.FlxTweenManager)
-	@:noCompletion /*inline*/ function get_tweeningZoom():Bool // it hurts my eyes but i hope it will do the trick
-	{
-		// once per half of framerate cap (basically every second frame)
-		final delay = 1 / (FlxG.updateFramerate * .5);
-		if (__updateTimer && (__tweenTimer += FlxG.elapsed) < delay)
-		{
-			// pretty smart i think??? maybe i can de better??????
-			// nah, will do for now
-			__updateTimer = false;
-			return __prevTweening;
-		}
-
-		__tweenTimer -= delay;
-		var ret = false;
-		FlxTween.globalManager.forEachTweensOf(this, ["zoom"], (_) -> ret = true);
-		return __prevTweening = ret;
-	}
-
-	@:noCompletion inline override function set_active(bool:Bool):Bool
+	@:noCompletion /*inline*/ override function set_active(bool:Bool):Bool
 	{
 		if (!bool)
+		{
 			followLerp = 0;
+			tweeningZoom = false;
+		}
 		return active = bool;
 	}
 
-	@:noCompletion inline function set_updateLerp(bool:Bool):Bool
+	@:noCompletion /*inline*/ function set_updateLerp(bool:Bool):Bool
 	{
 		if (!bool)
+		{
 			followLerp = 0;
+			tweeningZoom = false;
+		}
 		return updateLerp = bool;
 	}
 }

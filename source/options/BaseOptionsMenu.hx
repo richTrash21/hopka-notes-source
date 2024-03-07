@@ -1,5 +1,6 @@
 package options;
 
+import flixel.util.FlxDestroyUtil;
 import flixel.addons.display.FlxGridOverlay;
 import flixel.addons.display.FlxBackdrop;
 
@@ -205,6 +206,21 @@ class BaseOptionsMenu extends MusicBeatSubstate
 		if (nextAccept > 0)
 			--nextAccept;
 		super.update(elapsed);
+	}
+
+	override function destroy()
+	{
+		while (optionsArray.length > 0)
+			FlxDestroyUtil.destroy(optionsArray.pop());
+
+		optionsArray = null;
+		curOption = FlxDestroyUtil.destroy(curOption);
+		grpOptions = FlxDestroyUtil.destroy(grpOptions);
+		checkboxGroup = FlxDestroyUtil.destroy(checkboxGroup);
+		grpTexts = FlxDestroyUtil.destroy(grpTexts);
+		descBox = FlxDestroyUtil.destroy(descBox);
+		descText = FlxDestroyUtil.destroy(descText);
+		super.destroy();
 	}
 
 	function updateTextFrom(option:Option)

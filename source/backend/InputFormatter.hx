@@ -1,175 +1,181 @@
 package backend;
 
-import flixel.input.gamepad.FlxGamepad;
+import flixel.input.gamepad.FlxGamepadInputID;
+import flixel.input.keyboard.FlxKey;
 
-class InputFormatter {
-	public static function getKeyName(key:flixel.input.keyboard.FlxKey):String
+class InputFormatter
+{
+	public static function getKeyName(key:FlxKey):String
 	{
-		switch (key)
+		return switch (key)
 		{
-			case BACKSPACE:			return "BckSpc";
-			case CONTROL:			return "Ctrl";
-			case ALT:				return "Alt";
-			case CAPSLOCK:			return "Caps";
-			case PAGEUP:			return "PgUp";
-			case PAGEDOWN:			return "PgDown";
-			case ZERO:				return "0";
-			case ONE:				return "1";
-			case TWO:				return "2";
-			case THREE:				return "3";
-			case FOUR:				return "4";
-			case FIVE:				return "5";
-			case SIX:				return "6";
-			case SEVEN:				return "7";
-			case EIGHT:				return "8";
-			case NINE:				return "9";
-			case NUMPADZERO:		return "#0";
-			case NUMPADONE:			return "#1";
-			case NUMPADTWO:			return "#2";
-			case NUMPADTHREE:		return "#3";
-			case NUMPADFOUR:		return "#4";
-			case NUMPADFIVE:		return "#5";
-			case NUMPADSIX:			return "#6";
-			case NUMPADSEVEN:		return "#7";
-			case NUMPADEIGHT:		return "#8";
-			case NUMPADNINE:		return "#9";
-			case NUMPADMULTIPLY:	return "#*";
-			case NUMPADPLUS:		return "#+";
-			case NUMPADMINUS:		return "#-";
-			case NUMPADPERIOD:		return "#.";
-			case SEMICOLON:			return ";";
-			case COMMA:				return ",";
-			case PERIOD:			return ".";
-//			case SLASH:				return "/";
-			case GRAVEACCENT:		return "`";
-			case LBRACKET:			return "[";
-//			case BACKSLASH:			return "\\";
-			case RBRACKET:			return "]";
-			case QUOTE:				return "'";
-			case PRINTSCREEN:		return "PrtScrn";
-			case NONE:				return '---';
-
-			default:
-				var label:String = Std.string(key);
-				if(label.toLowerCase() == 'null') return '---';
-
-				var arr:Array<String> = label.split('_');
-				for (i in 0...arr.length) arr[i] = CoolUtil.capitalize(arr[i]);
-				return arr.join(' ');
+			case BACKSPACE:			"BckSpc";
+			case CONTROL:			"Ctrl";
+			case ALT:				"Alt";
+			case CAPSLOCK:			"Caps";
+			case PAGEUP:			"PgUp";
+			case PAGEDOWN:			"PgDown";
+			case ZERO:				"0";
+			case ONE:				"1";
+			case TWO:				"2";
+			case THREE:				"3";
+			case FOUR:				"4";
+			case FIVE:				"5";
+			case SIX:				"6";
+			case SEVEN:				"7";
+			case EIGHT:				"8";
+			case NINE:				"9";
+			case NUMPADZERO:		"#0";
+			case NUMPADONE:			"#1";
+			case NUMPADTWO:			"#2";
+			case NUMPADTHREE:		"#3";
+			case NUMPADFOUR:		"#4";
+			case NUMPADFIVE:		"#5";
+			case NUMPADSIX:			"#6";
+			case NUMPADSEVEN:		"#7";
+			case NUMPADEIGHT:		"#8";
+			case NUMPADNINE:		"#9";
+			case NUMPADMULTIPLY:	"#*";
+			case NUMPADPLUS:		"#+";
+			case NUMPADMINUS:		"#-";
+			case NUMPADPERIOD:		"#.";
+			case SEMICOLON:			";";
+			case COMMA:				",";
+			case PERIOD:			".";
+//			case SLASH:				"/";
+			case GRAVEACCENT:		"`";
+			case LBRACKET:			"[";
+//			case BACKSLASH:			"\\";
+			case RBRACKET:			"]";
+			case QUOTE:				"'";
+			case PRINTSCREEN:		"PrtScrn";
+			case NONE:				"---";
+			default:				__keyToString(key);
 		}
 	}
 
-	public static function getGamepadName(key:flixel.input.gamepad.FlxGamepadInputID)
+	public static function getGamepadName(key:FlxGamepadInputID)
 	{
-		var gamepad:flixel.input.gamepad.FlxGamepad = FlxG.gamepads.firstActive;
-		var model:FlxGamepadModel = gamepad != null ? gamepad.detectedModel : UNKNOWN;
-
-		switch(key)
+		final model = FlxG.gamepads.firstActive?.detectedModel ?? UNKNOWN;
+		return switch (key)
 		{
 			// Analogs
-			case LEFT_STICK_DIGITAL_LEFT:	return "Left";
-			case LEFT_STICK_DIGITAL_RIGHT:	return "Right";
-			case LEFT_STICK_DIGITAL_UP:		return "Up";
-			case LEFT_STICK_DIGITAL_DOWN:	return "Down";
+			case LEFT_STICK_DIGITAL_LEFT:  "Left";
+			case LEFT_STICK_DIGITAL_RIGHT: "Right";
+			case LEFT_STICK_DIGITAL_UP:    "Up";
+			case LEFT_STICK_DIGITAL_DOWN:  "Down";
 
-			case LEFT_STICK_CLICK:
-				switch (model) {
-					case PS4: return "L3";
-					case XINPUT: return "LS";
-					default: return "Analog Click";
-				}
+			case LEFT_STICK_CLICK: switch (model)
+					{
+						case PS4:	 "L3";
+						case XINPUT: "LS";
+						default:	 "Analog Click";
+					}
 
-			case RIGHT_STICK_DIGITAL_LEFT:	return "C. Left";
-			case RIGHT_STICK_DIGITAL_RIGHT:	return "C. Right";
-			case RIGHT_STICK_DIGITAL_UP:	return "C. Up";
-			case RIGHT_STICK_DIGITAL_DOWN:	return "C. Down";
+			case RIGHT_STICK_DIGITAL_LEFT:	"C. Left";
+			case RIGHT_STICK_DIGITAL_RIGHT:	"C. Right";
+			case RIGHT_STICK_DIGITAL_UP:	"C. Up";
+			case RIGHT_STICK_DIGITAL_DOWN:	"C. Down";
 
-			case RIGHT_STICK_CLICK:
-				switch (model) {
-					case PS4: return "R3";
-					case XINPUT: return "RS";
-					default: return "C. Click";
-				}
+			case RIGHT_STICK_CLICK: switch (model)
+					{
+						case PS4:	 "R3";
+						case XINPUT: "RS";
+						default:	 "C. Click";
+					}
 
 			// Directional
-			case DPAD_LEFT:		return "D. Left";
-			case DPAD_RIGHT:	return "D. Right";
-			case DPAD_UP:		return "D. Up";
-			case DPAD_DOWN:		return "D. Down";
+			case DPAD_LEFT:  "D. Left";
+			case DPAD_RIGHT: "D. Right";
+			case DPAD_UP:    "D. Up";
+			case DPAD_DOWN:  "D. Down";
 
 			// Top buttons
-			case LEFT_SHOULDER:
-				switch(model) {
-					case PS4: return "L1";
-					case XINPUT: return "LB";
-					default: return "L. Bumper";
-				}
-			case RIGHT_SHOULDER:
-				switch(model) {
-					case PS4: return "R1";
-					case XINPUT: return "RB";
-					default: return "R. Bumper";
-				}
-			case LEFT_TRIGGER, LEFT_TRIGGER_BUTTON:
-				switch(model) {
-					case PS4: return "L2";
-					case XINPUT: return "LT";
-					default: return "L. Trigger";
-				}
-			case RIGHT_TRIGGER, RIGHT_TRIGGER_BUTTON:
-				switch(model) {
-					case PS4: return "R2";
-					case XINPUT: return "RT";
-					default: return "R. Trigger";
-				}
+			case LEFT_SHOULDER: switch (model)
+					{
+						case PS4:	 "L1";
+						case XINPUT: "LB";
+						default:	 "L. Bumper";
+					}
+
+			case RIGHT_SHOULDER: switch (model)
+					{
+						case PS4:	 "R1";
+						case XINPUT: "RB";
+						default:	 "R. Bumper";
+					}
+
+			case LEFT_TRIGGER, LEFT_TRIGGER_BUTTON: switch (model)
+					{
+						case PS4:	 "L2";
+						case XINPUT: "LT";
+						default:	 "L. Trigger";
+					}
+
+			case RIGHT_TRIGGER, RIGHT_TRIGGER_BUTTON: switch (model)
+					{
+						case PS4:	 "R2";
+						case XINPUT: "RT";
+						default:	 "R. Trigger";
+					}
 
 			// Buttons
-			case A:
-				switch (model) {
-					case PS4: return "X";
-					case XINPUT: return "A";
-					default: return "Action Down";
-				}
-			case B:
-				switch (model) {
-					case PS4: return "O";
-					case XINPUT: return "B";
-					default: return "Action Right";
-				}
-			case X:
-				switch (model) {
-					case PS4: return "["; //This gets its image changed through code
-					case XINPUT: return "X";
-					default: return "Action Left";
-				}
-			case Y:
-				switch (model) { 
-					case PS4: return "]"; //This gets its image changed through code
-					case XINPUT: return "Y";
-					default: return "Action Up";
-				}
+			case A: switch (model)
+					{
+						case PS4:	 "X";
+						case XINPUT: "A";
+						default:	 "Action Down";
+					}
 
-			case BACK:
-				switch(model) {
-					case PS4: return "Share";
-					case XINPUT: return "Back";
-					default: return "Select";
-				}
-			case START:
-				switch(model) {
-					case PS4: return "Options";
-					default: return "Start";
-				}
+			case B: switch (model)
+					{
+						case PS4:	 return "O";
+						case XINPUT: return "B";
+						default:	 "Action Right";
+					}
 
-			case NONE:	return '---';
+			case X: switch (model)
+					{
+						case PS4:	 "["; // This gets its image changed through code
+						case XINPUT: "X";
+						default:	 "Action Left";
+					}
 
-			default:
-				var label:String = Std.string(key);
-				if(label.toLowerCase() == 'null') return '---';
+			case Y: switch (model)
+					{ 
+						case PS4: return "]"; // This gets its image changed through code
+						case XINPUT: return "Y";
+						default: return "Action Up";
+					}
 
-				var arr:Array<String> = label.split('_');
-				for (i in 0...arr.length) arr[i] = CoolUtil.capitalize(arr[i]);
-				return arr.join(' ');
+			case BACK: switch (model)
+					{
+						case PS4:	 "Share";
+						case XINPUT: "Back";
+						default:	 "Select";
+					}
+
+			case START: switch (model)
+					{
+						case PS4: "Options";
+						default:  "Start";
+					}
+
+			case NONE: "---";
+			default: __keyToString(key);
 		}
+	}
+
+	inline static function __keyToString(key:haxe.extern.EitherType<FlxKey, FlxGamepadInputID>):String
+	{
+		final label = Std.string(key);
+		if (label.toLowerCase() == "null")
+			return "---";
+
+		final arr = label.split("_");
+		for (i in 0...arr.length)
+			arr[i] = CoolUtil.capitalize(arr[i]);
+
+		return arr.join(" ");
 	}
 }

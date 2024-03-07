@@ -12,7 +12,7 @@ typedef SwagSection =
 	var altAnim:Bool;
 }
 
-class Section
+@:structInit class Section
 {
 	public var sectionNotes:Array<Dynamic> = [];
 
@@ -26,9 +26,9 @@ class Section
 	 */
 	public static var COPYCAT:Int = 0;
 
-	public function new(sectionBeats:Float = 4)
+	public function new(sectionBeats = 4.)
 	{
 		this.sectionBeats = sectionBeats;
-		trace('test created section: ' + sectionBeats);
+		trace('test created section: $sectionBeats');
 	}
 }

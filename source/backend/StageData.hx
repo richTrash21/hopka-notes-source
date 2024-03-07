@@ -26,7 +26,6 @@ typedef StageFile = {
 
 class StageData
 {
-
 	inline public static function dummy():StageFile
 	{
 		return {
@@ -47,32 +46,31 @@ class StageData
 		};
 	}
 
-	public static var forceNextDirectory:String = null;
+	public static var forceNextDirectory:String;
 	public static function loadDirectory(SONG:backend.Song)
 	{
-		var stage:String = 'stage';
-		if(SONG.stage != null)
-			stage = SONG.stage;
-		else if(SONG.song != null)
-			stage = 'stage';
+		// final stage = SONG.stage ?? "stage";
+		/*if (SONG.stage != null)
+		 	stage = SONG.stage;
+		else if (SONG.song != null)
+		 	stage = "stage";*/
 
-		final stageFile:StageFile = getStageFile(stage);
-		forceNextDirectory = stageFile?.directory ?? ''; //preventing crashes
+		forceNextDirectory = getStageFile(SONG.stage ?? "stage")?.directory ?? ""; // preventing crashes
 	}
 
 	inline public static function getStageFile(stage:String):StageFile
 	{
 		var rawJson:String = null;
-		final path:String = Paths.getPreloadPath('stages/$stage.json');
-
+		final path = Paths.getPreloadPath('stages/$stage.json');
 		#if MODS_ALLOWED
-		final modPath:String = Paths.modFolders('stages/$stage.json');
+		final modPath = Paths.modFolders('stages/$stage.json');
 		if (FileSystem.exists(modPath))
 			rawJson = File.getContent(modPath);
 		else if (FileSystem.exists(path))
 			rawJson = File.getContent(path);
 		#else
-		if (Assets.exists(path)) rawJson = Assets.getText(path);
+		if (Assets.exists(path))
+			rawJson = Assets.getText(path);
 		#end
 
 		return rawJson == null ? null : cast haxe.Json.parse(rawJson);
@@ -80,5 +78,7 @@ class StageData
 
 	// LMFAOOOOOOOOOOOOOOOOOO GET BUTCHERED!!!!!!!!!!!!
 	inline public static function vanillaSongStage(songName):String
-		return 'stage';
+	{
+		return "stage";
+	}
 }

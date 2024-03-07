@@ -17,7 +17,7 @@ class AttachedText extends Alphabet
 		this.offsetY = offsetY;
 	}
 
-	override function draw()
+	override function update(elapsed:Float)
 	{
 		if (sprTracker != null)
 		{
@@ -25,6 +25,12 @@ class AttachedText extends Alphabet
 			if (copyVisible) visible = sprTracker.visible;
 			if (copyAlpha)	 alpha = sprTracker.alpha;
 		}
-		super.draw();
+		super.update(elapsed);
+	}
+
+	override function destroy()
+	{
+		sprTracker = null;
+		super.destroy();
 	}
 }

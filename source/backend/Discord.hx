@@ -8,10 +8,14 @@ class DiscordClient
 	private static var _defaultID:String = "1141827456693711011";
 	public static var clientID(default, set):String = _defaultID;
 
-	private static var _options:Dynamic = {
+	// I HAVE TO ADD EVERY SINGLE FUCKING ICON INTO THIS BY MYSELF, FUCKING HELL
+	static final VALID_ICONS = ["blue", "clickbait", "false", "gothic", "hodgepodge", "lipped-letters", "red-cut"];
+	inline static final DEFAULT_ICON = "icon";
+
+	private static var _options:DiscordPresenceOptions = {
 		details: "In the Menus",
 		state: null,
-		largeImageKey: 'icon',
+		largeImageKey: DEFAULT_ICON,
 		largeImageText: "HopKa Notes",
 		smallImageKey : null,
 		startTimestamp : null,
@@ -21,55 +25,65 @@ class DiscordClient
 	public function new()
 	{
 		trace("Discord Client starting...");
-		DiscordRpc.start({
-			clientID: clientID,
-			onReady: onReady,
-			onError: onError,
-			onDisconnected: onDisconnected
-		});
-		trace("Discord Client started.");
-
-		var localID:String = clientID;
-		while (localID == clientID)
+		try // i need to test smth
 		{
-			DiscordRpc.process();
-			Sys.sleep(2);
-			//trace('Discord Client Update $localID');
-		}
+			DiscordRpc.start({
+				clientID: clientID,
+				onReady: onReady,
+				onError: onError,
+				onDisconnected: onDisconnected
+			});
+			trace("Discord Client started.");
 
-		//DiscordRpc.shutdown();
+			final localID = clientID;
+			while (localID == clientID)
+			{
+				DiscordRpc.process();
+				Sys.sleep(2);
+				// trace('Discord Client Update $localID');
+			}
+		}
+		catch(e)
+			throw "DISCORD RPC ERROR!! - " + e.message;
+		// DiscordRpc.shutdown();
 	}
 
 	public static function check()
 	{
-		if(!ClientPrefs.data.discordRPC)
+		if (!ClientPrefs.data.discordRPC)
 		{
-			if(isInitialized) shutdown();
+			if (isInitialized)
+				shutdown();
 			isInitialized = false;
 		}
-		else start();
+		else
+			start();
 	}
 	
 	public static function start()
 	{
-		if (!isInitialized && ClientPrefs.data.discordRPC) {
+		if (!isInitialized && ClientPrefs.data.discordRPC)
+		{
 			initialize();
 			lime.app.Application.current.window.onClose.add(shutdown);
 		}
 	}
 
-	public static function shutdown()
+	inline public static function shutdown()
+	{
 		DiscordRpc.shutdown();
+	}
 
-	static function onReady()
+	inline function onReady()
+	{
 		DiscordRpc.presence(_options);
+	}
 
 	private static function set_clientID(newID:String)
 	{
-		var change:Bool = (clientID != newID);
+		final change = (clientID != newID);
 		clientID = newID;
-
-		if(change && isInitialized)
+		if (change && isInitialized)
 		{
 			shutdown();
 			isInitialized = false;
@@ -79,53 +93,56 @@ class DiscordClient
 		return newID;
 	}
 
-	static function onError(_code:Int, _message:String)
+	inline function onError(_code:Int, _message:String)
+	{
 		trace('Error! $_code : $_message');
+	}
 
-	static function onDisconnected(_code:Int, _message:String)
+	inline function onDisconnected(_code:Int, _message:String)
+	{
 		trace('Disconnected! $_code : $_message');
+	}
 
 	public static function initialize()
 	{
-		
-		var DiscordDaemon = sys.thread.Thread.create(() ->
-		{
-			new DiscordClient();
-		});
+		final DiscordDaemon = sys.thread.Thread.create(DiscordClient.new);
 		trace("Discord Client initialized");
 		isInitialized = true;
 	}
 
-	public static function changePresence(details:String, state:Null<String>, ?smallImageKey : String, ?hasStartTimestamp : Bool, ?endTimestamp: Float)
+	public static function changePresence(details:String, ?state:String, ?smallImageKey:String, ?hasStartTimestamp:Bool, ?endTimestamp:Float, ?largeImageKey:String)
 	{
-		var startTimestamp:Float = 0;
-		if (hasStartTimestamp) startTimestamp = Date.now().getTime();
-		if (endTimestamp > 0) endTimestamp = startTimestamp + endTimestamp;
+		final startTimestamp:Null<Float> = hasStartTimestamp ? Date.now().getTime() : null;
+		if (endTimestamp > 0)
+			endTimestamp = startTimestamp + endTimestamp;
 
-		_options.details = details;
-		_options.state = state;
-		_options.largeImageKey = 'icon';
-		//_options.largeImageText = "Engine Version: " + states.MainMenuState.psychEngineVersion;
-		_options.smallImageKey = smallImageKey;
+		_options.details		= details;
+		_options.state			= state;
+		_options.largeImageKey	= VALID_ICONS.contains(largeImageKey) ? largeImageKey : DEFAULT_ICON;
+		// _options.largeImageText	= "Engine Version: " + states.MainMenuState.psychEngineVersion;
+		_options.smallImageKey	= smallImageKey;
+
 		// Obtained times are in milliseconds so they are divided so Discord can use it
-		_options.startTimestamp = Std.int(startTimestamp / 1000);
-		_options.endTimestamp = Std.int(endTimestamp / 1000);
+		_options.startTimestamp	= startTimestamp == null ? null : Std.int(startTimestamp * 0.001);
+		_options.endTimestamp	= endTimestamp == null ? null : Std.int(endTimestamp * 0.001);
 		DiscordRpc.presence(_options);
 
-		//trace('Discord RPC Updated. Arguments: $details, $state, $smallImageKey, $hasStartTimestamp, $endTimestamp');
+		// trace('Discord RPC Updated. Arguments: $details, $state, $smallImageKey, $hasStartTimestamp, $endTimestamp');
 	}
 	
 	public static function resetClientID()
+	{
 		clientID = _defaultID;
+	}
 
 	#if MODS_ALLOWED
 	public static function loadModRPC()
 	{
-		var pack:Dynamic = Mods.getPack();
-		if(pack != null && pack.discordRPC != null && pack.discordRPC != clientID)
+		final pack:Dynamic = Mods.getPack();
+		if (pack?.discordRPC != null && pack.discordRPC != clientID)
 		{
 			clientID = pack.discordRPC;
-			//trace('Changing clientID! $clientID, $_defaultID');
+			// trace('Changing clientID! $clientID, $_defaultID');
 		}
 	}
 	#end
@@ -133,10 +150,8 @@ class DiscordClient
 	#if LUA_ALLOWED
 	public static function implement(funk:psychlua.FunkinLua)
 	{
-		funk.set("changeDiscordPresence", function(details:String, state:Null<String>, ?smallImageKey:String, ?hasStartTimestamp:Bool, ?endTimestamp:Float)
-			changePresence(details, state, smallImageKey, hasStartTimestamp, endTimestamp)
-		);
-		funk.set("changeDiscordClientID", function(?newID:String = null) clientID = newID ?? _defaultID);
+		funk.set("changeDiscordPresence", changePresence);
+		funk.set("changeDiscordClientID", (?newID:String) -> clientID = newID ?? _defaultID);
 	}
 	#end
 }

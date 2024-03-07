@@ -23,24 +23,23 @@ class GameOverSubstate extends MusicBeatSubstate
 	public var boyfriend:Character;
 	public var camFollow(get, never):FlxObject;
 	public var updateCamera(default, set):Bool = false;
-	public final realCamera:GameCamera = cast FlxG.camera; // whoops😬
+	public var realCamera(default, null):GameCamera; // = cast FlxG.camera; // whoops😬
 
 	@:noCompletion inline function get_camFollow():FlxObject
+	{
 		return boyfriend.camFollow;
+	}
 
 	@:noCompletion inline function set_updateCamera(bool:Bool):Bool
 	{
-		if (updateCamera == bool)
-			return bool;
-
-		return realCamera.updateLerp = updateCamera = bool;
+		return updateCamera == bool ? bool : realCamera.updateLerp = updateCamera = bool;
 	}
 
 	// better structurised now
-	public static var characterName  = "bf-dead";
-	public static var deathSoundName = "fnf_loss_sfx";
-	public static var loopSoundName  = "gameOver";
-	public static var endSoundName   = "gameOverEnd";
+	public static var characterName  = DEFAULT_CHAR;
+	public static var deathSoundName = DEFAULT_SOUND;
+	public static var loopSoundName  = DEFAULT_LOOP;
+	public static var endSoundName   = DEFAULT_END;
 
 	public static var instance(default, null):GameOverSubstate;
 	public static var game(default, null):PlayState;
@@ -50,10 +49,10 @@ class GameOverSubstate extends MusicBeatSubstate
 		if (_song == null)
 			return;
 
-		characterName	= (_song.gameOverChar  == null || _song.gameOverChar.length  == 0) ? DEFAULT_CHAR  : _song.gameOverChar;
-		deathSoundName	= (_song.gameOverSound == null || _song.gameOverSound.length == 0) ? DEFAULT_SOUND : _song.gameOverSound;
-		loopSoundName	= (_song.gameOverLoop  == null || _song.gameOverLoop.length  == 0) ? DEFAULT_LOOP  : _song.gameOverLoop;
-		endSoundName	= (_song.gameOverEnd   == null || _song.gameOverEnd.length   == 0) ? DEFAULT_END   : _song.gameOverEnd;
+		characterName	= _song.gameOverChar?.length  == 0 ? DEFAULT_CHAR  : _song.gameOverChar;
+		deathSoundName	= _song.gameOverSound?.length == 0 ? DEFAULT_SOUND : _song.gameOverSound;
+		loopSoundName	= _song.gameOverLoop?.length  == 0 ? DEFAULT_LOOP  : _song.gameOverLoop;
+		endSoundName	= _song.gameOverEnd?.length   == 0 ? DEFAULT_END   : _song.gameOverEnd;
 
 		if (!PlayState.instance.boyfriendMap.exists(characterName))
 			PlayState.instance.addCharacterToList(characterName, 0);
@@ -67,6 +66,7 @@ class GameOverSubstate extends MusicBeatSubstate
 	{
 		instance = this;
 
+		realCamera = PlayState.instance.camGame;
 		realCamera.updateLerp = realCamera.updateZoom = false;
 		realCamera._speed *= 0.25;
 		realCamera.cameraSpeed = 1;
@@ -85,15 +85,17 @@ class GameOverSubstate extends MusicBeatSubstate
 		game.setOnScripts("inGameOver", true);
 		Conductor.songPosition = 0;
 
-		if(game.boyfriendMap.exists(characterName))
+		if (game.boyfriendMap.exists(characterName))
 		{
 			boyfriend = game.boyfriendMap.get(characterName);
 			boyfriend.setPosition(x, y);
 			boyfriend.alpha = 1;
 		}
-		else boyfriend = new Character(x, y, characterName, true);
-		boyfriend.x += boyfriend.positionArray[0];
-		boyfriend.y += boyfriend.positionArray[1];
+		else
+			boyfriend = new Character(x, y, characterName, true);
+
+		boyfriend.x += boyfriend.position.x;
+		boyfriend.y += boyfriend.position.y;
 		add(boyfriend);
 
 		FlxG.sound.play(Paths.sound(deathSoundName));

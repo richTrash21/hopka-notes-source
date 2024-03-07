@@ -40,4 +40,10 @@ class AttachedSprite extends FlxSprite
 		}
 		super.update(elapsed);
 	}
+
+	override function destroy()
+	{
+		sprTracker = null;
+		super.destroy();
+	}
 }

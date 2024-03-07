@@ -14,10 +14,8 @@ You've been warned!";
 	override function create()
 	{
 		if (leftState)
-		{
-			__next();
-			return;
-		}
+			return __next();
+
 		add(new FlxText(0, 0, FlxG.width,WARN_TEXT, 32).setFormat("VCR OSD Mono", 32, FlxColor.WHITE, CENTER).screenCenter());
 	}
 

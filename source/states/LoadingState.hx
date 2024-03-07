@@ -1,296 +1,385 @@
 package states;
 
+import sys.io.File;
+import sys.FileSystem;
+import haxe.Json;
+import lime.utils.Assets;
+import openfl.display.BitmapData;
+import openfl.utils.AssetType;
+import openfl.utils.Assets as OpenFlAssets;
+import flixel.addons.transition.FlxTransitionableState;
+import flixel.graphics.FlxGraphic;
 import flixel.util.typeLimit.NextState;
-import lime.app.Promise;
-import lime.app.Future;
 
-import flixel.FlxState;
-
-import openfl.utils.Assets;
-import lime.utils.Assets as LimeAssets;
-import lime.utils.AssetLibrary;
-
+import backend.Song;
 import backend.StageData;
+import objects.Character;
 
-import haxe.io.Path;
+import sys.thread.Thread;
+import sys.thread.Mutex;
 
-@:access(lime.utils.Assets)
 class LoadingState extends MusicBeatState
 {
-	static final MIN_TIME:Float = 1.0;
+	public static var loaded:Int = 0;
+	public static var loadMax:Int = 0;
 
-	// Browsers will load create(), you can make your song load a custom directory there
-	// If you're compiling to desktop (or something that doesn't use NO_PRELOAD_ALL), search for getNextState instead
-	// I'd recommend doing it on both actually lol
-	
-	// TO DO: Make this easier
-	
-	var target:NextState;
-	var stopMusic = false;
-	var directory:String;
-	var callbacks:MultiCallback;
-	var targetShit:Float = 0.0;
+	static var requestedBitmaps:Map<String, BitmapData> = [];
+	static var mutex:Mutex = new Mutex();
 
-	function new(target:NextState, stopMusic:Bool, directory:String)
+	function new(target:NextState, stopMusic:Bool)
 	{
-		super();
 		this.target = target;
 		this.stopMusic = stopMusic;
-		this.directory = directory;
+		startThreads();
+		
+		super();
 	}
 
-	var funkay:FlxSprite;
-	var loadBar:FlxSprite;
+	inline static public function loadAndSwitchState(target:NextState, stopMusic = false, intrusive = true)
+	{
+		MusicBeatState.switchState(getNextState(target, stopMusic, intrusive));
+	}
+	
+	var target:NextState;
+	var stopMusic:Bool = false;
+
+	var bar:FlxSprite;
+	var barWidth:Int = 0;
+	var intendedPercent:Float = 0;
+	var curPercent:Float = 0;
+	var canChangeState:Bool = true;
+
 	override function create()
 	{
-		final bg:FlxSprite = new FlxSprite().makeGraphic(FlxG.width, FlxG.height, 0xffcaff4d);
+		if (checkLoaded())
+		{
+			active = false;
+			super.create();
+			onLoad();
+			return;
+		}
+
+		final bg = new FlxSprite(Paths.image("funkay"));
 		bg.antialiasing = ClientPrefs.data.antialiasing;
 		add(bg);
-		funkay = new FlxSprite(0, 0, Paths.getPath('images/funkay.png', IMAGE));
-		funkay.setGraphicSize(0, FlxG.height);
-		funkay.updateHitbox();
-		add(funkay);
-		funkay.antialiasing = ClientPrefs.data.antialiasing;
-		funkay.scrollFactor.set();
-		funkay.screenCenter();
 
-		loadBar = new FlxSprite(0, FlxG.height - 20).makeGraphic(FlxG.width, 10, 0xffff16d2);
-		loadBar.screenCenter(X);
-		add(loadBar);
-		
-		initSongsManifest().onComplete
-		(
-			function (lib)
-			{
-				callbacks = new MultiCallback(onLoad);
-				final introComplete = callbacks.add("introComplete");
-				if (PlayState.SONG != null)
-					checkLoadSong(PlayState.SONG.needsVoices ? getVocalPath() : getSongPath());
+		bar = new FlxSprite(bg.x + 5, FlxG.height - 25).makeGraphic(1, 1, 0xff808080);
+		bar.scale.set(0, 15);
+		bar.updateHitbox();
+		add(bar);
+		barWidth = Std.int(bg.width - 10);
 
-				checkLibrary("shared");
-				if (directory != null && directory.length > 0 && directory != 'shared')
-					checkLibrary('week_assets');
-
-				final fadeTime:Float = 0.5;
-				FlxG.camera.fade(FlxG.camera.bgColor, fadeTime, true);
-				new FlxTimer().start(fadeTime + MIN_TIME, function(_) introComplete());
-			}
-		);
+		persistentUpdate = true;
+		super.create();
 	}
-	
-	function checkLoadSong(path:String)
-	{
-		if (!Assets.cache.hasSound(path))
-		{
-			final library = Assets.getLibrary("songs");
-			final symbolPath = path.split(":").pop();
-			// @:privateAccess
-			// library.types.set(symbolPath, SOUND);
-			// @:privateAccess
-			// library.pathGroups.set(symbolPath, [library.__cacheBreak(symbolPath)]);
-			final callback = callbacks.add('song:$path');
-			Assets.loadSound(path).onComplete(function (_) callback());
-		}
-	}
-	
-	function checkLibrary(library:String)
-	{
-		trace(Assets.hasLibrary(library));
-		if (Assets.getLibrary(library) == null)
-		{
-			if (!LimeAssets.libraryPaths.exists(library))
-				throw 'Missing library: $library';
 
-			final callback = callbacks.add('library:$library');
-			Assets.loadLibrary(library).onComplete(function (_) callback());
-		}
-	}
-	
+	var transitioning:Bool = false;
 	override function update(elapsed:Float)
 	{
 		super.update(elapsed);
-		funkay.setGraphicSize(Std.int(0.88 * FlxG.width + 0.9 * (funkay.width - 0.88 * FlxG.width)));
-		funkay.updateHitbox();
-		if (controls.ACCEPT)
+
+		if (!transitioning)
 		{
-			funkay.setGraphicSize(Std.int(funkay.width + 60));
-			funkay.updateHitbox();
+			if (canChangeState && !finishedLoading && checkLoaded())
+			{
+				transitioning = true;
+				onLoad();
+				return;
+			}
+			intendedPercent = loaded / loadMax;
 		}
-		if (callbacks != null)
+
+		if (curPercent != intendedPercent)
 		{
-			targetShit = FlxMath.remapToRange(callbacks.numRemaining / callbacks.length, 1, 0, 0, 1);
-			loadBar.scale.x += 0.5 * (targetShit - loadBar.scale.x);
+			curPercent = if (Math.abs(curPercent - intendedPercent) < 0.001)
+							intendedPercent;
+						 else
+							FlxMath.lerp(intendedPercent, curPercent, Math.exp(-elapsed * 15));
+
+			bar.scale.x = barWidth * curPercent;
+			bar.updateHitbox();
 		}
 	}
 	
+	var finishedLoading:Bool = false;
 	function onLoad()
 	{
 		if (stopMusic && FlxG.sound.music != null)
 			FlxG.sound.music.stop();
+
+		imagesToPrepare = [];
+		soundsToPrepare = [];
+		musicToPrepare = [];
+		songsToPrepare = [];
+
+		FlxG.camera.visible = false;
+		FlxTransitionableState.skipNextTransIn = true;
 		MusicBeatState.switchState(target);
+		transitioning = true;
+		finishedLoading = true;
 	}
-	
-	static function getSongPath()	return Paths.inst(PlayState.SONG.song);
-	static function getVocalPath()	return Paths.voices(PlayState.SONG.song);
-	
-	inline static public function loadAndSwitchState(target:NextState, stopMusic = false)
+
+	static function checkLoaded():Bool
 	{
-		MusicBeatState.switchState(getNextState(target, stopMusic));
+		for (key => bitmap in requestedBitmaps)
+		{
+			if (bitmap != null && Paths.cacheBitmap(key, bitmap) != null)
+				trace('finished preloading image $key');
+			else
+				trace('failed to cache image $key');
+		}
+		requestedBitmaps.clear();
+		return (loaded == loadMax);
 	}
-	
-	static function getNextState(target:NextState, stopMusic = false):NextState
+
+	static function getNextState(target:NextState, stopMusic = false, intrusive:Bool = true):NextState
 	{
-		final weekDir:String = StageData.forceNextDirectory;
+		var directory:String = 'default';
+		var weekDir:String = StageData.forceNextDirectory;
 		StageData.forceNextDirectory = null;
-		final directory:String = (weekDir != null && weekDir.length > 0 && weekDir != '') ? weekDir : 'shared';
+
+		if (weekDir != null && weekDir.length > 0 && weekDir != '') directory = weekDir;
 
 		Paths.currentLevel = directory;
 		trace('Setting asset folder to $directory');
 
-		#if NO_PRELOAD_ALL
-		final loaded = PlayState.SONG == null
-			? false
-			: isSoundLoaded(getSongPath()) && (!PlayState.SONG.needsVoices || isSoundLoaded(getVocalPath())) && isLibraryLoaded("shared") && isLibraryLoaded('week_assets');	
-		if (!loaded)
-			return LoadingState.new.bind(target, stopMusic, directory);
-		#end
-		if (stopMusic && FlxG.sound.music != null)
-			FlxG.sound.music.stop();
-		return target;
-	}
-	
-	#if NO_PRELOAD_ALL
-	static function isSoundLoaded(path:String):Bool
-	{
-		trace(path);
-		return Assets.cache.hasSound(path);
-	}
-	
-	static function isLibraryLoaded(library:String):Bool
-	{
-		return Assets.getLibrary(library) != null;
-	}
-	#end
-	
-	override function destroy()
-	{
-		super.destroy();
-		callbacks = null;
-	}
-	
-	static function initSongsManifest()
-	{
-		final id = "songs";
-		final promise = new Promise<AssetLibrary>();
-
-		final library = LimeAssets.getLibrary(id);
-
-		if (library != null)
+		var doPrecache:Bool = false;
+		clearInvalids();
+		if (intrusive)
 		{
-			return Future.withValue(library);
-		}
-
-		var path = id;
-		var rootPath = null;
-
-		final libraryPaths = LimeAssets.libraryPaths;
-		if (libraryPaths.exists(id))
-		{
-			path = libraryPaths[id];
-			rootPath = Path.directory(path);
+			if (imagesToPrepare.length > 0 || soundsToPrepare.length > 0 || musicToPrepare.length > 0 || songsToPrepare.length > 0)
+				return LoadingState.new.bind(target, stopMusic);
 		}
 		else
+			doPrecache = true;
+
+		if (stopMusic && FlxG.sound.music != null)
+			FlxG.sound.music.stop();
+		
+		if (doPrecache)
 		{
-			if (StringTools.endsWith(path, ".bundle"))
+			startThreads();
+			while (true)
 			{
-				rootPath = path;
-				path += "/library.json";
-			}
-			else
-			{
-				rootPath = Path.directory(path);
-			}
-			path = LimeAssets.__cacheBreak(path);
-		}
-
-		lime.utils.AssetManifest.loadFromFile(path, rootPath).onComplete(function(manifest)
-		{
-			if (manifest == null)
-			{
-				promise.error('Cannot parse asset manifest for library "$id"');
-				return;
-			}
-
-			final library = AssetLibrary.fromManifest(manifest);
-
-			if (library == null)
-			{
-				promise.error('Cannot open library "$id"');
-			}
-			else
-			{
-				LimeAssets.libraries.set(id, library);
-				library.onChange.add(LimeAssets.onChange.dispatch);
-				promise.completeWith(Future.withValue(library));
-			}
-		}).onError(function(_) promise.error('There is no asset library with an ID of "$id"'));
-
-		return promise.future;
-	}
-}
-
-class MultiCallback
-{
-	public var callback:Void->Void;
-	public var logId:String = null;
-	public var length(default, null) = 0;
-	public var numRemaining(default, null) = 0;
-	
-	var unfired = new Map<String, Void->Void>();
-	var fired = new Array<String>();
-	
-	public function new (callback:Void->Void, logId:String = null)
-	{
-		this.callback = callback;
-		this.logId = logId;
-	}
-	
-	public function add(id = "untitled")
-	{
-		id = '$length:$id';
-		length++;
-		numRemaining++;
-		final func:()->Void = function()
-			{
-				if (unfired.exists(id))
+				if (checkLoaded())
 				{
-					unfired.remove(id);
-					fired.push(id);
-					numRemaining--;
-					
-					if (logId != null)
-						log('fired $id, $numRemaining remaining');
-					
-					if (numRemaining == 0)
-					{
-						if (logId != null)
-							log('all callbacks fired');
-						callback();
-					}
+					imagesToPrepare = [];
+					soundsToPrepare = [];
+					musicToPrepare = [];
+					songsToPrepare = [];
+					break;
 				}
 				else
-					log('already fired $id');
+					Sys.sleep(.01);
 			}
-		unfired[id] = func;
-		return func;
+		}
+		return target;
 	}
-	
-	inline function log(msg):Void
+
+	static var imagesToPrepare:Array<String> = [];
+	static var soundsToPrepare:Array<String> = [];
+	static var musicToPrepare:Array<String> = [];
+	static var songsToPrepare:Array<String> = [];
+	public static function prepare(images:Array<String> = null, sounds:Array<String> = null, music:Array<String> = null)
 	{
-		if (logId != null)
-			trace('$logId: $msg');
+		if (images != null) imagesToPrepare = imagesToPrepare.concat(images);
+		if (sounds != null) soundsToPrepare = soundsToPrepare.concat(sounds);
+		if (music != null) musicToPrepare = musicToPrepare.concat(music);
 	}
-	
-	public function getFired() return fired.copy();
-	public function getUnfired() return [for (id in unfired.keys()) id];
+
+	static var dontPreloadDefaultVoices:Bool = false;
+	public static function prepareToSong()
+	{
+		var song:SwagSong = PlayState.SONG;
+		var folder:String = Paths.formatToSongPath(song.song);
+		try
+		{
+			var path:String = Paths.json('$folder/preload');
+			var json:Dynamic = null;
+
+			#if MODS_ALLOWED
+			var moddyFile:String = Paths.modsJson('$folder/preload');
+			json =	if (FileSystem.exists(moddyFile))
+						Json.parse(File.getContent(moddyFile));
+					else
+						Json.parse(File.getContent(path));
+			#else
+			json = Json.parse(Assets.getText(path));
+			#end
+
+			// if (json != null)
+			//	prepare((!ClientPrefs.data.lowQuality || json.images_low) ? json.images : json.images_low, json.sounds, json.music);
+		}
+		catch(e:Dynamic) {}
+
+		if (song.stage == null || song.stage.length < 1)
+			song.stage = StageData.vanillaSongStage(folder);
+
+		var stageData:StageFile = StageData.getStageFile(song.stage);
+		// if (stageData != null && stageData.preload != null)
+		//	prepare((!ClientPrefs.data.lowQuality || stageData.preload.images_low) ? stageData.preload.images : stageData.preload.images_low, stageData.preload.sounds, stageData.preload.music);
+
+		songsToPrepare.push('$folder/Inst');
+
+		var player1:String = song.player1;
+		var player2:String = song.player2;
+		var gfVersion:String = song.gfVersion;
+		var needsVoices:Bool = song.needsVoices;
+		var prefixVocals:String = needsVoices ? '$folder/Voices' : null;
+		if (gfVersion == null) gfVersion = 'gf';
+
+		dontPreloadDefaultVoices = false;
+		preloadCharacter(player1, prefixVocals);
+		if (player2 != player1) preloadCharacter(player2, prefixVocals);
+		if (!stageData.hide_girlfriend && gfVersion != player2 && gfVersion != player1)
+			preloadCharacter(gfVersion);
+		
+		if (!dontPreloadDefaultVoices && needsVoices) songsToPrepare.push(prefixVocals);
+	}
+
+	public static function clearInvalids()
+	{
+		clearInvalidFrom(imagesToPrepare, 'images', '.png', IMAGE);
+		clearInvalidFrom(soundsToPrepare, 'sounds', '.${Paths.SOUND_EXT}', SOUND);
+		clearInvalidFrom(musicToPrepare, 'music',' .${Paths.SOUND_EXT}', SOUND);
+		clearInvalidFrom(songsToPrepare, 'songs', '.${Paths.SOUND_EXT}', SOUND, 'songs');
+
+		for (arr in [imagesToPrepare, soundsToPrepare, musicToPrepare, songsToPrepare])
+			while (arr.contains(null))
+				arr.remove(null);
+	}
+
+	static function clearInvalidFrom(arr:Array<String>, prefix:String, ext:String, type:AssetType, ?library:String = null)
+	{
+		for (i in 0...arr.length)
+		{
+			var folder:String = arr[i];
+			if(folder.trim().endsWith('/'))
+			{
+				for (subfolder in Mods.directoriesWithFile(Paths.getSharedPath(), '$prefix/$folder'))
+					for (file in FileSystem.readDirectory(subfolder))
+						if(file.endsWith(ext))
+							arr.push(folder + file.substr(0, file.length - ext.length));
+
+				//trace('Folder detected! ' + folder);
+			}
+		}
+
+		var i:Int = 0;
+		while(i < arr.length)
+		{
+			var member:String = arr[i];
+			var myKey = '$prefix/$member$ext';
+			if(library == 'songs') myKey = '$member$ext';
+
+			//trace('attempting on $prefix: $myKey');
+			var doTrace:Bool = false;
+			if(member.endsWith('/') || (!Paths.fileExists(myKey, type, false, library) && (doTrace = true)))
+			{
+				arr.remove(member);
+				if(doTrace) trace('Removed invalid $prefix: $member');
+			}
+			else i++;
+		}
+	}
+
+	public static function startThreads()
+	{
+		loadMax = imagesToPrepare.length + soundsToPrepare.length + musicToPrepare.length + songsToPrepare.length;
+		loaded = 0;
+
+		//then start threads
+		for (sound in soundsToPrepare) initThread(() -> Paths.sound(sound), 'sound $sound');
+		for (music in musicToPrepare) initThread(() -> Paths.music(music), 'music $music');
+		for (song in songsToPrepare) initThread(() -> Paths.returnSound(null, song, 'songs'), 'song $song');
+
+		// for images, they get to have their own thread
+		for (image in imagesToPrepare)
+			Thread.create(() -> {
+				mutex.acquire();
+				try {
+					var bitmap:BitmapData;
+					var file:String = null;
+
+					#if MODS_ALLOWED
+					file = Paths.modsImages(image);
+					if (Paths.currentTrackedAssets.exists(file)) {
+						mutex.release();
+						loaded++;
+						return;
+					}
+					else if (FileSystem.exists(file))
+						bitmap = BitmapData.fromFile(file);
+					else
+					#end
+					{
+						file = Paths.getPath('images/$image.png', IMAGE);
+						if (Paths.currentTrackedAssets.exists(file)) {
+							mutex.release();
+							loaded++;
+							return;
+						}
+						else if (OpenFlAssets.exists(file, IMAGE))
+							bitmap = OpenFlAssets.getBitmapData(file);
+						else {
+							trace('no such image $image exists');
+							mutex.release();
+							loaded++;
+							return;
+						}
+					}
+					mutex.release();
+
+					if (bitmap != null) requestedBitmaps.set(file, bitmap);
+					else trace('oh no the image is null NOOOO ($image)');
+				}
+				catch(e:Dynamic) {
+					mutex.release();
+					trace('ERROR! fail on preloading image $image');
+				}
+				loaded++;
+			});
+	}
+
+	static function initThread(func:Void->Dynamic, traceData:String)
+	{
+		Thread.create(() -> {
+			mutex.acquire();
+			try {
+				var ret:Dynamic = func();
+				mutex.release();
+
+				if (ret != null) trace('finished preloading $traceData');
+				else trace('ERROR! fail on preloading $traceData');
+			}
+			catch(e:Dynamic) {
+				mutex.release();
+				trace('ERROR! fail on preloading $traceData');
+			}
+			loaded++;
+		});
+	}
+
+	inline private static function preloadCharacter(char:String, ?prefixVocals:String)
+	{
+		try
+		{
+			var path:String = Paths.getPath('characters/$char.json', TEXT, null, true);
+			#if MODS_ALLOWED
+			var character:Dynamic = Json.parse(File.getContent(path));
+			#else
+			var character:Dynamic = Json.parse(Assets.getText(path));
+			#end
+			
+			imagesToPrepare.push(character.image);
+			if (prefixVocals != null)
+			{
+				// songsToPrepare.push(prefixVocals + "-Opponent");
+				// songsToPrepare.push(prefixVocals + "-Player");
+				songsToPrepare.push(prefixVocals);
+				if(char == PlayState.SONG.player1) dontPreloadDefaultVoices = true;
+			}
+		}
+		catch(e:Dynamic) {}
+	}
 }
