@@ -120,9 +120,12 @@ class CharacterEditorState extends backend.MusicBeatUIState
 		ghost.alpha = ghostAlpha;
 		add(ghost);
 
-		addCharacter();
+		// addCharacter();
+		character = new Character(0, 0, _char, !predictCharacterIsNotPlayer(_char));
+		character.debugMode = true;
+		add(character);
 
-		cameraFollowPointer = new FlxSprite().loadGraphic(flixel.graphics.FlxGraphic.fromClass(flixel.system.debug.interaction.tools.Pointer.GraphicCursorCross));
+		cameraFollowPointer = new FlxSprite(flixel.graphics.FlxGraphic.fromClass(flixel.system.debug.interaction.tools.Pointer.GraphicCursorCross));
 		cameraFollowPointer.setGraphicSize(40, 40);
 		cameraFollowPointer.updateHitbox();
 		add(cameraFollowPointer);
@@ -178,9 +181,10 @@ class CharacterEditorState extends backend.MusicBeatUIState
 
 		// FlxG.mouse.visible = true;
 		FlxG.camera.zoom = 1;
-
 		makeUIMenu();
 
+		updateCharacterPositions();
+		reloadAnimList();
 		updatePointerPos();
 		updateHealthBar();
 		character.animation.finish();
@@ -195,15 +199,16 @@ class CharacterEditorState extends backend.MusicBeatUIState
 
 	function addCharacter(reload = false)
 	{
-		var pos = -1;
+		/*var pos = -1;
 		if (character != null)
 		{
 			pos = members.indexOf(character);
 			remove(character).destroy();
-		}
+		}*/
 
-		var isPlayer = (reload ? character.isPlayer : !predictCharacterIsNotPlayer(_char));
-		character = new Character(0, 0, _char, isPlayer);
+		final isPlayer = (reload ? character.isPlayer : !predictCharacterIsNotPlayer(_char));
+		// character = new Character(0, 0, _char, isPlayer);
+		character.loadCharacter(_char);
 		if (!reload /*&& isPlayer != character.editorIsPlayer*/)
 		{
 			character.isPlayer = !character.isPlayer;
@@ -211,12 +216,12 @@ class CharacterEditorState extends backend.MusicBeatUIState
 			if (check_player != null)
 				check_player.checked = character.isPlayer;
 		}
-		character.debugMode = true;
+		// character.debugMode = true;
 
-		if (pos > -1)
+		/*if (pos > -1)
 			insert(pos, character);
 		else
-			add(character);
+			add(character);*/
 
 		updateCharacterPositions();
 		reloadAnimList();
@@ -828,12 +833,20 @@ class CharacterEditorState extends backend.MusicBeatUIState
 	var holdingFrameElapsed:Float = 0;
 	var undoOffsets:Array<Float> = null;
 
-	var __mousePos = FlxPoint.get();
+	static var __mousePos = FlxPoint.get();
 	var __dragging = false;
 
 	override function update(elapsed:Float)
 	{
 		super.update(elapsed);
+
+		if (FlxG.keys.justPressed.F3)
+		{
+			if (FlxG.sound.music.playing)
+				FlxG.sound.music.pause();
+			else
+				FlxG.sound.music.play();
+		}
 
 		if (animationInputText.hasFocus || animationNameInputText.hasFocus || animationIndicesInputText.hasFocus || imageInputText.hasFocus || healthIconInputText.hasFocus)
 		{
@@ -1077,7 +1090,7 @@ class CharacterEditorState extends backend.MusicBeatUIState
 		imageInputText.backgroundSprite.alpha     = healthIconInputText.backgroundSprite.alpha    = _in ? .4 : 1;
 	}
 
-	final __point = FlxPoint.get();
+	static final __point = FlxPoint.get();
 	inline function updatePointerPos(snap = true)
 	{
 		character.getMidpoint(__point);
@@ -1198,7 +1211,7 @@ class CharacterEditorState extends backend.MusicBeatUIState
 	function reloadAnimationDropDown()
 	{
 		// Prevents crash
-		final animList = anims == null || anims.length == 0 ? ["NO ANIMATIONS"] : [for (anim in anims) anim.anim];
+		final animList = anims?.length > 0 ? [for (anim in anims) anim.anim] : ["NO ANIMATIONS"];
 		animationDropDown.setData(FlxUIDropDownMenu.makeStrIdLabelArray(animList, true));
 	}
 
@@ -1207,7 +1220,6 @@ class CharacterEditorState extends backend.MusicBeatUIState
 		super.destroy();
 		helpSubstate.destroy();
 		copiedOffset.put();
-		__point.put();
 	}
 
 	// save

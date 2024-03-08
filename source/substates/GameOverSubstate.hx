@@ -49,45 +49,38 @@ class GameOverSubstate extends MusicBeatSubstate
 		if (_song == null)
 			return;
 
-		characterName	= _song.gameOverChar?.length  == 0 ? DEFAULT_CHAR  : _song.gameOverChar;
-		deathSoundName	= _song.gameOverSound?.length == 0 ? DEFAULT_SOUND : _song.gameOverSound;
-		loopSoundName	= _song.gameOverLoop?.length  == 0 ? DEFAULT_LOOP  : _song.gameOverLoop;
-		endSoundName	= _song.gameOverEnd?.length   == 0 ? DEFAULT_END   : _song.gameOverEnd;
+		characterName  = _song.gameOverChar?.length  > 0 ? _song.gameOverChar  : DEFAULT_CHAR;
+		deathSoundName = _song.gameOverSound?.length > 0 ? _song.gameOverSound : DEFAULT_SOUND;
+		loopSoundName  = _song.gameOverLoop?.length  > 0 ? _song.gameOverLoop  : DEFAULT_LOOP;
+		endSoundName   = _song.gameOverEnd?.length   > 0 ? _song.gameOverEnd   : DEFAULT_END;
 
-		if (!PlayState.instance.boyfriendMap.exists(characterName))
-			PlayState.instance.addCharacterToList(characterName, 0);
+		if (!PlayState.instance.boyfriendMap.exists('GameOverSubstate__$characterName'))
+		{
+			// PlayState.instance.addCharacterToList('GameOverSubstate__$characterName', 0);
+			final char = new Character(0, 0, characterName, true);
+			PlayState.instance.boyfriendMap.set('GameOverSubstate__$characterName', char);
+			char.precache();
+			PlayState.instance.startCharacterScripts(char.curCharacter);
+		}
 
 		Paths.sound(deathSoundName);
 		Paths.music(loopSoundName);
 		Paths.sound(endSoundName);
 	}
 
-	override function create()
-	{
-		instance = this;
-
-		realCamera = PlayState.instance.camGame;
-		realCamera.updateLerp = realCamera.updateZoom = false;
-		realCamera._speed *= 0.25;
-		realCamera.cameraSpeed = 1;
-
-		game.callOnScripts("onGameOverStart");
-		boyfriend.animation.callback = onAnimationUpdate;
-		boyfriend.animation.finishCallback = onAnimationFinished;
-		super.create();
-	}
-
 	public function new(x:Float, y:Float)
 	{
-		game = PlayState.instance;
 		super();
+		instance = this;
+		game = PlayState.instance;
+		realCamera = game.camGame;
 
 		game.setOnScripts("inGameOver", true);
 		Conductor.songPosition = 0;
 
-		if (game.boyfriendMap.exists(characterName))
+		if (game.boyfriendMap.exists('GameOverSubstate__$characterName'))
 		{
-			boyfriend = game.boyfriendMap.get(characterName);
+			boyfriend = game.boyfriendMap.get('GameOverSubstate__$characterName');
 			boyfriend.setPosition(x, y);
 			boyfriend.alpha = 1;
 		}
@@ -101,28 +94,40 @@ class GameOverSubstate extends MusicBeatSubstate
 		FlxG.sound.play(Paths.sound(deathSoundName));
 		boyfriend.playAnim("firstDeath");
 
-		final midpoint:FlxPoint = boyfriend.getGraphicMidpoint();
-		camFollow.setPosition(midpoint.x, midpoint.y);
-		add(camFollow);
+		final midpoint = boyfriend.getGraphicMidpoint();
+		boyfriend.camFollow.setPosition(midpoint.x, midpoint.y);
+		// add(boyfriend.camFollow);
 		midpoint.put();
 
-		realCamera.follow(camFollow, LOCKON, 0);
+		realCamera.target = boyfriend.camFollow;
 		realCamera.scroll.set();
 	}
 
-	dynamic public static function onAnimationUpdate(name:String, frame:Int, frameID:Int):Void
+	override function create()
 	{
-		if (name == "firstDeath" && frame >= 12 && !instance.isFollowingAlready)
-			instance.updateCamera = instance.isFollowingAlready = true;
+		realCamera.updateLerp = realCamera.updateZoom = false;
+		realCamera._speed *= 0.25;
+		realCamera.cameraSpeed = 1;
+
+		callOnScripts("onGameOverStart");
+		boyfriend.animation.callback = onAnimationUpdate;
+		boyfriend.animation.finishCallback = onAnimationFinished;
+		super.create();
 	}
 
-	dynamic public static function onAnimationFinished(name:String):Void
+	dynamic public /*static*/ function onAnimationUpdate(name:String, frame:Int, frameID:Int):Void
+	{
+		if (name == "firstDeath" && frame >= 12 && !/*instance.*/isFollowingAlready)
+			/*instance.*/updateCamera = /*instance.*/isFollowingAlready = true;
+	}
+
+	dynamic public /*static*/ function onAnimationFinished(name:String):Void
 	{
 		if (name == "firstDeath")
 		{
-			instance.updateCamera = instance.startedDeath = true;
+			/*instance.*/updateCamera = /*instance.*/startedDeath = true;
 			FlxG.sound.playMusic(Paths.music(loopSoundName));
-			instance.boyfriend.playAnim("deathLoop");
+			/*instance.*/boyfriend.playAnim("deathLoop");
 		}
 		// in case of missing animations death will continue with music n' shit
 		/*else if(!name.startsWith("death"))
@@ -137,7 +142,7 @@ class GameOverSubstate extends MusicBeatSubstate
 
 	override function update(elapsed:Float)
 	{
-		game.callOnScripts("onUpdate", [elapsed]);
+		callOnScripts("onUpdate", [elapsed]);
 
 		if (!isEnding)
 		{
@@ -154,7 +159,7 @@ class GameOverSubstate extends MusicBeatSubstate
 				MusicBeatState.switchState(PlayState.isStoryMode ? states.StoryMenuState.new : states.FreeplayState.new);
 
 				FlxG.sound.playMusic(Paths.music("freakyMenu"));
-				game.callOnScripts("onGameOverConfirm", [false]);
+				callOnScripts("onGameOverConfirm", [false]);
 			}
 		}
 
@@ -162,13 +167,13 @@ class GameOverSubstate extends MusicBeatSubstate
 			Conductor.songPosition = FlxG.sound.music.time;
 
 		super.update(elapsed);
-		game.callOnScripts("onUpdatePost", [elapsed]);
+		callOnScripts("onUpdatePost", [elapsed]);
 	}
 
 	var isEnding = false;
 	function endBullshit():Void
 	{
-		final ret:Dynamic = game.callOnScripts("onGameOverConfirm", [true], true);
+		final ret:Dynamic = callOnScripts("onGameOverConfirm", [true], true);
 		if (ret == FunkinLua.Function_Stop)
 			return;
 
@@ -177,14 +182,21 @@ class GameOverSubstate extends MusicBeatSubstate
 
 		FlxG.sound.music.stop();
 		FlxG.sound.play(Paths.sound(endSoundName));
-		
 		new FlxTimer().start(0.7, (_) -> realCamera.fade(FlxColor.BLACK, 2, false, MusicBeatState.resetState));
+	}
+
+	inline function callOnScripts(funcToCall:String, ?args:Array<Dynamic>, ignoreStops = false, ?exclusions:Array<String>, ?excludeValues:Array<Dynamic>):Dynamic
+	{
+		return game == null ? FunkinLua.Function_Continue : game.callOnScripts(funcToCall, args, ignoreStops, exclusions, excludeValues);
 	}
 
 	override function destroy()
 	{
-		game = null;
-		instance = null;
+		realCamera.target = null;
 		super.destroy();
+		realCamera = null;
+		boyfriend = null;
+		instance = null;
+		game = null;
 	}
 }

@@ -29,7 +29,7 @@ class VisualsUISubState extends BaseOptionsMenu
 
 		// options
 
-		final noteSkins = Mods.mergeAllTextsNamed("images/noteSkins/list.txt", "shared");
+		final noteSkins = Mods.mergeAllTextsNamed("images/noteSkins/list.txt");
 		if (noteSkins.length > 0)
 		{
 			if (!noteSkins.contains(ClientPrefs.data.noteSkin))
@@ -62,7 +62,7 @@ class VisualsUISubState extends BaseOptionsMenu
 			noteOptionID = optionsArray.length - 1;
 		}
 		
-		final noteSplashes = Mods.mergeAllTextsNamed("images/noteSplashes/list.txt", "shared");
+		final noteSplashes = Mods.mergeAllTextsNamed("images/noteSplashes/list.txt");
 		if (noteSplashes.length > 0)
 		{
 			if (!noteSplashes.contains(ClientPrefs.data.splashSkin))

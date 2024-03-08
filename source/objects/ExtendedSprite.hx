@@ -21,6 +21,19 @@ class ExtendedSprite extends FlxSprite
 	{
 		return rect.overlaps(object.getHitbox(FlxRect.weak()));
 	}
+	
+	/**
+		Precahces given sprite by setting low alpha value and calling draw.
+		@return  Given sprite
+	**/
+	/*inline*/ public static function precache<T:FlxSprite>(sprite:T):T
+	{
+		final originalAlpha = sprite.alpha;
+		sprite.alpha = 0.00001;
+		sprite.draw();
+		sprite.alpha = originalAlpha;
+		return sprite;
+	}
 
 	public var onGraphicLoaded:()->Void;
 	public var animOffsets:Map<String, FlxPoint> = [];
@@ -86,16 +99,14 @@ class ExtendedSprite extends FlxSprite
 
 	public function playAnim(name:String, forced = false, ?reverse = false, ?startFrame = 0):Void
 	{
-		// if there is no animation named "Name" then just skips the whole shit
-		if (name == null || !animation.exists(name))
+		// if there is no animation named "name" then just skips the whole shit
+		if (name == null || !animExists(name))
 		{
-			FlxG.log.warn('No animation called "$name"');
-			return;
+			final txt = 'No animation called "$name"';
+			return #if debug FlxG.log.warn(txt) #else trace(txt) #end;
 		}
+
 		animation.play(name, forced, reverse, startFrame);
-		
-		/*if (animOffsets.exists(Name))
-			offset.copyFrom(animOffsets.get(Name));*/
 	}
 
 	// quick n' easy animation setup
@@ -147,6 +158,12 @@ class ExtendedSprite extends FlxSprite
 	{
 		x += addX;
 		y += addY;
+	}
+
+	public function subtractPosition(addX:Float, addY:Float):Void
+	{
+		x -= addX;
+		y -= addY;
 	}
 
 	/**

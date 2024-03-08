@@ -113,7 +113,7 @@ class NoteSplash extends FlxSprite implements ISortable
 				tempShader = Note.globalRgbShaders[direction];
 		}
 
-		alpha = #if (haxe > "4.2.5") note?.noteSplashData.a ?? #else note != null ? note.noteSplashData.a : #end ClientPrefs.data.splashAlpha;
+		alpha = note?.noteSplashData.a ?? ClientPrefs.data.splashAlpha;
 		rgbShader.copyValues(tempShader);
 
 		if (PlayState.isPixelStage || !ClientPrefs.data.antialiasing)

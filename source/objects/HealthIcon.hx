@@ -71,13 +71,8 @@ class HealthIcon extends ExtendedSprite
 		if (this.char == char)
 			return;
 
-		var prevFrame = 0;
-		var flip = isPlayer;
-		if (animation.curAnim != null)
-		{
-			prevFrame = animation.curAnim.curFrame;
-			flip = animation.curAnim.flipX;
-		}
+		final prevFrame = animation.curAnim?.curFrame ?? 0;
+		final flip = animation.curAnim?.flipX ?? isPlayer;
 
 		var name = Paths.fileExists('images/icons/$char.png', IMAGE) ? 'icons/$char' : 'icons/icon-$char'; // Older versions of psych engine's support
 		if (!Paths.fileExists('images/$name.png', IMAGE))

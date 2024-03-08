@@ -12,7 +12,7 @@ import openfl.utils.Assets;
 @:allow(states.editors.CharacterEditorState)
 class Character extends objects.ExtendedSprite
 {
-	inline public static final DEFAULT_CHARACTER = "bf"; //In case a character is missing, it will use BF on its place
+	inline public static final DEFAULT_CHARACTER = "bf"; // In case a character is missing, it will use BF on its place
 
 	public static function resolveCharacterData(data:CharacterData):CharacterFile
 	{
@@ -39,20 +39,20 @@ class Character extends objects.ExtendedSprite
 		return cast data;
 	}
 
-	public var hasMissAnimations(default, null):Bool = false;
-	public var animationsArray:Array<AnimArray> = [];
+	public var hasMissAnimations(default, null):Bool;
+	public var animationsArray:Array<AnimArray>;
 	public var isPlayer(default, set):Bool;
 	public var curCharacter:String;
 
 	// public var colorTween:FlxTween;
-	public var holdTimer:Float = 0;
-	public var heyTimer:Float = 0;
-	public var specialAnim:Bool = false;
-	public var stunned:Bool = false;
-	public var singDuration:Float = 4; // Multiplier of how long a character holds the sing pose
-	public var idleSuffix(default, set):String = "";
-	public var danceIdle:Bool = false; // Character use "danceLeft" and "danceRight" instead of "idle"
-	public var skipDance:Bool = false;
+	public var holdTimer:Float;
+	public var heyTimer:Float;
+	public var specialAnim:Bool;
+	public var stunned:Bool;
+	public var singDuration:Float; // Multiplier of how long a character holds the sing pose
+	public var idleSuffix(default, set):String;
+	public var danceIdle:Bool; // Character use "danceLeft" and "danceRight" instead of "idle"
+	public var skipDance:Bool;
 
 	public var healthIcon:String = "face";
 	public var healthColor:FlxColor = FlxColor.RED;
@@ -62,64 +62,81 @@ class Character extends objects.ExtendedSprite
 	public var position:FlxPoint = FlxPoint.get();
 
 	// Used on Character Editor
-	var imageFile = "";
-	var jsonScale = 1.;
-	var noAntialiasing = false;
-	var originalFlipX = false;
-	var originalFlipY = false;
+	var imageFile:String;
+	var jsonScale:Float;
+	var noAntialiasing:Bool;
+	var originalFlipX:Bool;
+	var originalFlipY:Bool;
 
 	@:allow(states.PlayState)
 	var camFollowOffset(default, null):FlxPoint;
-	var debugMode = false;
+	var debugMode:Bool;
+	var firstSetup = true;
 
 	// DEPRECATED!!!!!
 	public var positionArray(get, set):Array<Float>;
 	public var cameraPosition(get, set):Array<Float>;
 	public var healthColorArray(get, set):Array<Int>;
 
-	public function new(x:Float, y:Float, ?character = DEFAULT_CHARACTER, ?isPlayer = false, ?allowGPU = true)
+	public function new(?x = 0., ?y = 0., character:String, isPlayer = false, ?allowGPU = true)
 	{
 		super(x, y);
 		camFollowOffset = new FlxCallbackPoint(updateCamFollow);
-		curCharacter = character;
+		// curCharacter = character;
 
 		loadCharacter(character, allowGPU);
 		this.isPlayer = isPlayer;
+		firstSetup = false;
 	}
 
 	public function loadCharacter(data:CharacterData, ?gpu = false)
 	{
 		final json = resolveCharacterData(data);
-		settingCharacterUp = true;
+		if (!debugMode && imageFile == json.image)
+			return;
 
-		specialAnim = stunned = danceIdle = skipDance = false;
+		// remove old positioning
+		subtractPosition(position.x, position.y);
+
+		// reset data
+		curCharacter = data is String ? data : "unknown";
+		hasMissAnimations = specialAnim = skipDance = danceIdle = stunned = false;
+		settingCharacterUp = true;
 		holdTimer = heyTimer = 0;
 		singDuration = 4;
-		idleSuffix = "";
+		@:bypassAccessor idleSuffix = "";
 
-		final img = json.image;
+		final oldAnim = animation.curAnim?.name;
+		final oldFrame = animation.curAnim?.curFrame ?? 0;
+		final wasPlayer = isPlayer;
+		if (!firstSetup)
+			isPlayer = false;
+
+		while (animationsArray?.length > 0)
+			animationsArray.pop();
+
+		// load spritesheet
+		imageFile = json.image;
 		#if MODS_ALLOWED
-		final modAnimToFind = Paths.modFolders('images/$img/Animation.json');
-		final animToFind = Paths.getPath('images/$img/Animation.json', TEXT);
+		final modAnimToFind = Paths.modFolders('images/$imageFile/Animation.json');
+		final animToFind = Paths.getPath('images/$imageFile/Animation.json', TEXT);
 		final useAtlas = (FileSystem.exists(modAnimToFind) || FileSystem.exists(animToFind) || Assets.exists(animToFind));
 		#else
-		final useAtlas = Assets.exists(Paths.getPath('images/$img/Animation.json', TEXT));
+		final useAtlas = Assets.exists(Paths.getPath('images/$imageFile/Animation.json', TEXT));
 		#end
 
-		frames = useAtlas ? animateatlas.AtlasFrameMaker.construct(img) : Paths.getAtlas(img, null, gpu);
+		frames = useAtlas ? animateatlas.AtlasFrameMaker.construct(imageFile) : Paths.getAtlas(imageFile, gpu);
 
-		imageFile = img;
-		// if (json.scale != 1)
-		// {
+		// scale sprite
 		jsonScale = json.scale;
-		// setGraphicSize(width * jsonScale);
 		setScale(jsonScale);
 		updateHitbox();
-		// }
 
 		// positioning
-		position.set(json.position[0], json.position[1]);
 		cameraOffset.set(json.camera_position[0], json.camera_position[1]);
+		position.set(json.position[0], json.position[1]);
+		// add new position
+		addPosition(position.x, position.y);
 
 		// data
 		healthIcon = json.healthicon;
@@ -136,16 +153,15 @@ class Character extends objects.ExtendedSprite
 
 		// animations
 		animationsArray = json.animations;
-		if (animationsArray?.length == 0)
-			addAnim("idle", "BF idle dance", null, 24, false);
-		else
+		if (animationsArray?.length > 0)
 			for (anim in animationsArray)
 				generateAnim(anim);
+		else
+			addAnim("idle", "BF idle dance", 24, false);
 
 		originalFlipX = flipX;
 		originalFlipY = flipY;
 
-		hasMissAnimations = false;
 		for (name => offset in animOffsets)
 			if (name.startsWith("sing") && name.contains("miss"))
 			{
@@ -153,9 +169,16 @@ class Character extends objects.ExtendedSprite
 				break;
 			}
 
+		if (!firstSetup)
+			isPlayer = wasPlayer;
+
 		recalculateDanceIdle();
 		updateCamFollow();
-		dance();
+
+		if (debugMode || oldAnim == null || !animExists(oldAnim))
+			dance();
+		else
+			playAnim(oldAnim, oldFrame);
 	}
 
 	override public function update(elapsed:Float)
@@ -230,9 +253,13 @@ class Character extends objects.ExtendedSprite
 	override public function destroy()
 	{
 		super.destroy();
+		while (animationsArray?.length > 0)
+			animationsArray.pop();
+
+		animationsArray = null;
+
 		camFollowOffset = FlxDestroyUtil.destroy(camFollowOffset);
 		camFollow = FlxDestroyUtil.destroy(camFollow);
-
 		cameraOffset = FlxDestroyUtil.put(cameraOffset);
 		__midpoint = FlxDestroyUtil.put(__midpoint);
 		position = FlxDestroyUtil.put(position);
@@ -251,26 +278,19 @@ class Character extends objects.ExtendedSprite
 		if (animation.curAnim != null && animation.curAnim.looped && animation.curAnim.loopPoint > 0 && animation.curAnim.curFrame >= animation.curAnim.loopPoint)
 			animation.finish(); // fix for characters that have loopPoint > 0
 
-		var danceAnim = 'idle$idleSuffix';
-		if (danceIdle)
-		{
-			danced = !danced;
-			danceAnim = "dance" + (danced ? "Right" : "Left") + idleSuffix;
-		}
-		playAnim(danceAnim, force);
+		playAnim((danceIdle ? "dance" + ((danced = !danced) ? "Right" : "Left") : "idle") + idleSuffix, force);
 	}
 
 	override public function playAnim(animName:String, force = false, ?reversed = false, ?frame = 0):Void
 	{
 		specialAnim = false;
-		// if there is no animation named "animName" then just skips the whole shit
-		if (animName == null || !animation.exists(animName))
+		if (animName == null || !animExists(animName))
 		{
-			FlxG.log.warn('No animation called "$animName"');
-			return;
+			final txt = 'No animation called "$animName"';
+			return #if debug FlxG.log.warn(txt) #else trace(txt) #end;
 		}
-		animation.play(animName, force, reversed, frame);
 
+		animation.play(animName, force, reversed, frame);
 		if (curCharacter.startsWith("gf") || danceIdle) // idk
 			switch (animName)
 			{
@@ -286,14 +306,15 @@ class Character extends objects.ExtendedSprite
 	public function recalculateDanceIdle()
 	{
 		final lastDanceIdle = danceIdle;
-		danceIdle = (animation.exists('danceLeft$idleSuffix') && animation.exists('danceRight$idleSuffix'));
+		danceIdle = (animExists('danceLeft$idleSuffix') && animExists('danceRight$idleSuffix'));
 
 		if (settingCharacterUp)
+		{
 			danceEveryNumBeats = (danceIdle ? 1 : 2);
+			settingCharacterUp = false;
+		}
 		else if (lastDanceIdle != danceIdle)
 			danceEveryNumBeats = Math.round(Math.max(danceEveryNumBeats * (danceIdle ? 0.5 : 2), 1));
-
-		settingCharacterUp = false;
 	}
 
 	// creates a copy of this character🤯😱
@@ -474,12 +495,8 @@ class CharacterGroup extends FlxTypedSpriteGroup<Character>
 
 	public function setActiveByKey(Keys:Array<String>)
 	{
-		var char:Character = null;
 		while (activeList.length > 0)
-		{
-			char = activeList.pop();
-			diactivate(char);
-		}
+			diactivate(activeList.pop());
 
 		for (key in Keys)
 			addActiveByKey(key);

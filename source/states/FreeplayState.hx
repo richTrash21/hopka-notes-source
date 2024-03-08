@@ -58,16 +58,13 @@ class FreeplayState extends MusicBeatState
 
 		for (i in 0...WeekData.weeksList.length)
 		{
-			if (weekIsLocked(WeekData.weeksList[i])) continue;
+			if (weekIsLocked(WeekData.weeksList[i]))
+				continue;
 
 			final leWeek:WeekData = WeekData.weeksLoaded.get(WeekData.weeksList[i]);
 			WeekData.setDirectoryFromWeek(leWeek);
 			for (song in leWeek.songs)
-			{
-				final colrs:Array<Int> = cast song[2];
-				final colors:Array<Int> = colrs == null || colrs.length < 3 ? [146, 113, 253] : colrs;
-				addSong(song[0], i, song[1], FlxColor.fromRGB(colors[0], colors[1], colors[2]));
-			}
+				addSong(song.songName, i, song.iconName, song.bgColor);
 		}
 		Mods.loadTopMod();
 
@@ -80,6 +77,13 @@ class FreeplayState extends MusicBeatState
 
 		grpSongs = new FlxTypedGroup<Alphabet>();
 		add(grpSongs);
+
+		// prevent crash
+		if (songs.length == 0)
+		{
+			trace("WARNING!! No songs loaded, defaulting to \"Test\" to prevent crash!");
+			addSong("Test", 0, "dad", 0xFF7C7C7C); // "songs": [["Test", "dad", [124, 124, 124]]]
+		}
 
 		for (i in 0...songs.length)
 		{
@@ -188,10 +192,19 @@ class FreeplayState extends MusicBeatState
 		super.openSubState(SubState);
 	}
 
-	public function addSong(songName:String, weekNum:Int, songCharacter:String, color:Int)
-		songs.push(new SongMetadata(songName, weekNum, songCharacter, color));
+	inline public function addSong(songName:String, weekNum:Int, songCharacter:String, color:Int)
+	{
+		// songs.push(new SongMetadata(songName, weekNum, songCharacter, color));
+		songs.push({
+			songName: songName,
+			week: weekNum,
+			songCharacter: songCharacter,
+			color: color,
+			folder: Mods.currentModDirectory ?? ""
+		});
+	}
 
-	function weekIsLocked(name:String):Bool
+	inline function weekIsLocked(name:String):Bool
 	{
 		final leWeek:WeekData = WeekData.weeksLoaded.get(name);
 		return (!leWeek.startUnlocked && leWeek.weekBefore.length > 0 && (!StoryMenuState.weekCompleted.exists(leWeek.weekBefore) || !StoryMenuState.weekCompleted.get(leWeek.weekBefore)));
@@ -205,7 +218,7 @@ class FreeplayState extends MusicBeatState
 		if (FlxG.sound.music.volume < 0.7) 
 			FlxG.sound.music.volume += 0.5 * FlxG.elapsed;
 
-		FlxG.camera.followLerp = elapsed * 8.6 #if (flixel < "5.4.0") / #else * #end (FlxG.updateFramerate / 60);
+		FlxG.camera.followLerp = elapsed * 9.05 * (FlxG.updateFramerate / 60);
 		Conductor.songPosition = FlxG.sound.music.time;
 		
 		lerpScore = Math.floor(FlxMath.lerp(lerpScore, intendedScore, elapsed * 24));
@@ -463,22 +476,21 @@ class FreeplayState extends MusicBeatState
 	}
 }
 
-class SongMetadata
+@:structInit class SongMetadata
 {
 	public var songName:String;
-	public var week:Int = 0;
+	public var week:Int;
 	public var songCharacter:String;
-	public var color:Int = -7179779;
+	public var color:Int;
 	public var folder:String;
-	public var lastDifficulty:String;
+	public var lastDifficulty:String = "";
 
-	public function new(song:String, week:Int, songCharacter:String, color:Int)
+	/*public function new(song:String, week:Int, songCharacter:String, color:Int)
 	{
 		this.songName = song;
 		this.week = week;
 		this.songCharacter = songCharacter;
 		this.color = color;
-		this.folder = Mods.currentModDirectory;
-		if (this.folder == null) this.folder = '';
-	}
+		this.folder = Mods.currentModDirectory ?? "";
+	}*/
 }

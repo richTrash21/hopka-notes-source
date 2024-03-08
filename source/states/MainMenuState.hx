@@ -139,8 +139,8 @@ class MainMenuState extends MusicBeatState
 		#end
 
 		// TABULATION TEST
-		// final test = new Alphabet(10, 40, "TEST\n\tTEST\n\t\tTEST\n\t\tTE\tST\nT\tE\tS\tT", true);
-		// add(test);
+		final test = new Alphabet(10, 40, "TABULATION TEST\n\tTEST\n\t\tTEST\n\t\tTE\tST\nT\tE\tS\tT\n\tUR\t\tMOM\n\t>:3", true);
+		add(test);
 
 		super.create();
 	}

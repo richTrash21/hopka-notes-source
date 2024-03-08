@@ -8,13 +8,13 @@ import haxe.extern.EitherType;
 
 typedef WeekFile = {
 	// JSON variables
-	var songs:Array<Array<EitherType<String, Array<Int>>>>;
+	var songs:Array<WeekSongData>;
 	var weekCharacters:Array<String>;
 	var weekBackground:String;
 	var weekBefore:String;
 	var storyName:String;
 	var weekName:String;
-	var freeplayColor:Array<Int>;
+	// var freeplayColor:Array<Int>;
 	var startUnlocked:Bool;
 	var hiddenUntilUnlocked:Bool;
 	var hideStoryMode:Bool;
@@ -22,27 +22,53 @@ typedef WeekFile = {
 	var difficulties:String;
 }
 
+abstract WeekSongData(Array<EitherType<String, Array<Int>>>) from Array<EitherType<String, Array<Int>>> to Array<EitherType<String, Array<Int>>>
+{
+	public var songName(get, set):String;
+	public var iconName(get, set):String;
+	public var bgColor(get, set):FlxColor;
+
+	@:noCompletion inline function get_songName():String	return this[0];
+	@:noCompletion inline function get_iconName():String	return this[1];
+	@:noCompletion inline function get_bgColor():FlxColor	return this[2] == null ? 0xFF9271FD :FlxColor.fromRGB(this[2][0], this[2][1], this[2][2]);
+
+	@:noCompletion inline function set_songName(v:String):String	return this[0] = v;
+	@:noCompletion inline function set_iconName(v:String):String	return this[1] = v;
+	@:noCompletion inline function set_bgColor(v:FlxColor):FlxColor
+	{
+		if (this[2] == null)
+			this[2] = [v.red, v.green, v.blue];
+		else
+		{
+			this[2][0] = v.red;
+			this[2][1] = v.green;
+			this[2][2] = v.blue;
+		}
+		return v;
+	}
+}
+
 class WeekData
 {
 	public static var weeksLoaded:Map<String, WeekData> = [];
 	public static var weeksList:Array<String> = [];
-	public var folder:String = '';
 	
 	// JSON variables
-	public var songs:Array<Array<EitherType<String, Array<Int>>>>;
+	public var songs:Array<WeekSongData>;
 	public var weekCharacters:Array<String>;
 	public var weekBackground:String;
 	public var weekBefore:String;
 	public var storyName:String;
 	public var weekName:String;
-	public var freeplayColor:Array<Int>;
+	// public var freeplayColor:Array<Int>;
 	public var startUnlocked:Bool;
 	public var hiddenUntilUnlocked:Bool;
 	public var hideStoryMode:Bool;
 	public var hideFreeplay:Bool;
 	public var difficulties:String;
 
-	public var fileName:String;
+	public var folder:String = "";
+	public var fileName:String = "";
 
 	public static final DEFAULT_WEEK:WeekFile = {
 		songs: [
@@ -55,18 +81,22 @@ class WeekData
 		weekBefore: 'tutorial',
 		storyName: 'Your New Week',
 		weekName: 'Custom Week',
-		freeplayColor: [146, 113, 253],
+		// freeplayColor: [146, 113, 253],
 		startUnlocked: true,
 		hiddenUntilUnlocked: false,
 		hideStoryMode: false,
 		hideFreeplay: false,
-		difficulties: ''
+		difficulties: ""
 	};
 
 	inline public static function createWeekFile():WeekFile return DEFAULT_WEEK;
 
 	public function new(weekFile:WeekFile, fileName:String)
 	{
+		// doesn't need that
+		if (Reflect.hasField(weekFile, "freeplayColor"))
+			Reflect.deleteField(weekFile, "freeplayColor");
+
 		// by MiguelItsOut
 		for (field in Reflect.fields(weekFile))
 			Reflect.setField(this, field, Reflect.field(weekFile, field));
@@ -97,17 +127,17 @@ class WeekData
 				final fileToCheck:String = directories[j] + 'weeks/' + sexList[i] + '.json';
 				if (!weeksLoaded.exists(sexList[i]))
 				{
-					final week:WeekFile = getWeekFile(fileToCheck);
+					final week = getWeekFile(fileToCheck);
 					if (week != null)
 					{
-						final weekFile:WeekData = new WeekData(week, sexList[i]);
-
+						final weekFile = new WeekData(week, sexList[i]);
 						#if MODS_ALLOWED
 						if (j >= originalLength)
 							weekFile.folder = directories[j].substring(Paths.mods().length, directories[j].length-1);
 						#end
 
-						if (weekFile != null && (isStoryMode == null || (isStoryMode && !weekFile.hideStoryMode) || (!isStoryMode && !weekFile.hideFreeplay))) {
+						if ((isStoryMode && !weekFile.hideStoryMode) || (!isStoryMode && !weekFile.hideFreeplay))
+						{
 							weeksLoaded.set(sexList[i], weekFile);
 							weeksList.push(sexList[i]);
 						}
@@ -145,10 +175,10 @@ class WeekData
 	{
 		if (!weeksLoaded.exists(weekToCheck))
 		{
-			final week:WeekFile = getWeekFile(path);
+			final week = getWeekFile(path);
 			if (week != null)
 			{
-				final weekFile:WeekData = new WeekData(week, weekToCheck);
+				final weekFile = new WeekData(week, weekToCheck);
 				if (i >= originalLength)
 				{
 					#if MODS_ALLOWED
@@ -175,19 +205,25 @@ class WeekData
 			rawJson = lime.utils.Assets.getText(path);
 		#end
 
-		return rawJson != null && rawJson.length > 0 ? cast haxe.Json.parse(rawJson) : null;
+		return rawJson?.length > 0 ? cast haxe.Json.parse(rawJson) : null;
 	}
 
 	//   FUNCTIONS YOU WILL PROBABLY NEVER NEED TO USE
 
 	//To use on PlayState.hx or Highscore stuff
 	inline public static function getWeekFileName():String
+	{
 		return weeksList[PlayState.storyWeek];
+	}
 
 	//Used on LoadingState, nothing really too relevant
 	inline public static function getCurrentWeek():WeekData
+	{
 		return weeksLoaded.get(weeksList[PlayState.storyWeek]);
+	}
 
 	inline public static function setDirectoryFromWeek(?data:WeekData)
-		return Mods.currentModDirectory = (data != null && data.folder != null && data.folder.length > 0) ? data.folder : '';
+	{
+		return Mods.currentModDirectory = data?.folder?.length > 0 ? data.folder : "";
+	}
 }

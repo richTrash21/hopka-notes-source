@@ -467,20 +467,20 @@ class PlayState extends MusicBeatState
 			if (SONG.gfVersion == null || SONG.gfVersion.length < 1)
 				SONG.gfVersion = "gf"; // Fix for the Chart Editor
 
-			gf = new Character(0, 0, SONG.gfVersion);
+			gf = new Character(SONG.gfVersion);
 			startCharacterPos(gf);
 			gfGroup.add(gf);
 			startCharacterScripts(gf.curCharacter);
 			charList.push(gf);
 		}
 
-		dad = new Character(0, 0, SONG.player2);
+		dad = new Character(SONG.player2);
 		startCharacterPos(dad, true);
 		dadGroup.add(dad);
 		startCharacterScripts(dad.curCharacter);
 		charList.push(dad);
 
-		boyfriend = new Character(0, 0, SONG.player1, true);
+		boyfriend = new Character(SONG.player1, true);
 		startCharacterPos(boyfriend);
 		boyfriendGroup.add(boyfriend);
 		startCharacterScripts(boyfriend.curCharacter);
@@ -542,9 +542,8 @@ class PlayState extends MusicBeatState
 		add(strumLineNotes);
 		add(grpNoteSplashes);
 
-		final splash:NoteSplash = new NoteSplash();
-		grpNoteSplashes.add(splash);
-		splash.alpha = 0.000001; //cant make it invisible or it won't allow precaching
+		final splash = grpNoteSplashes.add(new NoteSplash()).precache();
+		splash.alpha = 0; // cant make it invisible or it won't allow precaching (does he know? - rich)
 
 		opponentStrums = new FlxTypedGroup<StrumNote>();
 		playerStrums = new FlxTypedGroup<StrumNote>();
@@ -741,9 +740,10 @@ class PlayState extends MusicBeatState
 
 		final char = new Character(0, 0, newCharacter, type == 0);
 		map.set(newCharacter, char);
-		group.add(char);
+		// group.add(char);
 		startCharacterPos(char, type == 1);
-		char.alpha = 0.00001;
+		char.precache();
+		char.active = false;
 		startCharacterScripts(char.curCharacter);
 
 		/*switch (type)
@@ -782,7 +782,8 @@ class PlayState extends MusicBeatState
 				}
 		}*/
 	}
-
+ 
+	@:allow(substates.GameOverSubstate)
 	function startCharacterScripts(name:String)
 	{
 		// Lua
@@ -858,19 +859,21 @@ class PlayState extends MusicBeatState
 		return null;
 	}
 
-	function startCharacterPos(char:Character, ?gfCheck:Bool = false)
+	inline function startCharacterPos(char:Character, ?gfCheck = false)
 	{
-		if (gfCheck && char.curCharacter.startsWith("gf")) //IF DAD IS GIRLFRIEND, HE GOES TO HER POSITION
+		if (gfCheck && char.curCharacter.startsWith("gf")) // IF DAD IS GIRLFRIEND, HE GOES TO HER POSITION
 		{
+			// char.setPosition(GF_POS.x, GF_POS.y);
 			char.setPosition(GF_POS.x, GF_POS.y);
+			char.addPosition(char.position.x, char.position.y);
 			char.danceEveryNumBeats = 2;
 		}
-		char.addPosition(char.position.x, char.position.y);
+		// char.addPosition(char.position.x, char.position.y);
 	}
 
 	public var videoPlayer:VideoHandler;
 	public var subtitles:Subtitles;
-	public function startVideo(name:String, antialias:Bool = true):Bool // TODO: actual subtitles (done!!)
+	public function startVideo(name:String, antialias = true):Bool // TODO: actual subtitles (done!!)
 	{
 		#if VIDEOS_ALLOWED
 		inCutscene = true;
@@ -1141,10 +1144,10 @@ class PlayState extends MusicBeatState
 
 			final anim = char.animation.curAnim;
 			final doDance = reference % (char == gf ? Math.round(gfSpeed * char.danceEveryNumBeats) : char.danceEveryNumBeats) == 0;
-			if (doDance && !anim?.name.startsWith("sing") && !char.stunned)
+			if (doDance && !anim.name.startsWith("sing") && !char.stunned)
 			{
 				// fixes danceEveryNumBeats = 1 on idle dances
-				char.dance(char.danceEveryNumBeats == 1 && anim.curFrame > (anim.frameRate > 0 ? Math.round(4 / (24 * anim.frameDuration)) : 0));
+				char.dance(char.danceEveryNumBeats <= 1 && anim.curFrame > (anim.frameRate > 0 ? Math.round(4 / (24 * anim.frameDuration)) : 0));
 			}
 		}
 	}
@@ -1405,33 +1408,30 @@ class PlayState extends MusicBeatState
 		switch (event.event)
 		{
 			case "Change Character":
-				final charType = switch(event.value1.toLowerCase())
+				addCharacterToList(event.value2, switch (event.value1.toLowerCase().trim())
 				{
-					case "gf" | "girlfriend" | "1": 2;
-					case "dad" | "opponent" | "0":  1;
-					default:
-						final val = Std.parseInt(event.value1);
-						(Math.isNaN(val)) ? 0 : val;
-				}
-				addCharacterToList(event.value2, charType);
+					case "gf" | "girlfriend": 2;
+					case "dad" | "opponent":  1;
+					default:				  Std.parseInt(event.value1) ?? 0;
+				});
 			
 			case "Play Sound":
 				precacheList.set(event.value1, "sound");
-				Paths.sound(event.value1);
+				// Paths.sound(event.value1);
 		}
 		stagesFunc((stage) -> stage.eventPushedUnique(event));
 	}
 
 	inline function eventEarlyTrigger(event:EventNote):Float
 	{
-		final ret:Null<Float> = callOnScripts("eventEarlyTrigger", [event.event, event.value1, event.value2, event.strumTime], true, [], [0]);
+		final ret = callOnScripts("eventEarlyTrigger", [event.event, event.value1, event.value2, event.strumTime], true, [], [0]);
 		if (ret != null && ret != FunkinLua.Function_Continue)
 			return ret;
 
-		return switch(event.event)
+		return switch (event.event)
 		{
-			//Better timing so that the kill sound matches the beat intended
-			case "Kill Henchmen":  280; //Plays 280ms before the actual position
+			// Better timing so that the kill sound matches the beat intended
+			case "Kill Henchmen":  280; // Plays 280ms before the actual position
 			default:			   0;
 		}
 	}
@@ -1920,8 +1920,7 @@ class PlayState extends MusicBeatState
 		vocals.stop();
 		FlxG.sound.music.stop();
 
-		persistentUpdate = false;
-		persistentDraw = false;
+		persistentUpdate = persistentDraw = false;
 		#if LUA_ALLOWED
 		for (tween in modchartTweens)
 			tween.active = true;
@@ -2084,13 +2083,13 @@ class PlayState extends MusicBeatState
 
 			case "Change Character":
 				final charType = switch (value1.toLowerCase().trim())
-					{
-						case "gf" | "girlfriend":  2;
-						case "dad" | "opponent":   1;
-						default:				   flValue1 == null ? 0 : Std.int(flValue1);
-					}
+				{
+					case "gf" | "girlfriend": 2;
+					case "dad" | "opponent":  1;
+					default:				  flValue1 == null ? 0 : Std.int(flValue1);
+				}
 
-				switch(charType)
+				switch (charType)
 				{
 					case 0:
 						if (boyfriend.curCharacter != value2)
@@ -2098,13 +2097,16 @@ class PlayState extends MusicBeatState
 							if (!boyfriendMap.exists(value2))
 								addCharacterToList(value2, charType);
 
-							charList.remove(boyfriend);
 							final lastAlpha = boyfriend.alpha;
-							boyfriend.alpha = 0.00001;
-							boyfriend = boyfriendMap.get(value2);
+							charList.remove(boyfriendGroup.remove(boyfriend));
+							// boyfriend.alpha = 0.00001;
+							boyfriend.active = false;
+
+							charList.push(boyfriend = boyfriendGroup.add(boyfriendMap.get(value2)));
 							boyfriend.alpha = lastAlpha;
+							boyfriend.active = true;
+
 							iconP1.changeIcon(boyfriend.healthIcon);
-							charList.push(boyfriend);
 							bfCamOffset._setXCallback(bfCamOffset);
 						}
 						setOnScripts("boyfriendName", boyfriend.curCharacter);
@@ -2115,17 +2117,21 @@ class PlayState extends MusicBeatState
 							if (!dadMap.exists(value2))
 								addCharacterToList(value2, charType);
 
-							charList.remove(dad);
-							final wasGf = dad.curCharacter.startsWith("gf-") || dad.curCharacter == "gf";
 							final lastAlpha = dad.alpha;
-							dad.alpha = 0.00001;
-							dad = dadMap.get(value2);
-							if (gf != null)
-								gf.visible = (!dad.curCharacter.startsWith("gf-") && dad.curCharacter != "gf") ? (wasGf ? true : gf.visible) : false;
+							final wasGf = dad.curCharacter.startsWith("gf-") || dad.curCharacter == "gf";
+							charList.remove(dadGroup.remove(dad));
+							// dad.alpha = 0.00001;
+							dad.active = false;
+
+							charList.push(dad = dadGroup.add(dadMap.get(value2)));
 							dad.alpha = lastAlpha;
+							dad.active = true;
+
 							iconP2.changeIcon(dad.healthIcon);
-							charList.push(dad);
 							dadCamOffset._setXCallback(dadCamOffset);
+
+							if (gf != null)
+								gf.visible = !(dad.curCharacter.startsWith("gf-") || dad.curCharacter == "gf") ? (wasGf ? true : gf.visible) : false;
 						}
 						setOnScripts("dadName", dad.curCharacter);
 
@@ -2137,12 +2143,15 @@ class PlayState extends MusicBeatState
 								if (!gfMap.exists(value2))
 									addCharacterToList(value2, charType);
 
-								charList.remove(gf);
 								final lastAlpha = gf.alpha;
-								gf.alpha = 0.00001;
-								gf = gfMap.get(value2);
+								charList.remove(gfGroup.remove(gf));
+								// gf.alpha = 0.00001;
+								gf.active = false;
+
+								charList.push(gf = gfGroup.add(gfMap.get(value2)));
 								gf.alpha = lastAlpha;
-								charList.push(gf);
+								gf.active = true;
+
 								gfCamOffset._setXCallback(gfCamOffset);
 							}
 							setOnScripts("gfName", gf.curCharacter);
@@ -2859,10 +2868,11 @@ class PlayState extends MusicBeatState
 	}
 
 	// new psych input by crowplexus
-	public function invalidateNote(note:Note):Void
+	inline public function invalidateNote(note:Note):Void
 	{
 		note.kill();
-		notes.remove(note, true).destroy();
+		notes.remove(note, true);
+		note.destroy();
 	}
 
 	public function spawnNoteSplash(x:Float, y:Float, data:Int, ?note:Note)
@@ -2875,8 +2885,17 @@ class PlayState extends MusicBeatState
 
 	override function destroy()
 	{
-		FlxDestroyUtil.putArray([BF_POS, GF_POS, DAD_POS/*, bfCamOffset, dadCamOffset, gfCamOffset*/]);
+		//FlxG.camera.pixelPerfectRender = false;
+		//camHUD.pixelPerfectRender = false;
+		FlxG.stage.removeEventListener(KeyboardEvent.KEY_DOWN, onKeyPress);
+		FlxG.stage.removeEventListener(KeyboardEvent.KEY_UP, onKeyRelease);
+		FlxG.timeScale = #if FLX_PITCH FlxG.sound.music.pitch = #end 1.0;
+		FlxArrayUtil.clearArray(Note.globalRgbShaders);
+		backend.NoteTypesConfig.clearNoteTypesData();
+		if (videoPlayer?.isPlaying)
+			endVideo(); // just in case
 
+		FlxDestroyUtil.putArray([BF_POS, GF_POS, DAD_POS]);
 		boyfriendMap.clear();
 		dadMap.clear();
 		gfMap.clear();
@@ -2896,16 +2915,6 @@ class PlayState extends MusicBeatState
 		bfCamOffset = FlxDestroyUtil.destroy(bfCamOffset);
 		dadCamOffset = FlxDestroyUtil.destroy(dadCamOffset);
 		gfCamOffset = FlxDestroyUtil.destroy(gfCamOffset);
-		
-		//FlxG.camera.pixelPerfectRender = false;
-		//camHUD.pixelPerfectRender = false;
-		FlxG.stage.removeEventListener(KeyboardEvent.KEY_DOWN, onKeyPress);
-		FlxG.stage.removeEventListener(KeyboardEvent.KEY_UP, onKeyRelease);
-		FlxG.timeScale = #if FLX_PITCH FlxG.sound.music.pitch = #end 1.0;
-		FlxArrayUtil.clearArray(Note.globalRgbShaders);
-		backend.NoteTypesConfig.clearNoteTypesData();
-		if (videoPlayer?.isPlaying)
-			endVideo(); // just in case
 
 		// properly destroys custom substates now, finally!!!
 		super.destroy();

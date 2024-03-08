@@ -67,28 +67,30 @@ class Mods
 	
 	inline public static function mergeAllTextsNamed(path:String, ?defaultDirectory:String, allowDuplicates:Bool = false)
 	{
-		if (defaultDirectory == null) defaultDirectory = Paths.getPreloadPath();
+		if (defaultDirectory == null)
+			defaultDirectory = Paths.getPreloadPath();
+
 		defaultDirectory = defaultDirectory.trim();
-		if (!defaultDirectory.endsWith('/')) defaultDirectory += '/';
-		if (!defaultDirectory.startsWith('assets/')) defaultDirectory = 'assets/$defaultDirectory';
+		if (!defaultDirectory.endsWith("/"))
+			defaultDirectory += "/";
+		if (!defaultDirectory.startsWith("assets/"))
+			defaultDirectory = "assets/$defaultDirectory";
 
-		final mergedList:Array<String> = [];
-		final paths:Array<String> = directoriesWithFile(defaultDirectory, path);
+		final mergedList = new Array<String>();
+		final paths = directoriesWithFile(defaultDirectory, path);
 
-		final defaultPath:String = defaultDirectory + path;
-		if(paths.contains(defaultPath))
+		final defaultPath = defaultDirectory + path;
+		if (paths.contains(defaultPath))
 		{
 			paths.remove(defaultPath);
 			paths.insert(0, defaultPath);
 		}
 
 		for (file in paths)
-		{
-			final list:Array<String> = CoolUtil.coolTextFile(file);
-			for (value in list)
+			for (value in CoolUtil.coolTextFile(file))
 				if ((allowDuplicates || !mergedList.contains(value)) && value.length > 0)
 					mergedList.push(value);
-		}
+
 		return mergedList;
 	}
 

@@ -38,5 +38,6 @@ import flixel.group.FlxSpriteGroup;
 import flixel.group.FlxGroup.FlxTypedGroup;
 
 using StringTools;
+using objects.ExtendedSprite;
 
 #end
