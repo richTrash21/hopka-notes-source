@@ -211,11 +211,12 @@ class CharacterEditorState extends backend.MusicBeatUIState
 		character.loadCharacter(_char);
 		if (!reload /*&& isPlayer != character.editorIsPlayer*/)
 		{
-			character.isPlayer = !character.isPlayer;
+			// character.isPlayer = !character.isPlayer;
 			// character.flipX = (character.originalFlipX != character.isPlayer);
 			if (check_player != null)
 				check_player.checked = character.isPlayer;
 		}
+		character.isPlayer = isPlayer;
 		// character.debugMode = true;
 
 		/*if (pos > -1)
