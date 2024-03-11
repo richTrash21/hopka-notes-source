@@ -112,7 +112,8 @@
 	<!--<haxelib name="SScript"				if="HSCRIPT_ALLOWED"/>-->
 	<haxelib name="hxCodec"				if="VIDEOS_ALLOWED" version="2.5.1"/>
 	<!--<haxelib name="hxvlc"				if="VIDEOS_ALLOWED"/>-->
-	<haxelib name="discord_rpc"			if="desktop"/>
+	<!-- <haxelib name="discord_rpc"			if="desktop"/> -->
+	<haxelib name="hxdiscord_rpc"			if="desktop"/>
 	<!--<haxelib name="tjson" />-->
 	<haxedef name="openflPos" />
 	<haxedef name="hscriptPos" />

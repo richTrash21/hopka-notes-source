@@ -1,5 +1,6 @@
 package backend;
 
+import flixel.system.FlxAssets.FlxGraphicAsset;
 import flixel.graphics.frames.FlxAtlasFrames;
 import flixel.graphics.FlxGraphic;
 
@@ -23,7 +24,8 @@ import backend.Mods;
 class Paths
 {
 	public static final SOUND_EXT = #if web "mp3" #else "ogg" #end;
-	public static final VIDEO_EXT = "mp4"; 
+	public static final VIDEO_EXT = "mp4";
+	public static final SUB_EXT = "srt"; 
 
 	inline public static function excludeAsset(key:String)
 	{
@@ -37,6 +39,10 @@ class Paths
 		'assets/music/breakfast.$SOUND_EXT',
 		'assets/music/tea-time.$SOUND_EXT',
 	];
+
+	public static final PNG_REGEX = ~/^.+\.png$/i;
+	public static final LUA_REGEX = ~/^.+\.lua$/i;
+	public static final HX_REGEX  = ~/^.+\.hx$/i;
 
 	// haya I love you for the base cache dump I took to the max
 	public static function clearUnusedMemory()
@@ -182,7 +188,7 @@ class Paths
 		if (FileSystem.exists(file))
 			return file;
 		#end
-		return 'assets/data/$key.srt';
+		return 'assets/data/$key.$SUB_EXT';
 	}
 
 	static public function sound(key:String, ?library:String):Sound
@@ -216,7 +222,7 @@ class Paths
 	static public function image(key:String, ?library:String, ?allowGPU = true, ?posInfos:haxe.PosInfos):FlxGraphic
 	{
 		var bitmap:BitmapData = null;
-		var file:String = null;
+		var file:String;
 
 		#if MODS_ALLOWED
 		file = modsImages(key);
@@ -228,8 +234,8 @@ class Paths
 		else if (FileSystem.exists(file))
 			bitmap = BitmapData.fromFile(file);
 		else
-		#end
 		{
+		#end
 			file = getPath('images/$key.png', IMAGE, library);
 			if (currentTrackedAssets.exists(file))
 			{
@@ -238,7 +244,9 @@ class Paths
 			}
 			else if (OpenFlAssets.exists(file, IMAGE))
 				bitmap = OpenFlAssets.getBitmapData(file);
+		#if MODS_ALLOWED
 		}
+		#end
 
 		if (bitmap != null)
 			return cacheBitmap(file, bitmap, allowGPU);
@@ -287,6 +295,12 @@ class Paths
 		currentTrackedAssets.set(file, graph);
 		localTrackedAssets.push(file);
 		return graph;
+	}
+
+	// use internal asset system only when asset is String and path is not absolete
+	inline public static function resolveGraphicAsset(asset:FlxGraphicAsset):FlxGraphicAsset
+	{
+		return ((asset is String && !(asset.startsWith("assets/") || PNG_REGEX.match(asset))) ? Paths.image(asset) : asset);
 	}
 
 	static public function getTextFromFile(key:String, ?ignoreMods = false, ?absolute = false):String

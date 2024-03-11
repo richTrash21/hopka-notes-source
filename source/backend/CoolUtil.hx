@@ -113,14 +113,6 @@ class CoolUtil
 	}
 
 	/**
-		An integer analog of FlxMath.inBounds() method.
-	**/
-	/*inline public static function inBoundsInt(value:Int, ?min:Int, ?max:Int):Bool
-	{
-		return (min == null || value >= min) && (max == null || value <= max);
-	}*/
-
-	/**
 		An integer analog of FlxMath.bound() method.
 	**/
 	inline public static function boundInt(value:Int, ?min:Int, ?max:Int):Int

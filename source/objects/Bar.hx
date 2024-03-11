@@ -1,5 +1,6 @@
 package objects;
 
+import flixel.system.FlxAssets.FlxGraphicAsset;
 import flixel.graphics.FlxGraphic;
 import flixel.util.FlxDestroyUtil;
 import flixel.util.helpers.FlxBounds;
@@ -12,60 +13,59 @@ class Bar extends FlxSpriteGroup
 	public var rightBar:BarSprite;
 	public var bg:FlxSprite;
 	
-	public var bounds:FlxBounds<Float> = new FlxBounds(0.0);
+	public var bounds:FlxBounds<Float>;
 	public var percent(default, set):Float;
 	public var leftToRight(default, set):Bool = true;
 	public var smooth:Bool = true;
-
-	// DEPRECATED!!!
-	public var barCenter(get, never):Float;
-	public var centerPoint(default, null):FlxPoint = FlxPoint.get();
 
 	// you might need to change this if you want to use a custom bar
 	public var barWidth(default, set):Int;
 	public var barHeight(default, set):Int;
 	public var barOffset:FlxPoint = FlxPoint.get(3, 3); // for optimisation purposes
+	public var centerPoint(default, null):FlxPoint = FlxPoint.get();
 
 	public var valueFunction:() -> Float;
 	public var updateCallback:(value:Float, percent:Float) -> Void;
 
 	// internal value tracker
 	var _value:Float;
+	var _lerpFactor = 25.;
 
-	public function new(x:Float, y:Float, image:String = "healthBar", ?valueFunction:()->Float, boundMin:Float = 0.0, boundMax:Float = 1.0)
+	// DEPRECATED!!!
+	public var barCenter(get, never):Float;
+
+	public function new(x = 0., y = 0., image = "healthBar", ?valueFunction:()->Float, boundMin = 0.0, boundMax = 1.0)
 	{
 		super(x, y);
 
-		this.valueFunction = valueFunction ?? () -> 0.0;
-		setBounds(boundMin, boundMax);
-
-		_value = FlxMath.bound(this.valueFunction(), bounds.min, bounds.max);
-		percent = FlxMath.remapToRange(_value, bounds.min, bounds.max, 0.0, 100.0);
-		
 		bg = new FlxSprite(Paths.image(image));
-		barWidth = Std.int(bg.width - barOffset.x * 2);
-		barHeight = Std.int(bg.height - barOffset.y * 2);
-
 		leftBar = new BarSprite(bg.width, bg.height);
 		rightBar = new BarSprite(bg.width, bg.height, FlxColor.BLACK);
-		regenerateClips();
-
 		antialiasing = ClientPrefs.data.antialiasing;
 
 		add(leftBar);
 		add(rightBar);
 		add(bg);
+
+		bounds = new FlxBounds(boundMin, boundMax);
+		this.valueFunction = valueFunction ?? () -> 0.0;
+		_value = FlxMath.bound(this.valueFunction(), bounds.min, bounds.max);
+		@:bypassAccessor
+		{
+			percent = FlxMath.remapToRange(_value, bounds.min, bounds.max, 0.0, 100.0);
+			barWidth = Std.int(bg.width - barOffset.x * 2);
+			barHeight = Std.int(bg.height - barOffset.y * 2);
+		}
+		regenerateClips();
 	}
 
 	override public function update(elapsed:Float)
 	{
 		_value = FlxMath.bound(valueFunction(), bounds.min, bounds.max);
 		final percentValue = FlxMath.remapToRange(_value, bounds.min, bounds.max, 0, 100);
-		percent = smooth ? FlxMath.lerp(percent, percentValue, elapsed * 25) : percentValue;
-		/* if (rightBar != null)
-			rightBar.setPosition(bg.x, bg.y);
-		if (leftBar != null)
-			leftBar.setPosition(bg.x, bg.y);*/
+		percent = smooth ? FlxMath.lerp(percent, percentValue, elapsed * _lerpFactor) : percentValue;
+		// rightBar.setPosition(bg.x, bg.y);
+		// leftBar.setPosition(bg.x, bg.y);
 		super.update(elapsed);
 	}
 
@@ -92,18 +92,38 @@ class Bar extends FlxSpriteGroup
 			rightBar.color = right;
 	}
 
+	public function loadBarGraphics(bgGraphic:FlxGraphicAsset, ?leftBarGraphic:FlxGraphicAsset, ?rightBarGraphic:FlxGraphicAsset)
+	{
+		bg.loadGraphic(Paths.resolveGraphicAsset(bgGraphic));
+		if (leftBarGraphic != null)
+		{
+			leftBar.loadGraphic((leftBarGraphic = Paths.resolveGraphicAsset(leftBarGraphic)));
+			rightBar.loadGraphic(rightBarGraphic == null ? leftBarGraphic : Paths.resolveGraphicAsset(rightBarGraphic));
+		}
+	}
+
 	public function updateBar()
 	{
-		if (leftBar == null || rightBar == null)
-			return;
-
 		final leftSize = FlxMath.lerp(0, barWidth, (leftToRight ? percent * 0.01 : 1 - percent * 0.01));
 
-		// flixel is retarded
-		rightBar.clipRect = rightBar.clipRect.set(barOffset.x + leftSize, barOffset.y, barWidth - leftSize, barHeight);
-		leftBar.clipRect = leftBar.clipRect.set(barOffset.x, barOffset.y, leftSize, barHeight);
+		final scaleX = Math.abs(scale.x);
+		final scaleY = Math.abs(scale.y);
 
-		centerPoint.set(leftBar.x + leftSize + barOffset.x, leftBar.y + leftBar.clipRect.height * 0.5 + barOffset.y);
+		// flixel is retarded
+		rightBar.clipRect = rightBar.clipRect.set(
+			(barOffset.x + leftSize) * scaleX,
+			barOffset.y * scaleY,
+			(barWidth - leftSize) * scaleX,
+			barHeight * scaleY
+		);
+		leftBar.clipRect = leftBar.clipRect.set(
+			barOffset.x * scaleX,
+			barOffset.y * scaleY,
+			leftSize * scaleX,
+			barHeight * scaleY
+		);
+
+		centerPoint.set(leftBar.x + barOffset.x + leftSize * scaleX, leftBar.y + barOffset.y + barHeight * 0.5 * scaleY);
 
 		if (updateCallback != null)
 			updateCallback(_value, percent);
@@ -111,23 +131,15 @@ class Bar extends FlxSpriteGroup
 
 	public function regenerateClips()
 	{
-		if (leftBar == null && rightBar == null)
-			return;
+		leftBar.setBarSize(bg.width, bg.height);
+		// leftBar.setGraphicSize(bg.width, bg.height);
+		leftBar.updateHitbox();
+		// leftBar.clipRect = leftBar.clipRect.setSize(bg.width, bg.height);
 
-		if (leftBar != null)
-		{
-			// leftBar.setBarSize(bg.width, bg.height);
-			leftBar.setGraphicSize(bg.width, bg.height);
-			leftBar.updateHitbox();
-			leftBar.clipRect.set(0, 0, bg.width, bg.height);
-		}
-		if (rightBar != null)
-		{
-			// rightBar.setBarSize(bg.width, bg.height);
-			rightBar.setGraphicSize(bg.width, bg.height);
-			rightBar.updateHitbox();
-			rightBar.clipRect.set(0, 0, bg.width, bg.height);
-		}
+		rightBar.setBarSize(bg.width, bg.height);
+		// rightBar.setGraphicSize(bg.width, bg.height);
+		rightBar.updateHitbox();
+		// rightBar.clipRect = rightBar.clipRect.setSize(bg.width, bg.height);
 		updateBar();
 	}
 
@@ -156,16 +168,16 @@ class Bar extends FlxSpriteGroup
 	@:noCompletion inline function set_barWidth(value:Int)
 	{
 		barWidth = value;
-		// regenerateClips();
-		updateBar();
+		regenerateClips();
+		// updateBar();
 		return value;
 	}
 
 	@:noCompletion inline function set_barHeight(value:Int)
 	{
 		barHeight = value;
-		// regenerateClips();
-		updateBar();
+		regenerateClips();
+		// updateBar();
 		return value;
 	}
 
@@ -181,7 +193,7 @@ class Bar extends FlxSpriteGroup
 		return super.set_y(value);
 	}
 
-	@:noCompletion override inline function set_antialiasing(value:Bool):Bool
+	@:noCompletion override function set_antialiasing(value:Bool):Bool
 	{
 		for (member in members)
 			member.antialiasing = value;
@@ -192,7 +204,7 @@ class Bar extends FlxSpriteGroup
 
 class BarSprite extends FlxSprite
 {
-	/*inline static var __graphicKey = "bar_sprite_graphic";
+	inline static var __graphicKey = "__bar_sprite_graphic";
 
 	public var barWidth(get, set):Float;
 	public var barHeight(get, set):Float;
@@ -201,21 +213,21 @@ class BarSprite extends FlxSprite
 	@:noCompletion var __originalScale = FlxPoint.get();
 
 	@:noCompletion var __fakeScale = false;
-	@:noCompletion var __drawingFakeScale = false;*/
+	@:noCompletion var __drawingFakeScale = false;
 
-	public function new(width = 300., height = 10., color = FlxColor.WHITE, ?graphic:flixel.system.FlxAssets.FlxGraphicAsset)
+	public function new(width = 300., height = 10., color = FlxColor.WHITE, ?graphic:FlxGraphicAsset)
 	{
 		super(graphic);
 		if (graphic == null)
-			makeGraphic(Std.int(width), Std.int(height)/*, FlxColor.WHITE, true, FlxG.bitmap.getUniqueKey(__graphicKey)*/);
+			makeGraphic(1, 1, FlxColor.WHITE, true, FlxG.bitmap.getUniqueKey(__graphicKey));
 
 		this.color = color;
-		this.width = width;
-		this.height = height;
+		setSize(width, height);
+		setBarSize(width, height);
 		clipRect = FlxRect.get(0, 0, width, height);
 	}
 
-	/*public function setBarSize(width:Float, height:Float):Void
+	public function setBarSize(width:Float, height:Float):Void
 	{
 		__scale.set(width, height);
 	}
@@ -230,17 +242,17 @@ class BarSprite extends FlxSprite
 		scale.scalePoint(__scale);
 		super.updateHitbox();
 		scale.copyFrom(__originalScale);
-	}*/
+	}
 
 	override public function destroy():Void
 	{
 		clipRect = FlxDestroyUtil.put(clipRect);
 		super.destroy();
-		// __scale = FlxDestroyUtil.put(__scale);
-		// __originalScale = FlxDestroyUtil.put(__originalScale);
+		__scale = FlxDestroyUtil.put(__scale);
+		__originalScale = FlxDestroyUtil.put(__originalScale);
 	}
 
-	/*@:noCompletion override function drawComplex(camera:FlxCamera):Void
+	@:noCompletion override function drawComplex(camera:FlxCamera):Void
 	{
 		if (!__fakeScale)
 			return super.drawComplex(camera);
@@ -255,7 +267,7 @@ class BarSprite extends FlxSprite
 
 	override function transformWorldToPixelsSimple(worldPoint:FlxPoint, ?result:FlxPoint):FlxPoint
 	{
-		if (!__fakeScale || __drawingFakeScale)
+		if (__drawingFakeScale)
 			return super.transformWorldToPixelsSimple(worldPoint, result);
 
 		__originalScale.copyFrom(scale);
@@ -267,7 +279,7 @@ class BarSprite extends FlxSprite
 
 	override public function transformWorldToPixels(worldPoint:FlxPoint, ?camera:FlxCamera, ?result:FlxPoint):FlxPoint
 	{
-		if (!__fakeScale || __drawingFakeScale)
+		if (__drawingFakeScale)
 			return super.transformWorldToPixels(worldPoint, camera, result);
 
 		__originalScale.copyFrom(scale);
@@ -279,7 +291,7 @@ class BarSprite extends FlxSprite
 
 	override function transformScreenToPixels(screenPoint:FlxPoint, ?camera:FlxCamera, ?result:FlxPoint):FlxPoint
 	{
-		if (!__fakeScale || __drawingFakeScale)
+		if (__drawingFakeScale)
 			return super.transformScreenToPixels(screenPoint, camera, result);
 
 		__originalScale.copyFrom(scale);
@@ -289,14 +301,36 @@ class BarSprite extends FlxSprite
 		return ret;
 	}
 
-	@:noCompletion override inline function set_graphic(value:FlxGraphic):FlxGraphic
+	@:noCompletion override function set_graphic(value:FlxGraphic):FlxGraphic
 	{
 		__fakeScale = value != null && value.key.startsWith(__graphicKey);
+		__drawingFakeScale = false;
 		return super.set_graphic(value);
-	}*/
+	}
 
-	@:noCompletion override inline function set_clipRect(rect:FlxRect):FlxRect
+	@:noCompletion override function set_clipRect(rect:FlxRect):FlxRect
 	{
+		if (rect != null)
+		{
+			var scaleX = scale.x;
+			var scaleY = scale.y;
+			if (__fakeScale)
+			{
+				scaleX *= __scale.x;
+				scaleY *= __scale.y;
+			}
+
+			if ((scaleX = Math.max(FlxPoint.EPSILON, Math.abs(scaleX))) != 1)
+			{
+				rect.x /= scaleX;
+				rect.width /= scaleX;
+			}
+			if ((scaleY = Math.max(FlxPoint.EPSILON, Math.abs(scaleY))) != 1)
+			{
+				rect.y /= scaleY;
+				rect.height /= scaleY;
+			}
+		}
 		clipRect = rect;
 		if (frames != null)
 			frame = frames.frames[animation.frameIndex];
@@ -304,14 +338,14 @@ class BarSprite extends FlxSprite
 		return rect;
 	}
 
-	/*@:noCompletion override inline function set_width(value:Float):Float
+	@:noCompletion override inline function set_width(value:Float):Float
 	{
-		return __scale.x = width = value;
+		return width = value;
 	}
 
 	@:noCompletion override inline function set_height(value:Float):Float
 	{
-		return __scale.y = height = value;
+		return height = value;
 	}
 
 	@:noCompletion inline function get_barWidth():Float
@@ -321,9 +355,7 @@ class BarSprite extends FlxSprite
 
 	@:noCompletion inline function set_barWidth(value:Float):Float
 	{
-		// avoid devision by zero
-		// UPD: nvmd
-		return __scale.x = value; // value == 0 ? FlxPoint.EPSILON : value;
+		return __scale.x = value;
 	}
 
 	@:noCompletion inline function get_barHeight():Float
@@ -333,8 +365,6 @@ class BarSprite extends FlxSprite
 
 	@:noCompletion inline function set_barHeight(value:Float):Float
 	{
-		// avoid devision by zero
-		// UPD: nvmd
-		return __scale.x = value; // value == 0 ? FlxPoint.EPSILON : value;
-	}*/
+		return __scale.x = value;
+	}
 }

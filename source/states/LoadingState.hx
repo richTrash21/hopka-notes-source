@@ -18,7 +18,7 @@ import objects.Character;
 import sys.thread.Thread;
 import sys.thread.Mutex;
 
-class LoadingState extends MusicBeatState
+class LoadingState extends flixel.FlxState
 {
 	public static var loaded:Int = 0;
 	public static var loadMax:Int = 0;

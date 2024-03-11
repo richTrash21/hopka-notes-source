@@ -54,7 +54,7 @@ class HealthIcon extends ExtendedSprite
 
 	override function update(elapsed:Float)
 	{
-		if (lerpScale && isOnScreen(camera))
+		if (lerpScale && scale.x != baseScale && isOnScreen(camera))
 		{
 			setScale(FlxMath.lerp(baseScale, scale.x, Math.max(1 - (_speed * elapsed * lerpSpeed), 0)));
 			updateHitbox();
@@ -96,6 +96,7 @@ class HealthIcon extends ExtendedSprite
 		flipX	  = json.flip_x ?? false;
 		baseScale = json.scale ?? 1;
 		updateHitbox();
+		offset.set();
 
 		antialiasing = char.endsWith("-pixel") ? false : (ClientPrefs.data.antialiasing ? json.antialias ?? true : false);
 
@@ -108,10 +109,8 @@ class HealthIcon extends ExtendedSprite
 
 	override function updateHitbox()
 	{
-		// super.updateHitbox();
 		width = ICON_WIDTH + Math.abs(scale.x - baseScale) * frameWidth;
 		height = ICON_HEIGHT + Math.abs(scale.y - baseScale) * frameHeight;
-		offset.set();
 		centerOrigin();
 	}
 
@@ -123,6 +122,6 @@ class HealthIcon extends ExtendedSprite
 
 	@:noCompletion inline function set_baseScale(scale:Float):Float
 	{
-		return baseScale == scale ? scale : baseScale = setScale(scale).x;
+		return baseScale = setScale(scale).x;
 	}
 }

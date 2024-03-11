@@ -441,11 +441,11 @@ class PlayState extends MusicBeatState
 		inline function scriptHelper(file:String, folder:String)
 		{
 			#if LUA_ALLOWED
-			if ((~/^.+\.lua$/i).match(file))
+			if (Paths.LUA_REGEX.match(file))
 				new FunkinLua(folder + file);
 			#end
 			#if HSCRIPT_ALLOWED
-			if ((~/^.+\.hx$/i).match(file))
+			if (Paths.HX_REGEX.match(file))
 				initHScript(folder + file);
 			#end
 		}
@@ -550,7 +550,7 @@ class PlayState extends MusicBeatState
 
 		generateSong(SONG.song);
 
-		add(_camFollow = (prevCamFollow == null) ? new FlxObject(camPos.x, camPos.y, 1, 1) : prevCamFollow);
+		add(_camFollow = prevCamFollow ?? new FlxObject(camPos.x, camPos.y, 1, 1));
 		prevCamFollow = null;
 		camPos.put();
 
@@ -1147,7 +1147,7 @@ class PlayState extends MusicBeatState
 			if (doDance && !anim.name.startsWith("sing") && !char.stunned)
 			{
 				// fixes danceEveryNumBeats = 1 on idle dances
-				char.dance(char.danceEveryNumBeats <= 1 && anim.curFrame > (anim.frameRate > 0 ? Math.round(4 / (24 * anim.frameDuration)) : 0));
+				char.dance(char.danceEveryNumBeats < 2 && anim.curFrame > (anim.frameRate == 0 ? 0 : Math.floor(4 / (24 * anim.frameDuration))));
 			}
 		}
 	}
@@ -1185,20 +1185,24 @@ class PlayState extends MusicBeatState
 
 	public dynamic function fullComboFunction()
 	{
-		final sicks = ratingsData[0].hits;
-		final goods = ratingsData[1].hits;
-		final bads  = ratingsData[2].hits;
-		final shits = ratingsData[3].hits;
-
-		if (songMisses == 0)
+		ratingFC = if (songMisses == 0)
 		{
-			ratingFC = if (bads > 0 || shits > 0)  "FC";
-					   else if (goods > 0)		   "GFC";
-					   else if (sicks > 0)		   "SFC";
-					   else						   "";
+			if (ratingsData[2].hits + ratingsData[3].hits > 0) // bads and shits
+				"FC";
+			else if (ratingsData[1].hits > 0) // goods
+				"GFC";
+			else if (ratingsData[0].hits > 0) // sicks
+				"SFC";
+			else
+				"";
 		}
 		else
-			ratingFC = (songMisses < 10) ? "SDCB" : "Clear";
+		{
+			if (songMisses < 10)
+				"SDCB";
+			else
+				"Clear";
+		}
 	}
 
 	public function setSongTime(time:Float)
@@ -1262,7 +1266,10 @@ class PlayState extends MusicBeatState
 
 		#if desktop
 		// Updating Discord Rich Presence (with Time Left)
-		DiscordClient.changePresence(detailsText, SONG.song + ' ($storyDifficultyText)', iconP2.char, true, songLength, songName);
+		var text = SONG.song;
+		if (storyDifficultyText != Difficulty.defaultDifficulty)
+			text += ' ($storyDifficultyText)';
+		DiscordClient.changePresence(detailsText, text, iconP2.char, true, songLength, songName);
 		#end
 		setOnScripts("songLength", songLength);
 		callOnScripts("onSongStart");
@@ -1282,21 +1289,18 @@ class PlayState extends MusicBeatState
 				songSpeed  = ClientPrefs.getGameplaySetting("scrollspeed");
 		}
 
-		// whyyyy??????
-		// ok nvmd
-		final songData = SONG;
-		Conductor.bpm = songData.bpm;
-		curSong = songData.song;
+		Conductor.bpm = SONG.bpm;
+		curSong = SONG.song;
 
 		vocals = new FlxSound();
-		if (songData.needsVoices)
+		if (SONG.needsVoices)
 		{
-			vocals.loadEmbedded(Paths.voices(songData.song));
+			vocals.loadEmbedded(Paths.voices(SONG.song));
 			#if FLX_PITCH vocals.pitch = playbackRate; #end
 		}
 		FlxG.sound.list.add(vocals);
 
-		inst = new FlxSound().loadEmbedded(Paths.inst(songData.song));
+		inst = new FlxSound().loadEmbedded(Paths.inst(SONG.song));
 		FlxG.sound.list.add(inst);
 
 		notes = new FlxTypedGroup<Note>();
@@ -1315,7 +1319,7 @@ class PlayState extends MusicBeatState
 					makeEvent(event, i);
 		}
 
-		for (section in songData.notes)
+		for (section in SONG.notes)
 			for (songNotes in section.sectionNotes)
 			{
 				final daStrumTime = songNotes[0];
@@ -1383,7 +1387,7 @@ class PlayState extends MusicBeatState
 			}
 
 		//Event Notes
-		for (event in songData.events)
+		for (event in SONG.events)
 			for (i in 0...event[1].length)
 				makeEvent(event, i);
 
@@ -1424,7 +1428,7 @@ class PlayState extends MusicBeatState
 
 	inline function eventEarlyTrigger(event:EventNote):Float
 	{
-		final ret = callOnScripts("eventEarlyTrigger", [event.event, event.value1, event.value2, event.strumTime], true, [], [0]);
+		final ret = callOnScripts("eventEarlyTrigger", [event.event, event.value1, event.value2, event.strumTime], true);
 		if (ret != null && ret != FunkinLua.Function_Continue)
 			return ret;
 
@@ -1595,7 +1599,12 @@ class PlayState extends MusicBeatState
 
 		#if desktop
 		if (health >= 0 && !paused)
-			DiscordClient.changePresence(detailsPausedText, SONG.song + ' ($storyDifficultyText)', iconP2.char, songName);
+		{
+			var text = SONG.song;
+			if (storyDifficultyText != Difficulty.defaultDifficulty)
+				text += ' ($storyDifficultyText)';
+			DiscordClient.changePresence(detailsPausedText, text, iconP2.char, songName);
+		}
 		#end
 		if (!FlxG.autoPause && startedCountdown && canPause && !paused)
 		{
@@ -1610,7 +1619,10 @@ class PlayState extends MusicBeatState
 	inline function resetRPC(?cond = false)
 	{
 		#if desktop
-		DiscordClient.changePresence(detailsText, SONG.song + ' ($storyDifficultyText)', iconP2.char, cond,
+		var text = SONG.song;
+		if (storyDifficultyText != Difficulty.defaultDifficulty)
+			text += ' ($storyDifficultyText)';
+		DiscordClient.changePresence(detailsText, text, iconP2.char, cond,
 									 cond ? songLength - Conductor.songPosition - ClientPrefs.data.noteOffset : null, songName);
 		#end
 	}
@@ -1869,7 +1881,10 @@ class PlayState extends MusicBeatState
 		openSubState(new PauseSubState(camOther));
 
 		#if desktop
-		DiscordClient.changePresence(detailsPausedText, SONG.song + ' ($storyDifficultyText)', iconP2.char, songName);
+		var text = SONG.song;
+		if (storyDifficultyText != Difficulty.defaultDifficulty)
+			text += ' ($storyDifficultyText)';
+		DiscordClient.changePresence(detailsPausedText, text, iconP2.char, songName);
 		#end
 	}
 
@@ -1933,7 +1948,10 @@ class PlayState extends MusicBeatState
 
 		#if desktop
 		// Game Over doesn't get his own variable because it's only used here
-		DiscordClient.changePresence('Game Over - $detailsText', SONG.song + ' ($storyDifficultyText)', iconP2.char, songName);
+		var text = SONG.song;
+		if (storyDifficultyText != Difficulty.defaultDifficulty)
+			text += ' ($storyDifficultyText)';
+		DiscordClient.changePresence('Game Over - $detailsText', text, iconP2.char, songName);
 		#end
 		return isDead = true;
 	}
@@ -2212,16 +2230,16 @@ class PlayState extends MusicBeatState
 	public function moveCamera(char:String):Bool
 	{
 		_camTarget = char.toLowerCase().trim();
-		if (!isCameraOnForcedPos)
-			setCharCamOffset(_camTarget);
+		// if (!isCameraOnForcedPos)
+		//	setCharCamOffset(_camTarget);
 		camGame.follow(camFollow, LOCKON, 0);
 		callOnScripts("onMoveCamera", [_camTarget]);
 		return _camTarget == "dad" || _camTarget == "opponent"; // for lua
 	}
 
-	dynamic public function setCharCamOffset(char:String)
+	/*dynamic public function setCharCamOffset(char:String)
 	{
-		/*switch (char)
+		switch (char)
 		{
 			case "dad" | "opponent":
 				dad.camFollowOffset.copyFrom(dadCamOffset).add(150, -100);
@@ -2234,8 +2252,8 @@ class PlayState extends MusicBeatState
 			default:
 				boyfriend.camFollowOffset.copyFrom(bfCamOffset).subtract(100, 100);
 				boyfriend.updateCamFollow();
-		}*/
-	}
+		}
+	}*/
 
 	dynamic public function getCharCamFollow(char:String):FlxObject
 	{
@@ -2440,7 +2458,6 @@ class PlayState extends MusicBeatState
 	{
 		//tryna do MS based judgment due to popular demand
 		final daRating = Conductor.judgeNote(ratingsData, Math.abs(note.strumTime - Conductor.songPosition + ClientPrefs.data.ratingOffset) / playbackRate);		
-		final score = daRating.score;
 
 		totalNotesHit += daRating.ratingMod;
 		note.ratingMod = daRating.ratingMod;
@@ -2453,7 +2470,7 @@ class PlayState extends MusicBeatState
 
 		if (!practiceMode && !cpuControlled)
 		{
-			songScore += score;
+			songScore += daRating.score;
 			if (!note.ratingDisabled)
 			{
 				songHits++;
@@ -2466,14 +2483,11 @@ class PlayState extends MusicBeatState
 		if (!ClientPrefs.data.enableCombo || ClientPrefs.data.hideHud || (!showRating && !showComboNum))
 			return;
 
-		final placement	= FlxG.width * 0.35;
-		var scaleMult	= 0.7;
-		var numScale	= 0.5;
+		final placement = FlxG.width * 0.35;
+		var scaleMult   = 0.7;
+		var numScale    = 0.5;
 		if (isPixelStage)
-		{
-			scaleMult = daPixelZoom * 0.85;
-			numScale  = daPixelZoom * 0.85;
-		}
+			scaleMult = numScale = daPixelZoom * 0.85;
 
 		final noStacking = !ClientPrefs.data.comboStacking;
 		if (noStacking)
@@ -2508,11 +2522,6 @@ class PlayState extends MusicBeatState
 				numScore.loadGraphic(Paths.image(uiPrefix + 'num$i' + uiSuffix));
 				numScore.x = placement + (45 * daLoop++) - 90 + ClientPrefs.data.comboOffset[2];
 				numScore.screenCenter(Y).y += 80 - ClientPrefs.data.comboOffset[3];
-
-				/*if (numScore.frames?.frames[i] != null)
-					numScore.frame = numScore.frames.frames[i];
-				else
-					numScore.loadGraphic("flixel/images/logo/default.png"); // prevents crash*/
 
 				numScore.setScale(numScale);
 				numScore.updateHitbox();

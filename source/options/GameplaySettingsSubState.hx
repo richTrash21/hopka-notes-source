@@ -32,11 +32,11 @@ class GameplaySettingsSubState extends BaseOptionsMenu
 			'bool'
 		));
 
-		addOption(new Option('Use Note Logic',
+		/*addOption(new Option('Use Note Logic',
 			'If unchecked, camera moves according to the Character\'s animation, rather then Strum animation.\nNOTE: Works only if \"Directional Camera\" is checked.',
 			'camScriptNote',
 			'bool'
-		));
+		));*/
 
 		addOption(new Option('Ghost Tapping',
 			"If checked, you won't get misses from pressing keys\nwhile there are no notes able to be hit.",
@@ -48,7 +48,7 @@ class GameplaySettingsSubState extends BaseOptionsMenu
 			"If checked, the game automatically pauses if the screen isn't on focus.",
 			'autoPause',
 			'bool');
-		option.change = function() FlxG.autoPause = ClientPrefs.data.autoPause;
+		option.change = () -> FlxG.autoPause = ClientPrefs.data.autoPause;
 		addOption(option);
 
 		addOption(new Option('Deafen on Lost Focus',

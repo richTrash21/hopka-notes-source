@@ -143,9 +143,8 @@ class CharacterEditorState extends backend.MusicBeatUIState
 		mouseManager.add(healthIcon,
 			(icon) ->
 			{
-				final anim = icon.animation.curAnim;
-				if (anim.numFrames > 1)
-					anim.curFrame = FlxMath.wrap(++anim.curFrame, 0, anim.numFrames-1);
+				if (icon.animation.curAnim.numFrames > 1)
+					icon.animation.curAnim.curFrame = FlxMath.wrap(++icon.animation.curAnim.curFrame, 0, icon.animation.curAnim.numFrames-1);
 				icon.scale.set(0.975 * icon.baseScale, 0.975 * icon.baseScale);
 			},
 			(icon) -> icon.scale.set(icon.baseScale, icon.baseScale)
@@ -154,30 +153,28 @@ class CharacterEditorState extends backend.MusicBeatUIState
 		animsTxt.cameras = [camHUD];
 		add(animsTxt);
 
-		var tipText:FlxText = new FlxText(FlxG.width - 300, FlxG.height - 24, 300, "Press F1 for Help", 16);
+		var tipText:FlxText = new FlxText("Press F1 for Help", 16);
 		tipText.cameras = [camHUD];
-		tipText.setFormat(null, 16, FlxColor.WHITE, RIGHT, OUTLINE_FAST, FlxColor.BLACK);
-		tipText.borderColor = FlxColor.BLACK;
+		tipText.setBorderStyle(OUTLINE_FAST, FlxColor.BLACK, 1);
+		tipText.alignment = RIGHT;
 		tipText.scrollFactor.set();
-		tipText.borderSize = 1;
 		tipText.active = false;
+		tipText.setPosition(FlxG.width - tipText.width, FlxG.height - tipText.height);
 		add(tipText);
 
 		cameraZoomText = new FlxText(0, 50, 200, "Zoom: 1x");
 		cameraZoomText.setFormat(null, 16, FlxColor.WHITE, CENTER, OUTLINE_FAST, FlxColor.BLACK);
 		cameraZoomText.scrollFactor.set();
 		cameraZoomText.borderSize = 1;
-		cameraZoomText.screenCenter(X);
 		cameraZoomText.cameras = [camHUD];
-		add(cameraZoomText);
+		add(cameraZoomText.screenCenter(X));
 
 		frameAdvanceText = new FlxText(0, 75, 350, "");
 		frameAdvanceText.setFormat(null, 16, FlxColor.WHITE, CENTER, OUTLINE_FAST, FlxColor.BLACK);
 		frameAdvanceText.scrollFactor.set();
 		frameAdvanceText.borderSize = 1;
-		frameAdvanceText.screenCenter(X);
 		frameAdvanceText.cameras = [camHUD];
-		add(frameAdvanceText);
+		add(frameAdvanceText.screenCenter(X));
 
 		// FlxG.mouse.visible = true;
 		FlxG.camera.zoom = 1;
@@ -199,15 +196,7 @@ class CharacterEditorState extends backend.MusicBeatUIState
 
 	function addCharacter(reload = false)
 	{
-		/*var pos = -1;
-		if (character != null)
-		{
-			pos = members.indexOf(character);
-			remove(character).destroy();
-		}*/
-
 		final isPlayer = (reload ? character.isPlayer : !predictCharacterIsNotPlayer(_char));
-		// character = new Character(0, 0, _char, isPlayer);
 		character.loadCharacter(_char);
 		if (!reload /*&& isPlayer != character.editorIsPlayer*/)
 		{
@@ -217,17 +206,18 @@ class CharacterEditorState extends backend.MusicBeatUIState
 				check_player.checked = character.isPlayer;
 		}
 		character.isPlayer = isPlayer;
-		// character.debugMode = true;
-
-		/*if (pos > -1)
-			insert(pos, character);
-		else
-			add(character);*/
 
 		updateCharacterPositions();
 		reloadAnimList();
 		if (healthBar != null && healthIcon != null)
 			updateHealthBar();
+	}
+
+	inline function makeLabel(x = 0., y = 0., text:String):FlxText
+	{
+		final t = new FlxText(x, y, 0, text);
+		t.active = false;
+		return t;
 	}
 
 	function makeUIMenu()
@@ -274,33 +264,33 @@ class CharacterEditorState extends backend.MusicBeatUIState
 		//var hideGhostButton:FlxButton = null;
 		var makeGhostButton:FlxButton = new FlxButton(25, 15, "Make Ghost", () ->
 		{
-			var anim = anims[curAnim];
-			if (character.animation.curAnim != null)
+			// var anim = anims[curAnim];
+			if (character.animation.curAnim == null)
+				return;
+
+			var myAnim = anims[curAnim];
+			ghost.loadGraphic(character.graphic);
+			ghost.frames.frames = character.frames.frames;
+			ghost.animation.copyFrom(character.animation);
+			ghost.animation.play(character.animation.curAnim.name, true, false, character.animation.curAnim.curFrame);
+			ghost.animation.pause();
+
+			if (ghost != null)
 			{
-				var myAnim = anims[curAnim];
-				ghost.loadGraphic(character.graphic);
-				ghost.frames.frames = character.frames.frames;
-				ghost.animation.copyFrom(character.animation);
-				ghost.animation.play(character.animation.curAnim.name, true, false, character.animation.curAnim.curFrame);
-				ghost.animation.pause();
+				ghost.setPosition(character.x, character.y);
+				ghost.antialiasing = character.antialiasing;
+				ghost.flipX = character.flipX;
+				ghost.alpha = ghostAlpha;
 
-				if (ghost != null)
-				{
-					ghost.setPosition(character.x, character.y);
-					ghost.antialiasing = character.antialiasing;
-					ghost.flipX = character.flipX;
-					ghost.alpha = ghostAlpha;
+				ghost.scale.copyFrom(character.scale);
+				ghost.updateHitbox();
 
-					ghost.scale.copyFrom(character.scale);
-					ghost.updateHitbox();
-
-					ghost.offset.copyFrom(character.curAnimOffset);
-					ghost.visible = true;
-				}
-				/*hideGhostButton.active = true;
-				hideGhostButton.alpha = 1;*/
-				trace("created ghost image");
+				ghost.offset.copyFrom(character.curAnimOffset);
+				ghost.visible = true;
 			}
+			/*hideGhostButton.active = true;
+			hideGhostButton.alpha = 1;*/
+			trace("created ghost image");
 		});
 
 		/*hideGhostButton = new FlxButton(20 + makeGhostButton.width, makeGhostButton.y, "Hide Ghost", () ->
@@ -314,12 +304,7 @@ class CharacterEditorState extends backend.MusicBeatUIState
 
 		var highlightGhost:FlxUICheckBox = new FlxUICheckBox(20 + makeGhostButton.x + makeGhostButton.width, makeGhostButton.y, null, null, "Highlight Ghost", 100);
 		highlightGhost.callback = () ->
-		{
-			var value = highlightGhost.checked ? 125 : 0;
-			ghost.colorTransform.redOffset = value;
-			ghost.colorTransform.greenOffset = value;
-			ghost.colorTransform.blueOffset = value;
-		};
+			ghost.colorTransform.redOffset = ghost.colorTransform.greenOffset = ghost.colorTransform.blueOffset = highlightGhost.checked ? 125 : 0;
 
 		var ghostAlphaSlider:FlxUISlider = new FlxUISlider(this, "ghostAlpha", 10, makeGhostButton.y + 25, 0, 1, 210, null, 5, FlxColor.WHITE, FlxColor.BLACK);
 		ghostAlphaSlider.nameLabel.text = "Opacity:";
@@ -427,7 +412,7 @@ class CharacterEditorState extends backend.MusicBeatUIState
 		reloadCharacterDropDown();
 		charDropDown.selectedLabel = _char;
 
-		tab_group.add(new FlxText(charDropDown.x, charDropDown.y - 18, 0, "Character:"));
+		tab_group.add(makeLabel(charDropDown.x, charDropDown.y - 18, "Character:"));
 		tab_group.add(check_player);
 		tab_group.add(reloadCharacter);
 		tab_group.add(templateCharacter);
@@ -461,6 +446,12 @@ class CharacterEditorState extends backend.MusicBeatUIState
 
 		animationDropDown = new DropDownAdvanced(15, animationInputText.y - 55, FlxUIDropDownMenu.makeStrIdLabelArray([""], true), (pressed:String) ->
 		{
+			if (character.animationsArray.length == 0)
+			{
+				final t = "Trying to switch to null animation!";
+				return #if debug FlxG.log.warn(t) #else trace('WARNING!! - $t') #end;
+			}
+
 			final anim:AnimArray = character.animationsArray[Std.parseInt(pressed)];
 			animationInputText.text = anim.anim;
 			animationNameInputText.text = anim.name;
@@ -478,17 +469,15 @@ class CharacterEditorState extends backend.MusicBeatUIState
 		{
 			final str = animationIndicesInputText.text.trim();
 			var indices:Array<Int>;
-			// stolen from redar13 (again) >:3
-			if (str.contains("..."))
+			if (str.contains("...")) // stolen from redar13 (again) >:3
 			{
 				var split = str.split("...");
 				var from = FlxMath.maxInt(0, Std.parseInt(split[0]));
 				var to = FlxMath.maxInt(0, Std.parseInt(split[1]));
-				var reverse = false;
 
-				if (from > to)
+				var reverse = false;
+				if ((reverse = from > to))
 				{
-					reverse = true;
 					final temp = from;
 					from = to;
 					to = temp;
@@ -500,9 +489,9 @@ class CharacterEditorState extends backend.MusicBeatUIState
 				animationIndicesInputText.text = indices.join(",");
 			}
 			else
-				indices = str.length > 0 ? flixel.util.FlxStringUtil.toIntArray(str) : [];
+				indices = str.length == 0 ? [] : flixel.util.FlxStringUtil.toIntArray(str);
 
-			var lastAnim:String = (character.animationsArray[curAnim] == null) ? "" : character.animationsArray[curAnim].anim;
+			// var lastAnim:String = (character.animationsArray[curAnim] == null) ? "" : character.animationsArray[curAnim].anim;
 			var lastOffsets = [0., 0.];
 			for (anim in character.animationsArray)
 				if (animationInputText.text == anim.anim)
@@ -534,6 +523,12 @@ class CharacterEditorState extends backend.MusicBeatUIState
 
 		var removeButton = new FlxButton(180, animationIndicesInputText.y + 60, "Remove", () ->
 		{
+			if (character.animationsArray.length == 0)
+			{
+				final t = "No animation to remove!";
+				return #if debug FlxG.log.warn(t) #else trace('WARNING!! - $t') #end;
+			}
+
 			for (anim in character.animationsArray)
 				if (animationInputText.text == anim.anim)
 				{
@@ -548,10 +543,12 @@ class CharacterEditorState extends backend.MusicBeatUIState
 
 					if (resetAnim && character.animationsArray.length > 0)
 					{
-						curAnim = FlxMath.wrap(curAnim, 0, anims.length-1);
-						character.playAnim(anims[curAnim].anim, true);
+						character.playAnim(anims[curAnim = FlxMath.wrap(curAnim, 0, anims.length-1)].anim, true);
 						updateTextColors();
 					}
+					else if (character.animationsArray.length == 0)
+						character.animation.curAnim = null; // hopefully fixes crash
+
 					reloadAnimList();
 					trace("Removed animation: " + animationInputText.text);
 					break;
@@ -560,12 +557,12 @@ class CharacterEditorState extends backend.MusicBeatUIState
 		reloadAnimList();
 		animationDropDown.selectedLabel = anims[0] == null ? "" : anims[0].anim;
 
-		tab_group.add(new FlxText(animationDropDown.x, animationDropDown.y - 18, 0, "Animations:"));
-		tab_group.add(new FlxText(animationInputText.x, animationInputText.y - 18, 0, "Animation name:"));
-		tab_group.add(new FlxText(animationFramerate.x, animationFramerate.y - 18, 0, "Framerate:"));
-		tab_group.add(new FlxText(animationNameInputText.x, animationNameInputText.y - 18, 0, "Animation Symbol Name/Tag:"));
-		tab_group.add(new FlxText(animationIndicesInputText.x, animationIndicesInputText.y - 18, 0, "ADVANCED - Animation Indices:"));
-		tab_group.add(new FlxText(animationLoopPoint.x, animationLoopPoint.y - 18, 0, "Loop Point:"));
+		tab_group.add(makeLabel(animationDropDown.x, animationDropDown.y - 18, "Animations:"));
+		tab_group.add(makeLabel(animationInputText.x, animationInputText.y - 18, "Animation name:"));
+		tab_group.add(makeLabel(animationFramerate.x, animationFramerate.y - 18, "Framerate:"));
+		tab_group.add(makeLabel(animationNameInputText.x, animationNameInputText.y - 18, "Animation Symbol Name/Tag:"));
+		tab_group.add(makeLabel(animationIndicesInputText.x, animationIndicesInputText.y - 18, "ADVANCED - Animation Indices:"));
+		tab_group.add(makeLabel(animationLoopPoint.x, animationLoopPoint.y - 18, "Loop Point:"));
 
 		tab_group.add(animationInputText);
 		tab_group.add(animationNameInputText);
@@ -672,13 +669,13 @@ class CharacterEditorState extends backend.MusicBeatUIState
 		healthColorStepperG = new FlxUINumericStepper(singDurationStepper.x + 60, saveCharacterButton.y, 20, character.healthColor.green, 0, 255, 0);
 		healthColorStepperB = new FlxUINumericStepper(singDurationStepper.x + 120, saveCharacterButton.y, 20, character.healthColor.blue, 0, 255, 0);
 
-		tab_group.add(new FlxText(15, imageInputText.y - 18, 0, "Image file name:"));
-		tab_group.add(new FlxText(15, healthIconInputText.y - 18, 0, "Health icon name:"));
-		tab_group.add(new FlxText(15, singDurationStepper.y - 18, 0, "Sing Animation length:"));
-		tab_group.add(new FlxText(15, scaleStepper.y - 18, 0, "Scale:"));
-		tab_group.add(new FlxText(positionXStepper.x, positionXStepper.y - 18, 0, "Character X/Y:"));
-		tab_group.add(new FlxText(positionCameraXStepper.x, positionCameraXStepper.y - 18, 0, "Camera X/Y:"));
-		tab_group.add(new FlxText(healthColorStepperR.x, healthColorStepperR.y - 18, 0, "Health bar R/G/B:"));
+		tab_group.add(makeLabel(15, imageInputText.y - 18, "Image file name:"));
+		tab_group.add(makeLabel(15, healthIconInputText.y - 18, "Health icon name:"));
+		tab_group.add(makeLabel(15, singDurationStepper.y - 18, "Sing Animation length:"));
+		tab_group.add(makeLabel(15, scaleStepper.y - 18, "Scale:"));
+		tab_group.add(makeLabel(positionXStepper.x, positionXStepper.y - 18, "Character X/Y:"));
+		tab_group.add(makeLabel(positionCameraXStepper.x, positionCameraXStepper.y - 18, "Camera X/Y:"));
+		tab_group.add(makeLabel(healthColorStepperR.x, healthColorStepperR.y - 18, "Health bar R/G/B:"));
 
 		tab_group.add(imageInputText);
 		tab_group.add(reloadImage);

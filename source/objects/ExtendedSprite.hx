@@ -26,7 +26,7 @@ class ExtendedSprite extends FlxSprite
 		Precahces given sprite by setting low alpha value and calling draw.
 		@return  Given sprite
 	**/
-	/*inline*/ public static function precache<T:FlxSprite>(sprite:T):T
+	inline public static function precache<T:FlxSprite>(sprite:T):T
 	{
 		final originalAlpha = sprite.alpha;
 		sprite.alpha = 0.00001;
@@ -47,14 +47,14 @@ class ExtendedSprite extends FlxSprite
 
 	public var inBounds(default, null):Bool;
 	public var boundBox(default, set):FlxRect;
-	public var onEnterBounds:()->Void;
-	public var onLeaveBounds:()->Void;
+	public var onEnterBounds:(sprite:FlxSprite)->Void;
+	public var onLeaveBounds:(sprite:FlxSprite)->Void;
 
 	var __drawingWithOffset = false;
 
 	public function new(?x = 0., ?y = 0., ?simpleGraphic:flixel.system.FlxAssets.FlxGraphicAsset, ?antialiasing = true):Void
 	{
-		super(x, y, simpleGraphic is String ? Paths.image(simpleGraphic) : simpleGraphic);
+		super(x, y, Paths.resolveGraphicAsset(simpleGraphic));
 		this.antialiasing = ClientPrefs.data.antialiasing ? antialiasing : false;
 	}
 
@@ -78,9 +78,9 @@ class ExtendedSprite extends FlxSprite
 		if (lastInBounds != inBounds)
 		{
 			if (inBounds && onEnterBounds != null)
-				onEnterBounds();
+				onEnterBounds(this);
 			else if (!inBounds && onLeaveBounds != null)
-				onLeaveBounds();
+				onLeaveBounds(this);
 		}
 	}
 
@@ -264,7 +264,7 @@ class ExtendedSprite extends FlxSprite
 
 	override public function transformWorldToPixelsSimple(worldPoint:FlxPoint, ?result:FlxPoint):FlxPoint
 	{
-		if (animation.curAnim == null || !animOffsets.exists(animation.curAnim.name) || __drawingWithOffset)
+		if (animation.curAnim == null || !animOffsets.exists(animation.curAnim.name) /*|| __drawingWithOffset*/)
 			return super.transformWorldToPixelsSimple(worldPoint, result);
 
 		// get current animation's offsets
@@ -277,7 +277,7 @@ class ExtendedSprite extends FlxSprite
 
 	override public function transformWorldToPixels(worldPoint:FlxPoint, ?camera:FlxCamera, ?result:FlxPoint):FlxPoint
 	{
-		if (animation.curAnim == null || !animOffsets.exists(animation.curAnim.name) || __drawingWithOffset)
+		if (animation.curAnim == null || !animOffsets.exists(animation.curAnim.name) /*|| __drawingWithOffset*/)
 			return super.transformWorldToPixels(worldPoint, camera, result);
 
 		// get current animation's offsets
@@ -293,11 +293,11 @@ class ExtendedSprite extends FlxSprite
 		return animation.curAnim == null ? null : animOffsets.get(animation.curAnim.name);
 	}
 
-	@:noCompletion inline function set_boundBox(Rect:FlxRect):FlxRect
+	@:noCompletion inline function set_boundBox(rect:FlxRect):FlxRect
 	{
-		if (Rect != null)
-			inBounds = objectInRect(this, Rect);
-		return boundBox = Rect;
+		if (rect != null)
+			inBounds = objectInRect(this, rect);
+		return boundBox = rect;
 	}
 
 	@:noCompletion inline function get_RIGHT():Float
