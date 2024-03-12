@@ -117,13 +117,21 @@ class Alphabet extends FlxTypedSpriteGroup<AlphaCharacter>
 
 	override public function update(elapsed:Float)
 	{
-		if (isMenuItem)
+		if (isMenuItem && (changeX || changeY))
 		{
-			final lerpVal = FlxMath.bound(elapsed * 9.6, 0, 1);
+			var lerpVal:Null<Float> = null; // FlxMath.bound(elapsed * 9.6, 0, 1)
 			if (changeX)
-				x = FlxMath.lerp(x, (targetY * distancePerItem.x) + startPosition.x, lerpVal);
+			{
+				final __targetX = (targetY * distancePerItem.x) + startPosition.x;
+				if (x != __targetX)
+					x = FlxMath.lerp(__targetX, x, lerpVal ?? (lerpVal = Math.exp(-elapsed * 9.6)));
+			}
 			if (changeY)
-				y = FlxMath.lerp(y, (targetY * 1.3 * distancePerItem.y) + startPosition.y, lerpVal);
+			{
+				final __targetY = (targetY * 1.3 * distancePerItem.y) + startPosition.y;
+				if (y != __targetY)
+					y = FlxMath.lerp(__targetY, y, lerpVal ?? (lerpVal = Math.exp(-elapsed * 9.6)));
+			}
 		}
 		super.update(elapsed);
 	}

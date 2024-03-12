@@ -63,7 +63,7 @@ class Bar extends FlxSpriteGroup
 	{
 		_value = FlxMath.bound(valueFunction(), bounds.min, bounds.max);
 		final percentValue = FlxMath.remapToRange(_value, bounds.min, bounds.max, 0, 100);
-		percent = smooth ? FlxMath.lerp(percent, percentValue, elapsed * _lerpFactor) : percentValue;
+		percent = smooth && percent != percentValue ? FlxMath.lerp(percentValue, percent, Math.exp(-elapsed * _lerpFactor)) : percentValue;
 		// rightBar.setPosition(bg.x, bg.y);
 		// leftBar.setPosition(bg.x, bg.y);
 		super.update(elapsed);

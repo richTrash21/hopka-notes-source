@@ -220,23 +220,25 @@ class FreeplayState extends MusicBeatState
 
 		FlxG.camera.followLerp = elapsed * 9.05 * (FlxG.updateFramerate / 60);
 		Conductor.songPosition = FlxG.sound.music.time;
+
+		lerpScore = if (Math.abs(lerpScore - intendedScore) <= 10)
+						intendedScore;
+					else
+						Math.floor(FlxMath.lerp(intendedScore, lerpScore, Math.exp(-elapsed * 24)));
+
+		lerpRating = if (Math.abs(lerpRating - intendedRating) <= 0.01)
+						intendedRating;
+					 else
+						FlxMath.lerp(intendedRating, lerpRating, Math.exp(-elapsed * 12));
+
+		final ratingSplit:Array<String> = Std.string(CoolUtil.floorDecimal(lerpRating * 100, 2)).split(".");
+		if(ratingSplit.length < 2) // No decimals, add an empty space
+			ratingSplit.push("");
 		
-		lerpScore = Math.floor(FlxMath.lerp(lerpScore, intendedScore, elapsed * 24));
-		lerpRating = FlxMath.lerp(lerpRating, intendedRating, elapsed * 12);
+		while(ratingSplit[1].length < 2) // Less than 2 decimals in it, add decimals then
+			ratingSplit[1] += "0";
 
-		if (Math.abs(lerpScore - intendedScore) <= 10)
-			lerpScore = intendedScore;
-		if (Math.abs(lerpRating - intendedRating) <= 0.01)
-			lerpRating = intendedRating;
-
-		final ratingSplit:Array<String> = Std.string(CoolUtil.floorDecimal(lerpRating * 100, 2)).split('.');
-		if(ratingSplit.length < 2) //No decimals, add an empty space
-			ratingSplit.push('');
-		
-		while(ratingSplit[1].length < 2) //Less than 2 decimals in it, add decimals then
-			ratingSplit[1] += '0';
-
-		scoreText.text = 'PERSONAL BEST: $lerpScore (${ratingSplit.join('.')}%)';
+		scoreText.text = 'PERSONAL BEST: $lerpScore (' + ratingSplit.join(".") + "%)";
 		positionHighscore();
 
 		final shiftMult:Int = FlxG.keys.pressed.SHIFT ? 3 : 1;

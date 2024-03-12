@@ -54,9 +54,9 @@ class HealthIcon extends ExtendedSprite
 
 	override function update(elapsed:Float)
 	{
-		if (lerpScale && scale.x != baseScale && isOnScreen(camera))
+		if (lerpScale && scale.x != baseScale /*&& isOnScreen(camera)*/)
 		{
-			setScale(FlxMath.lerp(baseScale, scale.x, Math.max(1 - (_speed * elapsed * lerpSpeed), 0)));
+			setScale(FlxMath.lerp(baseScale, scale.x, Math.exp(-elapsed * _speed * lerpSpeed))); // Math.max(1 - (_speed * elapsed * lerpSpeed), 0)
 			updateHitbox();
 		}
 

@@ -65,7 +65,7 @@ class GameCamera extends FlxCamera
 			followLerp = elapsed * _speed * cameraSpeed * (FlxG.updateFramerate / 60);
 
 		if (updateZoom && !tweeningZoom)
-			zoom = FlxMath.lerp(targetZoom, zoom, Math.max(1 - (elapsed * _zoomSpeed * zoomDecay), 0));
+			zoom = FlxMath.lerp(targetZoom, zoom, Math.exp(-elapsed * _zoomSpeed * zoomDecay)); // Math.max(1 - (elapsed * _zoomSpeed * zoomDecay), 0)
 
 		super.update(elapsed);
 	}

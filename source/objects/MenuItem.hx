@@ -70,7 +70,9 @@ class StoryMenuItem extends MenuItem
 	override public function update(elapsed:Float)
 	{
 		super.update(elapsed);
-		y = FlxMath.lerp(y, (targetY * 120) + 480, Math.min(elapsed * 10.2, 1));
+		final __targetY = (targetY * 120) + 480;
+		if (y != __targetY)
+			y = FlxMath.lerp(__targetY, y, Math.exp(-elapsed * 10.2)); // Math.min(elapsed * 10.2, 1)
 	}
 }
 

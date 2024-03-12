@@ -168,7 +168,7 @@ class InputFormatter
 
 	inline static function __keyToString(key:haxe.extern.EitherType<FlxKey, FlxGamepadInputID>):String
 	{
-		final label = Std.string(key);
+		final label:String = cast (key:String);
 		if (label.toLowerCase() == "null")
 			return "---";
 

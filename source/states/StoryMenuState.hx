@@ -175,8 +175,10 @@ class StoryMenuState extends MusicBeatState
 
 	override function update(elapsed:Float)
 	{
-		lerpScore = Math.floor(FlxMath.lerp(lerpScore, intendedScore, FlxMath.bound(elapsed * 30, 0, 1)));
-		if(Math.abs(intendedScore - lerpScore) < 10) lerpScore = intendedScore;
+		lerpScore = if (Math.abs(intendedScore - lerpScore) < 10)
+						intendedScore;
+					else
+						Math.floor(FlxMath.lerp(intendedScore, lerpScore, Math.exp(-elapsed * 30)));
 
 		scoreText.text = "WEEK SCORE:" + lerpScore;
 

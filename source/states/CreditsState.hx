@@ -168,17 +168,17 @@ class CreditsState extends MusicBeatState
 		
 		for (item in grpOptions.members)
 		{
-			if(!item.bold)
+			if (!item.bold)
 			{
-				var lerpVal:Float = FlxMath.bound(elapsed * 12, 0, 1);
-				if(item.targetY == 0)
+				var lerpVal:Float = Math.exp(-elapsed * 12); // FlxMath.bound(elapsed * 12, 0, 1)
+				if (item.targetY == 0)
 				{
-					var lastX:Float = item.x;
+					final lastX = item.x;
 					item.screenCenter(X);
-					item.x = FlxMath.lerp(lastX, item.x - 70, lerpVal);
+					item.x = FlxMath.lerp(item.x - 70, lastX, lerpVal);
 				}
 				else
-					item.x = FlxMath.lerp(item.x, 200 + -40 * Math.abs(item.targetY), lerpVal);
+					item.x = FlxMath.lerp(200 + -40 * Math.abs(item.targetY), item.x, lerpVal);
 			}
 		}
 		super.update(elapsed);

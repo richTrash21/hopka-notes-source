@@ -203,14 +203,10 @@ class TitleState extends MusicBeatState
 
 		if (newTitle && !pressedEnter)
 		{
-			titleTextTimer += FlxMath.bound(elapsed, 0, 1);
-			if (titleTextTimer > 2) titleTextTimer -= 2;
-
-			var timer:Float = titleTextTimer;
-			if (timer >= 1) timer = (-timer) + 2;
+			if ((titleTextTimer += elapsed) > 2)
+				titleTextTimer -= 2;
 				
-			timer = FlxEase.quadInOut(timer);
-				
+			final timer = FlxEase.quadInOut(titleTextTimer >= 1 ? (-titleTextTimer) + 2 : titleTextTimer);
 			titleText.color = FlxColor.interpolate(titleTextColors[0], titleTextColors[1], timer);
 			titleText.alpha = FlxMath.lerp(titleTextAlphas[0], titleTextAlphas[1], timer);
 		}

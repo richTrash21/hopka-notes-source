@@ -419,13 +419,15 @@ class ModsMenuState extends MusicBeatState
 		for (mod in mods)
 		{
 			var intendedPos:Float = (i - curSelected) * 225 + 200;
-			if(i > curSelected) intendedPos += 225;
-			mod.alphabet.y = elapsed == -1 ? intendedPos : FlxMath.lerp(mod.alphabet.y, intendedPos, FlxMath.bound(elapsed * 12, 0, 1));
+			if (i > curSelected)
+				intendedPos += 225;
+			mod.alphabet.y = elapsed == -1 ? intendedPos : FlxMath.lerp(intendedPos, mod.alphabet.y, Math.exp(-elapsed * 12));
 
-			if(i == curSelected)
+			if (i == curSelected)
 			{
 				descriptionTxt.y = mod.alphabet.y + 160;
-				for (button in buttonsArray) button.y = mod.alphabet.y + 320;
+				for (button in buttonsArray)
+					button.y = mod.alphabet.y + 320;
 			}
 			i++;
 		}
