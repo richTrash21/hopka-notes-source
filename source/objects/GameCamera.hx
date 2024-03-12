@@ -54,12 +54,13 @@ class GameCamera extends FlxCamera
 
 		// once per half of current framerate (hope it won't backfire tho)
 		final delay = 1 / (Main.fpsVar.currentFPS * .5);
-		if ((__tweenTimer += FlxG.elapsed) > delay)
+		if ((__tweenTimer += elapsed * .5) > delay)
 		{
 			__tweenTimer -= delay;
 			tweeningZoom = false;
 			FlxTween.globalManager.forEachTweensOf(this, ["zoom"], (_) -> tweeningZoom = true);
 		}
+		__tweenTimer += elapsed * .5;
 
 		if (target != null && updateLerp)
 			followLerp = elapsed * _speed * cameraSpeed * (FlxG.updateFramerate / 60);
@@ -73,10 +74,8 @@ class GameCamera extends FlxCamera
 	@:noCompletion /*inline*/ override function set_active(bool:Bool):Bool
 	{
 		if (!bool)
-		{
-			followLerp = 0;
 			tweeningZoom = false;
-		}
+
 		return active = bool;
 	}
 
