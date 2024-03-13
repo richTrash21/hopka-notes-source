@@ -242,7 +242,7 @@ class FreeplayState extends MusicBeatState
 		positionHighscore();
 
 		final shiftMult:Int = FlxG.keys.pressed.SHIFT ? 3 : 1;
-		if(songs.length > 1)
+		if (songs.length > 1)
 		{
 			if (FlxG.keys.justPressed.HOME || FlxG.keys.justPressed.END || controls.UI_UP_P || controls.UI_DOWN_P)
 			{ 
@@ -252,17 +252,17 @@ class FreeplayState extends MusicBeatState
 				holdTime = 0;	
 			}
 
-			if(controls.UI_DOWN || controls.UI_UP)
+			if (controls.UI_DOWN || controls.UI_UP)
 			{
 				final checkLastHold:Int = Math.floor((holdTime - 0.5) * 10);
 				holdTime += elapsed;
 				final checkNewHold:Int = Math.floor((holdTime - 0.5) * 10);
 
-				if(holdTime > 0.5 && checkNewHold - checkLastHold > 0)
+				if (holdTime > 0.5 && checkNewHold - checkLastHold > 0)
 					changeSelection((checkNewHold - checkLastHold) * (controls.UI_UP ? -shiftMult : shiftMult));
 			}
 
-			if(FlxG.mouse.wheel != 0)
+			if (FlxG.mouse.wheel != 0)
 			{
 				FlxG.sound.play(Paths.sound('scrollMenu'), 0.2);
 				changeSelection(-shiftMult * FlxG.mouse.wheel, false);
@@ -288,7 +288,7 @@ class FreeplayState extends MusicBeatState
 			MusicBeatState.switchState(MainMenuState.new);
 		}
 
-		if(FlxG.keys.justPressed.CONTROL)
+		if (FlxG.keys.justPressed.CONTROL)
 		{
 			persistentUpdate = false;
 			openSubState(new GameplayChangersSubstate());
@@ -327,7 +327,6 @@ class FreeplayState extends MusicBeatState
 				}
 			}
 		}
-
 		else if (controls.ACCEPT)
 		{
 			persistentUpdate = false;
@@ -351,15 +350,16 @@ class FreeplayState extends MusicBeatState
 				PlayState.storyDifficulty = curDifficulty;
 
 				trace('CURRENT WEEK: ' + WeekData.getWeekFileName());
-				if(colorTween != null) colorTween.cancel();
+				if (colorTween != null)
+					colorTween.cancel();
 			}
 			catch(e)
 			{
 				exceptionError(e);
-				super.update(elapsed);
-				return;
+				return super.update(elapsed);
 			}
 			LoadingState.loadAndSwitchState(new PlayState());
+			MainMenuState.pizzaTime = false;
 
 			FlxG.sound.music.volume = 0;
 			stopVocals();
@@ -367,7 +367,7 @@ class FreeplayState extends MusicBeatState
 			DiscordClient.loadModRPC();
 			#end
 		}
-		else if(controls.RESET)
+		else if (controls.RESET)
 		{
 			persistentUpdate = false;
 			openSubState(new ResetScoreSubState(songs[curSelected].songName, curDifficulty, songs[curSelected].songCharacter));

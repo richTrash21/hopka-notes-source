@@ -35,7 +35,7 @@ class Mods
 	private static var globalMods:Array<String> = [];
 	inline public static function getGlobalMods():Array<String> return globalMods;
 
-	inline public static function pushGlobalMods() // prob a better way to do this but idc
+	/*inline*/ public static function pushGlobalMods() // prob a better way to do this but idc
 	{
 		globalMods = [];
 		for (mod in parseList().enabled)
@@ -47,7 +47,7 @@ class Mods
 		return globalMods;
 	}
 
-	inline public static function getModDirectories():Array<String>
+	/*inline*/ public static function getModDirectories():Array<String>
 	{
 		final list:Array<String> = [];
 		#if MODS_ALLOWED
@@ -65,7 +65,7 @@ class Mods
 		return list;
 	}
 	
-	inline public static function mergeAllTextsNamed(path:String, ?defaultDirectory:String, allowDuplicates:Bool = false)
+	/*inline*/ public static function mergeAllTextsNamed(path:String, ?defaultDirectory:String, allowDuplicates:Bool = false)
 	{
 		if (defaultDirectory == null)
 			defaultDirectory = Paths.getPreloadPath();
@@ -94,7 +94,7 @@ class Mods
 		return mergedList;
 	}
 
-	inline public static function directoriesWithFile(path:String, fileToFind:String, mods:Bool = true)
+	/*inline*/ public static function directoriesWithFile(path:String, fileToFind:String, mods:Bool = true)
 	{
 		final foldersToCheck:Array<String> = [];
 		#if sys
@@ -150,7 +150,7 @@ class Mods
 	}
 
 	public static var updatedOnState:Bool = false;
-	inline public static function parseList():ModsList
+	/*inline*/ public static function parseList():ModsList
 	{
 		if (!updatedOnState)
 			updateModList();
@@ -229,7 +229,7 @@ class Mods
 
 	public static function loadTopMod()
 	{
-		currentModDirectory = '';
+		currentModDirectory = "";
 		#if MODS_ALLOWED
 		final list = parseList().enabled;
 		if (list != null && list[0] != null)

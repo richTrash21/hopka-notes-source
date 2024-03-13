@@ -8,7 +8,7 @@ using flixel.util.FlxArrayUtil;
 class Subtitles extends FlxText
 {
 	@:allow(Init)
-	static var _markup:Array<FlxTextFormatMarkerPair>;
+	static var _markup = new Array<FlxTextFormatMarkerPair>();
 	@:allow(Init)
 	static var __posY = 0.;
 

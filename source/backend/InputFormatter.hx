@@ -50,7 +50,7 @@ class InputFormatter
 			case QUOTE:				"'";
 			case PRINTSCREEN:		"PrtScrn";
 			case NONE:				"---";
-			default:				__keyToString(key);
+			default:				__keyToString(cast (key:String));
 		}
 	}
 
@@ -129,8 +129,8 @@ class InputFormatter
 
 			case B: switch (model)
 					{
-						case PS4:	 return "O";
-						case XINPUT: return "B";
+						case PS4:	 "O";
+						case XINPUT: "B";
 						default:	 "Action Right";
 					}
 
@@ -143,9 +143,9 @@ class InputFormatter
 
 			case Y: switch (model)
 					{ 
-						case PS4: return "]"; // This gets its image changed through code
-						case XINPUT: return "Y";
-						default: return "Action Up";
+						case PS4:	 "]"; // This gets its image changed through code
+						case XINPUT: "Y";
+						default:	 "Action Up";
 					}
 
 			case BACK: switch (model)
@@ -162,20 +162,17 @@ class InputFormatter
 					}
 
 			case NONE: "---";
-			default: __keyToString(key);
+			default: __keyToString(cast (key:String));
 		}
 	}
 
-	inline static function __keyToString(key:haxe.extern.EitherType<FlxKey, FlxGamepadInputID>):String
+	inline static function __keyToString(key:String):String
 	{
-		final label:String = cast (key:String);
-		if (label.toLowerCase() == "null")
-			return "---";
-
-		final arr = label.split("_");
-		for (i in 0...arr.length)
-			arr[i] = CoolUtil.capitalize(arr[i]);
-
-		return arr.join(" ");
+		return	if (key == null)
+					"---";
+				else if (key.contains("_"))
+					[for (split in key.split("_")) CoolUtil.capitalize(split)].join(" ");
+				else
+					CoolUtil.capitalize(key);
 	}
 }

@@ -16,11 +16,6 @@ class Init extends flixel.FlxState
 		super.create();
 
 		// sexy subtitle markups
-		Subtitles._markup = [
-			// standart fonts doesn't have those so why bother?
-			/*new FlxTextFormatMarkerPair(new FlxTextFormat(null, true), "<b>"),
-			new FlxTextFormatMarkerPair(new FlxTextFormat(null, null, true), "<i>")*/
-		];
 		for (name => color in FlxColor.colorLookup)
 		{
 			name = name.toLowerCase();
@@ -36,7 +31,6 @@ class Init extends flixel.FlxState
 				LuaUtils.__easeMap.set(f.toLowerCase(), cast Reflect.getProperty(FlxEase, f));
 
 		FlxTransitionableState.skipNextTransOut = true;
-		Paths.clearStoredMemory();
 
 		#if LUA_ALLOWED
 		Mods.pushGlobalMods();
@@ -78,12 +72,12 @@ class Init extends flixel.FlxState
 		FlxG.console.registerFunction("switchState", (name:String) -> MusicBeatState.switchState(Type.createInstance(Type.resolveClass(name), [])));
 		#end
 
+		var switchTo:flixel.util.typeLimit.NextState = Main.game.initialState;
 		if (FlxG.save.data.flashing == null && !FlashingState.leftState)
 		{
 			FlxTransitionableState.skipNextTransIn = true;
-			FlxG.switchState(FlashingState.new);
+			switchTo = FlashingState.new;
 		}
-		else
-			FlxG.switchState(Main.game.initialState);
+		FlxG.switchState(switchTo);
 	}
 }

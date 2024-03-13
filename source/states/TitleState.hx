@@ -1,21 +1,17 @@
 package states;
 
-import haxe.Json;
-import flixel.graphics.frames.FlxFrame;
-import flixel.group.FlxSpriteGroup;
 import flixel.addons.transition.FlxTransitionableState;
 import shaders.ColorSwap;
 
-@:structInit class TitleData
-{
-	public var titlex:Float = -150;
-	public var titley:Float = -100;
-	public var startx:Float = 100;
-	public var starty:Float = 576;
-	public var gfx:Float = 512;
-	public var gfy:Float = 40;
-	public var backgroundSprite:String = '';
-	public var bpm:Float = 102;
+typedef TitleData = {
+	titlex:Float,
+	titley:Float,
+	startx:Float,
+	starty:Float,
+	gfx:Float,
+	gfy:Float,
+	backgroundSprite:String,
+	bpm:Float
 }
 
 // REWRITTEN BY Rudyrue (https://github.com/ShadowMario/FNF-PsychEngine/pull/13695)
@@ -28,23 +24,15 @@ class TitleState extends MusicBeatState
 	var gf:FlxSprite;
 	var logo:FlxSprite;
 	var titleText:FlxSprite;
-
 	var ngSpr:FlxSprite;
-
-	var titleJson:TitleData;
 
 	// whether the "press enter to begin" sprite is the old atlas or the new atlas
 	var newTitle:Bool;
-
-	final titleTextColors:Array<FlxColor> = [0xFF33FFFF, 0xFF3333CC];
-	final titleTextAlphas:Array<Float> = [1, .64];
-
 	var titleTextTimer:Float;
-
 	var randomPhrase:Array<String> = [];
 
-	var textGroup:FlxSpriteGroup;
-	var colourSwap:ColorSwap = null;
+	var textGroup:FlxTypedGroup<Alphabet>;
+	var colorSwap:ColorSwap;
 
 	override function create():Void
 	{
@@ -53,128 +41,102 @@ class TitleState extends MusicBeatState
 		persistentUpdate = true;
 
 		super.create();
-		
-		final balls = Json.parse(Paths.getTextFromFile('images/gfDanceTitle.json'));
 
-		titleJson = {
-			titlex: balls.titlex,
-			titley: balls.titley,
-			startx: balls.startx,
-			starty: balls.starty,
-			gfx: balls.gfx,
-			gfy: balls.gfy,
-			backgroundSprite: balls.backgroundSprite,
-			bpm: balls.bpm,
-		}
+		final titleJson:TitleData = cast haxe.Json.parse(Paths.getTextFromFile("images/gfDanceTitle.json"));
 
-		Conductor.bpm = titleJson.bpm;
+		if (!skippedIntro)
+			Conductor.bpm = titleJson.bpm;
 
 		if (titleJson.backgroundSprite != null && titleJson.backgroundSprite.length > 0 && titleJson.backgroundSprite != "none")
-		{
-			final bg:ExtendedSprite = new ExtendedSprite(0, 0, titleJson.backgroundSprite);
-			bg.active = false;
-			add(bg);
-		}
+			add(new ExtendedSprite(titleJson.backgroundSprite)).active = false;
 
-		if (ClientPrefs.data.shaders) colourSwap = new ColorSwap();
+		if (ClientPrefs.data.shaders)
+			colorSwap = new ColorSwap();
 
 		gf = new FlxSprite(titleJson.gfx, titleJson.gfy);
 		gf.antialiasing = ClientPrefs.data.antialiasing;
 
-		gf.frames = Paths.getSparrowAtlas('gfDanceTitle');
-		gf.animation.addByIndices('left', 'gfDance', [30, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14], "", 24, false);
-		gf.animation.addByIndices('right', 'gfDance', [15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29], "", 24, false);
+		gf.frames = Paths.getSparrowAtlas("gfDanceTitle");
+		gf.animation.addByIndices("left", "gfDance", [30, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14], "", 24, false);
+		gf.animation.addByIndices("right", "gfDance", [15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29], "", 24, false);
 
-		gf.animation.play('right');
-		gf.alpha = 0.0001;
+		gf.animation.play("right");
 		add(gf);
+		gf.precache();
+		gf.visible = false;
 
 		logo = new FlxSprite(titleJson.titlex, titleJson.titley);
-		logo.frames = Paths.getSparrowAtlas('logoBumpin');
+		logo.frames = Paths.getSparrowAtlas("logoBumpin");
 		logo.antialiasing = ClientPrefs.data.antialiasing;
-		logo.animation.addByPrefix('bump', 'logo bumpin', 24, false);
-		logo.animation.play('bump');
-		logo.alpha = 0.0001;
+		logo.animation.addByPrefix("bump", "logo bumpin", 24, false);
+		logo.animation.play("bump");
 		add(logo);
+		logo.precache();
+		logo.visible = false;
 
-		if (colourSwap != null)
-		{
-			gf.shader = colourSwap.shader;
-			logo.shader = colourSwap.shader;
-		}
+		if (colorSwap != null)
+			gf.shader = logo.shader = colorSwap.shader;
 
 		titleText = new FlxSprite(titleJson.startx, titleJson.starty);
-		titleText.visible = false;
-		titleText.frames = Paths.getSparrowAtlas('titleEnter');
+		titleText.frames = Paths.getSparrowAtlas("titleEnter");
 
-		final animFrames:Array<FlxFrame> = [];
-		@:privateAccess
+		if ((newTitle = (titleText.frames.exists("ENTER IDLE0000") || titleText.frames.exists("ENTER FREEZE0000"))))
 		{
-			titleText.animation.findByPrefix(animFrames, "ENTER IDLE");
-			titleText.animation.findByPrefix(animFrames, "ENTER FREEZE");
-		}
-		
-		if (animFrames.length > 0)
-		{
-			newTitle = true;
-			
-			titleText.animation.addByPrefix('idle', "ENTER IDLE", 24);
-			titleText.animation.addByPrefix('press', ClientPrefs.data.flashing ? "ENTER PRESSED" : "ENTER FREEZE", 24);
+			titleText.animation.addByPrefix("idle", "ENTER IDLE", 24);
+			titleText.animation.addByPrefix("press", "ENTER " + (ClientPrefs.data.flashing ? "PRESSED" : "FREEZE"), 24);
 		}
 		else
 		{
-			newTitle = false;
-			
-			titleText.animation.addByPrefix('idle', "Press Enter to Begin", 24);
-			titleText.animation.addByPrefix('press', "ENTER PRESSED", 24);
+			titleText.animation.addByPrefix("idle", "Press Enter to Begin", 24);
+			titleText.animation.addByPrefix("press", "ENTER PRESSED", 24);
 		}
-		
-		titleText.active = false;
-		titleText.animation.play('idle');
-		add(titleText);
 
-		textGroup = new FlxSpriteGroup();
+		titleText.animation.play("idle");
+		add(titleText);
+		titleText.precache();
+		titleText.visible = titleText.active = false;
+
+		textGroup = new FlxTypedGroup();
 		add(textGroup);
 
 		randomPhrase = FlxG.random.getObject(getIntroTextShit());
 
 		if (!skippedIntro)
 		{
-			add(ngSpr = new FlxSprite(0, FlxG.height * 0.52, Paths.image('newgrounds_logo')));
-			ngSpr.visible = false;
-			ngSpr.active = false;
-			ngSpr.setGraphicSize(Std.int(ngSpr.width * 0.8));
+			add(ngSpr = new FlxSprite(0, FlxG.height * 0.52, Paths.image("newgrounds_logo")));
+			ngSpr.antialiasing = ClientPrefs.data.antialiasing;
+			ngSpr.setGraphicSize(ngSpr.width * 0.8);
 			ngSpr.updateHitbox();
 			ngSpr.screenCenter(X);
-			ngSpr.antialiasing = ClientPrefs.data.antialiasing;
-			
-			FlxG.sound.playMusic(Paths.music('freakyMenu'), 0);
+			ngSpr.precache();
+			ngSpr.visible = ngSpr.active = false;
+
+			FlxG.sound.playMusic(Paths.music("freakyMenu"), 0);
 			FlxG.sound.music.fadeIn(4, 0, 0.7);
 		}
-		else skipIntro();
+		else
+			skipIntro();
 
 		Paths.clearUnusedMemory();
 	}
 
-	function getIntroTextShit():Array<Array<String>>
+	inline function getIntroTextShit():Array<Array<String>>
 	{
+		var firstArray:Array<String>;
 		#if MODS_ALLOWED
-		final firstArray:Array<String> = Mods.mergeAllTextsNamed('data/introText.txt', Paths.getPreloadPath());
+		firstArray = Mods.mergeAllTextsNamed("data/introText.txt", Paths.getPreloadPath());
 		#else
-		final fullText:String = Assets.getText(Paths.txt('introText'));
-		final firstArray:Array<String> = fullText.split('\n');
+		firstArray = Assets.getText(Paths.txt("introText")).split("\n");
 		#end
-		final swagGoodArray:Array<Array<String>> = [];
-
-		for (i in firstArray) swagGoodArray.push(i.split('--'));
-		return swagGoodArray;
+		return [for (i in firstArray) i.split("--")];
 	}
 
 	override function update(elapsed:Float):Void
 	{
 		super.update(elapsed);
 
-		if (FlxG.sound.music != null) Conductor.songPosition = FlxG.sound.music.time;
+		if (FlxG.sound.music != null)
+			Conductor.songPosition = FlxG.sound.music.time;
 
 		if (controls.ACCEPT)
 		{
@@ -184,21 +146,24 @@ class TitleState extends MusicBeatState
 				{
 					pressedEnter = true;
 
-					if (ClientPrefs.data.flashing) titleText.active = true;
-					titleText.animation.play('press');
+					if (ClientPrefs.data.flashing)
+						titleText.active = true;
+					titleText.animation.play("press");
 					titleText.color = FlxColor.WHITE;
 					titleText.alpha = 1;
 
 					FlxG.camera.flash(ClientPrefs.data.flashing ? FlxColor.WHITE : 0x4CFFFFFF, 1);
-					FlxG.sound.play(Paths.sound('confirmMenu'), 0.7);
+					FlxG.sound.play(Paths.sound("confirmMenu"), 0.7);
 
-					new FlxTimer().start(1, function(okFlixel:FlxTimer)
+					new FlxTimer().start(1, (_) ->
 					{
 						FlxTransitionableState.skipNextTransIn = false;
 						MusicBeatState.switchState(MainMenuState.new);
 					});
 				}
-			} else skipIntro();
+			}
+			else
+				skipIntro();
 		}
 
 		if (newTitle && !pressedEnter)
@@ -207,81 +172,68 @@ class TitleState extends MusicBeatState
 				titleTextTimer -= 2;
 				
 			final timer = FlxEase.quadInOut(titleTextTimer >= 1 ? (-titleTextTimer) + 2 : titleTextTimer);
-			titleText.color = FlxColor.interpolate(titleTextColors[0], titleTextColors[1], timer);
-			titleText.alpha = FlxMath.lerp(titleTextAlphas[0], titleTextAlphas[1], timer);
+			titleText.color = FlxColor.interpolate(0xFF33FFFF, 0xFF3333CC, timer);
+			titleText.alpha = FlxMath.lerp(1, .64, timer);
 		}
 
-		if (colourSwap != null)
+		if (colorSwap != null)
 		{
-			if (controls.UI_LEFT)	colourSwap.hue -= elapsed * 0.1;
-			if (controls.UI_RIGHT)	colourSwap.hue += elapsed * 0.1;
+			if (controls.UI_LEFT)
+				colorSwap.hue -= elapsed * 0.1;
+			else if (controls.UI_RIGHT)
+				colorSwap.hue += elapsed * 0.1;
 		}
 	}
 
 	override function beatHit():Void
 	{
-		gf.animation.play(FlxMath.isEven(curBeat) ? 'left' : 'right', true);
-		logo.animation.play('bump', true);
+		gf.animation.play(FlxMath.isEven(curBeat) ? "left" : "right", true);
+		logo.animation.play("bump", true);
 
 		if (!skippedIntro)
 		{
+			ngSpr.visible = curBeat == 7;
 			switch (curBeat)
 			{
-				case 1:   createText(['ninjamuffin99', 'PhantomArcade', 'Kawai Sprite', 'evilsk8er']);
-				case 3:   addMoreText('present');
+				case 1:   createText(["ninjamuffin99", "PhantomArcade", "Kawai Sprite", "evilsk8er"]);
+				case 3:   addMoreText("present");
 				case 4:   deleteText();
-				case 5:   createText(['In association', 'with'], -40);
-				case 7:   addMoreText('Newgrounds', -40);
+				case 5:   createText(["In association", "with"], -40);
+				case 7:   addMoreText("Newgrounds", -40);
 				case 8:   deleteText();
 				case 9:   createText([randomPhrase[0]]);
 				case 11:  addMoreText(randomPhrase[1]);
 				case 12:  deleteText();
-				case 13:  addMoreText('Friday');
-				case 14:  addMoreText('Night');
-				case 15:  addMoreText('Funkin');
+				case 13:  addMoreText("Friday");
+				case 14:  addMoreText("Night");
+				case 15:  addMoreText("Funkin");
 				case 16:  skipIntro();
 			}
-			ngSpr.visible = (curBeat == 7);
 	  }
   }
 
 	function skipIntro()
 	{
 		FlxG.camera.flash(FlxColor.WHITE, 2);
-		skippedIntro = true;
-
-		gf.alpha = 1;
-		logo.alpha = 1;
-		titleText.visible = true;
-		if (ngSpr != null) ngSpr.destroy();
-
+		gf.visible = logo.visible = titleText.visible = skippedIntro = true;
+		ngSpr = flixel.util.FlxDestroyUtil.destroy(ngSpr);
 		deleteText();
 	}
 
-	function createText(textArray:Array<String>, ?offset:Float = 0)
+	inline function createText(textArray:Array<String>, ?offset = 0.)
 	{
-		if (textGroup != null)
-		{
-			for (i in 0...textArray.length)
-			{
-				final txt:Alphabet = new Alphabet(0, 0, textArray[i], true);
-				txt.screenCenter(X);
-				txt.y += (i * 60) + 200 + offset;
-				textGroup.add(txt);
-			}
-		}
+		for (i in 0...textArray.length)
+			addMoreText(textArray[i], offset, i);
 	}
 
-	function addMoreText(text:String, ?offset:Float = 0)
+	inline function addMoreText(text:String, ?offset = 0., ?i:Int)
 	{
-		if (textGroup != null)
-		{
-			final txt:Alphabet = new Alphabet(0, 0, text, true);
-			txt.screenCenter(X);
-			txt.y += (textGroup.length * 60) + 200 + offset;
-			textGroup.add(txt);
-		}
+		textGroup.add(new Alphabet(0, ((i ?? textGroup.length) * 60) + 200 + offset, text, true)).screenCenter(X);
 	}
-
-	inline function deleteText() while (textGroup.members.length > 0) textGroup.remove(textGroup.members[0], true);
+	
+	inline function deleteText()
+	{
+		while (textGroup.members.length > 0)
+			textGroup.remove(textGroup.members[0], true).destroy();
+	}
 }
