@@ -6,10 +6,6 @@ import flixel.effects.FlxFlicker;
 
 import options.OptionsState;
 
-#if ACHIEVEMENTS_ALLOWED
-import backend.Achievements;
-#end
-
 class MainMenuState extends MusicBeatState
 {
 	public static final psychEngineVersion = "0.7.1" #if debug + " [DEBUG]" #end; // This is also used for Discord RPC
@@ -18,12 +14,17 @@ class MainMenuState extends MusicBeatState
 	@:allow(states.StoryMenuState)
 	@:allow(states.FreeplayState)
 	static var pizzaTime = false;
+	@:allow(states.DoiseRoomLMAO)
+	static var doiseTrans = false;
 
 	static final optionShit:Array<MainMenuOption> = [
 		["story_mode",	StoryMenuState.new],
 		["freeplay",	FreeplayState.new],
 		#if (MODS_ALLOWED && debug) // shouldn't be included in release build lmao
 		["mods",		ModsMenuState.new],
+		#end
+		#if ACHIEVEMENTS_ALLOWED
+		// ["awards",		AchievementsMenuState.new],
 		#end
 		["credits",		CreditsState.new],
 		["donate"], // will be deleted prob idk
@@ -35,6 +36,12 @@ class MainMenuState extends MusicBeatState
 
 	override function create()
 	{
+		if (doiseTrans)
+		{
+			FlxG.fullscreen = false;
+			doiseTrans = false;
+		}
+
 		#if MODS_ALLOWED
 		Mods.pushGlobalMods();
 		Mods.loadTopMod();
@@ -43,16 +50,6 @@ class MainMenuState extends MusicBeatState
 		#if desktop
 		// Updating Discord Rich Presence
 		DiscordClient.changePresence("In the Menus", null);
-		#end
-
-		#if ACHIEVEMENTS_ALLOWED
-		final camGame = new FlxCamera();
-		final camAchievement = new FlxCamera();
-		camAchievement.bgColor.alpha = 0;
-
-		FlxG.cameras.reset(camGame);
-		FlxG.cameras.add(camAchievement, false);
-		FlxG.cameras.setDefaultDrawTarget(camGame, true);
 		#end
 
 		transIn = FlxTransitionableState.defaultTransIn;
@@ -103,35 +100,35 @@ class MainMenuState extends MusicBeatState
 		}
 		// FlxG.camera.target = menuItems.members[0];
 
-		final psychVersion = new FlxText(12, FlxG.height - 44, 0, 'Psych Engine v$psychEngineVersion', 16);
+		final psychVersion = new FlxText(12, FlxG.height - 64, 0, 'Psych Engine v$psychEngineVersion', 16);
 		psychVersion.active = false;
 		psychVersion.scrollFactor.set();
 		psychVersion.font = Paths.font("vcr.ttf");
 		add(psychVersion.setBorderStyle(OUTLINE_FAST, FlxColor.BLACK));
 
-		final fnfVersion = new FlxText(12, FlxG.height - 24, 0, "Friday Night Funkin v" + lime.app.Application.current.meta.get("version"), 16);
+		final fnfVersion = new FlxText(12, FlxG.height - 44, 0, "Friday Night Funkin v" + lime.app.Application.current.meta.get("version"), 16);
 		fnfVersion.active = false;
 		fnfVersion.scrollFactor.set();
 		fnfVersion.font = Paths.font("vcr.ttf");
 		add(fnfVersion.setBorderStyle(OUTLINE_FAST, FlxColor.BLACK));
 
+		final doiseTrap = new FlxText(12, FlxG.height - 24, 0, "NOTE: Press F1 for the funny!" , 16);
+		doiseTrap.active = false;
+		doiseTrap.scrollFactor.set();
+		doiseTrap.font = Paths.font("vcr.ttf");
+		add(doiseTrap.setBorderStyle(OUTLINE_FAST, FlxColor.BLACK));
+
 		changeItem();
 
 		#if ACHIEVEMENTS_ALLOWED
-		Achievements.loadAchievements();
+		// Unlocks "Freaky on a Friday Night" achievement if it's a Friday and between 18:00 PM and 23:59 PM
 		final leDate = Date.now();
 		if (leDate.getDay() == 5 && leDate.getHours() >= 18)
-		{
-			final achieveID = Achievements.getAchievementIndex("friday_night_play");
-			if (!Achievements.isAchievementUnlocked(Achievements.achievementsStuff[achieveID][2])) //It's a friday night. WEEEEEEEEEEEEEEEEEE
-			{
-				Achievements.achievementsMap.set(Achievements.achievementsStuff[achieveID][2], true);
-				add(new objects.AchievementPopup("friday_night_play", camAchievement));
-				FlxG.sound.play(Paths.sound("confirmMenu"), 0.7);
-				trace("Giving achievement \"friday_night_play\"");
-				ClientPrefs.saveSettings();
-			}
-		}
+			backend.Achievements.unlock("friday_night_play");
+
+		#if MODS_ALLOWED
+		backend.Achievements.reloadList();
+		#end
 		#end
 
 		// TABULATION TEST
@@ -236,6 +233,21 @@ class MainMenuState extends MusicBeatState
 				trace("cleared garbage lmao [" + (memDelta == 0 ? "actually not" : flixel.util.FlxStringUtil.formatBytes(memDelta)) + "]");
 			}
 			#end
+
+			// THE DOISE ROOM!!!!!
+			if (FlxG.keys.justPressed.F1)
+			{
+				selectedSomethin = true;
+				pizzaTime = false;
+				FlxG.sound.music.stop();
+				final snd = FlxG.sound.play(Paths.sound("cancelMenu"));
+				snd.onComplete = () -> snd.persist = false;
+				snd.persist = true;
+	
+				FlxG.camera.fade(FlxColor.BLACK, 0);
+				FlxTransitionableState.skipNextTransIn = FlxTransitionableState.skipNextTransOut = true;
+				new FlxTimer().start((_) -> MusicBeatState.switchState(DoiseRoomLMAO.new));
+			}
 		}
 
 		if (pizzaTime)
@@ -245,8 +257,9 @@ class MainMenuState extends MusicBeatState
 		// if (FlxG.camera.angle != 0)
 		//	FlxG.camera.angle = FlxMath.lerp(0, FlxG.camera.angle, Math.exp(-elapsed * 7.6));
 
-		final P = FlxG.keys.justPressed.P;
-		if (P || FlxG.keys.justPressed.N) // just don't ask, i was bored lmao - richTrash21
+		final N = FlxG.keys.justPressed.N;
+		// final D = FlxG.keys.justPressed.D;
+		if (N /*|| D*/ || FlxG.keys.justPressed.P) // just don't ask, i was bored lmao - richTrash21
 		{
 			if (pizzaTime)
 			{
@@ -256,18 +269,24 @@ class MainMenuState extends MusicBeatState
 			}
 			else
 			{
-				if (P) // ITS PIZZA TIME!!
+				if (N) // WORLD WIDE NOISE!!
+				{
+					// this is a hell of a name, good job on the song tho
+					FlxG.sound.playMusic(Paths.music("World_Wide_Noise_v6_yo_how_many_times_am_i_just_gonna_keep_changing_the_guitar_slightly_at_the_end"));
+					FlxG.sound.music.endTime = (60 / (Conductor.bpm = 167) * 4000) * 96;
+				}
+				/*else if (D) // IMPASTA SYNDROME (which is called Noise At the Door in the files...)
+				{
+					// beta name huh...
+					FlxG.sound.playMusic(Paths.music("Pizza_Tower_OST_-_Doise_At_the_Door(1)"));
+					Conductor.bpm = 132;
+				}*/
+				else // ITS PIZZA TIME!!
 				{
 					FlxG.sound.playMusic(Paths.music("mu_pizzatime"));
 					final barMS = 60 / (Conductor.bpm = 180) * 4000;
 					FlxG.sound.music.loopTime = barMS * 36;
 					FlxG.sound.music.endTime = barMS * 120;
-				}
-				else // WORLD WIDE NOISE!!
-				{
-					// this is a hell of a name, good job on the song tho
-					FlxG.sound.playMusic(Paths.music("World_Wide_Noise_v6_yo_how_many_times_am_i_just_gonna_keep_changing_the_guitar_slightly_at_the_end"));
-					FlxG.sound.music.endTime = (60 / (Conductor.bpm = 167) * 4000) * 96;
 				}
 				FlxG.camera.zoom += 0.02;
 			}

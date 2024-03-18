@@ -69,7 +69,7 @@ class Subtitles extends FlxText
 		_time = 0.0;
 		lineID = 0;
 		text = "";
-		trace('Parsed subtitles:\n$_parsedLines');
+		trace('Parsed subtitles: $_parsedLines');
 		return this;
 	}
 

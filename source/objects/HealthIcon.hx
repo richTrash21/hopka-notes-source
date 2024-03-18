@@ -96,7 +96,7 @@ class HealthIcon extends ExtendedSprite
 		flipX	  = json.flip_x ?? false;
 		baseScale = json.scale ?? 1;
 		updateHitbox();
-		offset.set();
+		// offset.set();
 
 		antialiasing = char.endsWith("-pixel") ? false : (ClientPrefs.data.antialiasing ? json.antialias ?? true : false);
 

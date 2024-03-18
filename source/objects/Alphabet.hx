@@ -162,47 +162,45 @@ class Alphabet extends FlxTypedSpriteGroup<AlphaCharacter>
 			{
 				xPos = 0;
 				rows++;
+				continue;
 			}
-			else
+
+			final spaceChar = (character == " " || (bold && character == "_"));
+			if (spaceChar)
+				consecutiveSpaces++;
+			else if (character == "\t") // tabulation support yaay!!!
 			{
-				final spaceChar = (character == " " || (bold && character == "_"));
-				if (spaceChar)
-					consecutiveSpaces++;
-				else if (character == "\t") // tabulation support yaay!!!
+				final TAB_SIZE = SPACE_SIZE * TAB_LEN * scale.x;
+				xPos += TAB_SIZE - (xPos % TAB_SIZE);
+			}
+
+			if (AlphaCharacter.allLetters.exists(character.toLowerCase()) && !(bold && spaceChar))
+			{
+				if (consecutiveSpaces != 0)
 				{
-					final TAB_SIZE = SPACE_SIZE * TAB_LEN * scale.x;
-					xPos += TAB_SIZE - (xPos % TAB_SIZE);
-				}
-
-				if (AlphaCharacter.allLetters.exists(character.toLowerCase()) && !(bold && spaceChar))
-				{
-					if (consecutiveSpaces > 0)
-					{
-						xPos += SPACE_SIZE * consecutiveSpaces * scale.x;
-						rowData[rows] = xPos;
-						if (!bold && xPos >= fieldWidth)
-						{
-							xPos = 0;
-							rows++;
-						}
-					}
-					consecutiveSpaces = 0;
-
-					letter = recycle(AlphaCharacter, true);
-					letter.scale.copyFrom(scale);
-					letter.rowWidth = 0;
-
-					letter.setupAlphaCharacter(xPos, rows * Y_PER_ROW * scale.y, character, bold);
-					letter.parent = this;
-
-					letter.ID = id++;
-					letter.row = rows;
-					xPos += letter.width + (letter.letterOffset.x + (bold ? 0 : 2)) * scale.x;
+					xPos += SPACE_SIZE * consecutiveSpaces * scale.x;
 					rowData[rows] = xPos;
-
-					add(letter);
-					lettersLength++;
+					if (!bold && xPos >= fieldWidth)
+					{
+						xPos = 0;
+						rows++;
+					}
 				}
+				consecutiveSpaces = 0;
+
+				letter = recycle(AlphaCharacter, true);
+				letter.scale.copyFrom(scale);
+				letter.rowWidth = letter.alignOffset = 0;
+
+				letter.setupAlphaCharacter(xPos, rows * Y_PER_ROW * scale.y, character, bold);
+				letter.parent = this;
+
+				letter.ID = id++;
+				letter.row = rows;
+				rowData[rows] = (xPos += letter.width + (letter.letterOffset.x + (bold ? 0 : 2 * scale.x)));
+
+				add(letter); // IDK BUT WITHOUT IT LETTERS FUCK UP
+				lettersLength++;
 			}
 		}
 		forEachAlive((letter) -> letter.rowWidth = rowData[letter.row]);
@@ -217,6 +215,8 @@ class Alphabet extends FlxTypedSpriteGroup<AlphaCharacter>
 		if (align == null)
 			align = alignment;
 
+		var __row = 0;
+		var __width = 0.;
 		forEachAlive((letter) ->
 		{
 			final newOffset = switch (align)
@@ -227,8 +227,8 @@ class Alphabet extends FlxTypedSpriteGroup<AlphaCharacter>
 				}
 	
 			letter.offset.x -= letter.alignOffset;
-			letter.alignOffset = newOffset * scale.x;
-			letter.offset.x += letter.alignOffset;
+			// letter.updateHitbox();
+			letter.offset.x += (letter.alignOffset = newOffset * scale.x);
 		});
 	}
 
@@ -267,6 +267,11 @@ class Alphabet extends FlxTypedSpriteGroup<AlphaCharacter>
 
 	@:noCompletion inline function get_scaleX():Float return scale.x;
 	@:noCompletion inline function get_scaleY():Float return scale.y;
+
+	/*@:noCompletion override function get_width():Float
+	{
+		return fieldWidth == 0 ? super.get_width() : fieldWidth;
+	}*/
 }
 
 

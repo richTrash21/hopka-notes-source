@@ -122,7 +122,7 @@ class NotesSubState extends MusicBeatSubstate
 		add(alphabetG);
 		alphabetB = makeColorAlphabet(txtX + 100, txtY);
 		add(alphabetB);
-		alphabetHex = makeColorAlphabet(txtX, txtY - 55);
+		alphabetHex = makeColorAlphabet(txtX - 20, txtY - 55);
 		add(alphabetHex);
 		hexTypeLine = new FlxSprite(0, 20).makeGraphic(5, 62, FlxColor.WHITE);
 		hexTypeLine.visible = false;
@@ -155,8 +155,10 @@ class NotesSubState extends MusicBeatSubstate
 		_lastControllerMode = controls.controllerMode;
 	}
 
-	function updateTip()
-		tipTxt.text = 'Hold ' + (!controls.controllerMode ? 'Shift' : 'Left Shoulder Button') + ' + Press RELOAD to fully reset the selected Note.';
+	inline function updateTip()
+	{
+		tipTxt.text = "Hold " + (controls.controllerMode ? "Left Shoulder Button" : "Shift") + " + Press RELOAD to fully reset the selected Note.";
+	}
 
 	var _storedColor:FlxColor;
 	var changingNote:Bool = false;
@@ -403,11 +405,18 @@ class NotesSubState extends MusicBeatSubstate
 					Math.abs(pointerX() - 1000) <= 84)
 			{
 				hexTypeNum = 0;
-				for (letter in alphabetHex.members)
+				alphabetHex.forEachAlive((letter) ->
+				{
+					if (letter.x - letter.offset.x + letter.width <= pointerX())
+						hexTypeNum++;
+					else
+						return;
+				});
+				/*for (letter in alphabetHex.members)
 				{
 					if(letter.x - letter.offset.x + letter.width <= pointerX()) hexTypeNum++;
 					else break;
-				}
+				}*/
 				if(hexTypeNum > 5) hexTypeNum = 5;
 				hexTypeLine.visible = true;
 				centerHexTypeLine();
@@ -473,26 +482,22 @@ class NotesSubState extends MusicBeatSubstate
 		}
 	}
 
-	function pointerOverlaps(obj:Dynamic)
+	inline function pointerOverlaps(obj:Dynamic)
 	{
-		if (!controls.controllerMode) return FlxG.mouse.overlaps(obj);
-		return FlxG.overlap(controllerPointer, obj);
+		return controls.controllerMode ? FlxG.overlap(controllerPointer, obj) : FlxG.mouse.overlaps(obj);
 	}
 
-	function pointerX():Float
+	inline function pointerX():Float
 	{
-		if (!controls.controllerMode) return FlxG.mouse.x;
-		return controllerPointer.x;
+		return controls.controllerMode ? controllerPointer.x : FlxG.mouse.x;
 	}
-	function pointerY():Float
+	inline function pointerY():Float
 	{
-		if (!controls.controllerMode) return FlxG.mouse.y;
-		return controllerPointer.y;
+		return controls.controllerMode ? controllerPointer.y : FlxG.mouse.y;
 	}
-	function pointerFlxPoint():FlxPoint
+	inline function pointerFlxPoint():FlxPoint
 	{
-		if (!controls.controllerMode) return FlxG.mouse.getScreenPosition();
-		return controllerPointer.getScreenPosition();
+		return controls.controllerMode ? controllerPointer.getScreenPosition() : FlxG.mouse.getScreenPosition();
 	}
 
 	function centerHexTypeLine()
@@ -500,12 +505,12 @@ class NotesSubState extends MusicBeatSubstate
 		//trace(hexTypeNum);
 		if (hexTypeNum > 0)
 		{
-			var letter = alphabetHex.members[hexTypeNum-1];
+			var letter = alphabetHex.members[alphabetHex.length - (hexTypeNum-1)];
 			hexTypeLine.x = letter.x - letter.offset.x + letter.width;
 		}
 		else
 		{
-			var letter = alphabetHex.members[0];
+			var letter = alphabetHex.members[alphabetHex.length - alphabetHex.lettersLength];
 			hexTypeLine.x = letter.x - letter.offset.x;
 		}
 		hexTypeLine.x += hexTypeLine.width;
@@ -532,12 +537,11 @@ class NotesSubState extends MusicBeatSubstate
 	}
 
 	// alphabets
-	function makeColorAlphabet(x:Float = 0, y:Float = 0):Alphabet
+	inline function makeColorAlphabet(x:Float = 0, y:Float = 0):Alphabet
 	{
 		var text:Alphabet = new Alphabet(x, y, '', true);
 		text.alignment = CENTERED;
 		text.setScale(0.6);
-		add(text);
 		return text;
 	}
 
@@ -619,12 +623,15 @@ class NotesSubState extends MusicBeatSubstate
 		bigNote.setPosition(250, 325);
 		bigNote.setGraphicSize(250);
 		bigNote.updateHitbox();
+		bigNote.clipRect = null;
 		bigNote.rgbShader.parent = Note.globalRgbShaders[curSelectedNote];
 		bigNote.shader = Note.globalRgbShaders[curSelectedNote].shader;
 		for (i in 0...Note.colArray.length)
 		{
-			if(!onPixel) bigNote.animation.addByPrefix('note$i', Note.colArray[i] + '0', 24, true);
-			else bigNote.animation.add('note$i', [i + 4], 24, true);
+			if (onPixel)
+				bigNote.animation.add('note$i', [i + 4], 24, true);
+			else
+				bigNote.animation.addByPrefix('note$i', Note.colArray[i] + '0', 24, true);
 		}
 		insert(members.indexOf(myNotes) + 1, bigNote);
 		_storedColor = getShaderColor();
@@ -643,6 +650,7 @@ class NotesSubState extends MusicBeatSubstate
 			if(instant) note.animation.curAnim.finish();
 		}
 		bigNote.animation.play('note$curSelectedNote', true);
+		// bigNote.clipRect = bigNote.clipRect.setSize(bigNote.frameWidth, bigNote.frameHeight);
 		updateColors();
 	}
 
@@ -654,7 +662,8 @@ class NotesSubState extends MusicBeatSubstate
 		alphabetG.text = Std.string(color.green);
 		alphabetB.text = Std.string(color.blue);
 		alphabetHex.text = color.toHexString(false, false);
-		for (letter in alphabetHex.members) letter.color = color;
+		// for (letter in alphabetHex.members) letter.color = color;
+		alphabetHex.forEachAlive((letter) -> letter.color = color);
 
 		colorWheel.color = FlxColor.fromHSB(0, 0, color.brightness);
 		colorWheelSelector.setPosition(colorWheel.x + colorWheel.width/2, colorWheel.y + colorWheel.height/2);

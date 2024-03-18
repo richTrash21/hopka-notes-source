@@ -516,6 +516,8 @@ class FunkinLua
 		set("startTween", (tag:String, vars:String, ?values:Any, duration:Float, ?options:Any) ->
 		{
 			final penisExam:Dynamic = LuaUtils.tweenPrepare(tag, vars);
+			// SHIT WASN'T WORKING, NEEDED TESTING
+			// trace('startTween: (tag: $tag | vars: $vars | values: $values, duration: $duration | options $options | obj: $penisExam)');
 			if (penisExam == null)
 			{
 				luaTrace('startTween: Couldnt find object: $vars', false, false, FlxColor.RED);
@@ -1310,7 +1312,12 @@ class FunkinLua
 			return closed = true;
 		});
 
-		#if desktop DiscordClient.implement(this); #end
+		#if desktop
+		DiscordClient.implement(this);
+		#end
+		#if ACHIEVEMENTS_ALLOWED
+		backend.Achievements.implement(this);
+		#end
 		HScript.implement(this);
 		ReflectionFunctions.implement(this);
 		TextFunctions.implement(this);

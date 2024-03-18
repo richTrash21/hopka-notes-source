@@ -170,7 +170,7 @@ class ReflectionFunctions
 						GameOverSubstate.instance.insert(GameOverSubstate.instance.members.indexOf(GameOverSubstate.instance.boyfriend), obj);
 				}
 			}
-			else FunkinLua.luaTrace('addInstance: Can\'t add what doesn\'t exist~ ($objectName)', false, false, FlxColor.RED);
+			else FunkinLua.luaTrace('addInstance: Can\'t add what doesn\'t exist ($objectName)', false, false, FlxColor.RED);
 		});
 	}
 

@@ -72,7 +72,7 @@ class Init extends flixel.FlxState
 		FlxG.console.registerFunction("switchState", (name:String) -> MusicBeatState.switchState(Type.createInstance(Type.resolveClass(name), [])));
 		#end
 
-		var switchTo:flixel.util.typeLimit.NextState = Main.game.initialState;
+		var switchTo:flixel.util.typeLimit.NextState = FlxG.save.data.isDoised ? states.DoiseRoomLMAO.new : Main.game.initialState;
 		if (FlxG.save.data.flashing == null && !FlashingState.leftState)
 		{
 			FlxTransitionableState.skipNextTransIn = true;

@@ -143,12 +143,6 @@ class Note extends FlxSprite implements INote
 	public var hitsoundChartEditor:Bool = true;
 	public var hitsound:String = "hitsound";
 
-	inline function set_multSpeed(value:Float):Float
-	{
-		resizeByRatio(value / multSpeed);
-		return multSpeed = value;
-	}
-
 	public function resizeByRatio(ratio:Float) // haha funny twitter shit
 	{
 		if (isSustainNote && animation.curAnim != null && !animation.curAnim.name.endsWith("end"))
@@ -156,13 +150,6 @@ class Note extends FlxSprite implements INote
 			scale.y *= ratio;
 			updateHitbox();
 		}
-	}
-
-	inline function set_texture(value:String):String
-	{
-		if (texture != value)
-			reloadNote(value);
-		return texture = value;
 	}
 
 	public function defaultRGB()
@@ -174,57 +161,6 @@ class Note extends FlxSprite implements INote
 			rgbShader.g = arr[1];
 			rgbShader.b = arr[2];
 		}
-	}
-
-	private function set_noteType(value:String):String
-	{
-		// noteSplashData.texture = PlayState.SONG?.splashSkin ?? "noteSplashes/noteSplashes" + NoteSplash.getSplashSkinPostfix();
-		noteSplashData.texture = null;
-		defaultRGB();
-		if (noteData > -1 && noteType != value)
-		{
-			switch(value)
-			{
-				case "Hurt Note":
-					ignoreNote = mustPress;
-					//reloadNote("HURTNOTE_assets");
-					//this used to change the note texture to HURTNOTE_assets.png,
-					//but i've changed it to something more optimized with the implementation of RGBPalette:
-
-					// note colors
-					rgbShader.r = 0xFF101010;
-					rgbShader.g = 0xFFFF0000;
-					rgbShader.b = 0xFF990022;
-
-					// splash data and colors
-					noteSplashData.r = 0xFFFF0000;
-					noteSplashData.g = 0xFF101010;
-					noteSplashData.texture = "noteSplashes/noteSplashes-electric";
-
-					// gameplay data
-					lowPriority = true;
-					missHealth = isSustainNote ? 0.25 : 0.1;
-					hitCausesMiss = true;
-					hitsound = "cancelMenu";
-					hitsoundChartEditor = false;
-
-				case "Alt Animation":
-					animSuffix = "-alt";
-
-				case "No Animation":
-					noAnimation = true;
-					noMissAnimation = true;
-
-				case "GF Sing":
-					gfNote = true;
-			}
-			if (value != null && value.length > 1)
-				backend.NoteTypesConfig.applyNoteTypeData(this, value);
-			if (hitsound != "hitsound" && ClientPrefs.data.hitsoundVolume > 0)
-				Paths.sound(hitsound); // precache new sound for being idiot-proof
-			noteType = value;
-		}
-		return value;
 	}
 
 	public function new(strumTime:Float, noteData:Int, ?prevNote:Note, ?sustainNote = false, ?inEditor = false, ?createdFrom:Dynamic)
@@ -341,7 +277,7 @@ class Note extends FlxSprite implements INote
 		final customSkin = skin + skinPostfix;
 		final path = PlayState.isPixelStage ? "pixelUI/" : "";
 
-		if (customSkin == _lastValidChecked || Paths.fileExists('images/$path' + '$customSkin.png', IMAGE))
+		if (customSkin == _lastValidChecked || Paths.fileExists('images/$path$customSkin.png', IMAGE))
 		{
 			skin = customSkin;
 			_lastValidChecked = customSkin;
@@ -351,15 +287,16 @@ class Note extends FlxSprite implements INote
 
 		if (PlayState.isPixelStage)
 		{
+			var graphic:flixel.graphics.FlxGraphic;
 			if (isSustainNote)
 			{
-				final graphic = Paths.image('pixelUI/$skinPixel' + 'ENDS$skinPostfix');
+				graphic = Paths.image('pixelUI/$skinPixel' + 'ENDS$skinPostfix');
 				loadGraphic(graphic, true, Math.floor(graphic.width * 0.25), Math.floor(graphic.height * 0.5));
 				originalHeight = graphic.height * 0.5;
 			}
 			else
 			{
-				final graphic = Paths.image('pixelUI/$skinPixel' + skinPostfix);
+				graphic = Paths.image('pixelUI/$skinPixel$skinPostfix');
 				loadGraphic(graphic, true, Math.floor(graphic.width * 0.25), Math.floor(graphic.height * 0.2));
 			}
 			setGraphicSize(width * PlayState.daPixelZoom);
@@ -393,15 +330,17 @@ class Note extends FlxSprite implements INote
 
 	function loadNoteAnims()
 	{
+		final color = colArray[noteData];
 		if (isSustainNote)
 		{
-			if (frames.framesHash.exists("pruple end hold0000"))
-				animation.addByPrefix("purpleholdend", "pruple end hold", 24, true); // this fixes some retarded typo from the original note .FLA
-			animation.addByPrefix(colArray[noteData] + "holdend", colArray[noteData] + " hold end", 24, true);
-			animation.addByPrefix(colArray[noteData] + "hold", colArray[noteData] + " hold piece", 24, true);
+			if (noteData == 0 && frames.framesHash.exists("pruple end hold0000")) // this fixes some retarded typo from the original note .FLA
+				animation.addByPrefix("purpleholdend", "pruple end hold", 24, true);
+			else
+				animation.addByPrefix(color + "holdend", '$color hold end', 24, true);
+			animation.addByPrefix(color + "hold", '$color hold piece', 24, true);
 		}
 		else
-			animation.addByPrefix(colArray[noteData] + "Scroll", colArray[noteData] + "0");
+			animation.addByPrefix(color + "Scroll", color + "0");
 
 		setGraphicSize(width * 0.7);
 		updateHitbox();
@@ -409,13 +348,14 @@ class Note extends FlxSprite implements INote
 
 	function loadPixelNoteAnims()
 	{
+		final color = colArray[noteData];
 		if (isSustainNote)
 		{
-			animation.add(colArray[noteData] + "holdend", [noteData + 4], 24, true);
-			animation.add(colArray[noteData] + "hold", [noteData], 24, true);
+			animation.add(color + "holdend", [noteData + 4], 24, true);
+			animation.add(color + "hold", [noteData], 24, true);
 		}
 		else
-			animation.add(colArray[noteData] + "Scroll", [noteData + 4], 24, true);
+			animation.add(color + "Scroll", [noteData + 4], 24, true);
 	}
 
 	override function update(elapsed:Float)
@@ -443,12 +383,12 @@ class Note extends FlxSprite implements INote
 	override public function destroy()
 	{
 		if (tail != null)
-			while (tail.length > 0)
+			while (tail.length != 0)
 				tail.pop();
 
 		clipRect = FlxDestroyUtil.put(clipRect);
 		extraData = CoolUtil.clear(extraData);
-		noteSplashData = null; // fucks up notesplashes (lmao)
+		noteSplashData = null;
 		rgbShader = null;
 		prevNote = null;
 		nextNote = null;
@@ -463,7 +403,7 @@ class Note extends FlxSprite implements INote
 	{
 		distance = (0.45 * (Conductor.songPosition - strumTime) * songSpeed * multSpeed);
 		if (!myStrum.downScroll)
-			distance *= -1;
+			distance = -distance;
 
 		final angleDir = myStrum.direction * Math.PI / 180;
 		if (copyAngle)
@@ -487,9 +427,9 @@ class Note extends FlxSprite implements INote
 
 	public function clipToStrumNote(myStrum:StrumNote)
 	{
-		final center = myStrum.y + offsetY + swagWidth * 0.5;
 		if (isSustainNote && (mustPress || !ignoreNote) && (!mustPress || (wasGoodHit || (prevNote.wasGoodHit && !canBeHit))))
 		{
+			final center = myStrum.y + offsetY + swagWidth * 0.5;
 			if (myStrum.downScroll)
 			{
 				if (y - offset.y * scale.y + height >= center)
@@ -507,6 +447,79 @@ class Note extends FlxSprite implements INote
 			}
 			clipRect = clipRect;
 		}
+	}
+
+	@:noCompletion override function set_clipRect(rect:FlxRect):FlxRect
+	{
+		clipRect = rect;
+		if (frames != null)
+			frame = frames.frames[animation.frameIndex];
+
+		return rect;
+	}
+
+	@:noCompletion inline function set_multSpeed(value:Float):Float
+	{
+		resizeByRatio(value / multSpeed);
+		return multSpeed = value;
+	}
+
+	@:noCompletion inline function set_texture(value:String):String
+	{
+		if (texture != value)
+			reloadNote(value);
+		return texture = value;
+	}
+
+	@:noCompletion private function set_noteType(value:String):String
+	{
+		// noteSplashData.texture = PlayState.SONG?.splashSkin ?? "noteSplashes/noteSplashes" + NoteSplash.getSplashSkinPostfix();
+		noteSplashData.texture = null;
+		defaultRGB();
+		if (noteData != -1 && noteType != value)
+		{
+			switch(value)
+			{
+				case "Hurt Note":
+					ignoreNote = mustPress;
+					// reloadNote("HURTNOTE_assets");
+					// this used to change the note texture to HURTNOTE_assets.png,
+					// but i've changed it to something more optimized with the implementation of RGBPalette:
+
+					// note colors
+					rgbShader.r = 0xFF101010;
+					rgbShader.g = 0xFFFF0000;
+					rgbShader.b = 0xFF990022;
+
+					// splash data and colors
+					noteSplashData.r = 0xFFFF0000;
+					noteSplashData.g = 0xFF101010;
+					noteSplashData.texture = "noteSplashes/noteSplashes-electric";
+
+					// gameplay data
+					lowPriority = true;
+					missHealth = isSustainNote ? 0.25 : 0.1;
+					hitCausesMiss = true;
+					hitsound = "cancelMenu";
+					hitsoundChartEditor = false;
+
+				case "Alt Animation":
+					animSuffix = "-alt";
+
+				case "No Animation":
+					noAnimation = true;
+					noMissAnimation = true;
+
+				case "GF Sing":
+					gfNote = true;
+			}
+			if (value != null && value.length > 1)
+				backend.NoteTypesConfig.applyNoteTypeData(this, value);
+			if (hitsound != "hitsound" && ClientPrefs.data.hitsoundVolume > 0)
+				Paths.sound(hitsound); // precache new sound for being idiot-proof
+			noteType = value;
+		}
+		return value;
 	}
 }
 

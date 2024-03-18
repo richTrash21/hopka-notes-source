@@ -44,7 +44,7 @@ class LuaUtils
 		};
 	}
 
-	public static function setVarInArray(instance:Dynamic, variable:String, value:Dynamic, ?allowMaps:Bool = false, ?bypassAccessor:Bool = false):Any
+	public static function setVarInArray(instance:Dynamic, variable:String, value:Dynamic, ?allowMaps = false, ?bypassAccessor = false):Any
 	{
 		if (value is String)
 			value = boolCkeck(value);
@@ -88,7 +88,7 @@ class LuaUtils
 		return value;
 	}
 
-	public static function getVarInArray(instance:Dynamic, variable:String, ?allowMaps:Bool = false, ?bypassAccessor:Bool = false):Any
+	public static function getVarInArray(instance:Dynamic, variable:String, ?allowMaps = false, ?bypassAccessor = false):Any
 	{
 		final splitProps = variable.split("[");
 		if (splitProps.length > 1)
@@ -128,7 +128,7 @@ class LuaUtils
 		return variable is haxe.Constraints.IMap; // variable.exists != null && variable.keyValueIterator != null;
 	}
 
-	public static function setGroupStuff(leArray:Dynamic, variable:String, value:Dynamic, ?allowMaps:Bool = false, ?bypassAccessor:Bool = false)
+	public static function setGroupStuff(leArray:Dynamic, variable:String, value:Dynamic, ?allowMaps:Bool = false, ?bypassAccessor:Bool = false):Any
 	{
 		if (value is String)
 			value = boolCkeck(value);
@@ -151,7 +151,7 @@ class LuaUtils
 		return value;
 	}
 
-	public static function getGroupStuff(leArray:Dynamic, variable:String, ?allowMaps:Bool = false, ?bypassAccessor:Bool = false)
+	public static function getGroupStuff(leArray:Dynamic, variable:String, ?allowMaps:Bool = false, ?bypassAccessor:Bool = false):Any
 	{
 		final split = variable.split(".");
 		if (split.length > 1)
@@ -169,7 +169,7 @@ class LuaUtils
 		return bypassAccessor ? Reflect.field(leArray, variable) : Reflect.getProperty(leArray, variable);
 	}
 
-	public static function getPropertyLoop(split:Array<String>, ?checkForTextsToo:Bool = true, ?getProperty:Bool=true, ?allowMaps:Bool = false):Dynamic
+	public static function getPropertyLoop(split:Array<String>, ?checkForTextsToo:Bool = true, ?getProperty:Bool=true, ?allowMaps:Bool = false):Any
 	{
 		var obj:Dynamic = getObjectDirectly(split[0], checkForTextsToo);
 		for (i in 1...(getProperty ? split.length-1 : split.length))
@@ -178,13 +178,15 @@ class LuaUtils
 		return obj;
 	}
 
-	inline public static function getObjectDirectly(objectName:String, ?checkForTextsToo:Bool = true, ?allowMaps:Bool = false):Dynamic
+	inline public static function getObjectDirectly(objectName:String, ?checkForTextsToo = true, ?allowMaps = false):Any
 	{
-		return switch(objectName)
-			{
-				case "this" | "instance" | "game":	PlayState.instance;
-				default:							PlayState.instance.getLuaObject(objectName, checkForTextsToo) ?? getVarInArray(getTargetInstance(), objectName, allowMaps);
-			}
+		return switch (objectName)
+		{
+			case "this" | "instance" | "game":
+				PlayState.instance;
+			default:
+				PlayState.instance.getLuaObject(objectName, checkForTextsToo) ?? getVarInArray(getTargetInstance(), objectName, allowMaps);
+		}
 	}
 
 	inline public static function getTextObject(name:String):FlxText
@@ -192,7 +194,7 @@ class LuaUtils
 		return #if LUA_ALLOWED PlayState.instance.modchartTexts.exists(name) ? PlayState.instance.modchartTexts.get(name) : #end Reflect.getProperty(PlayState.instance, name);
 	}
 
-	inline public static function isOfTypes(value:Any, types:Array<Dynamic>)
+	inline public static function isOfTypes(value:Dynamic, types:Array<Dynamic>)
 	{
 		for (type in types)
 			if (Std.isOfType(value, type))

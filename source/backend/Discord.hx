@@ -44,11 +44,11 @@ class DiscordClient
 		final requestPtr:cpp.Star<DiscordUser> = cpp.ConstPointer.fromRaw(request).ptr;
 
 		final discriminator = requestPtr.discriminator.toString();
-		var str = "(Discord) Connected to User (" + requestPtr.username.toString(); // Old discriminators
+		var str = "(Discord) Connected to User (" + requestPtr.username.toString(); // New Discord IDs/Discriminator system
 		if (Std.parseInt(discriminator) != 0)
-			str += "#" + discriminator; // New Discord IDs/Discriminator system
+			str += '#$discriminator'; // Old discriminators
 
-		trace(str + ")");
+		trace('$str)');
 		changePresence();
 	}
 

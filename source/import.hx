@@ -4,6 +4,10 @@
 import backend.Discord;
 #end
 
+#if ACHIEVEMENTS_ALLOWED
+import backend.Achievements;
+#end
+
 //Psych
 import backend.Paths;
 import backend.Controls;
