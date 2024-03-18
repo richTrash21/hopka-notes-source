@@ -1,5 +1,7 @@
 package states;
 
+import flixel.input.keyboard.FlxKey;
+import flixel.FlxSubState;
 import flixel.addons.display.FlxBackdrop;
 
 class DoiseRoomLMAO extends MusicBeatState
@@ -67,8 +69,9 @@ class DoiseRoomLMAO extends MusicBeatState
 
 		FlxG.fullscreen = true;
 		FlxG.sound.playMusic(Paths.music("Pizza_Tower_OST_-_Doise_At_the_Door(1)"));
-		Conductor.bpm = 132;
+		FlxG.sound.music.time = (60 / (Conductor.bpm = 132) * 1000) * 15;
 
+		persistentUpdate = true;
 		FlxG.save.data.isDoised = true;
 		FlxG.save.flush();
 		super.create();
@@ -77,7 +80,7 @@ class DoiseRoomLMAO extends MusicBeatState
 
 	inline static function formatNumber(n:Int):String
 	{
-		return n + switch (n)
+		return n + switch (n > 20 ? n % 10 : n)
 		{
 			case 1: "st";
 			case 2: "nd";
@@ -86,21 +89,39 @@ class DoiseRoomLMAO extends MusicBeatState
 		}
 	}
 
-	static final escapeCode:Array<flixel.input.keyboard.FlxKey> = [D, O, I, S, E];
+	static final escapeCode:Array<FlxKey> = [D, O, I, S, E];
 	final escapeInput = new Array<Int>();
+	#if desktop
+	var updateRpc = true;
+	var rpcTimer = 0.;
+	#end
 
 	override public function update(elapsed:Float)
 	{
 		super.update(elapsed);
 
-		if (FlxG.keys.justPressed.ANY)
-		{
-			escapeInput.push(FlxG.keys.firstJustPressed());
-			while (escapeInput.length > escapeCode.length)
-				escapeInput.shift();
+		#if desktop
+		if (updateRpc)
+			if ((rpcTimer += elapsed) > 1)
+			{
+				DiscordClient.changePresence("???");
+				updateRpc = false;
+			}
+		#end
 
-			var matched = false;
+		if (FlxG.keys.justPressed.ANY && subState == null)
+		{
+			final firstKey:FlxKey = FlxG.keys.firstJustPressed();
+			if (firstKey == NONE || firstKey.toString().length != 1)
+				return;
+
+			escapeInput.push(firstKey);
+			/*while (escapeInput.length > escapeCode.length)
+				escapeInput.shift();*/
+
 			if (escapeInput.length == escapeCode.length)
+			{
+				var matched = false;
 				for (i => key in escapeInput)
 				{
 					if (key != escapeCode[i])
@@ -111,19 +132,51 @@ class DoiseRoomLMAO extends MusicBeatState
 					matched = true;
 				}
 
-			if (matched)
-			{
-				FlxG.save.data.doisedCount = 0;
-				FlxG.save.data.isDoised = false;
-				FlxG.save.flush();
+				if (matched)
+				{
+					FlxG.save.data.doisedCount = 0;
+					FlxG.save.data.isDoised = false;
+					FlxG.save.flush();
 
-				FlxG.camera.fade(FlxColor.BLACK, 0);
-				FlxG.sound.playMusic(Paths.music("freakyMenu"));
-				Conductor.bpm = 102;
-				flixel.addons.transition.FlxTransitionableState.skipNextTransIn = true;
-				MusicBeatState.switchState(MainMenuState.new);
-				trace("ok nvmd out of that nightmare lmao");
+					FlxG.camera.fade(FlxColor.BLACK, 0);
+					FlxG.sound.playMusic(Paths.music("freakyMenu"));
+					Conductor.bpm = 102;
+					flixel.addons.transition.FlxTransitionableState.skipNextTransIn = true;
+					MusicBeatState.switchState(MainMenuState.new);
+					trace("ok nvmd out of that nightmare lmao");
+				}
+				else
+					openSubState(new DoiseJumpscare());
 			}
 		}
+	}
+}
+
+class DoiseJumpscare extends FlxSubState
+{
+	var offset = FlxPoint.get();
+	var spr:FlxSprite;
+	var timer = 0.;
+	var jumpTime = FlxG.random.float(0.6, 1.2);
+	public function new()
+	{
+		super();
+		bgColor = 0xCC000000;
+		spr = new FlxSprite(Paths.image("doiseRoom/spr_rankND_15"));
+		spr.setGraphicSize(0, 720);
+		spr.updateHitbox();
+		add(spr.screenCenter());
+		FlxG.sound.play(Paths.sound("exe_scream"));
+		trace("GET DOISESCARED!!!!");
+	}
+
+	override function update(elapsed:Float)
+	{
+		super.update(elapsed);
+		spr.offset.subtractPoint(offset);
+		offset.set(FlxG.random.float(-5, 5), FlxG.random.float(-5, 5));
+		spr.offset.addPoint(offset);
+		if ((timer += elapsed) > jumpTime)
+			Sys.exit(0);
 	}
 }

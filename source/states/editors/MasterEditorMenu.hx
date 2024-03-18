@@ -1,5 +1,6 @@
 package states.editors;
 
+#if !RELESE_BUILD_FR
 import backend.WeekData;
 
 import objects.Character;
@@ -9,23 +10,22 @@ import states.FreeplayState;
 
 class MasterEditorMenu extends MusicBeatState
 {
-	#if !RELESE_BUILD_FR
-	var options:Array<String> = [
-		'Chart Editor',
-		'Character Editor',
-		'Week Editor',
-		'Menu Character Editor',
-		'Dialogue Editor',
-		'Dialogue Portrait Editor',
-		'Note Splash Debug',
-		'Mods Menu' //do not ask
+	static var options:Array<states.MainMenuState.MainMenuOption> = [
+		["Chart Editor",				ChartingState.new, true],
+		["Character Editor",			CharacterEditorState.new.bind(Character.DEFAULT_CHARACTER, false), true],
+		["Week Editor",					WeekEditorState.new.bind(null)],
+		["Menu Character Editor",		MenuCharacterEditorState.new],
+		["Dialogue Editor",				DialogueEditorState.new, true],
+		["Dialogue Portrait Editor",	DialogueCharacterEditorState.new, true],
+		["Note Splash Debug",			NoteSplashDebugState.new, true],
+		["Mods Menu",					ModsMenuState.new] // do not ask
 	];
-	private var grpTexts:FlxTypedGroup<Alphabet>;
-	private var directories:Array<String> = [null];
+	static var curSelected = 0;
+	static var curDirectory = 0;
 
-	private var curSelected:Int = 0;
-	private var curDirectory:Int = 0;
-	private var directoryTxt:FlxText;
+	var grpTexts:FlxTypedGroup<Alphabet>;
+	var directories:Array<String> = [null];
+	var directoryTxt:FlxText;
 
 	override function create()
 	{
@@ -37,7 +37,7 @@ class MasterEditorMenu extends MusicBeatState
 		DiscordClient.changePresence("Editors Main Menu", null);
 		#end
 
-		var bg:FlxSprite = new FlxSprite(0, 0, Paths.image('menuDesat'));
+		var bg:FlxSprite = new FlxSprite(0, 0, Paths.image("menuDesat"));
 		bg.scrollFactor.set();
 		bg.color = 0xFF353535;
 		add(bg);
@@ -47,7 +47,7 @@ class MasterEditorMenu extends MusicBeatState
 
 		for (i in 0...options.length)
 		{
-			var leText:Alphabet = new Alphabet(90, 320, options[i], true);
+			final leText = new Alphabet(90, 320, options[i].name, true);
 			leText.isMenuItem = true;
 			leText.targetY = i;
 			grpTexts.add(leText);
@@ -58,15 +58,17 @@ class MasterEditorMenu extends MusicBeatState
 		var textBG:FlxSprite = new FlxSprite(0, FlxG.height - 42).makeGraphic(FlxG.width, 42, 0x99000000);
 		add(textBG);
 
-		directoryTxt = new FlxText(textBG.x, textBG.y + 4, FlxG.width, '', 32);
+		directoryTxt = new FlxText(textBG.x, textBG.y + 4, FlxG.width, "", 32);
 		directoryTxt.setFormat(Paths.font("vcr.ttf"), 32, FlxColor.WHITE, CENTER);
 		directoryTxt.scrollFactor.set();
 		add(directoryTxt);
 		
-		for (folder in Mods.getModDirectories()) directories.push(folder);
+		for (folder in Mods.getModDirectories())
+			directories.push(folder);
 
-		var found:Int = directories.indexOf(Mods.currentModDirectory);
-		if(found > -1) curDirectory = found;
+		final found = directories.indexOf(Mods.currentModDirectory);
+		if (found != -1)
+			curDirectory = found;
 		changeDirectory();
 		#end
 		changeSelection();
@@ -75,40 +77,28 @@ class MasterEditorMenu extends MusicBeatState
 		super.create();
 	}
 
+	var selectedSomething = false;
 	override function update(elapsed:Float)
 	{
-		if (controls.UI_UP_P)	changeSelection(-1);
-		if (controls.UI_DOWN_P)	changeSelection(1);
+		if (controls.UI_UP_P)    changeSelection(-1);
+		if (controls.UI_DOWN_P)  changeSelection(1);
 		#if MODS_ALLOWED
-		if(controls.UI_LEFT_P)	changeDirectory(-1);
-		if(controls.UI_RIGHT_P)	changeDirectory(1);
+		if (controls.UI_LEFT_P)  changeDirectory(-1);
+		if (controls.UI_RIGHT_P) changeDirectory(1);
 		#end
 
 		if (controls.BACK)
 			MusicBeatState.switchState(MainMenuState.new);
 
-		if (controls.ACCEPT)
+		if (controls.ACCEPT && !selectedSomething)
 		{
-			switch (options[curSelected])
-			{
-				case 'Chart Editor'://felt it would be cool maybe
-					LoadingState.loadAndSwitchState(ChartingState.new, false);
-				case 'Character Editor':
-					LoadingState.loadAndSwitchState(CharacterEditorState.new.bind(Character.DEFAULT_CHARACTER, false));
-				case 'Week Editor':
-					MusicBeatState.switchState(WeekEditorState.new.bind(null));
-				case 'Menu Character Editor':
-					MusicBeatState.switchState(MenuCharacterEditorState.new);
-				case 'Dialogue Editor':
-					LoadingState.loadAndSwitchState(DialogueEditorState.new, false);
-				case 'Dialogue Portrait Editor':
-					LoadingState.loadAndSwitchState(DialogueCharacterEditorState.new, false);
-				case 'Note Splash Debug':
-					LoadingState.loadAndSwitchState(NoteSplashDebugState.new);
-				case 'Mods Menu':
-					MusicBeatState.switchState(ModsMenuState.new);
-			}
-			if (options[curSelected] != 'Mods Menu')
+			selectedSomething = true;
+			final curOption = options[curSelected];
+			if (curOption.preload)
+				LoadingState.loadAndSwitchState(curOption.state);
+			else
+				MusicBeatState.switchState(curOption.state);
+			if (curOption.name != "Mods Menu")
 				FlxG.sound.music.volume = 0;
 			#if PRELOAD_ALL
 			FreeplayState.stopVocals();
@@ -120,7 +110,7 @@ class MasterEditorMenu extends MusicBeatState
 	function changeSelection(change:Int = 0)
 	{
 		if (change != 0)
-			FlxG.sound.play(Paths.sound('scrollMenu'), 0.4);
+			FlxG.sound.play(Paths.sound("scrollMenu"), 0.4);
 
 		curSelected = FlxMath.wrap(curSelected + change, 0, options.length-1);
 
@@ -136,20 +126,18 @@ class MasterEditorMenu extends MusicBeatState
 	function changeDirectory(change:Int = 0)
 	{
 		if(change != 0)
-			FlxG.sound.play(Paths.sound('scrollMenu'), 0.4);
+			FlxG.sound.play(Paths.sound("scrollMenu"), 0.4);
 
 		curDirectory = FlxMath.wrap(curDirectory + change, 0, directories.length-1);
 	
 		WeekData.setDirectoryFromWeek();
-		if(directories[curDirectory] == null || directories[curDirectory].length < 1)
-			directoryTxt.text = '< No Mod Directory Loaded >';
+		final txt = if (directories[curDirectory] == null || directories[curDirectory].length < 1)
+			"No Mod Directory Loaded";
 		else
-		{
-			Mods.currentModDirectory = directories[curDirectory];
-			directoryTxt.text = '< Loaded Mod Directory: ${Mods.currentModDirectory} >';
-		}
-		directoryTxt.text = directoryTxt.text.toUpperCase();
+			directoryTxt.text = "Loaded Mod Directory: " + (Mods.currentModDirectory = directories[curDirectory]);
+
+		directoryTxt.text = "< " + txt.toUpperCase() + " >";
 	}
 	#end
-	#end
 }
+#end

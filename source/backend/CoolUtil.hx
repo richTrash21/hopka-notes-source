@@ -112,6 +112,16 @@ class CoolUtil
 		#end
 	}
 
+	public static function fwrap(value:Float, min:Float, max:Float):Float
+	{
+		final range = max - min + 1;
+
+		if (value < min)
+			value += range * ((min - value) / range + 1);
+
+		return min + (value - min) % range;
+	}
+
 	/**
 		An integer analog of FlxMath.bound() method.
 	**/

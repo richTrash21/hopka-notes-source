@@ -20,9 +20,6 @@ class MainMenuState extends MusicBeatState
 	static final optionShit:Array<MainMenuOption> = [
 		["story_mode",	StoryMenuState.new],
 		["freeplay",	FreeplayState.new],
-		#if (MODS_ALLOWED && debug) // shouldn't be included in release build lmao
-		["mods",		ModsMenuState.new],
-		#end
 		#if ACHIEVEMENTS_ALLOWED
 		// ["awards",		AchievementsMenuState.new],
 		#end
