@@ -13,7 +13,10 @@ class CameraTarget extends FlxObject
 		super(x, y, 1, 1);
 		allowCollisions = NONE;
 		immovable = true;
+		#if !FLX_DEBUG
 		visible = false;
+		#end
+		active = false;
 		moves = false;
 	}
 
@@ -27,7 +30,7 @@ class CameraTarget extends FlxObject
 	override public function update(elapsed:Float)
 	{
 		#if FLX_DEBUG
-		FlxBasic.activeCount++;
+		flixel.FlxBasic.activeCount++;
 		#end
 	}
 
