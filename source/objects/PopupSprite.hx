@@ -22,20 +22,26 @@ class PopupSprite extends ExtendedSprite implements ISortable
 	public var autoDestroy:Bool = false;
 
 	/**
-		Tracker for fade tween.
+		After what time this sprite should fade?
+		Do not do anything if set to `null`.
 	**/
-	public var fadeTween:FlxTween;
+	public var fadeTime:Null<Float>;
+
+	/**
+		At whitch speed this sprite should fade?
+	**/
+	public var fadeSpeed:Float = 1;
 
 	// internal stuff, for reseting shit
 	var _speed:FlxPointRangeBounds;
 	var _angleSpeed:FlxBounds<FlxPoint>;
+	var _timer = 0.;
 
-	public function new(minVelocityX:Float = 0, maxVelocityX:Float = 0, minVelocityY:Float = 0, maxVelocityY:Float = 0, minAccelerationX:Float = 0,
-			maxAccelerationX:Float = 0, minAccelerationY:Float = 0, maxAccelerationY:Float = 0):Void
+	public function new(minVelocityX = 0., maxVelocityX = 0., minVelocityY = 0., maxVelocityY = 0., minAccelerationX = 0., maxAccelerationX = 0.,
+			minAccelerationY = 0., maxAccelerationY = 0.):Void
 	{
 		super();
-		antialiasing = ClientPrefs.data.antialiasing;
-		_speed = new FlxPointRangeBounds(0);
+		_speed = new FlxPointRangeBounds(0.);
 		_angleSpeed = new FlxBounds<FlxPoint>(FlxPoint.get(), FlxPoint.get());
 		setVelocity(minVelocityX, maxVelocityX, minVelocityY, maxVelocityY);
 		setAcceleration(minAccelerationX, maxAccelerationX, minAccelerationY, maxAccelerationY);
@@ -43,18 +49,19 @@ class PopupSprite extends ExtendedSprite implements ISortable
 
 	override public function update(elapsed:Float):Void
 	{
+		if (fadeTime != null)
+			if ((_timer += elapsed) >= fadeTime)
+				alpha -= elapsed * fadeSpeed;
+
 		super.update(elapsed);
 
-		if (!isOnScreen(camera))
+		if (!isOnScreen(camera) || (fadeTime != null && alpha == 0))
 		{
-			finishFade();
-			killOrDestroy();
+			if (autoDestroy)
+				destroy();
+			else
+				kill();
 		}
-	}
-
-	inline function killOrDestroy():Void
-	{
-		autoDestroy ? destroy() : kill();
 	}
 
 	override public function revive():Void
@@ -62,15 +69,19 @@ class PopupSprite extends ExtendedSprite implements ISortable
 		resetMovement();
 		angle = 0;
 		alpha = 1;
+		fadeTime = null;
+		fadeSpeed = 1;
+		_timer = 0;
 		super.revive();
 	}
 
 	override public function destroy():Void
 	{
-		FlxDestroyUtil.putArray([_angleSpeed.min, _angleSpeed.max]);
-		fadeTween = FlxDestroyUtil.destroy(fadeTween);
 		_speed = FlxDestroyUtil.destroy(_speed);
+		_angleSpeed.min.put();
+		_angleSpeed.max.put();
 		_angleSpeed = null;
+		fadeTime = null;
 		super.destroy();
 	}
 
@@ -82,27 +93,27 @@ class PopupSprite extends ExtendedSprite implements ISortable
 		resetAngleAcceleration();
 	}
 
-	/*inline*/ public function setVelocity(minVelocityX:Float = 0, maxVelocityX:Float = 0, minVelocityY:Float = 0, maxVelocityY:Float = 0):FlxPoint
+	public function setVelocity(minVelocityX:Float = 0, maxVelocityX:Float = 0, minVelocityY:Float = 0, maxVelocityY:Float = 0):FlxPoint
 	{
 		_speed.start.min.set(minVelocityX, minVelocityY);
 		_speed.start.max.set(maxVelocityX, maxVelocityY);
 		return resetVelocity();
 	}
 
-	/*inline*/ public function setAcceleration(minAccelerationX:Float = 0, maxAccelerationX:Float = 0, minAccelerationY:Float = 0, maxAccelerationY:Float = 0):FlxPoint
+	public function setAcceleration(minAccelerationX:Float = 0, maxAccelerationX:Float = 0, minAccelerationY:Float = 0, maxAccelerationY:Float = 0):FlxPoint
 	{
 		_speed.end.min.set(minAccelerationX, minAccelerationY);
 		_speed.end.max.set(maxAccelerationX, maxAccelerationY);
 		return resetAcceleration();
 	}
 
-	/*inline*/ public function setAngleVelocity(min:Float = 0, max:Float = 0):Float
+	public function setAngleVelocity(min:Float = 0, max:Float = 0):Float
 	{
 		_angleSpeed.min.set(min, max);
 		return resetAngleVelocity();
 	}
 
-	/*inline*/ public function setAngleAcceleration(min:Float = 0, max:Float = 0):Float
+	public function setAngleAcceleration(min:Float = 0, max:Float = 0):Float
 	{
 		_angleSpeed.max.set(min, max);
 		return resetAngleAcceleration();
@@ -128,41 +139,9 @@ class PopupSprite extends ExtendedSprite implements ISortable
 		return angularAcceleration = FlxG.random.float(_angleSpeed.max.x, _angleSpeed.max.y);
 	}
 
-	/**
-		Simple fade out tween that kills/destroys (controlled via `autoDestroy`) this sprite after it's completion.
-		@param    Duration - Duration of this tween.
-		@param    Delay - Delay of this tween.
-		@return   This sprite, for chaining stuff.
-	**/
-	public function fadeOut(Duration:Float = 1, ?Delay:Float = 0):PopupSprite
+	// the menacing sounding helper
+	@:noCompletion inline function killOrDestroy():Void
 	{
-		cancelFade();
-		fadeTween = FlxTween.num(1, 0, Duration, {startDelay: Delay, onComplete: (_) ->
-			{
-				killOrDestroy();
-				fadeTween = null;
-			}},
-			set_alpha);
-
-		return this;
-	}
-
-	/**
-		Helper function to get rid of the tween.
-	**/
-	inline public function cancelFade():Void
-	{
-		if (fadeTween != null)
-		{
-			fadeTween.cancel();
-			fadeTween = null;
-		}
-	}
-
-	@:access(flixel.tweens.FlxTween.finish)
-	inline public function finishFade():Void
-	{
-		if (fadeTween != null)
-			fadeTween.finish();
+		autoDestroy ? destroy() : kill();
 	}
 }

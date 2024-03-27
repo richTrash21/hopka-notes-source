@@ -1,5 +1,6 @@
 package states.editors;
 
+#if !RELESE_BUILD_FR
 import flixel.util.FlxStringUtil;
 import flash.geom.Rectangle;
 import haxe.Json;
@@ -54,7 +55,6 @@ import sys.io.File;
 
 class ChartingState extends MusicBeatUIState
 {
-	#if !RELESE_BUILD_FR
 	public static var noteTypeList:Array<String> = //Used for backwards compatibility with 0.1 - 0.3.2 charts, though, you should add your hardcoded custom note types here too.
 	[
 		'',
@@ -174,6 +174,7 @@ class ChartingState extends MusicBeatUIState
 	public var mouseQuant:Bool = false;
 	override function create()
 	{
+		persistentUpdate = true;
 		if (PlayState.SONG != null)
 			_song = PlayState.SONG;
 		else
@@ -197,7 +198,7 @@ class ChartingState extends MusicBeatUIState
 
 		// Paths.clearMemory();
 
-		#if desktop
+		#if hxdiscord_rpc
 		// Updating Discord Rich Presence
 		DiscordClient.changePresence("Chart Editor", StringTools.replace(_song.song, '-', ' '));
 		#end
@@ -1298,7 +1299,7 @@ class ChartingState extends MusicBeatUIState
 				//if (check_mute_vocals != null && check_mute_vocals.checked) vocals.volume = 0;
 			}
 
-			#if desktop
+			#if hxdiscord_rpc
 			// Updating Discord Rich Presence
 			DiscordClient.changePresence("Chart Editor", StringTools.replace(_song.song, '-', ' '));
 			#end
@@ -1608,6 +1609,7 @@ class ChartingState extends MusicBeatUIState
 			}
 			if (FlxG.keys.justPressed.ENTER)
 			{
+				persistentUpdate = true;
 				autosaveSong();
 				// FlxG.mouse.visible = false;
 				PlayState.SONG = _song;
@@ -1626,6 +1628,7 @@ class ChartingState extends MusicBeatUIState
 
 
 			if (FlxG.keys.justPressed.BACKSPACE) {
+				persistentUpdate = false;
 				// Protect against lost data when quickly leaving the chart editor.
 				autosaveSong();
 				PlayState.chartingMode = false;
@@ -1932,7 +1935,7 @@ class ChartingState extends MusicBeatUIState
 
 	override function destroy()
 	{
-		while (Note.globalRgbShaders.length > 0)
+		while (Note.globalRgbShaders.length != 0)
 			Note.globalRgbShaders.pop();
 
 		backend.NoteTypesConfig.clearNoteTypesData();
@@ -2952,5 +2955,5 @@ class AttachedFlxText extends FlxText
 			alpha = sprTracker.alpha;
 		}
 	}
-	#end
 }
+#end

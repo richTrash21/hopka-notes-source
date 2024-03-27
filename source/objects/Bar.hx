@@ -76,6 +76,9 @@ class Bar extends FlxSpriteGroup
 		centerPoint = FlxDestroyUtil.put(centerPoint);
 		valueFunction = null;
 		updateCallback = null;
+		leftBar = null;
+		rightBar = null;
+		bg = null;
 		super.destroy();
 	}
 

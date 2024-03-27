@@ -4,38 +4,46 @@ import flixel.addons.transition.FlxTransitionableState;
 import flixel.util.typeLimit.NextState;
 import flixel.FlxState;
 
-class MusicBeatState extends FlxTransitionableState implements IMusicBeatState
+class MusicBeatState extends FlxState /*FlxTransitionableState*/ implements IMusicBeatState
 {
 	// TRANS RIGHTS!!!!
-	public static final transTime = .45; // uniform transition time
+	// public static final transTime = .45; // uniform transition time
 	// substates that transition can land onto
-	public static final substatesToTrans:Array<Class<flixel.FlxSubState>> = [substates.PauseSubState, substates.GameOverSubstate, psychlua.CustomSubstate];
+	// public static final substatesToTrans:Array<Class<flixel.FlxSubState>> = [substates.PauseSubState, substates.GameOverSubstate, psychlua.CustomSubstate];
 
 	public static var timePassedOnState = 0.;
 
+	@:access(flixel.FlxState._constructor)
 	public static function switchState(?nextState:NextState)
 	{
-		if (nextState == null || nextState == FlxG.state)
+		if (nextState == null || nextState == FlxG.state._constructor)
 			return resetState();
 
-		FlxTransitionableState.skipNextTransIn ? FlxG.switchState(nextState) : startTransition(nextState);
+		if (FlxTransitionableState.skipNextTransIn)
+			FlxG.switchState(nextState);
+		else
+			startTransition(nextState);
+
 		FlxTransitionableState.skipNextTransIn = false;
 	}
 
 	public static function resetState()
 	{
-		FlxTransitionableState.skipNextTransIn ? FlxG.resetState() : startTransition();
+		if (FlxTransitionableState.skipNextTransIn)
+			FlxG.resetState();
+		else
+			startTransition();
+
 		FlxTransitionableState.skipNextTransIn = false;
 	}
 
 	// Custom made Trans in
 	public static function startTransition(?nextState:NextState)
 	{
-		stateOrSubState().openSubState(new CustomFadeTransition(transTime, false));
-		CustomFadeTransition.finishCallback = nextState == null ? FlxG.resetState : FlxG.switchState.bind(nextState);
+		Main.transition.start(nextState, StateTransition.transTime, false);
 	}
 
-	inline public static function getState():FlxState
+	/*inline public static function getState():FlxState
 	{
 		return FlxG.state;
 	}
@@ -43,13 +51,14 @@ class MusicBeatState extends FlxTransitionableState implements IMusicBeatState
 	inline public static function getSubState():FlxState
 	{
 		return FlxG.state.subState;
-	}
+	}*/
 
 	// thx redar
-	inline static function stateOrSubState():FlxState
-	{
-		return (FlxG.state.subState != null && substatesToTrans.contains(Type.getClass(FlxG.state.subState))) ? getSubState() : getState();
-	}
+	// UPD: dont need this anymore lmao
+	// inline static function stateOrSubState():FlxState
+	// {
+	//	return (FlxG.state.subState != null /*&& substatesToTrans.contains(Type.getClass(FlxG.state.subState))*/) ? getSubState() : getState();
+	// }
 
 	var curSection:Int = 0;
 	var stepsToDo:Int = 0;
@@ -63,19 +72,13 @@ class MusicBeatState extends FlxTransitionableState implements IMusicBeatState
 	public var controls(get, never):Controls;
 	public var stages:Array<BaseStage> = [];
 
-	public function new() { super(); }
+	// public function new() { super(); }
 
 	override public function create()
 	{
 		#if MODS_ALLOWED
 		Mods.updatedOnState = false;
 		#end
-		super.create();
-
-		if (!FlxTransitionableState.skipNextTransOut)
-			openSubState(new CustomFadeTransition(transTime * 1.1, true));
-
-		FlxTransitionableState.skipNextTransOut = false;
 		timePassedOnState = 0;
 	}
 
@@ -100,12 +103,24 @@ class MusicBeatState extends FlxTransitionableState implements IMusicBeatState
 					rollbackSection();
 			}
 		}
-
-		// if (FlxG.save.data != null)
-		//	FlxG.save.data.fullscreen = FlxG.fullscreen;
 		
 		stagesFunc((stage) -> stage.update(elapsed));
 		super.update(elapsed);
+	}
+
+	// transition is not substate anymore so had to change this a bit
+	override function tryUpdate(elapsed:Float)
+	{
+		if (CoolUtil.updateStateCheck(this))
+			update(elapsed);
+
+		if (_requestSubStateReset)
+		{
+			_requestSubStateReset = false;
+			resetSubState();
+		}
+		if (subState != null)
+			subState.tryUpdate(elapsed);
 	}
 
 	public function stepHit():Void
@@ -140,11 +155,12 @@ class MusicBeatState extends FlxTransitionableState implements IMusicBeatState
 		});
 	}
 
-	inline function stagesFunc(func:StageFunction)
+	inline function stagesFunc(func:BaseStage->Void)
 	{
-		for (stage in stages)
-			if (stage != null && stage.exists && stage.active)
-				func(stage);
+		if (stages.length != 0)
+			for (stage in stages)
+				if (stage != null && stage.exists && stage.active)
+					func(stage);
 	}
 
 	@:noCompletion function updateSection():Void
@@ -206,5 +222,3 @@ class MusicBeatState extends FlxTransitionableState implements IMusicBeatState
 		return Controls.instance;
 	}
 }
-
-typedef StageFunction = BaseStage->Void

@@ -623,7 +623,7 @@ class NotesSubState extends MusicBeatSubstate
 		bigNote.setPosition(250, 325);
 		bigNote.setGraphicSize(250);
 		bigNote.updateHitbox();
-		bigNote.clipRect = null;
+		// bigNote.clipRect = null;
 		bigNote.rgbShader.parent = Note.globalRgbShaders[curSelectedNote];
 		bigNote.shader = Note.globalRgbShaders[curSelectedNote].shader;
 		for (i in 0...Note.colArray.length)
@@ -690,35 +690,27 @@ class NotesSubState extends MusicBeatSubstate
 
 	override function destroy()
 	{
-		/*var t:Array<FlxColor>;
-		while (dataArray.length > 0)
-		{
-			t = dataArray.pop();
-			while (t.length > 0)
-				t.pop();
-		}*/
 		dataArray = null;
-		
-		hexTypeLine = FlxDestroyUtil.destroy(hexTypeLine);
-		copyButton = FlxDestroyUtil.destroy(copyButton);
-		pasteButton = FlxDestroyUtil.destroy(pasteButton);
-		colorGradient = FlxDestroyUtil.destroy(colorGradient);
-		colorGradientSelector = FlxDestroyUtil.destroy(colorGradientSelector);
-		colorPalette = FlxDestroyUtil.destroy(colorPalette);
-		colorWheel = FlxDestroyUtil.destroy(colorWheel);
-		colorWheelSelector = FlxDestroyUtil.destroy(colorWheelSelector);
-		alphabetR = FlxDestroyUtil.destroy(alphabetR);
-		alphabetG = FlxDestroyUtil.destroy(alphabetG);
-		alphabetB = FlxDestroyUtil.destroy(alphabetB);
-		alphabetHex = FlxDestroyUtil.destroy(alphabetHex);
-		modeBG = FlxDestroyUtil.destroy(modeBG);
-		notesBG = FlxDestroyUtil.destroy(notesBG);
-		controllerPointer = FlxDestroyUtil.destroy(controllerPointer);
-		tipTxt = FlxDestroyUtil.destroy(tipTxt);
-		skinNote = FlxDestroyUtil.destroy(skinNote);
-		modeNotes = FlxDestroyUtil.destroy(modeNotes);
-		myNotes = FlxDestroyUtil.destroy(myNotes);
-		bigNote = FlxDestroyUtil.destroy(bigNote);
+		hexTypeLine = null;
+		copyButton = null;
+		pasteButton = null;
+		colorGradient = null;
+		colorGradientSelector = null;
+		colorPalette = null;
+		colorWheel = null;
+		colorWheelSelector = null;
+		alphabetR = null;
+		alphabetG = null;
+		alphabetB = null;
+		alphabetHex = null;
+		modeBG = null;
+		notesBG = null;
+		controllerPointer = null;
+		tipTxt = null;
+		skinNote = null;
+		modeNotes = null;
+		myNotes = null;
+		bigNote = null;
 		super.destroy();
 	}
 }

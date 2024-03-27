@@ -103,8 +103,8 @@ typedef SwagSong =
 	}
 
 	public var song:String = "";
-	public var notes:Array<SwagSection> = [];
-	public var events:Array<Dynamic> = [];
+	public var notes:Array<SwagSection>;
+	public var events:Array<Dynamic>;
 	public var bpm:Float = 100;
 	public var needsVoices:Bool = true;
 	public var speed:Float = 1;
@@ -123,6 +123,7 @@ typedef SwagSong =
 
 	public var arrowSkin:String;
 	public var splashSkin:String;
+	public var swapNotes:Bool; // for quickly swapping bf and dad notes
 
 	public function new(SONG:SwagSong)
 	{

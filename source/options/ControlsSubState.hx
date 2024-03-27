@@ -387,30 +387,20 @@ class ControlsSubState extends MusicBeatSubstate
 
 	override function destroy()
 	{		
-		/*var option:Array<EitherType<Bool, String>>;
-		while (options.length > 0)
-		{
-			option = options.pop();
-			while (option.length > 0)
-				option.pop();
-		}*/
 		options = null;
-
-		/*while (curOptions.length > 0)
-			curOptions.pop();
-		while (curOptionsValid.length > 0)
-			curOptionsValid.pop();*/
 		curOptions = null;
 		curOptionsValid = null;
 
 		rebindScreen = FlxDestroyUtil.destroy(rebindScreen);
-		grpDisplay = FlxDestroyUtil.destroy(grpDisplay);
-		grpBlacks = FlxDestroyUtil.destroy(grpBlacks);
-		grpOptions = FlxDestroyUtil.destroy(grpOptions);
-		grpBinds = FlxDestroyUtil.destroy(grpBinds);
-		selectSpr = FlxDestroyUtil.destroy(selectSpr);
-		controllerSpr = FlxDestroyUtil.destroy(controllerSpr);
-		colorTween = FlxDestroyUtil.destroy(colorTween);
+		grpDisplay = null;
+		grpBlacks = null;
+		grpOptions = null;
+		grpBinds = null;
+		selectSpr = null;
+		controllerSpr = null;
+		if (colorTween != null)
+			colorTween.cancel();
+		colorTween = null;
 		super.destroy();
 		bg.color = OptionsState.BG_COLOR;
 		bg = null;
@@ -622,8 +612,8 @@ private class RemapKeybindScreen extends flixel.FlxSubState
 
 	override function destroy()
 	{
-		bindingText = FlxDestroyUtil.destroy(bindingText);
-		bindingText2 = FlxDestroyUtil.destroy(bindingText2);
+		bindingText = null;
+		bindingText2 = null;
 		super.destroy();
 	}
 

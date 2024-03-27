@@ -32,7 +32,7 @@ class MasterEditorMenu extends MusicBeatState
 		persistentUpdate = true;
 
 		FlxG.camera.bgColor = FlxColor.BLACK;
-		#if desktop
+		#if hxdiscord_rpc
 		// Updating Discord Rich Presence
 		DiscordClient.changePresence("Editors Main Menu", null);
 		#end

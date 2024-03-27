@@ -3,7 +3,6 @@ package substates;
 import objects.GameCamera;
 import objects.Character;
 import flixel.FlxObject;
-import flixel.math.FlxPoint;
 
 #if LUA_ALLOWED
 import psychlua.*;
@@ -150,7 +149,9 @@ class GameOverSubstate extends MusicBeatSubstate
 				endBullshit();
 			else if (controls.BACK)
 			{
-				#if desktop DiscordClient.resetClientID(); #end
+				#if hxdiscord_rpc
+				DiscordClient.resetClientID();
+				#end
 				FlxG.sound.music.stop();
 				PlayState.deathCounter = 0;
 				PlayState.seenCutscene = PlayState.chartingMode = false;

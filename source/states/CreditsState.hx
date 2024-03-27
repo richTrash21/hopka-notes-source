@@ -25,7 +25,7 @@ class CreditsState extends MusicBeatState
 
 	override function create()
 	{
-		#if desktop
+		#if hxdiscord_rpc
 		// Updating Discord Rich Presence
 		DiscordClient.changePresence("In the Menus", null);
 		#end

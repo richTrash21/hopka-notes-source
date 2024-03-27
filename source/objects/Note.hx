@@ -249,7 +249,8 @@ class Note extends FlxSprite implements INote
 		}
 		x += offsetX;
 
-		clipRect = FlxRect.get(0, 0, frameWidth, frameHeight);
+		if (isSustainNote)
+			clipRect = FlxRect.get(0, 0, frameWidth, frameHeight);
 	}
 
 	var _lastNoteOffX:Float = 0;
@@ -382,10 +383,6 @@ class Note extends FlxSprite implements INote
 
 	override public function destroy()
 	{
-		if (tail != null)
-			while (tail.length != 0)
-				tail.pop();
-
 		clipRect = FlxDestroyUtil.put(clipRect);
 		extraData = CoolUtil.clear(extraData);
 		noteSplashData = null;

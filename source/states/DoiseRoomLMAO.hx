@@ -1,8 +1,7 @@
 package states;
 
-import flixel.input.keyboard.FlxKey;
-import flixel.FlxSubState;
 import flixel.addons.display.FlxBackdrop;
+import flixel.input.keyboard.FlxKey;
 
 class DoiseRoomLMAO extends MusicBeatState
 {
@@ -54,7 +53,7 @@ class DoiseRoomLMAO extends MusicBeatState
 			FlxG.save.data.doisedCount += 1;
 
 		final doxx = Sys.getEnv("USERNAME");
-		var txt = FlxG.save.data.isDoised ? 'Welcome back, $doxx!\nIt\'s your ' + formatNumber(FlxG.save.data.doisedCount) + " here!" : 'Welcome to The Doise Room, $doxx!';
+		var txt = FlxG.save.data.isDoised ? 'Welcome back, $doxx!\nIt\'s your ' + formatNumber(FlxG.save.data.doisedCount) + " time here!" : 'Welcome to The Doise Room, $doxx!';
 		final doxxText = new Alphabet(txt);
 		doxxText.forEachAlive((s) -> { s.antialiasing = false; s.pixelPerfectRender = true; });
 		doxxText.setScale(0.6333);
@@ -68,8 +67,9 @@ class DoiseRoomLMAO extends MusicBeatState
 		add(doxxText);
 
 		FlxG.fullscreen = true;
-		FlxG.sound.playMusic(Paths.music("Pizza_Tower_OST_-_Doise_At_the_Door(1)"));
+		FlxG.sound.playMusic(Paths.music("Pizza_Tower_OST_-_Doise_At_the_Door(1)")); // beta name huh...
 		FlxG.sound.music.time = (60 / (Conductor.bpm = 132) * 1000) * 15;
+		FlxG.stage.application.window.title = "Doise wuz here";
 
 		persistentUpdate = true;
 		FlxG.save.data.isDoised = true;
@@ -91,7 +91,7 @@ class DoiseRoomLMAO extends MusicBeatState
 
 	static final escapeCode:Array<FlxKey> = [D, O, I, S, E];
 	final escapeInput = new Array<Int>();
-	#if desktop
+	#if hxdiscord_rpc
 	var updateRpc = true;
 	var rpcTimer = 0.;
 	#end
@@ -100,7 +100,7 @@ class DoiseRoomLMAO extends MusicBeatState
 	{
 		super.update(elapsed);
 
-		#if desktop
+		#if hxdiscord_rpc
 		if (updateRpc)
 			if ((rpcTimer += elapsed) > 1)
 			{
@@ -134,6 +134,7 @@ class DoiseRoomLMAO extends MusicBeatState
 
 				if (matched)
 				{
+					FlxG.stage.application.window.title = "FNF': HopKa Notes";
 					FlxG.save.data.doisedCount = 0;
 					FlxG.save.data.isDoised = false;
 					FlxG.save.flush();
@@ -152,12 +153,13 @@ class DoiseRoomLMAO extends MusicBeatState
 	}
 }
 
-class DoiseJumpscare extends FlxSubState
+class DoiseJumpscare extends flixel.FlxSubState
 {
 	var offset = FlxPoint.get();
 	var spr:FlxSprite;
 	var timer = 0.;
 	var jumpTime = FlxG.random.float(0.6, 1.2);
+
 	public function new()
 	{
 		super();
@@ -173,9 +175,7 @@ class DoiseJumpscare extends FlxSubState
 	override function update(elapsed:Float)
 	{
 		super.update(elapsed);
-		spr.offset.subtractPoint(offset);
-		offset.set(FlxG.random.float(-5, 5), FlxG.random.float(-5, 5));
-		spr.offset.addPoint(offset);
+		spr.offset.subtractPoint(offset).addPoint(offset.set(FlxG.random.float(-10, 10), FlxG.random.float(-10, 10)));
 		if ((timer += elapsed) > jumpTime)
 			Sys.exit(0);
 	}

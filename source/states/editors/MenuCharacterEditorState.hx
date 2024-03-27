@@ -1,5 +1,6 @@
 package states.editors;
 
+#if !RELESE_BUILD_FR
 import flixel.addons.ui.FlxUI;
 import flixel.addons.ui.FlxUICheckBox;
 import flixel.addons.ui.FlxUIInputText;
@@ -22,7 +23,6 @@ import backend.MusicBeatUIState;
 
 class MenuCharacterEditorState extends MusicBeatUIState
 {
-	#if !RELESE_BUILD_FR
 	var grpWeekCharacters:FlxTypedGroup<MenuCharacter>;
 	var characterFile:MenuCharacterFile = null;
 	var txtOffsets:FlxText;
@@ -37,7 +37,7 @@ class MenuCharacterEditorState extends MusicBeatUIState
 			confirm_anim: 'M Dad Idle',
 			flipX: false
 		};
-		#if desktop
+		#if hxdiscord_rpc
 		// Updating Discord Rich Presence
 		DiscordClient.changePresence("Menu Character Editor", "Editting: " + characterFile.image);
 		#end
@@ -222,7 +222,7 @@ class MenuCharacterEditorState extends MusicBeatUIState
 		char.animation.play('idle');
 		updateOffset();
 		
-		#if desktop
+		#if hxdiscord_rpc
 		// Updating Discord Rich Presence
 		DiscordClient.changePresence("Menu Character Editor", "Editting: " + characterFile.image);
 		#end
@@ -351,8 +351,8 @@ class MenuCharacterEditorState extends MusicBeatUIState
 	}
 
 	/**
-		* Called when the save file dialog is cancelled.
-		*/
+		Called when the save file dialog is cancelled.
+	**/
 	function onLoadCancel(_):Void
 	{
 		_file.removeEventListener(Event.SELECT, onLoadComplete);
@@ -363,8 +363,8 @@ class MenuCharacterEditorState extends MusicBeatUIState
 	}
 
 	/**
-		* Called if there is an error while saving the gameplay recording.
-		*/
+		Called if there is an error while saving the gameplay recording.
+	**/
 	function onLoadError(_):Void
 	{
 		_file.removeEventListener(Event.SELECT, onLoadComplete);
@@ -399,8 +399,8 @@ class MenuCharacterEditorState extends MusicBeatUIState
 	}
 
 	/**
-		* Called when the save file dialog is cancelled.
-		*/
+		Called when the save file dialog is cancelled.
+	**/
 	function onSaveCancel(_):Void
 	{
 		_file.removeEventListener(Event.COMPLETE, onSaveComplete);
@@ -410,8 +410,8 @@ class MenuCharacterEditorState extends MusicBeatUIState
 	}
 
 	/**
-		* Called if there is an error while saving the gameplay recording.
-		*/
+		Called if there is an error while saving the gameplay recording.
+	**/
 	function onSaveError(_):Void
 	{
 		_file.removeEventListener(Event.COMPLETE, onSaveComplete);
@@ -420,5 +420,5 @@ class MenuCharacterEditorState extends MusicBeatUIState
 		_file = null;
 		FlxG.log.error("Problem saving file");
 	}
-	#end
 }
+#end

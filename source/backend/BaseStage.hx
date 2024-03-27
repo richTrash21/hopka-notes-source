@@ -42,32 +42,30 @@ class BaseStage extends FlxBasic
 	public var camFollow(get, never):FlxObject;
 	
 	var game:MusicBeatState;
-	var _playState:PlayState; // to get rid of Dynamic type on game variable and avoid casting
+	var playState:PlayState; // to get rid of Dynamic type on game variable and avoid casting
 	public var onPlayState:Bool;
 
 	@:noCompletion inline function resolveState():MusicBeatState
 	{
-		final daState = MusicBeatState.getState();
-		if ((onPlayState = daState is states.PlayState))
-			_playState = PlayState.instance;	
-
-		return cast daState; // avoid casting me say?
+		// FlxG.state is states.PlayState
+		return (onPlayState = PlayState.instance != null) ? (playState = PlayState.instance) : cast FlxG.state; // avoid casting me say?
 	}
 
 	public function new()
 	{
+		super();
 		this.game = resolveState();
-		if (this.game == null)
+		// impossible scenario
+		/*if (this.game == null)
 		{
 			FlxG.log.warn('Invalid state for the stage added!');
 			destroy();
 		}
 		else
-		{
-			this.game.stages.push(this);
-			super();
-			create();
-		}
+		{*/
+		this.game.stages.push(this);
+		create();
+		// }
 	}
 
 	/** cleanup **/
@@ -75,7 +73,7 @@ class BaseStage extends FlxBasic
 	{
 		super.destroy();
 		game = null;
-		_playState = null;
+		playState = null;
 		onPlayState = false;
 	}
 
@@ -120,15 +118,15 @@ class BaseStage extends FlxBasic
 	
 	public function addBehindGF(obj:FlxBasic):FlxBasic
 	{
-		return onPlayState ? insert(members.indexOf(_playState.gfGroup), obj) : obj;
+		return onPlayState ? insert(members.indexOf(playState.gfGroup), obj) : obj;
 	}
 	public function addBehindBF(obj:FlxBasic):FlxBasic
 	{
-		return onPlayState ? insert(members.indexOf(_playState.boyfriendGroup), obj) : obj;
+		return onPlayState ? insert(members.indexOf(playState.boyfriendGroup), obj) : obj;
 	}
 	public function addBehindDad(obj:FlxBasic):FlxBasic
 	{
-		return onPlayState ? insert(members.indexOf(_playState.dadGroup), obj) : obj;
+		return onPlayState ? insert(members.indexOf(playState.dadGroup), obj) : obj;
 	}
 
 	public function setDefaultGF(name:String) //Fix for the Chart Editor on Base Game stages
@@ -149,14 +147,14 @@ class BaseStage extends FlxBasic
 	public function setStartCallback(myfn:Void->Void)
 	{
 		if (onPlayState)
-			_playState.startCallback = myfn;
+			playState.startCallback = myfn;
 		/* else
 			FlxG.log.warn("setStartCallback: Current state is NOT PlayState!"); */
 	}
 	public function setEndCallback(myfn:Void->Void)
 	{
 		if (onPlayState)
-			_playState.endCallback = myfn;
+			playState.endCallback = myfn;
 		/* else
 			FlxG.log.warn("setEndCallback: Current state is NOT PlayState!"); */
 	}
@@ -178,7 +176,7 @@ class BaseStage extends FlxBasic
 	public function precache(key:String, type:String)
 	{
 		if (onPlayState)
-			_playState.precacheList.set(key, type);
+			playState.precacheList.set(key, type);
 
 		switch(type)
 		{
@@ -194,31 +192,31 @@ class BaseStage extends FlxBasic
 	// overrides
 	function startCountdown():Bool
 	{
-		return onPlayState ? _playState.startCountdown() : false;
+		return onPlayState ? playState.startCountdown() : false;
 	}
 	function endSong():Bool
 	{
-		return onPlayState ? _playState.endSong() : false;
+		return onPlayState ? playState.endSong() : false;
 	}
 
 	function moveCameraSection()
 	{
 		if (onPlayState)
-			_playState.moveCameraSection();
+			playState.moveCameraSection();
 	}
 	function moveCamera(char:String /*isDad:Bool*/)
 	{
 		if (onPlayState)
-			_playState.moveCamera(char /*isDad*/);
+			playState.moveCamera(char /*isDad*/);
 	}
 
 	@:noCompletion inline function get_paused():Bool
 	{
-		return onPlayState ? _playState.paused : false;
+		return onPlayState ? playState.paused : false;
 	}
 	@:noCompletion inline function get_songName():String
 	{
-		return onPlayState ? _playState.songName : null;
+		return onPlayState ? playState.songName : null;
 	}
 	@:noCompletion inline function get_isStoryMode():Bool
 	{
@@ -230,19 +228,19 @@ class BaseStage extends FlxBasic
 	}
 	@:noCompletion inline function get_inCutscene():Bool
 	{
-		return onPlayState ? _playState.inCutscene : false;
+		return onPlayState ? playState.inCutscene : false;
 	}
 	@:noCompletion inline function set_inCutscene(value:Bool):Bool
 	{
-		return onPlayState ? _playState.inCutscene = value : false;
+		return onPlayState ? playState.inCutscene = value : false;
 	}
 	@:noCompletion inline function get_canPause()
 	{
-		return onPlayState ? _playState.canPause : false;
+		return onPlayState ? playState.canPause : false;
 	}
 	@:noCompletion inline function set_canPause(value:Bool)
 	{
-		return onPlayState ? _playState.canPause = value : false;
+		return onPlayState ? playState.canPause = value : false;
 	}
 	@:noCompletion inline function get_members()
 	{
@@ -251,28 +249,28 @@ class BaseStage extends FlxBasic
 
 	@:noCompletion inline function get_boyfriend():Character
 	{
-		return onPlayState ? _playState.boyfriend : null;
+		return onPlayState ? playState.boyfriend : null;
 	}
 	@:noCompletion inline function get_dad():Character
 	{
-		return onPlayState ? _playState.dad : null;
+		return onPlayState ? playState.dad : null;
 	}
 	@:noCompletion inline function get_gf():Character
 	{
-		return onPlayState ? _playState.gf : null;
+		return onPlayState ? playState.gf : null;
 	}
 
 	@:noCompletion inline function get_boyfriendGroup():FlxTypedSpriteGroup<Character>
 	{
-		return onPlayState ? _playState.boyfriendGroup : null;
+		return onPlayState ? playState.boyfriendGroup : null;
 	}
 	@:noCompletion inline function get_dadGroup():FlxTypedSpriteGroup<Character>
 	{
-		return onPlayState ? _playState.dadGroup : null;
+		return onPlayState ? playState.dadGroup : null;
 	}
 	@:noCompletion inline function get_gfGroup():FlxTypedSpriteGroup<Character>
 	{
-		return onPlayState ? _playState.gfGroup : null;
+		return onPlayState ? playState.gfGroup : null;
 	}
 	
 	@:noCompletion inline function get_camGame():FlxCamera
@@ -281,23 +279,23 @@ class BaseStage extends FlxBasic
 	}
 	@:noCompletion inline function get_camHUD():FlxCamera
 	{
-		return _playState.camHUD;
+		return playState.camHUD;
 	}
 	@:noCompletion inline function get_camOther():FlxCamera
 	{
-		return _playState.camOther;
+		return playState.camOther;
 	}
 
 	@:noCompletion inline function get_defaultCamZoom():Float
 	{
-		return onPlayState ? _playState.defaultCamZoom : 0.0;
+		return onPlayState ? playState.defaultCamZoom : 0.0;
 	}
 	@:noCompletion inline function set_defaultCamZoom(value:Float):Float
 	{
-		return onPlayState ? _playState.defaultCamZoom = value : 0.0;
+		return onPlayState ? playState.defaultCamZoom = value : 0.0;
 	}
 	@:noCompletion inline function get_camFollow():FlxObject
 	{
-		return onPlayState ? _playState.camFollow : null;
+		return onPlayState ? playState.camFollow : null;
 	}
 }

@@ -1,5 +1,6 @@
 package backend;
 
+#if hxdiscord_rpc
 import hxdiscord_rpc.Discord;
 import hxdiscord_rpc.Types;
 
@@ -153,3 +154,4 @@ class DiscordClient
 	}
 	#end
 }
+#end

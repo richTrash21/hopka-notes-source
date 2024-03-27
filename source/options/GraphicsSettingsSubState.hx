@@ -81,7 +81,7 @@ class GraphicsSettingsSubState extends BaseOptionsMenu
 
 	override function destroy()
 	{
-		spr = flixel.util.FlxDestroyUtil.destroy(spr);
+		spr = null;
 		super.destroy();
 	}
 }

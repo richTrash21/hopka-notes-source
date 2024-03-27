@@ -1,5 +1,6 @@
 package states.editors;
 
+#if !RELESE_BUILD_FR
 import flixel.math.FlxPoint;
 import flixel.ui.FlxButton;
 import flixel.addons.ui.*;
@@ -65,6 +66,7 @@ class CharacterEditorState extends backend.MusicBeatUIState
 
 	override function create()
 	{
+		persistentUpdate = true;
 		FlxG.sound.playMusic(Paths.music(Paths.formatToSongPath(substates.PauseSubState.songName ?? ClientPrefs.data.pauseMusic)), 0.4);
 
 		if (ClientPrefs.data.cacheOnGPU)
@@ -197,7 +199,7 @@ class CharacterEditorState extends backend.MusicBeatUIState
 	function addCharacter(reload = false)
 	{
 		final isPlayer = (reload ? character.isPlayer : !predictCharacterIsNotPlayer(_char));
-		character.loadCharacter(_char);
+		character.loadCharacter(_char, true, false);
 		if (!reload /*&& isPlayer != character.editorIsPlayer*/)
 		{
 			// character.isPlayer = !character.isPlayer;
@@ -368,7 +370,7 @@ class CharacterEditorState extends backend.MusicBeatUIState
 				position: [0, 0]
 			};
 
-			character.loadCharacter(_template);
+			character.loadCharacter(_template, true, false);
 			character.color = FlxColor.WHITE;
 			character.alpha = 1;
 			reloadAnimList();
@@ -709,7 +711,7 @@ class CharacterEditorState extends backend.MusicBeatUIState
 			if (sender == healthIconInputText)
 			{
 				var lastIcon = healthIcon.char;
-				healthIcon.changeIcon(healthIconInputText.text, false);
+				healthIcon.changeIcon(healthIconInputText.text, false, false);
 				character.healthIcon = healthIconInputText.text;
 				if (lastIcon != healthIcon.char)
 					updatePresence();
@@ -989,20 +991,21 @@ class CharacterEditorState extends backend.MusicBeatUIState
 			}
 		}
 
-		var anim = anims[curAnim];
+		final anim = anims[curAnim];
 		if (changedOffset && anim != null && anim.offsets != null && offset != null)
 		{
 			anim.offsets[0] = offset.x;
 			anim.offsets[1] = offset.y;
 
-			final textPos = animsTxt.text.indexOf(anim.anim);
+			final curAnimName = anim.anim;
+			final textPos = animsTxt.text.indexOf('$curAnimName: ');
 			var breakPos = animsTxt.text.indexOf("\n", textPos);
 			if (breakPos == -1)
 				breakPos = animsTxt.text.length;
 
-			animsTxt.text = animsTxt.text.replace(animsTxt.text.substring(textPos, breakPos), anim.anim + ": " + anim.offsets);
+			animsTxt.text = animsTxt.text.replace(animsTxt.text.substring(textPos, breakPos), '$curAnimName: ' + anim.offsets);
 			updateTextColors();
-			character.addOffset(anim.anim, offset.x, offset.y);
+			character.addOffset(curAnimName, offset.x, offset.y);
 		}
 
 		if (FlxG.mouse.justReleased)
@@ -1057,6 +1060,7 @@ class CharacterEditorState extends backend.MusicBeatUIState
 			openSubState(helpSubstate);
 		else if (FlxG.keys.justPressed.ESCAPE)
 		{
+			persistentUpdate = false;
 			// FlxG.mouse.visible = false;
 			if (_goToPlayState)
 				MusicBeatState.switchState(PlayState.new);
@@ -1112,13 +1116,13 @@ class CharacterEditorState extends backend.MusicBeatUIState
 		healthColorStepperG.value = character.healthColor.green;
 		healthColorStepperB.value = character.healthColor.blue;
 		healthBar.leftBar.color = healthBar.rightBar.color = character.healthColor;
-		healthIcon.changeIcon(character.healthIcon, false);
+		healthIcon.changeIcon(character.healthIcon, false, false);
 		updatePresence();
 	}
 
 	inline function updatePresence()
 	{
-		#if destop // DISCORD_ALLOWED
+		#if hxdiscord_rpc
 		// Updating Discord Rich Presence
 		DiscordClient.changePresence("Character Editor", 'Character: $_char', healthIcon.char);
 		#end
@@ -1149,13 +1153,14 @@ class CharacterEditorState extends backend.MusicBeatUIState
 		if (anims.length == 0)
 			return;
 
-		final anim = anims[curAnim];
-		final textPos = animsTxt.text.indexOf(anim.anim);
+		final curAnimName = anims[curAnim].anim;
+		var textPos = animsTxt.text.indexOf('$curAnimName: ');
 		var breakPos = animsTxt.text.indexOf("\n", textPos);
 		if (breakPos == -1)
 			breakPos = animsTxt.text.length;
 
 		final t = animsTxt.text.substring(textPos, breakPos);		
+		trace('curAnim: $curAnimName | newText: $t');
 		animsTxt.applyMarkup(animsTxt.text.replace(t, '<l>$t<l>'), textMarkup);
 	}
 
@@ -1345,3 +1350,4 @@ private class HelpSubstate extends flixel.FlxSubState
 			close();
 	}
 }
+#end

@@ -1,5 +1,6 @@
 package states.editors;
 
+#if !RELESE_BUILD_FR
 import backend.WeekData;
 
 import openfl.utils.Assets;
@@ -33,7 +34,6 @@ import backend.MusicBeatUIState;
 
 class WeekEditorState extends MusicBeatUIState
 {
-	#if !RELESE_BUILD_FR
 	var txtWeekTitle:FlxText;
 	var bgSprite:FlxSprite;
 	var lock:FlxSprite;
@@ -57,6 +57,7 @@ class WeekEditorState extends MusicBeatUIState
 
 	override function create()
 	{
+		persistentUpdate = true;
 		txtWeekTitle = new FlxText(FlxG.width * 0.7, 10, 0, "", 32);
 		txtWeekTitle.setFormat("VCR OSD Mono", 32, FlxColor.WHITE, RIGHT);
 		txtWeekTitle.alpha = 0.7;
@@ -141,7 +142,7 @@ class WeekEditorState extends MusicBeatUIState
 		add(loadWeekButton.screenCenter(X));
 		loadWeekButton.x -= 120;
 		
-		final freeplayButton = new FlxButton(0, 650, "Freeplay", MusicBeatState.switchState.bind(WeekEditorFreeplayState.new.bind(weekFile)));
+		final freeplayButton = new FlxButton(0, 650, "Freeplay", () -> { MusicBeatState.switchState(WeekEditorFreeplayState.new.bind(weekFile)); persistentUpdate = false; });
 		add(freeplayButton.screenCenter(X));
 	
 		final saveWeekButton:FlxButton = new FlxButton(0, 650, "Save Week", saveWeek.bind(weekFile));
@@ -338,7 +339,7 @@ class WeekEditorState extends MusicBeatUIState
 		}
 		recalculateStuffPosition();
 
-		#if desktop
+		#if hxdiscord_rpc
 		// Updating Discord Rich Presence
 		DiscordClient.changePresence("Week Editor", 'Editting: $weekFileName');
 		#end
@@ -432,6 +433,7 @@ class WeekEditorState extends MusicBeatUIState
 		if(!blockInput) {
 			ClientPrefs.toggleVolumeKeys(true);
 			if(FlxG.keys.justPressed.ESCAPE) {
+				persistentUpdate = false;
 				MusicBeatState.switchState(MasterEditorMenu.new);
 				FlxG.sound.playMusic(Paths.music('freakyMenu'));
 			}
@@ -583,6 +585,7 @@ class WeekEditorFreeplayState extends backend.MusicBeatUIState
 
 	override function create()
 	{
+		persistentUpdate = true;
 		bg = new FlxSprite(0, 0, Paths.image('menuDesat'));
 		bg.antialiasing = ClientPrefs.data.antialiasing;
 		bg.color = FlxColor.WHITE;
@@ -637,7 +640,7 @@ class WeekEditorFreeplayState extends backend.MusicBeatUIState
 		add(loadWeekButton.screenCenter(X));
 		loadWeekButton.x -= 120;
 		
-		final storyModeButton:FlxButton = new FlxButton(0, 685, "Story Mode", MusicBeatState.switchState.bind(WeekEditorState.new.bind(weekFile)));
+		final storyModeButton:FlxButton = new FlxButton(0, 685, "Story Mode", () -> { MusicBeatState.switchState(WeekEditorState.new.bind(weekFile)); persistentUpdate = false; });
 		add(storyModeButton.screenCenter(X));
 	
 		final saveWeekButton:FlxButton = new FlxButton(0, 685, "Save Week", WeekEditorState.saveWeek.bind(weekFile));
@@ -751,6 +754,7 @@ class WeekEditorFreeplayState extends backend.MusicBeatUIState
 		if (WeekEditorState.loadedWeek != null)
 		{
 			super.update(elapsed);
+			persistentUpdate = false;
 			FlxTransitionableState.skipNextTransIn = true;
 			FlxTransitionableState.skipNextTransOut = true;
 			MusicBeatState.switchState(WeekEditorFreeplayState.new.bind(WeekEditorState.loadedWeek));
@@ -769,6 +773,7 @@ class WeekEditorFreeplayState extends backend.MusicBeatUIState
 			ClientPrefs.toggleVolumeKeys(true);
 			if (FlxG.keys.justPressed.ESCAPE)
 			{
+				persistentUpdate = true;
 				MusicBeatState.switchState(MasterEditorMenu.new);
 				FlxG.sound.playMusic(Paths.music('freakyMenu'));
 			}
@@ -777,5 +782,5 @@ class WeekEditorFreeplayState extends backend.MusicBeatUIState
 		}
 		super.update(elapsed);
 	}
-	#end
 }
+#end

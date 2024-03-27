@@ -1,5 +1,6 @@
 package substates;
 
+import flixel.util.FlxDestroyUtil;
 import flixel.addons.transition.FlxTransitionableState;
 import flixel.util.FlxStringUtil;
 
@@ -232,10 +233,8 @@ class PauseSubState extends MusicBeatSubstate
 					}
 
 				case "End Song":
-					CustomFadeTransition.nextCamera = FlxG.camera;
 					exitPause();
-					PlayState.instance.notes.clear();
-					PlayState.instance.unspawnNotes = [];
+					PlayState.instance.clearNotesBefore(FlxG.sound.music.length);
 					PlayState.instance.finishSong(true);
 
 				case "Toggle Botplay":
@@ -260,7 +259,9 @@ class PauseSubState extends MusicBeatSubstate
 					if (pauseMusic.fadeTween != null)
 						pauseMusic.fadeTween.cancel();
 					pauseMusic.stop();
-					#if desktop DiscordClient.resetClientID(); #end
+					#if hxdiscord_rpc
+					DiscordClient.resetClientID();
+					#end
 					PlayState.seenCutscene = false;
 					PlayState.deathCounter = 0;
 
@@ -282,6 +283,8 @@ class PauseSubState extends MusicBeatSubstate
 		if (!closing) // doesn't need to close the thing twice
 		{
 			FlxTween.num(.6, 0, .1, {ease: FlxEase.quartInOut}, (a) -> { bgColor.alphaFloat = a; if (FlxG.renderTile) bgColor = bgColor; });
+			// var oldMult = 1.;
+			// FlxTween.num(1, 0, .1, {ease: FlxEase.quartInOut}, (a) -> forEachOfType(FlxSprite, (obj) -> obj.alpha = obj.alpha / oldMult * (oldMult = a)));
 			forEachOfType(FlxSprite, (obj) -> FlxTween.tween(obj, {alpha: 0}, 0.1, {ease: FlxEase.quartInOut}), true);
 			if (pauseMusic.fadeTween != null)
 				pauseMusic.fadeTween.cancel();
@@ -313,7 +316,7 @@ class PauseSubState extends MusicBeatSubstate
 
 	override function destroy()
 	{
-		pauseMusic.destroy();
+		pauseMusic = FlxDestroyUtil.destroy(pauseMusic);
 		super.destroy();
 	}
 

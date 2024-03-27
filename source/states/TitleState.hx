@@ -37,7 +37,7 @@ class TitleState extends MusicBeatState
 	override function create():Void
 	{
 		Paths.clearStoredMemory();
-		FlxTransitionableState.skipNextTransOut = false;
+		FlxTransitionableState.skipNextTransOut = true;
 		persistentUpdate = true;
 
 		super.create();

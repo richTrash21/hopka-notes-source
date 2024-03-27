@@ -1,5 +1,6 @@
 package psychlua;
 
+import flixel.input.keyboard.FlxKey;
 import flixel.math.FlxPoint;
 import openfl.display.BlendMode;
 import animateatlas.AtlasFrameMaker;
@@ -22,14 +23,6 @@ class LuaUtils
 {
 	@:allow(Init)
 	@:noCompletion static final __easeMap = new Map<String, EaseFunction>();
-	@:noCompletion static final __tweenTypeMap = [
-		"backward"	=> FlxTweenType.BACKWARD,
-		"looping"	=> FlxTweenType.LOOPING,
-		"loop"		=> FlxTweenType.LOOPING,
-		"persist"	=> FlxTweenType.PERSIST,
-		"pingpong"	=> FlxTweenType.PINGPONG,
-		"oneshot"	=> FlxTweenType.ONESHOT
-	];
 
 	public static function getLuaTween(options:Dynamic):LuaTweenOptions
 	{
@@ -295,37 +288,40 @@ class LuaUtils
 
 	inline public static function keyJustPressed(key:String):Bool
 	{
-		return keyUtil(FlxG.keys.justPressed, key.toUpperCase().trim());
+		return keyUtil(FlxG.keys.justPressed, key);
 	}
 
 	inline public static function keyPressed(key:String):Bool
 	{
-		return keyUtil(FlxG.keys.pressed, key.toUpperCase().trim());
+		return keyUtil(FlxG.keys.pressed, key);
 	}
 
 	inline public static function keyJustReleased(key:String):Bool
 	{
-		return keyUtil(FlxG.keys.justReleased, key.toUpperCase().trim());
+		return keyUtil(FlxG.keys.justReleased, key);
 	}
 
 	inline public static function keyReleased(key:String):Bool
 	{
-		return keyUtil(FlxG.keys.released, key.toUpperCase().trim());
+		return keyUtil(FlxG.keys.released, key);
 	}
 
+	@:access(flixel.input.FlxBaseKeyList.check)
 	inline static function keyUtil(keyList:flixel.input.keyboard.FlxKeyList, key:String):Bool
 	{
-		return Reflect.getProperty(keyList, key) ?? false;
+		final realKey = FlxKey.fromString(key.toUpperCase().trim());
+		// had to make NONE always false bc of how old code treated invalid keys as false return
+		return realKey == NONE ? false : keyList.check(realKey); // Reflect.getProperty(keyList, key);
 	}
 	
 	inline public static function loadFrames(image:String, spriteType:String):flixel.graphics.frames.FlxFramesCollection
 	{
-		return switch(spriteType.toLowerCase().trim())
+		spriteType = spriteType.toLowerCase().trim();
+		return switch (spriteType.substr(0, 3))
 		{
-			case "texture" | "textureatlas" | "tex":				 AtlasFrameMaker.construct(image);
-			case "texture_noaa" | "textureatlas_noaa" | "tex_noaa":	 AtlasFrameMaker.construct(image, true);
-			case "packer" | "packeratlas" | "pac":					 Paths.getPackerAtlas(image);
-			default:												 Paths.getSparrowAtlas(image);
+			case "tex": AtlasFrameMaker.construct(image, spriteType.endsWith("_noaa"));
+			case "pac": Paths.getPackerAtlas(image);
+			default:    Paths.getSparrowAtlas(image);
 		}
 	}
 
@@ -391,22 +387,22 @@ class LuaUtils
 	// buncho string stuffs
 	inline public static function getTweenTypeByString(type:String):FlxTweenType
 	{
-		return __tweenTypeMap.get(type.toLowerCase().trim()) ?? FlxTweenType.ONESHOT;
-		/*return switch (type.toLowerCase().trim())
+		return switch (type.toLowerCase().trim())
 		{
 			case "backward":		FlxTweenType.BACKWARD;
 			case "looping"|"loop":	FlxTweenType.LOOPING;
 			case "persist":			FlxTweenType.PERSIST;
 			case "pingpong":		FlxTweenType.PINGPONG;
 			default:				FlxTweenType.ONESHOT;
-		}*/
+		}
 	}
 
 	inline public static function getTweenEaseByString(ease:String):EaseFunction
 	{
-		return __easeMap.get(ease.toLowerCase().trim()) ?? FlxEase.linear;
+		return __easeMap.get(ease.toLowerCase().trim());
 		/*return switch (ease.toLowerCase().trim())
 		{
+			case "linear":				FlxEase.linear;
 			case "backin":				FlxEase.backIn;
 			case "backinout":			FlxEase.backInOut;
 			case "backout":				FlxEase.backOut;
@@ -443,7 +439,7 @@ class LuaUtils
 			case "smootherstepin":		FlxEase.smootherStepIn;
 			case "smootherstepinout":	FlxEase.smootherStepInOut;
 			case "smootherstepout":		FlxEase.smootherStepOut;
-			default:					FlxEase.linear;
+			default:					null; // same as linear (lol)
 		}*/
 	}
 

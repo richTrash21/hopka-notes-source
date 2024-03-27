@@ -6,32 +6,29 @@ import objects.StrumNote;
 
 class VisualsUISubState extends BaseOptionsMenu
 {
-	var noteOptionID:Int = -1;
-	var notes:FlxTypedGroup<StrumNote>;
-	var notesTween:Array<FlxTween> = [];
+	var noteOptionID = -1;
+	var notes:FlxTypedSpriteGroup<StrumNote>; // for note skins
+	var notesY = 90; // note option: 90, other: -200
+	var changedMusic = false;
 
-	var changedMusic:Bool = false;
 	public function new()
 	{
 		title = "Visuals and UI";
-		rpcTitle = "Visuals & UI Settings Menu"; //for Discord Rich Presence
-
-		// for note skins
-		notes = new FlxTypedGroup<StrumNote>();
-		for (i in 0...Note.colArray.length)
-		{
-			final note = new StrumNote(370 + (560 / Note.colArray.length) * i, -200, i, 0);
-			note.centerOffsets();
-			note.centerOrigin();
-			note.playAnim("static");
-			notes.add(note);
-		}
+		rpcTitle = "Visuals & UI Settings Menu"; // for Discord Rich Presence
 
 		// options
-
 		final noteSkins = Mods.mergeAllTextsNamed("images/noteSkins/list.txt");
-		if (noteSkins.length > 0)
+		if (noteSkins.length != 0)
 		{
+			notes = new FlxTypedSpriteGroup(370, -200);
+			for (i in 0...Note.colArray.length)
+			{
+				final note = new StrumNote(560 / Note.colArray.length * i, 0, i, 0);
+				note.centerOffsets();
+				note.centerOrigin();
+				notes.add(note).playAnim("static");
+			}
+
 			if (!noteSkins.contains(ClientPrefs.data.noteSkin))
 				ClientPrefs.data.noteSkin = ClientPrefs.defaultData.noteSkin; // Reset to default if saved noteskin couldnt be found
 
@@ -58,12 +55,11 @@ class VisualsUISubState extends BaseOptionsMenu
 				});
 			}
 			addOption(option);
-		
 			noteOptionID = optionsArray.length - 1;
 		}
 		
 		final noteSplashes = Mods.mergeAllTextsNamed("images/noteSplashes/list.txt");
-		if (noteSplashes.length > 0)
+		if (noteSplashes.length != 0)
 		{
 			if (!noteSplashes.contains(ClientPrefs.data.splashSkin))
 				ClientPrefs.data.splashSkin = ClientPrefs.defaultData.splashSkin; //Reset to default if saved splashskin couldnt be found
@@ -174,7 +170,7 @@ class VisualsUISubState extends BaseOptionsMenu
 		));
 		#end
 
-		#if desktop
+		#if hxdiscord_rpc
 		addOption(new Option("Discord Rich Presence",
 			"Uncheck this to prevent accidental leaks, it will hide the Application from your \"Playing\" box on Discord.",
 			"discordRPC",
@@ -201,26 +197,19 @@ class VisualsUISubState extends BaseOptionsMenu
 	override function changeSelection(change:Int = 0)
 	{
 		super.changeSelection(change);
-		
-		if (noteOptionID < 0)
-			return;
+		notesY = noteOptionID == curSelected ? 90 : -200;
+	}
 
-		for (i in 0...Note.colArray.length)
-		{
-			final note = notes.members[i];
-			if (notesTween[i] != null)
-				notesTween[i].cancel();
-			notesTween[i] = FlxTween.tween(note, {y: curSelected == noteOptionID ? 90 : -200}, Math.abs(note.y / 290) / 3, {ease: FlxEase.quadInOut});
-		}
+	override function update(elapsed:Float)
+	{
+		super.update(elapsed);
+		if (noteOptionID != -1 && notes.y != notesY)
+			notes.y = FlxMath.lerp(notesY, notes.y, Math.exp(-elapsed * 18.6));
 	}
 
 	override function destroy()
 	{
-		while (notesTween.length > 0)
-			FlxDestroyUtil.destroy(notesTween.pop());
-		notesTween = null;
-		notes = FlxDestroyUtil.destroy(notes);
-
+		notes = null;
 		if (changedMusic && !OptionsState.onPlayState)
 			FlxG.sound.playMusic(Paths.music("freakyMenu"), 1, true);
 		super.destroy();

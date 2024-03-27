@@ -33,7 +33,7 @@ class BaseOptionsMenu extends MusicBeatSubstate
 		if (rpcTitle == null)
 			rpcTitle = "Options Menu";
 		
-		#if desktop
+		#if hxdiscord_rpc
 		DiscordClient.changePresence(rpcTitle, null);
 		#end
 		
@@ -210,16 +210,16 @@ class BaseOptionsMenu extends MusicBeatSubstate
 
 	override function destroy()
 	{
-		while (optionsArray.length > 0)
+		while (optionsArray.length != 0)
 			FlxDestroyUtil.destroy(optionsArray.pop());
 
 		optionsArray = null;
-		curOption = FlxDestroyUtil.destroy(curOption);
-		grpOptions = FlxDestroyUtil.destroy(grpOptions);
-		checkboxGroup = FlxDestroyUtil.destroy(checkboxGroup);
-		grpTexts = FlxDestroyUtil.destroy(grpTexts);
-		descBox = FlxDestroyUtil.destroy(descBox);
-		descText = FlxDestroyUtil.destroy(descText);
+		curOption = null;
+		grpOptions = null;
+		checkboxGroup = null;
+		grpTexts = null;
+		descBox = null;
+		descText = null;
 		super.destroy();
 	}
 

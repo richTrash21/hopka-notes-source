@@ -1,10 +1,5 @@
 package backend;
 
-import flixel.addons.transition.FlxTransitionableState;
-import flixel.FlxState;
-
-import backend.MusicBeatState;
-
 /**
 	An exact copy of MusicBeatState, but extending FlxUIState (whitch was originaly a MusicBeatState thing lmao)
  **/
@@ -26,13 +21,7 @@ class MusicBeatUIState extends flixel.addons.ui.FlxUIState implements IMusicBeat
 	override function create()
 	{
 		#if MODS_ALLOWED Mods.updatedOnState = false; #end
-
 		super.create();
-
-		if (!FlxTransitionableState.skipNextTransOut)
-			openSubState(new CustomFadeTransition(MusicBeatState.transTime, true));
-
-		FlxTransitionableState.skipNextTransOut = false;
 	}
 
 	override function update(elapsed:Float)
@@ -45,13 +34,33 @@ class MusicBeatUIState extends flixel.addons.ui.FlxUIState implements IMusicBeat
 		if (oldStep != curStep && curStep > 0)
 			stepHit();
 
-		// if (FlxG.save.data != null)
-		//	FlxG.save.data.fullscreen = FlxG.fullscreen;
-
 		super.update(elapsed);
 	}
 
-	function updateSection():Void
+	override function tryUpdate(elapsed:Float)
+	{
+		if (CoolUtil.updateStateCheck(this))
+			update(elapsed);
+
+		if (_requestSubStateReset)
+		{
+			_requestSubStateReset = false;
+			resetSubState();
+		}
+		if (subState != null)
+			subState.tryUpdate(elapsed);
+	}
+
+	public function stepHit():Void
+	{
+		if (curStep % 4 == 0)
+			beatHit();
+	}
+
+	public function beatHit():Void {}
+	public function sectionHit():Void {}
+
+	@:noCompletion function updateSection():Void
 	{
 		if (stepsToDo < 1)
 			stepsToDo = 16;
@@ -64,7 +73,7 @@ class MusicBeatUIState extends flixel.addons.ui.FlxUIState implements IMusicBeat
 		}
 	}
 
-	function rollbackSection():Void
+	@:noCompletion function rollbackSection():Void
 	{
 		if (curStep < 0)
 			return;
@@ -76,28 +85,19 @@ class MusicBeatUIState extends flixel.addons.ui.FlxUIState implements IMusicBeat
 			sectionHit();
 	}
 
-	private function updateBeat():Void
+	@:noCompletion function updateBeat():Void
 	{
-		curBeat = Math.floor(curStep / 4);
-		curDecBeat = curDecStep/4;
+		curBeat = Math.floor(curStep * .25);
+		curDecBeat = curDecStep * .25;
 	}
 
-	function updateCurStep():Void
+	@:noCompletion function updateCurStep():Void
 	{
 		final lastChange = Conductor.getBPMFromSeconds(Conductor.songPosition);
 		final shit = ((Conductor.songPosition - ClientPrefs.data.noteOffset) - lastChange.songTime) / lastChange.stepCrochet;
 		curDecStep = lastChange.stepTime + shit;
 		curStep = lastChange.stepTime + Math.floor(shit);
 	}
-
-	public function stepHit():Void
-	{
-		if (curStep % 4 == 0)
-			beatHit();
-	}
-
-	public function beatHit():Void {}
-	public function sectionHit():Void {}
 
 	@:noCompletion inline function get_controls():Controls
 	{

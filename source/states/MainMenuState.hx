@@ -20,11 +20,11 @@ class MainMenuState extends MusicBeatState
 	static final optionShit:Array<MainMenuOption> = [
 		["story_mode",	StoryMenuState.new],
 		["freeplay",	FreeplayState.new],
-		#if ACHIEVEMENTS_ALLOWED
-		// ["awards",		AchievementsMenuState.new],
-		#end
+		// #if ACHIEVEMENTS_ALLOWED
+		["awards",		AchievementsMenuState.new],
+		// #end
 		["credits",		CreditsState.new],
-		["donate"], // will be deleted prob idk
+		// ["donate"], // will be deleted prob idk
 		["options",		OptionsState.new, true]
 	];
 
@@ -44,16 +44,16 @@ class MainMenuState extends MusicBeatState
 		Mods.loadTopMod();
 		#end
 
-		#if desktop
+		#if hxdiscord_rpc
 		// Updating Discord Rich Presence
 		DiscordClient.changePresence("In the Menus", null);
 		#end
 
-		transIn = FlxTransitionableState.defaultTransIn;
-		transOut = FlxTransitionableState.defaultTransOut;
-		persistentUpdate = persistentDraw = true;
+		// transIn = FlxTransitionableState.defaultTransIn;
+		// transOut = FlxTransitionableState.defaultTransOut;
+		persistentUpdate = true;
 
-		final yScroll:Float = Math.max(0.25 - (0.05 * (optionShit.length - 4)), 0.1);
+		final yScroll = Math.max(0.2 - (0.05 * (optionShit.length - 4)), 0.1);
 		final bg = new FlxSprite(Paths.image("menuBG"));
 		bg.antialiasing = ClientPrefs.data.antialiasing;
 		bg.scrollFactor.set(0, yScroll);
@@ -95,7 +95,6 @@ class MainMenuState extends MusicBeatState
 			menuItems.add(menuItem).screenCenter(X);
 			menuItem.scrollFactor.set(0, itemScrollY);
 		}
-		// FlxG.camera.target = menuItems.members[0];
 
 		final psychVersion = new FlxText(12, FlxG.height - 64, 0, 'Psych Engine v$psychEngineVersion', 16);
 		psychVersion.active = false;
@@ -214,6 +213,11 @@ class MainMenuState extends MusicBeatState
 				selectedSomethin = true;
 				MusicBeatState.switchState(states.editors.MasterEditorMenu.new);
 			}
+			else if (FlxG.keys.justPressed.EIGHT)
+			{
+				selectedSomethin = true;
+				MusicBeatState.switchState(MainMenuPCState.new);
+			}
 			#end
 			else if (controls.justPressed("reset")) // garbage begone!!!
 			{
@@ -248,15 +252,14 @@ class MainMenuState extends MusicBeatState
 		}
 
 		if (pizzaTime)
+		{
 			Conductor.songPosition = FlxG.sound.music.time;
-		if (FlxG.camera.zoom != 1)
-			FlxG.camera.zoom = FlxMath.lerp(1, FlxG.camera.zoom, Math.exp(-elapsed * 7.6));
-		// if (FlxG.camera.angle != 0)
-		//	FlxG.camera.angle = FlxMath.lerp(0, FlxG.camera.angle, Math.exp(-elapsed * 7.6));
+			if (FlxG.camera.zoom != 1)
+				FlxG.camera.zoom = FlxMath.lerp(1, FlxG.camera.zoom, Math.exp(-elapsed * 7.6));
+		}
 
 		final N = FlxG.keys.justPressed.N;
-		// final D = FlxG.keys.justPressed.D;
-		if (N /*|| D*/ || FlxG.keys.justPressed.P) // just don't ask, i was bored lmao - richTrash21
+		if (N || FlxG.keys.justPressed.P) // just don't ask, i was bored lmao - richTrash21
 		{
 			if (pizzaTime)
 			{
@@ -272,12 +275,6 @@ class MainMenuState extends MusicBeatState
 					FlxG.sound.playMusic(Paths.music("World_Wide_Noise_v6_yo_how_many_times_am_i_just_gonna_keep_changing_the_guitar_slightly_at_the_end"));
 					FlxG.sound.music.endTime = (60 / (Conductor.bpm = 167) * 4000) * 96;
 				}
-				/*else if (D) // IMPASTA SYNDROME (which is called Noise At the Door in the files...)
-				{
-					// beta name huh...
-					FlxG.sound.playMusic(Paths.music("Pizza_Tower_OST_-_Doise_At_the_Door(1)"));
-					Conductor.bpm = 132;
-				}*/
 				else // ITS PIZZA TIME!!
 				{
 					FlxG.sound.playMusic(Paths.music("mu_pizzatime"));
@@ -292,14 +289,10 @@ class MainMenuState extends MusicBeatState
 		super.update(elapsed);
 	}
 
-	// var __angleIn:Bool;
 	override function beatHit()
 	{
 		if (pizzaTime)
-		{
 			FlxG.camera.zoom += 0.02;
-			// FlxG.camera.angle += (__angleIn = !__angleIn) ? .5 : -.5;
-		}
 	}
 
 	function changeItem(huh = 0)
@@ -332,4 +325,4 @@ abstract MainMenuOption(__OptionType) from __OptionType to __OptionType
 	@:noCompletion inline function get_preload():Bool     return this[2];
 }
 
-typedef __OptionType = Array<Dynamic>; // had to use dynamic wahhh 😭😭
+@:noCompletion private typedef __OptionType = Array<Dynamic>; // had to use dynamic wahhh 😭😭

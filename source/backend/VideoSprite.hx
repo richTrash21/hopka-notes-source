@@ -1,7 +1,7 @@
 package backend;
 
-import openfl.display.BitmapData;
-
+#if VIDEOS_ALLOWED
+#if hxCodec
 /**
  * This class will play the video in the form of a FlxSprite, which you can control.
  */
@@ -21,13 +21,13 @@ class VideoSprite extends flixel.FlxSprite
 		
 		video = new VideoHandler(VideoWidth, VideoHeight, autoScale = AutoScale);
 		video.visible = false;
-		//FlxG.game.removeChild(video);
 
 		video.readyCallback = () ->
 		{
 			visible = true;
 			loadGraphic(video.bitmapData);
 			FlxG.cameras.cameraResized.add(cameraResized);
+			adjustSize();
 
 			if (readyCallback != null)
 				readyCallback();
@@ -46,7 +46,13 @@ class VideoSprite extends flixel.FlxSprite
 
 	function cameraResized(camera:FlxCamera)
 	{
-		if (autoScale && camera == this.camera)
+		if (camera == this.camera)
+			adjustSize();
+	}
+
+	function adjustSize()
+	{
+		if (autoScale)
 		{
 			setGraphicSize(camera.width / camera.scaleX, camera.height / camera.scaleY);
 			updateHitbox();
@@ -84,8 +90,12 @@ class VideoSprite extends flixel.FlxSprite
 		video.resume();
 	}
 
-	@:noCompletion inline function get_isPlaying()
+	@:noCompletion inline function get_isPlaying():Bool
 	{
 		return video?.isPlaying;
 	}
 }
+#else
+typedef VideoSprite = hxvlc.flixel.FlxVideoSprite;
+#end
+#end

@@ -68,6 +68,7 @@ class Alphabet extends FlxTypedSpriteGroup<AlphaCharacter>
 		this.startPosition = FlxPoint.get(x, y);
 		this.bold = bold;
 		this.text = text;
+		directAlpha = true;
 	}
 
 	inline public function setAlignmentFromString(align:String)
@@ -194,6 +195,7 @@ class Alphabet extends FlxTypedSpriteGroup<AlphaCharacter>
 
 				letter.setupAlphaCharacter(xPos, rows * Y_PER_ROW * scale.y, character, bold);
 				letter.parent = this;
+				letter.alpha = 1;
 
 				letter.ID = id++;
 				letter.row = rows;
@@ -215,8 +217,6 @@ class Alphabet extends FlxTypedSpriteGroup<AlphaCharacter>
 		if (align == null)
 			align = alignment;
 
-		var __row = 0;
-		var __width = 0.;
 		forEachAlive((letter) ->
 		{
 			final newOffset = switch (align)

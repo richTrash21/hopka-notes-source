@@ -13,8 +13,28 @@ class GameplayChangersSubstate extends MusicBeatSubstate
 	private var checkboxGroup:FlxTypedGroup<CheckboxThingie>;
 	private var grpTexts:FlxTypedGroup<AttachedText>;
 
-	function getOptions()
+	public function getOptionByName(name:String):GameplayOption
 	{
+		for (opt in optionsArray)
+			if (opt.name == name)
+				return opt;
+
+		return null;
+	}
+
+	public function new()
+	{
+		super();
+		final bg:FlxSprite = new FlxSprite().makeGraphic(FlxG.width, FlxG.height, 0x99000000);
+		bg.active = false;
+		bg.scrollFactor.set();
+		add(bg);
+
+		// avoids lagspikes while scrolling through menus!
+		add(grpOptions	  = new FlxTypedGroup<Alphabet>());
+		add(grpTexts	  = new FlxTypedGroup<AttachedText>());
+		add(checkboxGroup = new FlxTypedGroup<CheckboxThingie>());
+		
 		final goption:GameplayOption = new GameplayOption('Scroll Type', 'scrolltype', 'string', 'multiplicative', ["multiplicative", "constant"]);
 		optionsArray.push(new GameplayOption('Scroll Type', 'scrolltype', 'string', 'multiplicative', ["multiplicative", "constant"]));
 
@@ -66,31 +86,6 @@ class GameplayChangersSubstate extends MusicBeatSubstate
 		optionsArray.push(new GameplayOption('Practice Mode', 'practice', 'bool', false));
 		optionsArray.push(new GameplayOption('Botplay', 'botplay', 'bool', false));
 		optionsArray.push(new GameplayOption('Showcase Mode', 'showcase', 'bool', false));
-	}
-
-	public function getOptionByName(name:String):GameplayOption
-	{
-		for (opt in optionsArray)
-			if (opt.name == name)
-				return opt;
-
-		return null;
-	}
-
-	public function new()
-	{
-		super();
-		final bg:FlxSprite = new FlxSprite().makeGraphic(FlxG.width, FlxG.height, 0x99000000);
-		bg.active = false;
-		bg.scrollFactor.set();
-		add(bg);
-
-		// avoids lagspikes while scrolling through menus!
-		add(grpOptions	  = new FlxTypedGroup<Alphabet>());
-		add(grpTexts	  = new FlxTypedGroup<AttachedText>());
-		add(checkboxGroup = new FlxTypedGroup<CheckboxThingie>());
-		
-		getOptions();
 
 		for (i in 0...optionsArray.length)
 		{
@@ -262,23 +257,24 @@ class GameplayChangersSubstate extends MusicBeatSubstate
 			}
 		}
 
-		if (nextAccept > 0) nextAccept -= 1;
+		if (nextAccept > 0)
+			nextAccept -= 1;
 
 		super.update(elapsed);
 	}
 
 	function updateTextFrom(option:GameplayOption)
 	{
-		final text:String = option.displayFormat;
 		var val:Dynamic = option.value;
-		if (option.type == 'percent') val *= 100;
-		final def:Dynamic = option.defaultValue;
-		option.text = text.replace('%v', val).replace('%d', def);
+		if (option.type == 'percent')
+			val *= 100;
+		option.text = option.displayFormat.replace('%v', val).replace('%d',  option.defaultValue);
 	}
 
 	function clearHold()
 	{
-		if (holdTime > 0.5) FlxG.sound.play(Paths.sound('scrollMenu'));
+		if (holdTime > 0.5)
+			FlxG.sound.play(Paths.sound('scrollMenu'));
 		holdTime = 0;
 	}
 
@@ -391,14 +387,13 @@ class GameplayOption
 
 	private function get_type()
 	{
-		final newValue:String = switch(type.toLowerCase().trim())
-			{
-				case 'int' | 'float' | 'percent' | 'string': type;
-				case 'integer':	'int';
-				case 'str':		'string';
-				case 'fl':		'float';
-				default:		'bool';
-			}
-		return type = newValue;
+		return type = switch (type.toLowerCase().trim())
+		{
+			case 'int' | 'float' | 'percent' | 'string': type;
+			case 'integer':	'int';
+			case 'str':		'string';
+			case 'fl':		'float';
+			default:		'bool';
+		}
 	}
 }

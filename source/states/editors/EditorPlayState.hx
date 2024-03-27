@@ -1,5 +1,7 @@
 package states.editors;
 
+import objects.PopupSprite;
+#if !RELESE_BUILD_FR
 import flixel.util.FlxStringUtil;
 import backend.Section.SwagSection;
 import backend.Rating;
@@ -14,7 +16,6 @@ import openfl.events.KeyboardEvent;
 
 class EditorPlayState extends MusicBeatSubstate
 {
-	#if !RELESE_BUILD_FR
 	// Borrowed from original PlayState
 	var finishTimer:FlxTimer = null;
 	var noteKillOffset:Float = 350;
@@ -35,15 +36,7 @@ class EditorPlayState extends MusicBeatSubstate
 	var grpNoteSplashes:FlxTypedGroup<NoteSplash>;
 	
 	var combo:Int = 0;
-	var lastRating:FlxSprite;
-	var lastCombo:FlxSprite;
-	var lastScore:Array<FlxSprite> = [];
-	var keysArray:Array<String> = [
-		'note_left',
-		'note_down',
-		'note_up',
-		'note_right'
-	];
+	var scoreGroup:FlxTypedGroup<PopupSprite>;
 	
 	var songHits:Int = 0;
 	var songMisses:Int = 0;
@@ -55,7 +48,6 @@ class EditorPlayState extends MusicBeatSubstate
 	var ratingPercent:Float;
 	var ratingFC:String;
 	
-	var showCombo:Bool = false;
 	var showComboNum:Bool = true;
 	var showRating:Bool = true;
 
@@ -96,10 +88,9 @@ class EditorPlayState extends MusicBeatSubstate
 		add(bg);
 		
 		/**** NOTES ****/
-		strumLineNotes = new FlxTypedGroup<StrumNote>();
-		add(strumLineNotes);
-		grpNoteSplashes = new FlxTypedGroup<NoteSplash>();
-		add(grpNoteSplashes);
+		add(strumLineNotes = new FlxTypedGroup());
+		add(scoreGroup = new FlxTypedGroup()).ID = 0;
+		add(grpNoteSplashes = new FlxTypedGroup());
 		
 		var splash:NoteSplash = new NoteSplash(100, 100);
 		grpNoteSplashes.add(splash);
@@ -136,7 +127,7 @@ class EditorPlayState extends MusicBeatSubstate
 		FlxG.stage.addEventListener(KeyboardEvent.KEY_DOWN, onKeyPress);
 		FlxG.stage.addEventListener(KeyboardEvent.KEY_UP, onKeyRelease);
 		
-		#if desktop
+		#if hxdiscord_rpc
 		// Updating Discord Rich Presence (with Time Left)
 		DiscordClient.changePresence('Playtesting on Chart Editor', PlayState.SONG.song, null, true, songLength);
 		#end
@@ -425,6 +416,20 @@ class EditorPlayState extends MusicBeatSubstate
 		for (i in 0...10) Paths.image('num$i');
 	}
 
+	inline static function __ratingFactory():PopupSprite
+	{
+		final s = PlayState.__ratingFactory();
+		s.scrollFactor.set();
+		return s; 
+	}
+
+	inline static function __numScoreFactory():PopupScore
+	{
+		final s = PlayState.__numScoreFactory();
+		s.scrollFactor.set();
+		return s;
+	}
+
 	private function popUpScore(note:Note = null):Void
 	{
 		var noteDiff:Float = Math.abs(note.strumTime - Conductor.songPosition + ClientPrefs.data.ratingOffset);
@@ -453,111 +458,64 @@ class EditorPlayState extends MusicBeatSubstate
 			RecalculateRating(false);
 		}
 
-		var rating:FlxSprite = new FlxSprite(placement - 40 + ClientPrefs.data.comboOffset[0], 0, Paths.image(daRating.image));
-		rating.screenCenter(Y);
-		rating.y -= 60 + ClientPrefs.data.comboOffset[1];
-		rating.acceleration.y = 550 * playbackRate * playbackRate;
-		rating.velocity.y -= FlxG.random.int(140, 175) * playbackRate;
-		rating.velocity.x -= FlxG.random.int(1, 10) * playbackRate;
-		rating.angularVelocity = rating.velocity.x * FlxG.random.int(1, -1, [0]);
-		rating.visible = (!ClientPrefs.data.hideHud && showRating);
-		rating.antialiasing = antialias;
-		rating.scrollFactor.set();
+		// доволен??🙄🙄
+		if (!ClientPrefs.data.enableCombo || ClientPrefs.data.hideHud || (!showRating && !showComboNum))
+			return;
 
-		rating.setGraphicSize(Std.int(rating.width * 0.7));
-		rating.updateHitbox();
+		final placement = FlxG.width * 0.35;
+		var scaleMult   = 0.7;
+		var numScale    = 0.5;
 
-		var comboSpr:FlxSprite = new FlxSprite(placement + ClientPrefs.data.comboOffset[0], 0, Paths.image('combo'));
-		comboSpr.screenCenter(Y);
-		comboSpr.y += 60 - ClientPrefs.data.comboOffset[1];
-		comboSpr.acceleration.y = FlxG.random.int(200, 300) * playbackRate * playbackRate;
-		comboSpr.velocity.y -= FlxG.random.int(140, 160) * playbackRate;
-		comboSpr.velocity.x = FlxG.random.int(1, 10) * playbackRate;
-		comboSpr.visible = (!ClientPrefs.data.hideHud && showCombo);
-		comboSpr.antialiasing = antialias;
-		comboSpr.scrollFactor.set();
+		final noStacking = !ClientPrefs.data.comboStacking;
+		if (noStacking)
+			scoreGroup.forEachAlive((spr) -> spr.kill());
 
-		comboSpr.setGraphicSize(Std.int(comboSpr.width * 0.7));
-		comboSpr.updateHitbox();
-
-		insert(members.indexOf(strumLineNotes), rating);
-		
-		if (!ClientPrefs.data.comboStacking)
+		if (showRating)
 		{
-			if (lastRating != null) lastRating.kill();
-			lastRating = rating;
+			final rating = scoreGroup.recycle(PopupSprite, __ratingFactory, true);
+			rating.loadGraphic(Paths.image(daRating.image));
+			rating.x = placement - 40 + ClientPrefs.data.comboOffset[0];
+			rating.screenCenter(Y).y -= 60 + ClientPrefs.data.comboOffset[1];
+			rating.setScale(scaleMult);
+			rating.updateHitbox();
+			rating.setAngleVelocity(-rating.velocity.x, rating.velocity.x);
+			scoreGroup.add(rating);
+
+			rating.fadeTime = Conductor.crochet * 0.001;
+			rating.fadeSpeed = 5;
+			rating.order = scoreGroup.ID++;
+			rating.scrollFactor.set();
 		}
 
-		var seperatedScore:Array<Int> = [];
-		if(combo >= 1000) seperatedScore.push(Math.floor(combo / 1000) % 10);
-		seperatedScore.push(Math.floor(combo / 100) % 10);
-		seperatedScore.push(Math.floor(combo / 10) % 10);
-		seperatedScore.push(combo % 10);
-
-		var daLoop:Int = 0;
-		var xThing:Float = 0;
-		if (showCombo) insert(members.indexOf(strumLineNotes), comboSpr);
-		if (!ClientPrefs.data.comboStacking)
+		if (showComboNum)
 		{
-			if (lastCombo != null) lastCombo.kill();
-			lastCombo = comboSpr;
-		}
-		if (lastScore != null)
-		{
-			while (lastScore.length > 0)
+			final digits = combo < 1000 ? 3 : CoolUtil.getDigits(combo);
+			final seperatedScore = [for (i in 0...digits) Math.floor(combo / Math.pow(10, (digits - 1) - i)) % 10];
+			for (i => v in seperatedScore)
 			{
-				lastScore[0].kill();
-				lastScore.remove(lastScore[0]);
+				final numScore = scoreGroup.recycle(PopupScore, __numScoreFactory, true);
+				numScore.loadGraphic(Paths.image('num$v'));
+				numScore.x = placement + (45 * i) - 90 + ClientPrefs.data.comboOffset[2];
+				numScore.screenCenter(Y).y += 80 - ClientPrefs.data.comboOffset[3];
+
+				numScore.setScale(numScale);
+				numScore.updateHitbox();
+				numScore.offset.add(FlxG.random.float(-1, 1), FlxG.random.float(-1, 1));
+				numScore.angularVelocity = -numScore.velocity.x;
+				scoreGroup.add(numScore);
+
+				numScore.fadeTime = Conductor.crochet * 0.001;
+				numScore.fadeSpeed = 5;
+				numScore.order = scoreGroup.ID++;
 			}
 		}
-		for (i in seperatedScore)
-		{
-			var numScore:FlxSprite = new FlxSprite(placement + (45 * daLoop) - 90 + ClientPrefs.data.comboOffset[2]).loadGraphic(Paths.image('num$i'));
-			numScore.screenCenter(Y).y += 80 - ClientPrefs.data.comboOffset[3];
-			//numScore.frame = numScore.frames.frames[i];
-			numScore.scrollFactor.set();
-			
-			if (!ClientPrefs.data.comboStacking) lastScore.push(numScore);
-
-			numScore.setGraphicSize(Std.int(numScore.width * 0.5));
-			numScore.updateHitbox();
-
-			numScore.offset.x += FlxG.random.int(-2, 2);
-			numScore.offset.y += FlxG.random.int(-2, 2);
-			numScore.acceleration.y = FlxG.random.int(200, 300) * playbackRate * playbackRate;
-			numScore.velocity.y -= FlxG.random.int(140, 160) * playbackRate;
-			numScore.velocity.x = FlxG.random.float(-5, 5) * playbackRate;
-			numScore.angularVelocity = -numScore.velocity.x;
-			numScore.visible = !ClientPrefs.data.hideHud;
-			numScore.antialiasing = antialias;
-
-			if(showComboNum) insert(members.indexOf(strumLineNotes), numScore);
-
-			FlxTween.tween(numScore, {alpha: 0}, 0.2 / playbackRate, {
-				onComplete: function(tween:FlxTween) numScore.destroy(),
-				startDelay: Conductor.crochet * 0.002 / playbackRate
-			});
-
-			daLoop++;
-			if(numScore.x > xThing) xThing = numScore.x;
-		}
-		comboSpr.x = xThing + 50;
-
-		FlxTween.tween(rating, {alpha: 0}, 0.2 / playbackRate, {
-			onComplete: function(tween:FlxTween) rating.destroy(),
-			startDelay: Conductor.crochet * 0.001 / playbackRate
-		});
-
-		FlxTween.tween(comboSpr, {alpha: 0}, 0.2 / playbackRate, {
-			onComplete: function(tween:FlxTween) comboSpr.destroy(),
-			startDelay: Conductor.crochet * 0.002 / playbackRate
-		});
+		scoreGroup.sort(CoolUtil.sortByOrder);
 	}
 
 	private function onKeyPress(event:KeyboardEvent):Void
 	{
 		var eventKey:FlxKey = event.keyCode;
-		var key:Int = PlayState.getKeyFromEvent(keysArray, eventKey);
+		var key:Int = PlayState.getKeyFromEvent(PlayState.keysArray, eventKey);
 		if (!controls.controllerMode && FlxG.keys.checkStatus(eventKey, JUST_PRESSED)) keyPressed(key);
 	}
 
@@ -620,7 +578,7 @@ class EditorPlayState extends MusicBeatSubstate
 	private function onKeyRelease(event:KeyboardEvent):Void
 	{
 		var eventKey:FlxKey = event.keyCode;
-		var key:Int = PlayState.getKeyFromEvent(keysArray, eventKey);
+		var key:Int = PlayState.getKeyFromEvent(PlayState.keysArray, eventKey);
 		if(!controls.controllerMode && key > -1) keyReleased(key);
 	}
 
@@ -641,7 +599,7 @@ class EditorPlayState extends MusicBeatSubstate
 		var holdArray:Array<Bool> = [];
 		var pressArray:Array<Bool> = [];
 		var releaseArray:Array<Bool> = [];
-		for (key in keysArray)
+		for (key in PlayState.keysArray)
 		{
 			holdArray.push(controls.pressed(key));
 			pressArray.push(controls.justPressed(key));
@@ -791,13 +749,7 @@ class EditorPlayState extends MusicBeatSubstate
 
 	function updateScore(miss:Bool = false)
 	{
-		var str:String = '?';
-		if(totalPlayed != 0)
-		{
-			var percent:Float = CoolUtil.floorDecimal(ratingPercent * 100, 2);
-			str = '$percent% - $ratingFC';
-		}
-		scoreTxt.text = 'Hits: $songHits | Misses: $songMisses | Rating: $str';
+		scoreTxt.text = 'Hits: $songHits | Misses: $songMisses | Rating: ' + (totalPlayed == 0 ? "?" : CoolUtil.floorDecimal(ratingPercent * 100, 2) + '% - $ratingFC');
 	}
 	
 	function fullComboUpdate()
@@ -816,5 +768,5 @@ class EditorPlayState extends MusicBeatSubstate
 		}
 		else if (songMisses < 10) ratingFC = 'SDCB';
 	}
-	#end
 }
+#end

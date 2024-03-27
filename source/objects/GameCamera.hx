@@ -31,6 +31,11 @@ class GameCamera extends FlxCamera
 		Awfull for optimisation, better for the eyes.
 	**/
 	public var tweeningZoom(default, null):Bool;
+
+	/**
+		Okay, this should help optimize it a bit ig.
+	**/
+	public var checkForTweens(default, set):Bool = false;
 	@:noCompletion var __tweenTimer = 0.; // okay i actually optimized it???? (kinda)
 
 	// internal values
@@ -52,13 +57,16 @@ class GameCamera extends FlxCamera
 		if (!active)
 			return;
 
-		// once per half of current framerate (hope it won't backfire tho)
-		final delay = 1 / (Main.fpsVar.currentFPS * .5);
-		if ((__tweenTimer += elapsed) > delay)
+		if (checkForTweens)
 		{
-			__tweenTimer -= delay;
-			tweeningZoom = false;
-			FlxTween.globalManager.forEachTweensOf(this, ["zoom"], (_) -> tweeningZoom = true);
+			// once per half of current framerate (hope it won't backfire tho)
+			final delay = 1 / (Main.fpsVar.currentFPS * .5);
+			if ((__tweenTimer += elapsed) > delay)
+			{
+				__tweenTimer -= delay;
+				tweeningZoom = false;
+				FlxTween.globalManager.forEachTweensOf(this, ["zoom"], (_) -> tweeningZoom = true);
+			}
 		}
 
 		if (target != null && updateLerp)
@@ -68,6 +76,14 @@ class GameCamera extends FlxCamera
 			zoom = FlxMath.lerp(targetZoom, zoom, Math.exp(-elapsed * _zoomSpeed * zoomDecay)); // Math.max(1 - (elapsed * _zoomSpeed * zoomDecay), 0)
 
 		super.update(elapsed);
+	}
+
+	@:noCompletion /*inline*/ function set_checkForTweens(bool:Bool):Bool
+	{
+		if (!bool)
+			tweeningZoom = false;
+
+		return checkForTweens = bool;
 	}
 
 	@:noCompletion /*inline*/ override function set_active(bool:Bool):Bool

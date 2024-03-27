@@ -28,7 +28,7 @@ class Init extends flixel.FlxState
 		final __exclude = ["PI2", "EL", "B1", "B2", "B3", "B4", "B5", "B6", "ELASTIC_AMPLITUDE", "ELASTIC_PERIOD"];
 		for (f in Type.getClassFields(FlxEase))
 			if (!__exclude.contains(f))
-				LuaUtils.__easeMap.set(f.toLowerCase(), cast Reflect.getProperty(FlxEase, f));
+				LuaUtils.__easeMap.set(f.toLowerCase(), Reflect.getProperty(FlxEase, f));
 
 		FlxTransitionableState.skipNextTransOut = true;
 

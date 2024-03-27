@@ -1,5 +1,6 @@
 package;
 
+import backend.StateTransition;
 import debug.FPSCounter;
 
 import openfl.Lib;
@@ -37,6 +38,7 @@ class Main extends Sprite
 	public static var volumeDownKeys:Array<FlxKey> = [FlxKey.NUMPADMINUS, FlxKey.MINUS];
 	public static var volumeUpKeys:Array<FlxKey> = [FlxKey.NUMPADPLUS, FlxKey.PLUS];
 
+	public static var transition:StateTransition;
 	static var __log = "";
 
 	// You can pretty much ignore everything from here on - your code should go in your states.
@@ -50,16 +52,21 @@ class Main extends Sprite
 			inline function formatOutput(v:Dynamic, pos:haxe.PosInfos):String
 			{
 				final t = "<" + Date.now().toString().substr(11) + ">";
-				var s = " > " + Std.string(v);
+				var s = Std.string(v);
 				if (pos == null)
-					return t + s;
+					return '$t > $s';
 				var p = pos.fileName + ":" + pos.lineNumber;
-				if (pos.methodName?.length > 0)
-					p += " - " + (pos.className?.length > 0 ? pos.className + "." + pos.methodName : pos.methodName) + "()";
+				if (pos.methodName != null && pos.methodName.length != 0)
+				{
+					p += " - ";
+					if (pos.className != null && pos.className.length != 0)
+						p += pos.className + ".";
+					p += pos.methodName + "()";
+				}
 				if (pos.customParams != null)
 					for (_v in pos.customParams)
 						s += ", " + Std.string(_v);
-				return t + " [" + p + "]" + s;
+				return '$t [$p] > $s';
 			}
 
 			final str = formatOutput(v, pos);
@@ -78,9 +85,7 @@ class Main extends Sprite
 
 		super();
 		setupGame();
-
-		Application.current.window.onFocusIn.add(volumeOnFocus);
-		Application.current.window.onFocusOut.add(volumeOnFocusLost);
+		// Application.current.window.onClose.add(volumeOnFocus, true);
 	}
 
 	static function volumeOnFocus() // dont ask
@@ -93,8 +98,8 @@ class Main extends Sprite
 	{
 		if (ClientPrefs.data.lostFocusDeafen && !FlxG.sound.muted)
 		{
-			_focusVolume = Math.floor(FlxG.sound.volume * 10) * 0.1;
-			FlxG.sound.volume *= 0.5;
+			_focusVolume = Math.ffloor(FlxG.sound.volume * 10.0) * 0.1;
+			FlxG.sound.volume = FlxG.sound.volume * 0.5; // Math.ffloor(FlxG.sound.volume * 5.0) * 0.1;
 		}
 	}
 
@@ -102,13 +107,12 @@ class Main extends Sprite
 	{
 		final g = new FlxGame(game.width, game.height, Init, game.framerate, game.framerate, game.skipSplash, game.startFullscreen);
 		addChild(g);
+		transition = new StateTransition();
+		g.addChildAt(transition, 0);
 
 		#if !mobile
 		g.addChild(fpsVar = new FPSCounter(10, 3));
 		fpsVar.visible = ClientPrefs.data.showFPS;
-
-		Lib.current.stage.align = "tl";
-		Lib.current.stage.scaleMode = openfl.display.StageScaleMode.NO_SCALE;
 		#end
 
 		_focusVolume = FlxG.sound.volume;
@@ -128,25 +132,24 @@ class Main extends Sprite
 		Lib.current.loaderInfo.uncaughtErrorEvents.addEventListener(UncaughtErrorEvent.UNCAUGHT_ERROR, onCrash);
 		#end
 
-		#if desktop
+		#if hxdiscord_rpc
 		DiscordClient.prepare();
 		#end
 
-		// shader coords fix
-		FlxG.signals.gameResized.add((w, h) ->
-		{
-			for (cam in FlxG.cameras.list)
-				if (cam != null && cam.filters != null)
-					resetSpriteCache(cam.flashSprite);
-
-			resetSpriteCache(FlxG.game);
-		});
+		FlxG.signals.focusGained.add(volumeOnFocus);
+		FlxG.signals.focusLost.add(volumeOnFocusLost);
+		FlxG.signals.gameResized.add(shaderFix);
 	}
 
+	// shader coords fix
 	@:access(openfl.display.DisplayObject.__cleanup)
-	inline static function resetSpriteCache(sprite:Sprite):Void
+	static function shaderFix(_, _):Void
 	{
-		sprite.__cleanup();
+		for (cam in FlxG.cameras.list)
+			if (cam != null && cam.filters != null)
+				cam.flashSprite.__cleanup();
+
+		FlxG.game.__cleanup();
 	}
 
 	// Code was entirely made by sqirra-rng for their fnf engine named "Izzy Engine", big props to them!!!
@@ -167,8 +170,8 @@ class Main extends Sprite
 					Sys.println(stackItem);
 			}
 
-		final devMsg = " - " + #if RELESE_BUILD_FR "i messed up, whoops" #else "you done goofed" #end + " (richTrash21)";
-		errMsg += "\nUncaught Error: " + e.error + '\n\ntl;dr$devMsg';
+		final devMsg = #if RELESE_BUILD_FR "i messed up, whoops" #else "you done goofed" #end + " (richTrash21)";
+		errMsg += "\nUncaught Error: " + e.error + '\n\ntl;dr - $devMsg';
 		// "\nPlease report this error to the GitHub page: https://github.com/ShadowMario/FNF-PsychEngine\n\n> Crash Handler written by: sqirra-rng";
 
 		if (!FileSystem.exists("./crash/"))
@@ -180,7 +183,9 @@ class Main extends Sprite
 		Sys.println(savedIn);
 
 		Application.current.window.alert('$errMsg\n$savedIn', "Uncaught Error!");
+		#if hxdiscord_rpc
 		DiscordClient.shutdown();
+		#end
 		Sys.exit(1);
 	}
 	#end

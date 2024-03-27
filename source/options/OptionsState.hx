@@ -31,7 +31,7 @@ class OptionsState extends MusicBeatState
 
 	override function create()
 	{
-		#if desktop
+		#if hxdiscord_rpc
 		DiscordClient.changePresence("Options Menu", null);
 		#end
 
@@ -135,9 +135,9 @@ class OptionsState extends MusicBeatState
 
 	override function destroy()
 	{
-		grpOptions = FlxDestroyUtil.destroy(grpOptions);
-		selectorLeft = FlxDestroyUtil.destroy(selectorLeft);
-		selectorRight = FlxDestroyUtil.destroy(selectorRight);
+		grpOptions = null;
+		selectorLeft = null;
+		selectorRight = null;
 		ClientPrefs.loadPrefs();
 		super.destroy();
 	}

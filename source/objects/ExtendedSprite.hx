@@ -87,9 +87,12 @@ class ExtendedSprite extends FlxSprite
 	override public function destroy():Void
 	{
 		for (anim => offset in animOffsets)
+		{
 			offset.put();
+			animOffsets.remove(anim);
+		}
 
-		animOffsets = CoolUtil.clear(animOffsets);
+		animOffsets = null;
 		boundBox = flixel.util.FlxDestroyUtil.put(boundBox);
 		onGraphicLoaded = null;
 		onEnterBounds = null;

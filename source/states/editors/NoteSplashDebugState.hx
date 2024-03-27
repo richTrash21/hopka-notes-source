@@ -1,5 +1,6 @@
 package states.editors;
 
+#if !RELESE_BUILD_FR
 import objects.Note;
 import objects.StrumNote;
 import objects.NoteSplash;
@@ -10,7 +11,6 @@ import backend.MusicBeatUIState;
 
 class NoteSplashDebugState extends MusicBeatUIState
 {
-	#if !RELESE_BUILD_FR
 	var config:NoteSplashConfig;
 	var forceFrame:Int = -1;
 	var curSelected:Int = 0;
@@ -411,5 +411,5 @@ class NoteSplashDebugState extends MusicBeatUIState
 		spr.animation.addByPrefix(name, anim, framerate, loop);
 		return spr.animation.getByName(name) != null;
 	}
-	#end
 }
+#end

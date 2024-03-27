@@ -112,6 +112,14 @@ class CoolUtil
 		#end
 	}
 
+	/**
+		Returns `null` if `num` is `NaN`, othervise returns `num`.
+	**/
+	inline public static function nullifyNaN(num:Null<Float>):Null<Float>
+	{
+		return Math.isNaN(num) ? null : num;
+	}
+
 	public static function fwrap(value:Float, min:Float, max:Float):Float
 	{
 		final range = max - min + 1;
@@ -174,6 +182,12 @@ class CoolUtil
 			map.clear();
 
 		return null;
+	}
+
+	// fixup some shit
+	inline public static function updateStateCheck(state:flixel.FlxState):Bool
+	{
+		return (state.persistentUpdate || (state.subState == null && !Main.transition.active));
 	}
 
 	/**

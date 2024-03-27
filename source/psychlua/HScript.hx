@@ -1,39 +1,33 @@
 package psychlua;
 
+#if HSCRIPT_ALLOWED
 import flixel.FlxBasic;
 import psychlua.FunkinLua;
 import psychlua.CustomSubstate;
 
-#if HSCRIPT_ALLOWED
 import hscript.Parser;
 import hscript.Interp;
-#end
 
 /**
 	ALL OF THIS (+ some hscript related fixes in PlayState) ARE FROM https://github.com/ShadowMario/FNF-PsychEngine/pull/13304
 	MY ONLY CONTRIBUTIONS ARE MORE FUNCTIONS FOR CustomFlxColor
 	@richTrash21
 **/
-class HScript #if HSCRIPT_ALLOWED extends Interp #end
+class HScript extends Interp
 {
 	public var active:Bool = true;
-
-	public var parser:#if HSCRIPT_ALLOWED Parser #else Dynamic #end;
-
+	public var parser:Parser;
 	public var parentLua:FunkinLua;
-
 	public var exception:haxe.Exception;
 
 	public static function initHaxeModule(parent:FunkinLua)
 	{
-		#if HSCRIPT_ALLOWED
-		if(parent.hscript == null)
+		if (parent.hscript == null)
 		{
-			final times:Float = Date.now().getTime();
+			final times = Date.now().getTime();
 			parent.hscript = new HScript(parent);
 			trace('initialized hscript interp successfully: ${parent.scriptName} (${Std.int(Date.now().getTime() - times)}ms)');
 		}
-		#end
 	}
 
 	public static function initHaxeModuleCode(parent:FunkinLua, code:String)
@@ -52,7 +46,6 @@ class HScript #if HSCRIPT_ALLOWED extends Interp #end
 	public var origin:String;
 	public function new(?parent:FunkinLua, ?file:String)
 	{
-		#if HSCRIPT_ALLOWED
 		super();
 
 		final content:String = (file == null ? null : Paths.getTextFromFile(file, false, true));
@@ -64,12 +57,10 @@ class HScript #if HSCRIPT_ALLOWED extends Interp #end
 
 		preset();
 		executeCode(content);
-		#end
 	}
 
 	function preset()
 	{
-		#if HSCRIPT_ALLOWED
 		parser = new Parser();
 		parser.allowJSON = parser.allowMetadata = parser.allowTypes = true;
 		scriptObject = PlayState.instance; // allow use vars from playstate without "game" thing
@@ -159,50 +150,51 @@ class HScript #if HSCRIPT_ALLOWED extends Interp #end
 		setVar('Function_StopLua',		FunkinLua.Function_StopLua); //doesnt do much cuz HScript has a lower priority than Lua
 		setVar('Function_StopHScript',	FunkinLua.Function_StopHScript);
 		setVar('Function_StopAll',		FunkinLua.Function_StopAll);
-		#end
 	}
 
 	public function executeCode(?codeToRun:String):Dynamic
 	{
-		#if HSCRIPT_ALLOWED
-		if (codeToRun == null || !active) return null;
+		if (codeToRun == null || !active)
+			return null;
+
 		try
 		{
 			return execute(parser.parseString(codeToRun, origin));
 		}
-		catch(e) exception = e;
-		#end
+		catch(e)
+			exception = e;
+
 		return null;
 	}
 
 	public function executeFunction(?funcToRun:String, ?funcArgs:Array<Dynamic>):Dynamic
 	{
-		#if HSCRIPT_ALLOWED
-		if (funcToRun == null || !active) return FunkinLua.Function_Continue;
+		if (funcToRun == null || !active)
+			return FunkinLua.Function_Continue;
 
 		if (variables.exists(funcToRun))
 		{
-			if (funcArgs == null) funcArgs = [];
 			try
 			{
-				final ret:Dynamic = Reflect.callMethod(null, variables.get(funcToRun), funcArgs);
+				final ret:Dynamic = Reflect.callMethod(null, variables.get(funcToRun), funcArgs ?? []);
 				return ret ?? FunkinLua.Function_Continue;
 			}
-			catch(e) exception = e;
+			catch(e)
+				exception = e;
 		}
-		#end
 		return FunkinLua.Function_Continue;
 	}
 
+	#if LUA_ALLOWED
 	public static function implement(funk:FunkinLua)
 	{
-		#if (LUA_ALLOWED && HSCRIPT_ALLOWED)
 		funk.addLocalCallback("runHaxeCode", function(codeToRun:String, ?varsToBring:Any = null, ?funcToRun:String = null, ?funcArgs:Array<Dynamic> = null):Dynamic
 		{
 			initHaxeModule(funk);
-			if (!funk.hscript.active) return null;
+			if (!funk.hscript.active)
+				return null;
 
-			if(varsToBring != null)
+			if (varsToBring != null)
 			{
 				for (key in Reflect.fields(varsToBring))
 				{
@@ -230,10 +222,10 @@ class HScript #if HSCRIPT_ALLOWED extends Interp #end
 
 		funk.addLocalCallback("runHaxeFunction", function(funcToRun:String, ?funcArgs:Array<Dynamic>)
 		{
-			if (!funk.hscript.active) return null;
+			if (!funk.hscript.active)
+				return null;
 
 			final retVal:Dynamic = funk.hscript.executeFunction(funcToRun, funcArgs);
-
 			if (funk.hscript.exception != null)
 			{
 				funk.hscript.active = false;
@@ -243,21 +235,17 @@ class HScript #if HSCRIPT_ALLOWED extends Interp #end
 			return retVal;
 		});
 		// This function is unnecessary because import already exists in hscript-improved as a native feature
-		funk.addLocalCallback("addHaxeLibrary", function(libName:String, ?libPackage:String = '')
+		funk.addLocalCallback("addHaxeLibrary", function(libName:String, ?libPackage:String)
 		{
 			initHaxeModule(funk);
-			if (!funk.hscript.active) return;
+			if (!funk.hscript.active)
+				return;
 
-			var str:String = '';
-			if(libPackage.length > 0)
-				str = libPackage + '.';
-			else if(libName == null)
-				libName = '';
-
-			final c:Dynamic = resolveClassOrEnum(str + libName);
-
+			if (libName == null)
+				libName = "";
 			try
 			{
+				final c:Dynamic = resolveClassOrEnum((libPackage == null || libPackage.length == 0) ? libName : '$libPackage.$libName');
 				funk.hscript.setVar(libName, c);
 			}
 			catch(e)
@@ -266,8 +254,8 @@ class HScript #if HSCRIPT_ALLOWED extends Interp #end
 				FunkinLua.luaTrace('ERROR (${funk.lastCalledFunction}) - $e', false, false, FlxColor.RED);
 			}
 		});
-		#end
 	}
+	#end
 
 	inline public static function resolveClassOrEnum(name:String):Dynamic
 	{
@@ -281,7 +269,6 @@ class HScript #if HSCRIPT_ALLOWED extends Interp #end
 		parser = null;
 		origin = null;
 		parentLua = null;
-		#if HSCRIPT_ALLOWED
 		__instanceFields = [];
 		binops.clear();
 		customClasses.clear();
@@ -289,59 +276,77 @@ class HScript #if HSCRIPT_ALLOWED extends Interp #end
 		importBlocklist = [];
 		locals.clear();
 		resetVariables();
-		#end
 	}
 }
 
-#if HSCRIPT_ALLOWED
-class CustomFlxColor
+private class CustomFlxColor
 {
-	public static final TRANSPARENT:Int	 = FlxColor.TRANSPARENT;
-	public static final BLACK:Int		 = FlxColor.BLACK;
-	public static final WHITE:Int		 = FlxColor.WHITE;
-	public static final GRAY:Int		 = FlxColor.GRAY;
+	public static final TRANSPARENT = FlxColor.TRANSPARENT;
+	public static final BLACK       = FlxColor.BLACK;
+	public static final WHITE       = FlxColor.WHITE;
+	public static final GRAY        = FlxColor.GRAY;
+	public static final GREEN       = FlxColor.GREEN;
+	public static final LIME        = FlxColor.LIME;
+	public static final YELLOW      = FlxColor.YELLOW;
+	public static final ORANGE      = FlxColor.ORANGE;
+	public static final RED         = FlxColor.RED;
+	public static final PURPLE      = FlxColor.PURPLE;
+	public static final BLUE        = FlxColor.BLUE;
+	public static final BROWN       = FlxColor.BROWN;
+	public static final PINK        = FlxColor.PINK;
+	public static final MAGENTA     = FlxColor.MAGENTA;
+	public static final CYAN        = FlxColor.CYAN;
 
-	public static final GREEN:Int		 = FlxColor.GREEN;
-	public static final LIME:Int		 = FlxColor.LIME;
-	public static final YELLOW:Int		 = FlxColor.YELLOW;
-	public static final ORANGE:Int		 = FlxColor.ORANGE;
-	public static final RED:Int			 = FlxColor.RED;
-	public static final PURPLE:Int		 = FlxColor.PURPLE;
-	public static final BLUE:Int		 = FlxColor.BLUE;
-	public static final BROWN:Int		 = FlxColor.BROWN;
-	public static final PINK:Int		 = FlxColor.PINK;
-	public static final MAGENTA:Int		 = FlxColor.MAGENTA;
-	public static final CYAN:Int		 = FlxColor.CYAN;
+	public static function fromRGB(red:Int, green:Int, blue:Int, alpha:Int = 255):Int
+	{
+		return FlxColor.fromRGB(red, green, blue, alpha);
+	}
+	public static function fromRGBFloat(red:Float, green:Float, blue:Float, alpha:Float = 1):Int
+	{
+		return FlxColor.fromRGBFloat(red, green, blue, alpha);
+	}
 
-	public static function fromInt(Value:Int):Int
-		return cast FlxColor.fromInt(Value);
-	public static function fromRGB(Red:Int, Green:Int, Blue:Int, Alpha:Int = 255):Int
-		return cast FlxColor.fromRGB(Red, Green, Blue, Alpha);
-	public static function fromRGBFloat(Red:Float, Green:Float, Blue:Float, Alpha:Float = 1):Int
-		return cast FlxColor.fromRGBFloat(Red, Green, Blue, Alpha);
-
-	public static function fromCMYK(Cyan:Float, Magenta:Float, Yellow:Float, Black:Float, Alpha:Float = 1):Int
-		return cast FlxColor.fromCMYK(Cyan, Magenta, Yellow, Alpha);
-	public static function fromHSB(Hue:Float, Sat:Float, Brt:Float, Alpha:Float = 1):Int
-		return cast FlxColor.fromHSB(Hue, Sat, Brt, Alpha);
-	public static function fromHSL(Hue:Float, Sat:Float, Light:Float, Alpha:Float = 1):Int
-		return cast FlxColor.fromHSL(Hue, Sat, Light, Alpha);
+	public static function fromCMYK(cyan:Float, magenta:Float, yellow:Float, black:Float, alpha:Float = 1):Int
+	{
+		return FlxColor.fromCMYK(cyan, magenta, yellow, black, alpha);
+	}
+	public static function fromHSB(hue:Float, sat:Float, brt:Float, alpha:Float = 1):Int
+	{
+		return FlxColor.fromHSB(hue, sat, brt, alpha);
+	}
+	public static function fromHSL(hue:Float, sat:Float, light:Float, alpha:Float = 1):Int
+	{
+		return FlxColor.fromHSL(hue, sat, light, alpha);
+	}
 	public static function fromString(str:String):Int
-		return cast FlxColor.fromString(str);
+	{
+		return FlxColor.fromString(str);
+	}
 
-	public static function interpolate(Color1:Int, Color2:Int, Factor:Float = 0.5):Int
-		return cast FlxColor.interpolate(FlxColor.fromInt(Color1), FlxColor.fromInt(Color2), Factor);
+	public static function getHSBColorWheel(alpha:Int = 255):Array<Int>
+	{
+		return FlxColor.getHSBColorWheel(alpha);
+	}
+	public static function interpolate(color1:Int, color2:Int, factor:Float = 0.5):Int
+	{
+		return FlxColor.interpolate(color1, color2, factor);
+	}
+	public static function gradient(color1:FlxColor, color2:FlxColor, steps:Int, ?ease:Float->Float):Array<Int>
+	{
+		return FlxColor.gradient(color1, color2, steps, ease);
+	}
 
 	public static function multiply(lhs:Int, rhs:Int):Int
-		return cast FlxColor.multiply(FlxColor.fromInt(lhs), FlxColor.fromInt(rhs));
+	{
+		return FlxColor.multiply(lhs, rhs);
+	}
 	public static function add(lhs:Int, rhs:Int):Int
-		return cast FlxColor.add(FlxColor.fromInt(lhs), FlxColor.fromInt(rhs));
+	{
+		return FlxColor.add(lhs, rhs);
+	}
 	public static function subtract(lhs:Int, rhs:Int):Int
-		return cast FlxColor.subtract(FlxColor.fromInt(lhs), FlxColor.fromInt(rhs));
-
-	/*public function getDarkened(Factor:Float = 0.2):Int
-		return cast FlxColor.getDarkened(Factor);
-	public function getLightened(Factor:Float = 0.2):Int
-		return cast FlxColor.getLightened(Factor);*/
+	{
+		return FlxColor.subtract(lhs, rhs);
+	}
 }
 #end

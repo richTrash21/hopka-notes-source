@@ -1,5 +1,6 @@
 package states.editors;
 
+#if !RELESE_BUILD_FR
 import flixel.addons.ui.FlxUI;
 import flixel.addons.ui.FlxUICheckBox;
 import flixel.addons.ui.FlxUIInputText;
@@ -25,7 +26,6 @@ import backend.MusicBeatUIState;
 
 class DialogueEditorState extends MusicBeatUIState
 {
-	#if !RELESE_BUILD_FR
 	var character:DialogueCharacter;
 	var box:FlxSprite;
 	var daText:TypedAlphabet;
@@ -242,11 +242,13 @@ class DialogueEditorState extends MusicBeatUIState
 		daText.y = DialogueBoxPsych.DEFAULT_TEXT_Y;
 		if(daText.rows > 2) daText.y -= DialogueBoxPsych.LONG_TEXT_ADD;
 
-		#if desktop
+		#if hxdiscord_rpc
 		// Updating Discord Rich Presence
-		var rpcText:String = lineInputText.text;
-		if(rpcText == null || rpcText.length < 1) rpcText = '(Empty)';
-		if(rpcText.length < 3) rpcText += '   '; //Fixes a bug on RPC that triggers an error when the text is too short
+		var rpcText = lineInputText.text;
+		if (rpcText == null || rpcText.length == 0)
+			rpcText = "(Empty)";
+		if (rpcText.length < 3)
+			rpcText += "   "; // Fixes a bug on RPC that triggers an error when the text is too short
 		DiscordClient.changePresence("Dialogue Editor", rpcText);
 		#end
 	}

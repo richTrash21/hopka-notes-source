@@ -11,10 +11,15 @@ class HealthIcon extends ExtendedSprite
 	inline public static final ICON_HEIGHT = 150.;
 
 	// for icons that don't have config
-	static final defaultConfig:HealthIconConfig = {scale: 1, offset: [0, 0], flip_x: false};
+	static final defaultConfig:HealthIconConfig = {scale: 1, offset: [0, 0], antialias: true, flip_x: false};
+	public static final jsonCache = new Map<String, HealthIconConfig>();
 
-	/*inline*/ public static function getConfig(char:String):HealthIconConfig
+	 public static function getConfig(char:String, ?useCache = true):HealthIconConfig
 	{
+		if (useCache && jsonCache.exists(char))
+			return jsonCache.get(char);
+
+		var config = defaultConfig; // so if json couldn't be found default would be used instead
 		var path:String;
 		final iconPath = 'images/icons/$char.json';
 		#if MODS_ALLOWED
@@ -27,9 +32,12 @@ class HealthIcon extends ExtendedSprite
 		path = Paths.getPreloadPath(iconPath);
 		if (Assets.exists(path))
 		#end
-			return cast haxe.Json.parse(#if MODS_ALLOWED sys.io.File.getContent(path) #else Assets.getText(path) #end);
+			config = cast haxe.Json.parse(#if MODS_ALLOWED sys.io.File.getContent(path) #else Assets.getText(path) #end);
 
-		return defaultConfig; // so if json couldn't be found default would be used instead
+		if (useCache)
+			jsonCache.set(char, config);
+
+		return config;
 	}
 
 	public var isPlayer(default, null):Bool = false;
@@ -66,7 +74,7 @@ class HealthIcon extends ExtendedSprite
 		super.update(elapsed);
 	}
 
-	public function changeIcon(char:String, allowGPU = true)
+	public function changeIcon(char:String, allowGPU = true, ?useCache = true)
 	{
 		if (this.char == char)
 			return;
@@ -81,13 +89,13 @@ class HealthIcon extends ExtendedSprite
 			char = "face"; // so it will create a default config for face aka. null (LMAO THATS NOT HOW IT SHOULD WORK BUT IDC) - richTrash21
 		}
 
-		final json = getConfig(char);
+		final json = getConfig(char, useCache);
 		final graphic = Paths.image(name, allowGPU);
 		loadGraphic(graphic, true, (graphic.width > graphic.height) ? Math.floor(graphic.width * 0.5) : graphic.width, graphic.height);
 
 		if (!animOffsets.exists(char))
 		{
-			final o = addOffset(char, (width - 150) * 0.5, (height - 150) * 0.5);
+			final o = addOffset(char, (width - ICON_WIDTH) * 0.5, (height - ICON_HEIGHT) * 0.5);
 			if (json.offset?.length > 1)
 				o.add(json.offset[0], json.offset[1]);
 		}

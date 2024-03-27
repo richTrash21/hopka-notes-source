@@ -81,10 +81,11 @@ class AchievementPopup extends openfl.display.Sprite
 		text.destroy();
 
 		// other stuff
-		FlxG.stage.addEventListener(Event.RESIZE, onResize);
-		// addEventListener(Event.ENTER_FRAME, update);
+		FlxG.signals.preUpdate.add(update);
+		FlxG.signals.gameResized.add(onResize);
 
-		FlxG.game.addChild(this); //Don't add it below mouse, or it will disappear once the game changes states
+		// FlxG.game.addChild(this); // Don't add it below mouse, or it will disappear once the game changes states
+		FlxG.addChildBelowMouse(this); // dont care 🙄🥱
 
 		// fix scale
 		lastScale = (FlxG.stage.stageHeight / FlxG.height);
@@ -112,33 +113,18 @@ class AchievementPopup extends openfl.display.Sprite
 	var timePassed:Float = -1;
 	public var intendedY:Float = 0;
 
-	override function __enterFrame(deltaTime:Int):Void
-	// function update(_)
+	function update()
 	{
-		/*if (timePassed < 0) 
-		{
-			timePassed = Lib.getTimer();
-			return;
-		}*/
-
-		// var time = Lib.getTimer();
-		final elapsed = deltaTime * 0.001; // (time - timePassed) / 1000;
-		// timePassed = time;
-		// trace('update called! $elapsed');
-
-		if (elapsed >= 0.5)
-			return; // most likely passed through a loading
-
-		if ((countedTime += elapsed) < 3)
-			y = ((FlxEase.elasticOut((lerpTime = Math.min(1, lerpTime + elapsed))) * (intendedY + 130)) - 130) * lastScale;
+		if ((countedTime += FlxG.elapsed) < 3)
+			y = ((FlxEase.elasticOut((lerpTime = Math.min(1, lerpTime + FlxG.elapsed))) * (intendedY + 130)) - 130) * lastScale;
 		else
-			if ((y -= FlxG.height * 2 * elapsed * lastScale) <= -130 * lastScale)
+			if ((y -= FlxG.height * 2 * FlxG.elapsed * lastScale) <= -130 * lastScale)
 				destroy();
 	}
 
-	private function onResize(_)
+	function onResize(width:Int, height:Int)
 	{
-		final mult = FlxG.stage.stageHeight / FlxG.height;
+		final mult = height / FlxG.height;
 		scaleX = scaleY = mult;
 		x = (mult / lastScale) * x;
 		y = (mult / lastScale) * y;
@@ -153,8 +139,8 @@ class AchievementPopup extends openfl.display.Sprite
 		if (FlxG.game.contains(this))
 			FlxG.game.removeChild(this);
 
-		FlxG.stage.removeEventListener(Event.RESIZE, onResize);
-		// removeEventListener(Event.ENTER_FRAME, update);
+		FlxG.signals.gameResized.remove(onResize);
+		FlxG.signals.preUpdate.remove(update);
 		deleteClonedBitmaps();
 	}
 

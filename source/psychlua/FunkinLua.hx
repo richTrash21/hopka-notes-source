@@ -738,10 +738,10 @@ class FunkinLua
 				FlxTransitionableState.skipNextTransIn = FlxTransitionableState.skipNextTransOut = true;
 
 			PlayState.cancelMusicFadeTween();
-			CustomFadeTransition.nextCamera = !FlxTransitionableState.skipNextTransIn ? game.camOther : null;
 			MusicBeatState.switchState(PlayState.isStoryMode ? StoryMenuState.new : FreeplayState.new);
-			
-			#if desktop DiscordClient.resetClientID(); #end
+			#if hxdiscord_rpc
+			DiscordClient.resetClientID();
+			#end
 
 			FlxG.sound.playMusic(Paths.music("freakyMenu"));
 			PlayState.changedDifficulty = false;
@@ -1312,7 +1312,7 @@ class FunkinLua
 			return closed = true;
 		});
 
-		#if desktop
+		#if hxdiscord_rpc
 		DiscordClient.implement(this);
 		#end
 		#if ACHIEVEMENTS_ALLOWED

@@ -69,9 +69,6 @@ class Option implements flixel.util.FlxDestroyUtil.IFlxDestroyable
 
 	public function destroy()
 	{
-		while (options?.length > 0)
-			options.pop();
-
 		options = null;
 		child = null;
 		defaultValue = null;

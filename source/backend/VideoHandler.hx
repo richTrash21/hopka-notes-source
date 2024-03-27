@@ -1,5 +1,8 @@
 package backend;
 
+#if VIDEOS_ALLOWED
+#if hxCodec
+
 import openfl.events.Event;
 
 /**
@@ -25,7 +28,7 @@ class VideoHandler extends vlc.bitmap.VlcBitmap
 
 		FlxG.addChildBelowMouse(this);
 
-		FlxG.stage.addEventListener(Event.ENTER_FRAME, update);
+		// FlxG.stage.addEventListener(Event.ENTER_FRAME, update);
 
 		if (FlxG.autoPause)
 		{
@@ -34,7 +37,8 @@ class VideoHandler extends vlc.bitmap.VlcBitmap
 		}
 	}
 
-	function update(e:Event)
+	// function update(_)
+	override function __enterFrame(deltaTime:Int)
 	{
 		if ((Controls.instance.ACCEPT || Controls.instance.PAUSE) && isPlaying)
 			finishVideo();
@@ -80,14 +84,13 @@ class VideoHandler extends vlc.bitmap.VlcBitmap
 		if (FlxG.sound.music != null && pauseMusic)
 			FlxG.sound.music.resume();
 
-		FlxG.stage.removeEventListener(Event.ENTER_FRAME, update);
+		// FlxG.stage.removeEventListener(Event.ENTER_FRAME, update);
 
 		dispose();
 
 		if (FlxG.game.contains(this))
 		{
 			FlxG.game.removeChild(this);
-
 			if (finishCallback != null)
 				finishCallback();
 		}
@@ -117,3 +120,7 @@ class VideoHandler extends vlc.bitmap.VlcBitmap
 		#end
 	}
 }
+#else
+typedef VideoHandler = hxvlc.openfl.Video;
+#end
+#end

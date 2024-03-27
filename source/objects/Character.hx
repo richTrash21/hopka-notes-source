@@ -2,7 +2,6 @@ package objects;
 
 import flixel.util.FlxDestroyUtil;
 import flixel.math.FlxPoint;
-import flixel.FlxObject;
 
 #if MODS_ALLOWED
 import sys.FileSystem;
@@ -13,12 +12,16 @@ import openfl.utils.Assets;
 class Character extends objects.ExtendedSprite
 {
 	inline public static final DEFAULT_CHARACTER = "bf"; // In case a character is missing, it will use BF on its place
+	public static final jsonCache = new Map<String, CharacterFile>();
 
-	public static function resolveCharacterData(data:CharacterData):CharacterFile
+	public static function resolveCharacterData(data:CharacterData, ?useCache = true):CharacterFile
 	{
 		// from character name
 		if (data is String)
 		{
+			if (useCache && jsonCache.exists(data))
+				return jsonCache.get(data);
+
 			var path:String;
 			final characterPath = 'characters/$data.json';
 			#if MODS_ALLOWED
@@ -33,7 +36,10 @@ class Character extends objects.ExtendedSprite
 			#end
 				path = Paths.getPreloadPath('characters/$DEFAULT_CHARACTER.json'); // If a character couldn't be found, change him to BF just to prevent a crash
 	
-			return cast haxe.Json.parse(#if MODS_ALLOWED sys.io.File.getContent(path) #else Assets.getText(path) #end);	
+			final json:CharacterFile = cast haxe.Json.parse(#if MODS_ALLOWED sys.io.File.getContent(path) #else Assets.getText(path) #end);
+			if (useCache)
+				jsonCache.set(data, json);
+			return json;
 		}
 		// nvmd just standart character file data
 		return cast data;
@@ -57,7 +63,7 @@ class Character extends objects.ExtendedSprite
 	public var healthIcon:String = "face";
 	public var healthColor:FlxColor = FlxColor.RED;
 
-	public var camFollow(default, null):FlxObject = new FlxObject(0, 0, 1, 1);
+	public var camFollow(default, null):CameraTarget = new CameraTarget();
 	public var cameraOffset:FlxPoint = FlxPoint.get();
 	public var position:FlxPoint = FlxPoint.get();
 
@@ -89,17 +95,18 @@ class Character extends objects.ExtendedSprite
 		firstSetup = false;
 	}
 
-	public function loadCharacter(data:CharacterData, ?gpu = false)
+	public function loadCharacter(data:CharacterData, ?gpu = true, ?useCache = true)
 	{
-		final json = resolveCharacterData(data);
-		if (!debugMode && imageFile == json.image)
+		final isCharName = data is String;
+		final json = resolveCharacterData(data, useCache);
+		if (!debugMode && isCharName && data == curCharacter)
 			return;
 
 		// remove old positioning
 		subtractPosition(position.x, position.y);
 
 		// reset data
-		curCharacter = data is String ? data : "unknown";
+		curCharacter = isCharName ? data : "unknown";
 		hasMissAnimations = specialAnim = skipDance = danceIdle = stunned = false;
 		settingCharacterUp = true;
 		holdTimer = heyTimer = 0;
@@ -111,9 +118,6 @@ class Character extends objects.ExtendedSprite
 		final wasPlayer = isPlayer;
 		if (!firstSetup)
 			isPlayer = false;
-
-		while (animationsArray?.length > 0)
-			animationsArray.pop();
 
 		// load spritesheet
 		imageFile = json.image;
@@ -148,8 +152,7 @@ class Character extends objects.ExtendedSprite
 			healthColor = FlxColor.fromRGB(json.healthbar_colors[0], json.healthbar_colors[1], json.healthbar_colors[2]);
 
 		// antialiasing
-		noAntialiasing = json.no_antialiasing;
-		antialiasing = ClientPrefs.data.antialiasing ? !noAntialiasing : false;
+		antialiasing = ClientPrefs.data.antialiasing ? !(noAntialiasing = json.no_antialiasing) : false;
 
 		// animations
 		animationsArray = json.animations;
@@ -253,11 +256,7 @@ class Character extends objects.ExtendedSprite
 	override public function destroy()
 	{
 		super.destroy();
-		while (animationsArray?.length > 0)
-			animationsArray.pop();
-
 		animationsArray = null;
-
 		camFollowOffset = FlxDestroyUtil.destroy(camFollowOffset);
 		camFollow = FlxDestroyUtil.destroy(camFollow);
 		cameraOffset = FlxDestroyUtil.put(cameraOffset);

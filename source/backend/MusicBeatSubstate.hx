@@ -42,7 +42,31 @@ class MusicBeatSubstate extends flixel.FlxSubState implements IMusicBeatState
 		super.update(elapsed);
 	}
 
-	private function updateSection():Void
+	override function tryUpdate(elapsed:Float)
+	{
+		if (CoolUtil.updateStateCheck(this))
+			update(elapsed);
+
+		if (_requestSubStateReset)
+		{
+			_requestSubStateReset = false;
+			resetSubState();
+		}
+		if (subState != null)
+			subState.tryUpdate(elapsed);
+	}
+
+	public function stepHit():Void
+	{
+		if (curStep % 4 == 0)
+			beatHit();
+	}
+
+	public function beatHit():Void { /* do literally nothing dumbass */ }
+	public function sectionHit():Void { /* yep, you guessed it, nothing again, dumbass */ }
+	// rich: ur mean😭
+
+	@:noCompletion function updateSection():Void
 	{
 		if (stepsToDo < 1)
 			stepsToDo = Math.round(getBeatsOnSection() * 4);
@@ -55,7 +79,7 @@ class MusicBeatSubstate extends flixel.FlxSubState implements IMusicBeatState
 		}
 	}
 
-	private function rollbackSection():Void
+	@:noCompletion function rollbackSection():Void
 	{
 		if (curStep < 0)
 			return;
@@ -79,31 +103,21 @@ class MusicBeatSubstate extends flixel.FlxSubState implements IMusicBeatState
 			sectionHit();
 	}
 
-	private function updateBeat():Void
+	@:noCompletion function updateBeat():Void
 	{
 		curBeat = Math.floor(curStep * .25);
 		curDecBeat = curDecStep * .25;
 	}
 
-	private function updateCurStep():Void
+	@:noCompletion function updateCurStep():Void
 	{
 		final lastChange = Conductor.getBPMFromSeconds(Conductor.songPosition);
 		final shit = ((Conductor.songPosition - ClientPrefs.data.noteOffset) - lastChange.songTime) / lastChange.stepCrochet;
 		curDecStep = lastChange.stepTime + shit;
 		curStep = lastChange.stepTime + Math.floor(shit);
 	}
-
-	public function stepHit():Void
-	{
-		if (curStep % 4 == 0)
-			beatHit();
-	}
-
-	public function beatHit():Void { /* do literally nothing dumbass */ }
-	public function sectionHit():Void { /* yep, you guessed it, nothing again, dumbass */ }
-	// rich: ur mean😭
 	
-	function getBeatsOnSection()
+	@:noCompletion inline function getBeatsOnSection()
 	{
 		return PlayState.SONG?.notes[curSection]?.sectionBeats ?? 4;
 	}
