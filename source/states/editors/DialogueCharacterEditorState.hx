@@ -428,8 +428,8 @@ class DialogueCharacterEditorState extends MusicBeatUIState
 				character.x = FlxG.width - character.width + DialogueBoxPsych.RIGHT_CHAR_X;
 			
 			case 'center':
-				character.x = FlxG.width / 2;
-				character.x -= character.width / 2;
+				character.x = FlxG.width * .5;
+				character.x -= character.width * .5;
 		}
 		character.x += character.jsonFile.position[0] + mainGroup.x;
 		character.y += character.jsonFile.position[1] + mainGroup.y;

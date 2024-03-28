@@ -1,5 +1,6 @@
 package states.editors;
 
+import flixel.input.mouse.FlxMouseEvent;
 #if !RELESE_BUILD_FR
 import flixel.math.FlxPoint;
 import flixel.ui.FlxButton;
@@ -56,24 +57,21 @@ class CharacterEditorState extends backend.MusicBeatUIState
 
 	public function new(?char:String, goToPlayState:Bool = true)
 	{
-		this._char = char;
+		this._char = char ?? Character.DEFAULT_CHARACTER;
 		this._goToPlayState = goToPlayState;
-		if (this._char == null)
-			this._char = Character.DEFAULT_CHARACTER;
-
 		super();
 	}
 
 	override function create()
 	{
+		if (ClientPrefs.data.cacheOnGPU)
+		{
+			Paths.clearUnusedMemory();
+			Paths.clearStoredMemory();
+		}
+
 		persistentUpdate = true;
 		FlxG.sound.playMusic(Paths.music(Paths.formatToSongPath(substates.PauseSubState.songName ?? ClientPrefs.data.pauseMusic)), 0.4);
-
-		if (ClientPrefs.data.cacheOnGPU)
-			Paths.clearStoredMemory();
-
-		final mouseManager = new flixel.input.mouse.FlxMouseEventManager();
-		add(mouseManager);
 
 		camEditor = new FlxCamera();
 		camHUD = new FlxCamera();
@@ -142,7 +140,7 @@ class CharacterEditorState extends backend.MusicBeatUIState
 		add(healthIcon);
 		healthIcon.cameras = [camHUD];
 
-		mouseManager.add(healthIcon,
+		FlxMouseEvent.globalManager.add(healthIcon,
 			(icon) ->
 			{
 				if (icon.animation.curAnim.numFrames > 1)
@@ -1214,12 +1212,13 @@ class CharacterEditorState extends backend.MusicBeatUIState
 	function reloadAnimationDropDown()
 	{
 		// Prevents crash
-		final animList = anims?.length > 0 ? [for (anim in anims) anim.anim] : ["NO ANIMATIONS"];
+		final animList = (anims == null || anims.length == 0) ? ["NO ANIMATIONS"] : [for (anim in anims) anim.anim];
 		animationDropDown.setData(FlxUIDropDownMenu.makeStrIdLabelArray(animList, true));
 	}
 
 	override function destroy()
 	{
+		FlxMouseEvent.globalManager.remove(healthIcon);
 		super.destroy();
 		helpSubstate.destroy();
 		copiedOffset.put();

@@ -21,7 +21,7 @@ class GameOverSubstate extends MusicBeatSubstate
 
 	public var boyfriend:Character;
 	public var camFollow(get, never):FlxObject;
-	public var updateCamera(default, set):Bool = false;
+	public var updateCamera(default, set):Bool;
 	public var realCamera(default, null):GameCamera; // = cast FlxG.camera; // whoops😬
 
 	@:noCompletion inline function get_camFollow():FlxObject
@@ -31,7 +31,9 @@ class GameOverSubstate extends MusicBeatSubstate
 
 	@:noCompletion inline function set_updateCamera(bool:Bool):Bool
 	{
-		return updateCamera == bool ? bool : realCamera.updateLerp = updateCamera = bool;
+		if (updateCamera != bool)
+			realCamera.followLerp = bool ? 0.01 : 0.0;
+		return /*updateCamera == bool ? bool : realCamera.updateLerp =*/ updateCamera = bool;
 	}
 
 	// better structurised now
@@ -104,9 +106,10 @@ class GameOverSubstate extends MusicBeatSubstate
 
 	override function create()
 	{
-		realCamera.updateLerp = realCamera.updateZoom = false;
-		realCamera._speed *= 0.25;
-		realCamera.cameraSpeed = 1;
+		/*realCamera.updateLerp =*/ realCamera.updateZoom = false;
+		realCamera.followLerp = 0.0;
+		// realCamera._speed *= 0.25;
+		// realCamera.cameraSpeed = 1;
 
 		callOnScripts("onGameOverStart");
 		boyfriend.animation.callback = onAnimationUpdate;

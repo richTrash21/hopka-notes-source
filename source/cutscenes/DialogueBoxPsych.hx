@@ -130,8 +130,8 @@ class DialogueBoxPsych extends FlxSpriteGroup
 			var saveY:Bool = false;
 			switch(char.jsonFile.dialogue_pos) {
 				case 'center':
-					char.x = FlxG.width / 2;
-					char.x -= char.width / 2;
+					char.x = FlxG.width * .5;
+					char.x -= char.width * .5;
 					y = char.y;
 					char.y = FlxG.height + 50;
 					saveY = true;
@@ -364,9 +364,7 @@ class DialogueBoxPsych extends FlxSpriteGroup
 		if(char != null) {
 			char.playAnim(curDialogue.expression, daText.finishedText);
 			if(char.animation.curAnim != null) {
-				var rate:Float = 24 - (((curDialogue.speed - 0.05) / 5) * 480);
-				if(rate < 12) rate = 12;
-				else if(rate > 48) rate = 48;
+				var rate:Float = FlxMath.bound(24 - (((curDialogue.speed - 0.05) * 0.2) * 480), 12, 48);
 				char.animation.curAnim.frameRate = rate;
 			}
 		}

@@ -8,9 +8,12 @@ import flixel.FlxObject;
 **/
 class CameraTarget extends FlxObject
 {
-	public function new(?x:Float, ?y:Float)
+	// where this object was created?
+	@:noCompletion var _source:String;
+
+	public function new(?x:Float, ?y:Float, ?pos:haxe.PosInfos)
 	{
-		super(x, y, 1, 1);
+		super(x, y #if FLX_DEBUG , 1, 1 #end);
 		allowCollisions = NONE;
 		immovable = true;
 		#if !FLX_DEBUG
@@ -18,6 +21,7 @@ class CameraTarget extends FlxObject
 		#end
 		active = false;
 		moves = false;
+		_source = pos?.className;
 	}
 
 	@:noCompletion override function initVars()
@@ -26,11 +30,10 @@ class CameraTarget extends FlxObject
 		pixelPerfectPosition = FlxObject.defaultPixelPerfectPosition;
 	}
 
-	@:access(flixel.FlxBasic.activeCount)
 	override public function update(elapsed:Float)
 	{
 		#if FLX_DEBUG
-		flixel.FlxBasic.activeCount++;
+		@:access(flixel.FlxBasic.activeCount) flixel.FlxBasic.activeCount++;
 		#end
 	}
 
@@ -59,7 +62,8 @@ class CameraTarget extends FlxObject
 	{
 		return FlxStringUtil.getDebugString([
 			LabelValuePair.weak("x", x),
-			LabelValuePair.weak("y", y)
+			LabelValuePair.weak("y", y),
+			LabelValuePair.weak("source", _source)
 		]);
 	}
 }

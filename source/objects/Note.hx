@@ -208,14 +208,14 @@ class Note extends FlxSprite implements INote
 			if (ClientPrefs.data.downScroll)
 				flipY = true;
 
-			offsetX += width / 2;
+			offsetX += width * .5;
 			copyAngle = false;
 
 			animation.play(colArray[noteData % colArray.length] + "holdend");
 
 			updateHitbox();
 
-			offsetX -= width / 2;
+			offsetX -= width * .5;
 			if (PlayState.isPixelStage)
 				offsetX += 30;
 
@@ -223,7 +223,7 @@ class Note extends FlxSprite implements INote
 			{
 				prevNote.animation.play(colArray[prevNote.noteData % colArray.length] + "hold");
 
-				prevNote.scale.y *= Conductor.stepCrochet / 100 * 1.05;
+				prevNote.scale.y *= Conductor.stepCrochet * .0105;
 				if (createdFrom != null && createdFrom.songSpeed != null)
 					prevNote.scale.y *= createdFrom.songSpeed;
 
@@ -396,20 +396,24 @@ class Note extends FlxSprite implements INote
 		// _lastValidChecked = "";
 	}
 
-	public function followStrumNote(myStrum:StrumNote, fakeCrochet:Float, songSpeed:Float = 1)
+	// UMMM WHY DOES IT NEED FAKECROCHET????
+	public function followStrumNote(myStrum:StrumNote, /*fakeCrochet:Float,*/ songSpeed:Float = 1)
 	{
 		distance = (0.45 * (Conductor.songPosition - strumTime) * songSpeed * multSpeed);
 		if (!myStrum.downScroll)
 			distance = -distance;
 
-		final angleDir = myStrum.direction * Math.PI / 180;
 		if (copyAngle)
 			angle = myStrum.direction - 90 + myStrum.angle + offsetAngle;
+
 		if (copyAlpha)
 			alpha = myStrum.alpha * multAlpha;
 
+		final angleDir = myStrum.direction * Math.PI * 0.005555555555555556; // / 180
+		// trace(angleDir, myStrum.direction * Math.PI / 180);
 		if (copyX)
 			x = myStrum.x + offsetX + Math.cos(angleDir) * distance;
+
 		if (copyY)
 		{
 			y = myStrum.y + offsetY + correctionOffset + Math.sin(angleDir) * distance;
@@ -475,7 +479,7 @@ class Note extends FlxSprite implements INote
 		defaultRGB();
 		if (noteData != -1 && noteType != value)
 		{
-			switch(value)
+			switch (value)
 			{
 				case "Hurt Note":
 					ignoreNote = mustPress;

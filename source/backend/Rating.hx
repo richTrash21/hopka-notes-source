@@ -1,5 +1,7 @@
 package backend;
 
+import flixel.util.FlxStringUtil;
+
 @:structInit class Rating
 {
 	public var name:String = "";
@@ -28,5 +30,15 @@ package backend;
 			{name: "bad",  image: "bad",  hitWindow: ClientPrefs.data.badWindow,  ratingMod: .34, score: 100, noteSplash: false},
 			{name: "shit", image: "shit", hitWindow: 0,							  ratingMod: 0,   score: 50,  noteSplash: false}
 		];
+	}
+
+	public function toString():String
+	{
+		return FlxStringUtil.getDebugString([
+			LabelValuePair.weak("name", name),
+			LabelValuePair.weak("hitWindow", hitWindow),
+			LabelValuePair.weak("ratingMod", ratingMod),
+			LabelValuePair.weak("score", score)
+		]);
 	}
 }

@@ -226,7 +226,7 @@ class ModsMenuState extends MusicBeatState
 			if(loadedIcon != null)
 			{
 				newMod.icon.loadGraphic(loadedIcon, true, 150, 150);//animated icon support
-				var totalFrames = Math.floor(loadedIcon.width / 150) * Math.floor(loadedIcon.height / 150);
+				var totalFrames = Math.floor(loadedIcon.width * 0.006666666666666667) * Math.floor(loadedIcon.height * 0.006666666666666667); // / 150
 				newMod.icon.animation.add("icon", [for (i in 0...totalFrames) i],10);
 				newMod.icon.animation.play("icon");
 			}
@@ -324,7 +324,7 @@ class ModsMenuState extends MusicBeatState
 		if(noModsTxt.visible)
 		{
 			noModsSine += 180 * elapsed;
-			noModsTxt.alpha = 1 - Math.sin((Math.PI * noModsSine) / 180);
+			noModsTxt.alpha = 1 - Math.sin((Math.PI * noModsSine) * 0.005555555555555556); // / 180
 		}
 
 		if(canExit && controls.BACK)

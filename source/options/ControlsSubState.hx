@@ -222,7 +222,7 @@ class ControlsSubState extends MusicBeatSubstate
 			attach.changeX = false;
 			attach.distancePerItem.y = 60;
 			attach.targetY = text.targetY;
-			attach.ID = Math.floor(grpBinds.length / 2);
+			attach.ID = Math.floor(grpBinds.length * .5);
 			attach.snapToPosition();
 			attach.y += FlxG.height * 2;
 			grpBinds.add(attach);
@@ -428,13 +428,13 @@ private class RemapKeybindScreen extends flixel.FlxSubState
 		this.parent = parent;
 		// this.curOption = curOption;
 		super(0x00FFFFFF);
-		/*FlxTween.num(0, 0.6, 0.5, null, (a) -> { bgColor.alphaFloat = a; if (FlxG.renderTile) bgColor = bgColor;});
+		/*FlxTween.num(0, .6, .5, null, (a) -> { bgColor.alphaFloat = a; if (FlxG.renderTile) bgColor = bgColor;});
 
-		final bindingText = new Alphabet(FlxG.width / 2, 160, "Rebinding " + curOption.rebindName, false);
+		final bindingText = new Alphabet(FlxG.width * .5, 160, "Rebinding " + curOption.rebindName, false);
 		bindingText.alignment = CENTERED;
 		add(bindingText);
 		
-		final bindingText2 = new Alphabet(FlxG.width / 2, 340, "Hold ESC to Cancel\nHold Backspace to Delete", true);
+		final bindingText2 = new Alphabet(FlxG.width * .5, 340, "Hold ESC to Cancel\nHold Backspace to Delete", true);
 		bindingText2.alignment = CENTERED;
 		add(bindingText2);
 
@@ -444,24 +444,24 @@ private class RemapKeybindScreen extends flixel.FlxSubState
 
 		openCallback = () ->
 		{
-			// __timer = 0.01;
+			// __timer = .01;
 			__justOpened = true;
 			bgColor.alpha = 0;
 			if (FlxG.renderTile)
 				bgColor = bgColor;
-			FlxTween.num(0, 0.6, 0.5, (a) -> { bgColor.alphaFloat = a; if (FlxG.renderTile) bgColor = bgColor;});
+			FlxTween.num(0, .6, .5, (a) -> { bgColor.alphaFloat = a; if (FlxG.renderTile) bgColor = bgColor;});
 
 			curOption = this.parent.options[this.parent.curOptions[this.parent.curSelected]];
 	
-			add(bindingText = new Alphabet(FlxG.width * 0.5, 160, "Rebinding " + curOption.rebindName, false));
+			add(bindingText = new Alphabet(FlxG.width * .5, 160, "Rebinding " + curOption.rebindName, false));
 			bindingText.alignment = CENTERED;
 			bindingText.alpha = 0;
 
-			add(bindingText2 = new Alphabet(FlxG.width * 0.5, 340, "Hold ESC to Cancel\nHold Backspace to Delete", true));
+			add(bindingText2 = new Alphabet(FlxG.width * .5, 340, "Hold ESC to Cancel\nHold Backspace to Delete", true));
 			bindingText2.alignment = CENTERED;
 			bindingText2.alpha = 0;
 
-			FlxTween.num(0, 1, 0.2, (a) -> bindingText.alpha = bindingText2.alpha = a);
+			FlxTween.num(0, 1, .2, (a) -> bindingText.alpha = bindingText2.alpha = a);
 
 			// parent.binding = true;
 			ClientPrefs.toggleVolumeKeys(false);

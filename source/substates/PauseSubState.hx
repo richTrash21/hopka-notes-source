@@ -242,7 +242,8 @@ class PauseSubState extends MusicBeatSubstate
 
 				case "Options":
 					PlayState.instance.paused = true; // For lua
-					PlayState.instance.vocals.volume = 0;
+					if (PlayState.instance.vocals != null)
+						PlayState.instance.vocals.volume = 0;
 					MusicBeatState.switchState(OptionsState.new);
 					if (ClientPrefs.data.pauseMusic != "None")
 					{
@@ -293,6 +294,13 @@ class PauseSubState extends MusicBeatSubstate
 		}
 	}
 
+	/*override function close()
+	{
+		if (PlayState.instance.videoPlayer != null)
+			PlayState.instance.videoPlayer.resume();
+		super.close();
+	}*/
+
 	function deleteSkipTimeText()
 	{
 		if (skipTimeText != null)
@@ -306,7 +314,8 @@ class PauseSubState extends MusicBeatSubstate
 	{
 		PlayState.instance.paused = true; // For lua
 		FlxG.sound.music.volume = 0;
-		PlayState.instance.vocals.volume = 0;
+		if (PlayState.instance.vocals != null)
+			PlayState.instance.vocals.volume = 0;
 
 		if (noTrans)
 			FlxTransitionableState.skipNextTransIn = FlxTransitionableState.skipNextTransOut = true;
@@ -316,6 +325,8 @@ class PauseSubState extends MusicBeatSubstate
 
 	override function destroy()
 	{
+		if (PlayState.instance.videoPlayer != null)
+			PlayState.instance.videoPlayer.resume();
 		pauseMusic = FlxDestroyUtil.destroy(pauseMusic);
 		super.destroy();
 	}

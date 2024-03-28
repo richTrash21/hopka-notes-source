@@ -20,25 +20,27 @@ class MusicBeatState extends FlxState /*FlxTransitionableState*/ implements IMus
 			return resetState();
 
 		if (FlxTransitionableState.skipNextTransIn)
+		{
 			FlxG.switchState(nextState);
+			FlxTransitionableState.skipNextTransIn = false;
+		}
 		else
 			startTransition(nextState);
-
-		FlxTransitionableState.skipNextTransIn = false;
 	}
 
 	public static function resetState()
 	{
 		if (FlxTransitionableState.skipNextTransIn)
+		{
 			FlxG.resetState();
+			FlxTransitionableState.skipNextTransIn = false;
+		}
 		else
 			startTransition();
-
-		FlxTransitionableState.skipNextTransIn = false;
 	}
 
 	// Custom made Trans in
-	public static function startTransition(?nextState:NextState)
+	inline public static function startTransition(?nextState:NextState)
 	{
 		Main.transition.start(nextState, StateTransition.transTime, false);
 	}

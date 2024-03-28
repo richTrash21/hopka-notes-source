@@ -73,7 +73,7 @@ class StrumNote extends FlxSprite
 		if (isPixelNote)
 		{
 			final graphic = Paths.image('pixelUI/' + (Paths.fileExists('images/pixelUI/$texture.png', IMAGE) ? texture : defaultNoteSkin));
-			loadGraphic(graphic, true, Math.floor(graphic.width / 4), Math.floor(graphic.height / 5));
+			loadGraphic(graphic, true, Math.floor(graphic.width * 0.25), Math.floor(graphic.height * 0.2));
 
 			antialiasing = false;
 			setGraphicSize(width * pixelScale);

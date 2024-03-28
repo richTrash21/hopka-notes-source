@@ -85,7 +85,7 @@ class Main extends Sprite
 
 		super();
 		setupGame();
-		// Application.current.window.onClose.add(volumeOnFocus, true);
+		Application.current.window.onClose.add(volumeOnFocus, true);
 	}
 
 	static function volumeOnFocus() // dont ask

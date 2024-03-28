@@ -1,0 +1,8 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TextureAtlas imagePath="fnfgram_icon.png">
+	<!-- Created with Adobe Animate version 21.0.9.42677 -->
+	<!-- http://www.adobe.com/products/animate.html -->
+	<SubTexture name="fnfgram_icon0000" x="1" y="1" width="97" height="97" frameX="-1" frameY="-1" frameWidth="99" frameHeight="99"/>
+	<SubTexture name="fnfgram_icon0001" x="1" y="99" width="99" height="99"/>
+	<SubTexture name="fnfgram_icon0002" x="1" y="199" width="99" height="99"/>
+</TextureAtlas>

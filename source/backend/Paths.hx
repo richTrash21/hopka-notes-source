@@ -1,5 +1,7 @@
 package backend;
 
+import flixel.util.FlxArrayUtil;
+import flixel.util.FlxDestroyUtil;
 import flixel.system.FlxAssets.FlxGraphicAsset;
 import flixel.graphics.frames.FlxAtlasFrames;
 import flixel.graphics.FlxGraphic;
@@ -25,7 +27,8 @@ class Paths
 {
 	public static final SOUND_EXT = #if web "mp3" #else "ogg" #end;
 	public static final VIDEO_EXT = "mp4";
-	public static final SUB_EXT = "srt"; 
+	// had to change it to "subs" since vlc loads subtitles by itself and i cant disable it!
+	public static final SUB_EXT = "subs"; // "srt";
 
 	inline public static function excludeAsset(key:String)
 	{
@@ -98,17 +101,17 @@ class Paths
 			}
 		}
 		// flags everything to be cleared out next unused memory clear
-		localTrackedAssets = [];
+		FlxArrayUtil.clearArray(localTrackedAssets);
 		#if !html5 openfl.Assets.cache.clear("songs"); #end
 	}
 
 	static public var currentLevel(default, set):String;
-	inline static function set_currentLevel(level:String):String
+	@:noCompletion inline static function set_currentLevel(level:String):String
 	{
 		return currentLevel = level.toLowerCase();
 	}
 
-	public static function getPath(file:String, ?type:AssetType = TEXT, ?library:Null<String> = null, ?modsAllowed:Bool = false):String
+	public static function getPath(file:String, ?type:AssetType = TEXT, ?library:String, ?modsAllowed:Bool = false):String
 	{
 		#if MODS_ALLOWED
 		if (modsAllowed)
@@ -184,14 +187,14 @@ class Paths
 	inline static public function srt(key:String, ?library:String):String
 	{
 		#if MODS_ALLOWED
-		final file = modFolders('data/$key.srt');
+		final file = modFolders('videos/$key.$SUB_EXT');
 		if (FileSystem.exists(file))
 			return file;
 		#end
-		return 'assets/data/$key.$SUB_EXT';
+		return 'assets/videos/$key.$SUB_EXT';
 	}
 
-	static public function sound(key:String, ?library:String):Sound
+	inline static public function sound(key:String, ?library:String):Sound
 		return returnSound('sounds', key, library);
 
 	inline static public function soundRandom(key:String, min:Int, max:Int, ?library:String)

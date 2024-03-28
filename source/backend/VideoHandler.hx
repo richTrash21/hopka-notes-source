@@ -27,8 +27,7 @@ class VideoHandler extends vlc.bitmap.VlcBitmap
 		onError = onVLCError;
 
 		FlxG.addChildBelowMouse(this);
-
-		// FlxG.stage.addEventListener(Event.ENTER_FRAME, update);
+		FlxG.signals.preUpdate.add(update);
 
 		if (FlxG.autoPause)
 		{
@@ -37,8 +36,7 @@ class VideoHandler extends vlc.bitmap.VlcBitmap
 		}
 	}
 
-	// function update(_)
-	override function __enterFrame(deltaTime:Int)
+	function update()
 	{
 		if ((Controls.instance.ACCEPT || Controls.instance.PAUSE) && isPlaying)
 			finishVideo();
@@ -51,16 +49,14 @@ class VideoHandler extends vlc.bitmap.VlcBitmap
 	{
 		#if !android
 		var pDir = "";
-		var appDir = "file:///" + Sys.getCwd() + "/";
-
 		if (fileName.indexOf(":") == -1) // Not a path
-			pDir = appDir;
+			pDir = "file:///" + Sys.getCwd() + "/";
 		else if (fileName.indexOf("file://") == -1 || fileName.indexOf("http") == -1) // C:, D: etc? ..missing "file:///" ?
 			pDir = "file:///";
 
 		return pDir + fileName;
 		#else
-		return "file://" + fileName;
+		return 'file://$fileName';
 		#end
 	}
 	#end
@@ -84,7 +80,12 @@ class VideoHandler extends vlc.bitmap.VlcBitmap
 		if (FlxG.sound.music != null && pauseMusic)
 			FlxG.sound.music.resume();
 
-		// FlxG.stage.removeEventListener(Event.ENTER_FRAME, update);
+		FlxG.signals.preUpdate.remove(update);
+		if (FlxG.autoPause)
+		{
+			FlxG.signals.focusGained.remove(resume);
+			FlxG.signals.focusLost.remove(pause);
+		}
 
 		dispose();
 

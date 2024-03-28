@@ -67,7 +67,7 @@ class EditorPlayState extends MusicBeatSubstate
 		this.playbackRate = playbackRate;
 		this.startPos = Conductor.songPosition;
 
-		Conductor.safeZoneOffset = (ClientPrefs.data.safeFrames / 60) * 1000 * playbackRate;
+		Conductor.safeZoneOffset = (ClientPrefs.data.safeFrames * .016666666666666666) * 1000 * playbackRate; // / 60
 		Conductor.songPosition -= startOffset;
 		startOffset = Conductor.crochet;
 		timerToStart = startOffset;
@@ -171,14 +171,14 @@ class EditorPlayState extends MusicBeatSubstate
 		keysCheck();
 		if(notes.length > 0)
 		{
-			var fakeCrochet:Float = (60 / PlayState.SONG.bpm) * 1000;
+			// var fakeCrochet:Float = 60 / PlayState.SONG.bpm * 1000;
 			notes.forEachAlive(function(daNote:Note)
 			{
 				var strumGroup:FlxTypedGroup<StrumNote> = playerStrums;
 				if(!daNote.mustPress) strumGroup = opponentStrums;
 
 				var strum:StrumNote = strumGroup.members[daNote.noteData];
-				daNote.followStrumNote(strum, fakeCrochet, songSpeed / playbackRate);
+				daNote.followStrumNote(strum, /*fakeCrochet,*/ songSpeed / playbackRate);
 
 				if (!daNote.mustPress && daNote.wasGoodHit && !daNote.hitByOpponent && !daNote.ignoreNote)
 					opponentNoteHit(daNote);
@@ -201,8 +201,8 @@ class EditorPlayState extends MusicBeatSubstate
 			});
 		}
 		
-		final curTime:Float = (Conductor.songPosition - ClientPrefs.data.noteOffset) / 1000;
-		final maxTime:Float = songLength / 1000;
+		final curTime:Float = (Conductor.songPosition - ClientPrefs.data.noteOffset) * .001;
+		final maxTime:Float = songLength * .001;
 		// \n[${CoolUtil.floorDecimal(curTime, 2)} / ${CoolUtil.floorDecimal(maxTime, 2)}]
 		dataTxt.text = 'Time: ${FlxStringUtil.formatTime(curTime, true)} / ${FlxStringUtil.formatTime(maxTime, true)}\nSection: $curSection\nBeat: $curBeat\nStep: $curStep';
 		super.update(elapsed);
@@ -337,7 +337,7 @@ class EditorPlayState extends MusicBeatSubstate
 						sustainNote.parent = swagNote;
 						unspawnNotes.push(sustainNote);
 						
-						sustainNote.correctionOffset = swagNote.height / 2;
+						sustainNote.correctionOffset = swagNote.height * .5;
 						if(!PlayState.isPixelStage)
 						{
 							if(oldNote.isSustainNote)
@@ -395,7 +395,7 @@ class EditorPlayState extends MusicBeatSubstate
 	public function finishSong():Void
 	{
 		if(ClientPrefs.data.noteOffset <= 0) endSong();
-		else finishTimer = new FlxTimer().start(ClientPrefs.data.noteOffset / 1000, function(tmr:FlxTimer) endSong());
+		else finishTimer = new FlxTimer().start(ClientPrefs.data.noteOffset * .001, (_) -> endSong());
 	}
 
 	public function endSong()
@@ -637,7 +637,7 @@ class EditorPlayState extends MusicBeatSubstate
 		var strum:StrumNote = opponentStrums.members[Std.int(Math.abs(note.noteData))];
 		if(strum != null) {
 			strum.playAnim('confirm', true);
-			strum.resetAnim = Conductor.stepCrochet * 1.25 / 1000 / playbackRate;
+			strum.resetAnim = Conductor.stepCrochet * 1.25 * .001 / playbackRate;
 		}
 		note.hitByOpponent = true;
 

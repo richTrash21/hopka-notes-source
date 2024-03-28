@@ -5,9 +5,9 @@ import flixel.util.typeLimit.NextState;
 
 class StateTransition extends openfl.display.Bitmap
 {
-	// TRANS RIGHTS!!!!
-	public static final transTime = .45; // uniform transition time
-	static final colors = [FlxColor.BLACK, FlxColor.BLACK, 0];
+	/** TRANS RIGHTS!!!! Uniform transition time. **/
+	public static final transTime = .45;
+	static final colors = [FlxColor.BLACK, FlxColor.BLACK, FlxColor.TRANSPARENT];
 
 	public var active(default, null):Bool;
 
@@ -16,11 +16,9 @@ class StateTransition extends openfl.display.Bitmap
 	@:noCompletion var _startPos:Float;
 	@:noCompletion var _targetPos:Float;
 	@:noCompletion var _nextState:NextState;
-	@:noCompletion var _resetState:Bool;
 
 	// singleton yaaaaaaayy
-	@:allow(Main)
-	function new()
+	@:allow(Main) function new()
 	{
 		super(flixel.util.FlxGradient.createGradientBitmapData(1, FlxG.height * 2, colors), null, true);
 		visible = false;
@@ -34,29 +32,27 @@ class StateTransition extends openfl.display.Bitmap
 	public function start(?nextState:NextState, duration:Float, isTransIn:Bool)
 	{
 		_time = 0.0;
+		_nextState = nextState;
+		_duration = Math.max(duration, FlxPoint.EPSILON);
+
 		active = true;
 		visible = true;
-		_nextState = nextState;
-		_resetState = (nextState == null && !isTransIn);
-		_duration = Math.max(duration, 0.00001);
-
 		prepare(isTransIn);
-
-		// to avoid visual bugs
-		y = _startPos;
+		y = _startPos; // to avoid visual bugs
 	}
 
-	@:noCompletion function finish(?_)
+	@:noCompletion function update()
 	{
-		active = false;
-		if (_resetState)
-			FlxG.resetState();
-		else
+		if (active)
 		{
-			if (_nextState == null)
-				visible = false;
-			else
-				FlxG.switchState(_nextState);
+			_time += FlxG.elapsed;
+			if (_time < _duration) // move transition graphic
+				y = FlxMath.lerp(_startPos, _targetPos, Math.min(_time / _duration, 1.0));
+			else // finish transition
+			{
+				y = _targetPos;
+				finish();
+			}
 		}
 	}
 
@@ -77,22 +73,24 @@ class StateTransition extends openfl.display.Bitmap
 		}
 	}
 
-	@:noCompletion function update()
+	@:noCompletion function finish()
 	{
-		if (!active)
-			return;
-
-		if (_time < _duration) // move transition graphic
-			y = FlxMath.lerp(_startPos, _targetPos, Math.min(_time / _duration, 1.0));
-		else // finish transition
-			finish();
-
-		_time += FlxG.elapsed;
+		active = false;
+		if (_nextState == null && _startPos < 0)
+			FlxG.resetState();
+		else
+		{
+			if (_nextState == null)
+				visible = false;
+			else
+				FlxG.switchState(_nextState);
+		}
 	}
 
 	@:noCompletion function onResize(_, _)
 	{
-		prepare(_startPos < _targetPos);
+		if (active)
+			prepare(_startPos < 0);
 	}
 
 	@:noCompletion function onStateSwitched()

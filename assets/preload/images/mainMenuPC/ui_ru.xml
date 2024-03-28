@@ -1,0 +1,31 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TextureAtlas imagePath="ui_ru.png">
+	<!-- Created with Adobe Animate version 21.0.9.42677 -->
+	<!-- http://www.adobe.com/products/animate.html -->
+	<SubTexture name="button_canceled0000" x="1" y="1" width="211" height="65"/>
+	<SubTexture name="button_canceled0001" x="213" y="1" width="211" height="65"/>
+	<SubTexture name="button_canceled0002" x="425" y="1" width="211" height="65"/>
+	<SubTexture name="button_credits0000" x="201" y="158" width="200" height="39"/>
+	<SubTexture name="button_credits0001" x="402" y="158" width="200" height="39"/>
+	<SubTexture name="button_options0000" x="603" y="158" width="198" height="37"/>
+	<SubTexture name="button_options0001" x="1" y="198" width="198" height="37"/>
+	<SubTexture name="fnfgram0000" x="1" y="236" width="907" height="498"/>
+	<SubTexture name="quit0000" x="200" y="198" width="100" height="26"/>
+	<SubTexture name="quit0001" x="301" y="198" width="100" height="26"/>
+	<SubTexture name="s_controls0000" x="637" y="1" width="195" height="44"/>
+	<SubTexture name="s_controls0001" x="1" y="67" width="195" height="44"/>
+	<SubTexture name="s_gameplay0000" x="197" y="67" width="214" height="40"/>
+	<SubTexture name="s_gameplay0001" x="412" y="67" width="214" height="40"/>
+	<SubTexture name="s_graphic0000" x="627" y="67" width="194" height="38"/>
+	<SubTexture name="s_graphic0001" x="1" y="112" width="194" height="38"/>
+	<SubTexture name="s_note-color0000" x="196" y="112" width="192" height="45"/>
+	<SubTexture name="s_note-color0001" x="389" y="112" width="192" height="45"/>
+	<SubTexture name="s_visual-and-ui0000" x="582" y="112" width="199" height="38"/>
+	<SubTexture name="s_visual-and-ui0001" x="1" y="158" width="199" height="38"/>
+	<SubTexture name="settings_text0000" x="1" y="735" width="107" height="20" frameX="-10" frameY="0" frameWidth="128" frameHeight="20"/>
+	<SubTexture name="settings_text0001" x="109" y="735" width="62" height="20" frameX="-29" frameY="0" frameWidth="128" frameHeight="20"/>
+	<SubTexture name="settings_text0002" x="172" y="735" width="128" height="18" frameX="0" frameY="-2" frameWidth="128" frameHeight="20"/>
+	<SubTexture name="settings_text0003" x="301" y="735" width="100" height="18" frameX="-9" frameY="-1" frameWidth="128" frameHeight="20"/>
+	<SubTexture name="settings_text0004" x="402" y="735" width="84" height="18" frameX="-11" frameY="-1" frameWidth="128" frameHeight="20"/>
+	<SubTexture name="settings_text0005" x="487" y="735" width="105" height="20" frameX="-2" frameY="0" frameWidth="128" frameHeight="20"/>
+</TextureAtlas>

@@ -1,7 +1,6 @@
 package objects;
 
 import flixel.util.FlxDestroyUtil;
-import flixel.math.FlxPoint;
 
 #if MODS_ALLOWED
 import sys.FileSystem;
@@ -63,9 +62,9 @@ class Character extends objects.ExtendedSprite
 	public var healthIcon:String = "face";
 	public var healthColor:FlxColor = FlxColor.RED;
 
-	public var camFollow(default, null):CameraTarget = new CameraTarget();
-	public var cameraOffset:FlxPoint = FlxPoint.get();
-	public var position:FlxPoint = FlxPoint.get();
+	public var camFollow(default, null) = new CameraTarget();
+	public var cameraOffset = FlxPoint.get();
+	public var position = FlxPoint.get();
 
 	// Used on Character Editor
 	var imageFile:String;
@@ -121,12 +120,13 @@ class Character extends objects.ExtendedSprite
 
 		// load spritesheet
 		imageFile = json.image;
+		var useAtlas:Bool;
 		#if MODS_ALLOWED
 		final modAnimToFind = Paths.modFolders('images/$imageFile/Animation.json');
 		final animToFind = Paths.getPath('images/$imageFile/Animation.json', TEXT);
-		final useAtlas = (FileSystem.exists(modAnimToFind) || FileSystem.exists(animToFind) || Assets.exists(animToFind));
+		useAtlas = (FileSystem.exists(modAnimToFind) || FileSystem.exists(animToFind) || Assets.exists(animToFind));
 		#else
-		final useAtlas = Assets.exists(Paths.getPath('images/$imageFile/Animation.json', TEXT));
+		useAtlas = Assets.exists(Paths.getPath('images/$imageFile/Animation.json', TEXT));
 		#end
 
 		frames = useAtlas ? animateatlas.AtlasFrameMaker.construct(imageFile) : Paths.getAtlas(imageFile, gpu);
@@ -156,7 +156,7 @@ class Character extends objects.ExtendedSprite
 
 		// animations
 		animationsArray = json.animations;
-		if (animationsArray?.length > 0)
+		if (animationsArray != null && animationsArray.length != 0)
 			for (anim in animationsArray)
 				generateAnim(anim);
 		else
@@ -189,7 +189,10 @@ class Character extends objects.ExtendedSprite
 		if (debugMode || animation.curAnim == null)
 		{
 			super.update(elapsed);
-			camFollow.update(elapsed); // https://upload.wikimedia.org/wikipedia/ru/c/c2/%D0%A1%D0%B0%D0%BC%D1%8B%D0%B9_%D1%83%D0%BC%D0%BD%D1%8B%D0%B9_%D0%A1%D0%A2%D0%A1.jpg
+			#if FLX_DEBUG
+			if (camFollow.active && camFollow.exists)
+				camFollow.update(elapsed); // https://upload.wikimedia.org/wikipedia/ru/c/c2/%D0%A1%D0%B0%D0%BC%D1%8B%D0%B9_%D1%83%D0%BC%D0%BD%D1%8B%D0%B9_%D0%A1%D0%A2%D0%A1.jpg
+			#end
 			return;
 		}
 
@@ -239,12 +242,13 @@ class Character extends objects.ExtendedSprite
 	override public function draw()
 	{
 		super.draw();
-		camFollow.draw();
+		if (camFollow.visible && camFollow.exists)
+			camFollow.draw();
 	}
 	#end
 
 	var __midpoint = FlxPoint.get();
-	/*inline*/ public function updateCamFollow(?_:FlxPoint)
+	public function updateCamFollow(?_)
 	{
 		getMidpoint(__midpoint);
 		camFollow.setPosition(
@@ -255,13 +259,13 @@ class Character extends objects.ExtendedSprite
 
 	override public function destroy()
 	{
-		super.destroy();
 		animationsArray = null;
 		camFollowOffset = FlxDestroyUtil.destroy(camFollowOffset);
 		camFollow = FlxDestroyUtil.destroy(camFollow);
 		cameraOffset = FlxDestroyUtil.put(cameraOffset);
 		__midpoint = FlxDestroyUtil.put(__midpoint);
 		position = FlxDestroyUtil.put(position);
+		super.destroy();
 	}
 
 	public var danced:Bool = false;
@@ -274,7 +278,7 @@ class Character extends objects.ExtendedSprite
 		if (debugMode || skipDance || specialAnim)
 			return;
 
-		if (animation.curAnim != null && animation.curAnim.looped && animation.curAnim.loopPoint > 0 && animation.curAnim.curFrame >= animation.curAnim.loopPoint)
+		if (animation.curAnim != null && animation.curAnim.looped && animation.curAnim.loopPoint != 0 && animation.curAnim.curFrame >= animation.curAnim.loopPoint)
 			animation.finish(); // fix for characters that have loopPoint > 0
 
 		playAnim((danceIdle ? "dance" + ((danced = !danced) ? "Right" : "Left") : "idle") + idleSuffix, force);
@@ -313,16 +317,8 @@ class Character extends objects.ExtendedSprite
 			settingCharacterUp = false;
 		}
 		else if (lastDanceIdle != danceIdle)
-			danceEveryNumBeats = Math.round(Math.max(danceEveryNumBeats * (danceIdle ? 0.5 : 2), 1));
+			danceEveryNumBeats = FlxMath.maxInt(danceIdle ? Math.round(danceEveryNumBeats * 0.5) : danceEveryNumBeats * 2, 1);
 	}
-
-	// creates a copy of this character🤯😱
-	/*inline public function copy(?allowGPU:Bool = true):Character
-	{
-		final faker:Character = new Character(x, y, curCharacter, isPlayer, allowGPU);
-		faker.debugMode = debugMode;
-		return faker;
-	}*/
 
 	/**
 	 * for reuse in character edditor.
@@ -335,22 +331,22 @@ class Character extends objects.ExtendedSprite
 			return;
 
 		final animAnim = "" + data.anim;
-		final animOffsets = (data.offsets?.length < 2) ? [0.0, 0.0] : data.offsets;
+		final animOffsets = (data.offsets == null || data.offsets.length < 2) ? [0.0, 0.0] : data.offsets;
 		addAnim(animAnim, "" + data.name, data.indices, data.fps, data.loop, data.animflip_x, data.animflip_y, data.loop_point);
 		addOffset(animAnim, animOffsets[0], animOffsets[1]);
 	}
 
-	@:noCompletion inline function set_idleSuffix(value:String):String
+	@:noCompletion function set_idleSuffix(value:String):String
 	{
-		final prevSuffix = idleSuffix;
-		idleSuffix = value;
-		if (prevSuffix != value)
+		if (idleSuffix != value)
+		{
+			idleSuffix = value;
 			recalculateDanceIdle();
-
+		}
 		return value;
 	}
 
-	@:noCompletion inline function set_isPlayer(value:Bool):Bool
+	@:noCompletion function set_isPlayer(value:Bool):Bool
 	{
 		if (isPlayer != value)
 			flipX = !flipX;
@@ -358,19 +354,19 @@ class Character extends objects.ExtendedSprite
 		return isPlayer = value;
 	}
 
-	@:noCompletion override inline function set_x(value:Float):Float
+	@:noCompletion override function set_x(value:Float):Float
 	{
 		camFollow.x += value - x;
 		return x = value;
 	}
 
-	@:noCompletion override inline function set_y(value:Float):Float
+	@:noCompletion override function set_y(value:Float):Float
 	{
 		camFollow.y += value - y;
 		return y = value;
 	}
 
-	@:noCompletion override inline function set_width(value:Float):Float
+	@:noCompletion override function set_width(value:Float):Float
 	{
 		#if FLX_DEBUG
 		if (value < 0)
@@ -383,7 +379,7 @@ class Character extends objects.ExtendedSprite
 		return width = value;
 	}
 
-	@:noCompletion override inline function set_height(value:Float):Float
+	@:noCompletion override function set_height(value:Float):Float
 	{
 		#if FLX_DEBUG
 		if (value < 0)
@@ -403,7 +399,9 @@ class Character extends objects.ExtendedSprite
 
 	@:noCompletion inline function set_healthColorArray(value:Array<Int>):Array<Int>
 	{
-		healthColor = FlxColor.fromRGB(value[0], value[1], value[2]);
+		if (value != null)
+			healthColor = FlxColor.fromRGB(value[0], value[1], value[2]);
+
 		return value;
 	}
 
@@ -415,11 +413,8 @@ class Character extends objects.ExtendedSprite
 	@:noCompletion inline function set_positionArray(value:Array<Float>):Array<Float>
 	{
 		if (value != null)
-		{
-			position.x = value[0];
-			if (value.length > 1)
-				position.y = value[1];
-		}
+			position.set(value[0], value[1]);
+
 		return value;
 	}
 
@@ -431,11 +426,8 @@ class Character extends objects.ExtendedSprite
 	@:noCompletion inline function set_cameraPosition(value:Array<Float>):Array<Float>
 	{
 		if (value != null)
-		{
-			cameraOffset.x = value[0];
-			if (value.length > 1)
-				cameraOffset.y = value[1];
-		}
+			cameraOffset.set(value[0], value[1]);
+
 		return value;
 	}
 }

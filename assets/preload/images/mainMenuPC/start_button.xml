@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TextureAtlas imagePath="start_button.png">
+	<!-- Created with Adobe Animate version 21.0.9.42677 -->
+	<!-- http://www.adobe.com/products/animate.html -->
+	<SubTexture name="start_button0000" x="1" y="1" width="82" height="34"/>
+	<SubTexture name="start_button0001" x="1" y="36" width="82" height="34"/>
+</TextureAtlas>

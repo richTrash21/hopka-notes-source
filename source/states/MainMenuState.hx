@@ -141,6 +141,9 @@ class MainMenuState extends MusicBeatState
 		#end
 
 		super.create();
+		#if (flixel >= "6.0.0")
+		FlxG.camera.followLerp = 0.15;
+		#end
 	}
 
 	var selectedSomethin:Bool = false;
@@ -158,7 +161,9 @@ class MainMenuState extends MusicBeatState
 			if (FreeplayState.vocals.playing)
 				FreeplayState.vocals.volume = FlxG.sound.music.volume;
 		}
-		FlxG.camera.followLerp = elapsed * 9 * (FlxG.updateFramerate / 60);
+		#if (flixel < "6.0.0")
+		FlxG.camera.followLerp = elapsed * 9 * (FlxG.updateFramerate * 0.016666666666666666); // / 60
+		#end
 
 		if (!selectedSomethin)
 		{
@@ -217,6 +222,11 @@ class MainMenuState extends MusicBeatState
 			{
 				selectedSomethin = true;
 				MusicBeatState.switchState(MainMenuPCState.new);
+			}
+			else if (FlxG.keys.justPressed.NINE)
+			{
+				selectedSomethin = true;
+				MusicBeatState.switchState(TestVideoState.new);
 			}
 			#end
 			else if (controls.justPressed("reset")) // garbage begone!!!

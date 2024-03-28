@@ -1,0 +1,8 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TextureAtlas imagePath="monitor_frame.png">
+	<!-- Created with Adobe Animate version 21.0.9.42677 -->
+	<!-- http://www.adobe.com/products/animate.html -->
+	<SubTexture name="monitor0000" x="0" y="0" width="1171" height="844" frameX="-10" frameY="0" frameWidth="1191" frameHeight="844"/>
+	<SubTexture name="monitor0001" x="1171" y="0" width="1191" height="844"/>
+	<SubTexture name="monitor0002" x="2362" y="0" width="1179" height="844" frameX="-6" frameY="0" frameWidth="1191" frameHeight="844"/>
+</TextureAtlas>

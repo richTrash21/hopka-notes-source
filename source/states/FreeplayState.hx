@@ -177,12 +177,18 @@ class FreeplayState extends MusicBeatState
 
 		FlxG.sound.list.add(vocals);
 		super.create();
+		#if (flixel >= "6.0.0")
+		FlxG.camera.followLerp = 0.16;
+		#end
 	}
 
 	override function closeSubState()
 	{
 		changeSelection(0, false);
 		persistentUpdate = true;
+		#if (flixel >= "6.0.0")
+		FlxG.camera.followLerp = 0.16;
+		#end
 		super.closeSubState();
 	}
 
@@ -218,7 +224,9 @@ class FreeplayState extends MusicBeatState
 		if (FlxG.sound.music.volume < 0.7) 
 			FlxG.sound.music.volume += 0.5 * FlxG.elapsed;
 
-		FlxG.camera.followLerp = elapsed * 9.05 * (FlxG.updateFramerate / 60);
+		#if (flixel < "6.0.0")
+		FlxG.camera.followLerp = elapsed * 9.05 * (FlxG.updateFramerate * 0.016666666666666666); // / 60
+		#end
 		Conductor.songPosition = FlxG.sound.music.time;
 
 		lerpScore = if (Math.abs(lerpScore - intendedScore) <= 10)
@@ -472,9 +480,9 @@ class FreeplayState extends MusicBeatState
 	private function positionHighscore() {
 		scoreText.x = FlxG.width - scoreText.width - 6;
 		scoreBG.scale.x = FlxG.width - scoreText.x + 6;
-		scoreBG.x = FlxG.width - (scoreBG.scale.x / 2);
-		diffText.x = Std.int(scoreBG.x + (scoreBG.width / 2));
-		diffText.x -= diffText.width / 2;
+		scoreBG.x = FlxG.width - (scoreBG.scale.x * .5);
+		diffText.x = Std.int(scoreBG.x + (scoreBG.width * .5));
+		diffText.x -= diffText.width * .5;
 	}
 }
 
