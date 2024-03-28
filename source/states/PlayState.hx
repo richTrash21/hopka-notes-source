@@ -2939,30 +2939,6 @@ class PlayState extends MusicBeatState
 		HealthIcon.jsonCache.clear();
 		Character.jsonCache.clear();
 
-		BF_POS = FlxDestroyUtil.put(BF_POS);
-		GF_POS = FlxDestroyUtil.put(GF_POS);
-		DAD_POS = FlxDestroyUtil.put(DAD_POS);
-
-		boyfriendMap = CoolUtil.clear(boyfriendMap);
-		dadMap = CoolUtil.clear(dadMap);
-		gfMap = CoolUtil.clear(gfMap);
-		variables = CoolUtil.clear(variables);
-		#if LUA_ALLOWED
-		modchartTweens = CoolUtil.clear(modchartTweens);
-		modchartSprites = CoolUtil.clear(modchartSprites);
-		modchartTimers = CoolUtil.clear(modchartTimers);
-		modchartSounds = CoolUtil.clear(modchartSounds);
-		modchartTexts = CoolUtil.clear(modchartTexts);
-		modchartSaves = CoolUtil.clear(modchartSaves);
-		#end
-		#if (!flash && sys)
-		runtimeShaders = CoolUtil.clear(runtimeShaders);
-		#end
-
-		bfCamOffset = FlxDestroyUtil.destroy(bfCamOffset);
-		dadCamOffset = FlxDestroyUtil.destroy(dadCamOffset);
-		gfCamOffset = FlxDestroyUtil.destroy(gfCamOffset);
-
 		// properly destroys custom substates now, finally!!!
 		super.destroy();
 
@@ -2990,6 +2966,31 @@ class PlayState extends MusicBeatState
 			}
 		}
 		#end
+
+		BF_POS = FlxDestroyUtil.put(BF_POS);
+		GF_POS = FlxDestroyUtil.put(GF_POS);
+		DAD_POS = FlxDestroyUtil.put(DAD_POS);
+
+		boyfriendMap = CoolUtil.clear(boyfriendMap);
+		dadMap = CoolUtil.clear(dadMap);
+		gfMap = CoolUtil.clear(gfMap);
+		variables = CoolUtil.clear(variables);
+		#if LUA_ALLOWED
+		modchartTweens = CoolUtil.clear(modchartTweens);
+		modchartSprites = CoolUtil.clear(modchartSprites);
+		modchartTimers = CoolUtil.clear(modchartTimers);
+		modchartSounds = CoolUtil.clear(modchartSounds);
+		modchartTexts = CoolUtil.clear(modchartTexts);
+		modchartSaves = CoolUtil.clear(modchartSaves);
+		#end
+		#if (!flash && sys)
+		runtimeShaders = CoolUtil.clear(runtimeShaders);
+		#end
+
+		bfCamOffset = FlxDestroyUtil.destroy(bfCamOffset);
+		dadCamOffset = FlxDestroyUtil.destroy(dadCamOffset);
+		gfCamOffset = FlxDestroyUtil.destroy(gfCamOffset);
+
 		instance = null;
 	}
 

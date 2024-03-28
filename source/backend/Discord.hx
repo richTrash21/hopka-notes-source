@@ -7,9 +7,9 @@ import hxdiscord_rpc.Types;
 class DiscordClient
 {
 	public static var isInitialized:Bool = false;
-	private static final _defaultID:String = "1141827456693711011";
 	public static var clientID(default, set):String = _defaultID;
-	private static var presence = DiscordRichPresence.create();
+	static final _defaultID:String = "1141827456693711011";
+	static final presence = DiscordRichPresence.create();
 
 	// I HAVE TO ADD EVERY SINGLE FUCKING ICON INTO THIS BY MYSELF, FUCKING HELL
 	inline static final DEFAULT_ICON = "icon";
@@ -42,10 +42,10 @@ class DiscordClient
 	
 	static function onReady(request:cpp.RawConstPointer<DiscordUser>):Void
 	{
-		final requestPtr:cpp.Star<DiscordUser> = cpp.ConstPointer.fromRaw(request).ptr;
+		// final requestPtr:cpp.Star<DiscordUser> = cpp.ConstPointer.fromRaw(request).ptr;
 
-		final discriminator = requestPtr.discriminator.toString();
-		var str = "(Discord) Connected to User (" + requestPtr.username.toString(); // New Discord IDs/Discriminator system
+		final discriminator = cast (request[0].discriminator, String); // cast (requestPtr.discriminator, String);
+		var str = "Connected to User (" + cast (request[0].username, String); // cast (requestPtr.username, String); // New Discord IDs/Discriminator system
 		if (Std.parseInt(discriminator) != 0)
 			str += '#$discriminator'; // Old discriminators
 
@@ -55,17 +55,17 @@ class DiscordClient
 
 	inline static function onError(errorCode:Int, message:cpp.ConstCharStar):Void
 	{
-		trace('Discord: Error ($errorCode: ' + message.toString() + ")");
+		trace('Error ($errorCode: ' + cast (message, String) + ")");
 	}
 
 	inline static function onDisconnected(errorCode:Int, message:cpp.ConstCharStar):Void
 	{
-		trace('Discord: Disconnected ($errorCode: ' + message.toString() + ")");
+		trace('Disconnected ($errorCode: ' + cast (message, String) + ")");
 	}
 
 	public static function initialize()
 	{
-		final discordHandlers:DiscordEventHandlers = DiscordEventHandlers.create();
+		final discordHandlers = DiscordEventHandlers.create();
 		discordHandlers.ready = cpp.Function.fromStaticFunction(onReady);
 		discordHandlers.disconnected = cpp.Function.fromStaticFunction(onDisconnected);
 		discordHandlers.errored = cpp.Function.fromStaticFunction(onError);

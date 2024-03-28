@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TextureAtlas imagePath="startup_assets.png">
+	<!-- Created with Adobe Animate version 21.0.9.42677 -->
+	<!-- http://www.adobe.com/products/animate.html -->
+	<SubTexture name="haxeflixel_anim0000" x="1" y="1" width="304" height="290" frameX="-245" frameY="-21" frameWidth="786" frameHeight="457"/>
+	<SubTexture name="haxeflixel_anim0001" x="306" y="1" width="786" height="456" frameX="0" frameY="0" frameWidth="786" frameHeight="457"/>
+	<SubTexture name="haxeflixel_anim0002" x="1" y="458" width="785" height="457" frameX="0" frameY="0" frameWidth="786" frameHeight="457"/>
+	<SubTexture name="haxeflixel_anim0003" x="787" y="458" width="785" height="450" frameX="0" frameY="-6" frameWidth="786" frameHeight="457"/>
+	<SubTexture name="haxeflixel_anim0004" x="1" y="916" width="786" height="450" frameX="0" frameY="-6" frameWidth="786" frameHeight="457"/>
+	<SubTexture name="haxeflixel_anim0005" x="788" y="916" width="785" height="451" frameX="0" frameY="-6" frameWidth="786" frameHeight="457"/>
+	<SubTexture name="powered-by0000" x="1" y="1368" width="387" height="83"/>
+	<SubTexture name="powered-by0001" x="389" y="1368" width="387" height="83"/>
+	<SubTexture name="powered-by0002" x="777" y="1368" width="387" height="83"/>
+</TextureAtlas>

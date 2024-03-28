@@ -39,6 +39,9 @@ class MainMenuState extends MusicBeatState
 			doiseTrans = false;
 		}
 
+		if (FlxG.sound.music == null || !FlxG.sound.music.playing)
+			FlxG.sound.playMusic(Paths.music("freakyMenu"), 0);
+
 		#if MODS_ALLOWED
 		Mods.pushGlobalMods();
 		Mods.loadTopMod();
@@ -218,12 +221,19 @@ class MainMenuState extends MusicBeatState
 				selectedSomethin = true;
 				MusicBeatState.switchState(states.editors.MasterEditorMenu.new);
 			}
-			else if (FlxG.keys.justPressed.EIGHT)
+			else if (FlxG.keys.justPressed.SIX) // intro testing
+			{
+				selectedSomethin = true;
+				FlxTransitionableState.skipNextTransIn = true;
+				MusicBeatState.switchState(Init.new);
+				FlxG.sound.music.volume = 0;
+			}
+			else if (FlxG.keys.justPressed.EIGHT) // pc state testing
 			{
 				selectedSomethin = true;
 				MusicBeatState.switchState(MainMenuPCState.new);
 			}
-			else if (FlxG.keys.justPressed.NINE)
+			else if (FlxG.keys.justPressed.NINE) // video testing
 			{
 				selectedSomethin = true;
 				MusicBeatState.switchState(TestVideoState.new);
