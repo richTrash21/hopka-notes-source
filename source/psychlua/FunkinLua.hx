@@ -383,8 +383,8 @@ class FunkinLua
 			return false;
 		});
 
-		set("setVar", PlayState.instance.variables.set);
-		set("getVar", PlayState.instance.variables.get);
+		set("setVar", game.variables.set);
+		set("getVar", game.variables.get);
 
 		set("addLuaScript", (luaFile:String, ?ignoreAlreadyRunning:Bool = false) -> //would be dope asf.
 		{
@@ -418,7 +418,7 @@ class FunkinLua
 							return;
 						}
 
-				PlayState.instance.initHScript(foundScript);
+				game.initHScript(foundScript);
 				return;
 			}
 			luaTrace("addHScript: Script doesn't exist!", false, false, FlxColor.RED);
@@ -486,11 +486,11 @@ class FunkinLua
 		set("getObjectOrder", (obj:String) ->
 		{
 			final split = obj.split(".");
-			final leObj:FlxBasic = (split.length > 1)
+			final basic:FlxBasic = (split.length > 1)
 				? LuaUtils.getVarInArray(LuaUtils.getPropertyLoop(split), split[split.length-1])
 				: LuaUtils.getObjectDirectly(split[0]);
 
-			final ret = LuaUtils.getTargetInstance().members.indexOf(leObj);
+			final ret = LuaUtils.getTargetInstance().members.indexOf(basic);
 			if (ret == -1)
 				luaTrace('getObjectOrder: Object $obj doesn\'t exist!', false, false, FlxColor.RED);
 
@@ -499,17 +499,17 @@ class FunkinLua
 		set("setObjectOrder", (obj:String, position:Int) ->
 		{
 			final split = obj.split(".");
-			final leObj:FlxBasic = (split.length > 1)
+			final basic:FlxBasic = (split.length > 1)
 				? LuaUtils.getVarInArray(LuaUtils.getPropertyLoop(split), split[split.length-1])
 				: LuaUtils.getObjectDirectly(split[0]);
 
-			if (leObj == null)
+			if (basic == null)
 			{
 				luaTrace('setObjectOrder: Object $obj doesn\'t exist!', false, false, FlxColor.RED);
 				return;
 			}
 			final instance = LuaUtils.getTargetInstance();
-			instance.insert(position, instance.remove(leObj, true));
+			instance.insert(position, instance.remove(basic, true));
 		});
 
 		// gay ass tweens
@@ -575,16 +575,16 @@ class FunkinLua
 
 		set("doTweenColor", (tag:String, vars:String, targetColor:String, duration:Float, ease:String) ->
 		{
-			final penisExam:FlxSprite = LuaUtils.tweenPrepare(tag, vars);
-			if (penisExam == null)
+			final spr:FlxSprite = LuaUtils.tweenPrepare(tag, vars);
+			if (spr == null)
 			{
 				luaTrace('doTweenColor: Couldnt find object: $vars', false, false, FlxColor.RED);
 				return;
 			}
 
-			var curColor = penisExam.color;
-			// curColor.alphaFloat = penisExam.alpha; // um???????
-			game.modchartTweens.set(tag, FlxTween.color(penisExam, duration, curColor, CoolUtil.colorFromString(targetColor),
+			var curColor = spr.color;
+			// curColor.alphaFloat = spr.alpha; // um???????
+			game.modchartTweens.set(tag, FlxTween.color(spr, duration, curColor, CoolUtil.colorFromString(targetColor),
 			{
 				ease: LuaUtils.getTweenEaseByString(ease),
 				onComplete: (_) ->
@@ -621,27 +621,27 @@ class FunkinLua
 
 		set("mouseClicked", (button:String) ->
 			switch (button)
-				{
-					case "middle":	FlxG.mouse.justPressedMiddle;
-					case "right":	FlxG.mouse.justPressedRight;
-					default:		FlxG.mouse.justPressed;
-				}
+			{
+				case "middle":	FlxG.mouse.justPressedMiddle;
+				case "right":	FlxG.mouse.justPressedRight;
+				default:		FlxG.mouse.justPressed;
+			}
 		);
 		set("mousePressed", (button:String) ->
 			switch (button)
-				{
-					case "middle":	FlxG.mouse.pressedMiddle;
-					case "right":	FlxG.mouse.pressedRight;
-					default:		FlxG.mouse.pressed;
-				}
+			{
+				case "middle":	FlxG.mouse.pressedMiddle;
+				case "right":	FlxG.mouse.pressedRight;
+				default:		FlxG.mouse.pressed;
+			}
 		);
 		set("mouseReleased", (button:String) ->
 			switch (button)
-				{
-					case "middle":	FlxG.mouse.justReleasedMiddle;
-					case "right":	FlxG.mouse.justReleasedRight;
-					default:		FlxG.mouse.justReleased;
-				}
+			{
+				case "middle":	FlxG.mouse.justReleasedMiddle;
+				case "right":	FlxG.mouse.justReleasedRight;
+				default:		FlxG.mouse.justReleased;
+			}
 		);
 
 		set("runTimer", (tag:String, time:Float = 1, loops:Int = 1) ->
@@ -707,9 +707,9 @@ class FunkinLua
 			game.addCharacterToList(name,
 				switch (type.toLowerCase())
 				{
-					case "dad": 				1;
-					case "gf" | "girlfriend":	2;
-					default:					0;
+					case "dad" | "opponent" | "1": 	1;
+					case "gf" | "girlfriend" | "2":	2;
+					default:						0;
 				})
 		);
 		set("precacheImage", Paths.image);
@@ -728,13 +728,13 @@ class FunkinLua
 		set("restartSong", (?skipTransition:Bool = false) ->
 		{
 			game.persistentUpdate = false;
-			FlxG.camera.followLerp = 0;
+			// FlxG.camera.followLerp = 0;
 			PauseSubState.restartSong(skipTransition);
 			return true;
 		});
 		set("exitSong", (?skipTransition:Bool = false) ->
 		{
-			if(skipTransition)
+			if (skipTransition)
 				FlxTransitionableState.skipNextTransIn = FlxTransitionableState.skipNextTransOut = true;
 
 			PlayState.cancelMusicFadeTween();
@@ -747,7 +747,7 @@ class FunkinLua
 			PlayState.changedDifficulty = false;
 			PlayState.chartingMode = false;
 			game.transitioning = true;
-			FlxG.camera.followLerp = 0;
+			// FlxG.camera.followLerp = 0;
 			Mods.loadTopMod();
 			return true;
 		});
@@ -755,34 +755,34 @@ class FunkinLua
 
 		set("getCharacterX", (type:String) ->
 			switch (type.toLowerCase())
-				{
-					case "dad" | "opponent":   game.dadGroup.x;
-					case "gf" | "girlfriend":  game.gfGroup.x;
-					default:				   game.boyfriendGroup.x;
-				}
+			{
+				case "dad" | "opponent" | "1":	 game.dadGroup.x;
+				case "gf" | "girlfriend" | "2":	 game.gfGroup.x;
+				default:						 game.boyfriendGroup.x;
+			}
 		);
 		set("setCharacterX", (type:String, value:Float) ->
 			switch (type.toLowerCase())
 			{
-				case "dad" | "opponent":	game.dadGroup.x = value;
-				case "gf" | "girlfriend":	game.gfGroup.x = value;
-				default:					game.boyfriendGroup.x = value;
+				case "dad" | "opponent" | "1":	game.dadGroup.x = value;
+				case "gf" | "girlfriend" | "2":	game.gfGroup.x = value;
+				default:						game.boyfriendGroup.x = value;
 			}
 		);
 		set("getCharacterY", (type:String) ->
 			switch (type.toLowerCase())
-				{
-					case "dad" | "opponent":   game.dadGroup.y;
-					case "gf" | "girlfriend":  game.gfGroup.y;
-					default:				   game.boyfriendGroup.y;
-				}
+			{
+				case "dad" | "opponent" | "1":	 game.dadGroup.y;
+				case "gf" | "girlfriend" | "2":	 game.gfGroup.y;
+				default:						 game.boyfriendGroup.y;
+			}
 		);
 		set("setCharacterY", (type:String, value:Float) ->
 			switch (type.toLowerCase())
 			{
-				case "dad" | "opponent":   game.dadGroup.y = value;
-				case "gf" | "girlfriend":  game.gfGroup.y = value;
-				default:				   game.boyfriendGroup.y = value;
+				case "dad" | "opponent" | "1":	 game.dadGroup.y = value;
+				case "gf" | "girlfriend" | "2":	 game.gfGroup.y = value;
+				default:						 game.boyfriendGroup.y = value;
 			}
 		);
 
@@ -790,11 +790,11 @@ class FunkinLua
 		set("cameraShake", (camera:String, intensity:Float, duration:Float) ->
 			LuaUtils.cameraFromString(camera).shake(intensity, duration)
 		);
-		set("cameraFlash", (camera:String, color:String, duration:Float,forced:Bool) ->
-			LuaUtils.cameraFromString(camera).flash(CoolUtil.colorFromString(color), duration, forced)
+		set("cameraFlash", (camera:String, color:LuaColor, duration:Float,forced:Bool) ->
+			LuaUtils.cameraFromString(camera).flash(LuaUtils.resolveColor(color), duration, forced)
 		);
-		set("cameraFade", (camera:String, color:String, duration:Float, forced:Bool, fadeIn:Bool) ->
-			LuaUtils.cameraFromString(camera).fade(CoolUtil.colorFromString(color), duration, fadeIn, forced)
+		set("cameraFade", (camera:String, color:LuaColor, duration:Float, forced:Bool, fadeIn:Bool) ->
+			LuaUtils.cameraFromString(camera).fade(LuaUtils.resolveColor(color), duration, fadeIn, forced)
 		);
 
 		set("setRatingPercent",		(value:Float)  -> game.ratingPercent = value);
@@ -815,9 +815,9 @@ class FunkinLua
 		{
 			final char = switch (character.toLowerCase())
 			{
-				case "dad":					game.dad;
-				case "gf" | "girlfriend":	game.gf;
-				default:					game.boyfriend;
+				case "dad" | "opponent" | "1":	game.dad;
+				case "gf" | "girlfriend" | "2":	game.gf;
+				default:						game.boyfriend;
 			}
 			if (char != null)
 				char.dance(force);
@@ -827,65 +827,61 @@ class FunkinLua
 		{
 			tag = tag.replace(".", "");
 			LuaUtils.resetSpriteTag(tag);
-			final leSprite = new ExtendedSprite(x, y, image);
+			final spr = new ExtendedSprite(x, y, image);
 			if (animated)
-				leSprite.frames = LuaUtils.loadFrames(image, spriteType);
+				spr.frames = LuaUtils.loadFrames(image, spriteType);
 
-			game.modchartSprites.set(tag, leSprite);
+			game.modchartSprites.set(tag, spr);
 		});
 		set("makeAnimatedLuaSprite", (tag:String, ?image:String = null, ?x:Float = 0, ?y:Float = 0, ?spriteType:String = "sparrow") ->
 		{
 			FunkinLua.luaTrace("makeAnimatedLuaSprite is deprecated! Use makeLuaSprite instead", false, true); // just wanted to merge them
 			tag = tag.replace(".", "");
 			LuaUtils.resetSpriteTag(tag);
-			final leSprite = new ExtendedSprite(x, y);
-			leSprite.frames = LuaUtils.loadFrames(image, spriteType);
-			game.modchartSprites.set(tag, leSprite);
+			final spr = new ExtendedSprite(x, y);
+			spr.frames = LuaUtils.loadFrames(image, spriteType);
+			game.modchartSprites.set(tag, spr);
 		});
 
-		set("makeGraphic", (obj:String, width:Int = 256, height:Int = 256, color:String = "FFFFFF") ->
+		set("makeGraphic", (obj:String, width:Int = 256, height:Int = 256, ?color:LuaColor) ->
 		{
 			final spr:FlxSprite = LuaUtils.getObjectDirectly(obj, false);
 			if (spr != null)
-				spr.makeGraphic(width, height, CoolUtil.colorFromString(color));
+				spr.makeGraphic(width, height, color == null ? FlxColor.WHITE : LuaUtils.resolveColor(color));
 		});
-		set("makeGradient", (obj:String, width:Int = 256, height:Int = 256, colors:Array<String>, angle:Int = 90, chunkSize:Int = 1, interpolate:Bool = false) ->
+		set("makeGradient", (obj:String, width:Int = 256, height:Int = 256, ?colors:Array<LuaColor>, angle:Int = 90, chunkSize:Int = 1, interpolate:Bool = false) ->
 		{
 			final spr:FlxSprite = LuaUtils.getObjectDirectly(obj, false);
 			if (spr == null)
 				return;
 
 			if (colors == null || colors.length < 2)
-				colors = ["FFFFFF", "000000"];
-			spr.pixels = FlxGradient.createGradientBitmapData(width, height, [for (penis in colors) CoolUtil.colorFromString(penis)], chunkSize, angle, interpolate);
+				colors = [FlxColor.WHITE, FlxColor.BLACK];
+			spr.pixels = FlxGradient.createGradientBitmapData(width, height, [for (penis in colors) LuaUtils.resolveColor(penis)], chunkSize, angle, interpolate);
 		});
 
 		set("addAnimationByPrefix", (obj:String, name:String, prefix:String, framerate:Int = 24, loop:Bool = true) ->
 		{
-			final obj:FlxSprite = LuaUtils.getObjectDirectly(obj, false);
-			if (obj == null)
+			final spr:FlxSprite = LuaUtils.getObjectDirectly(obj, false);
+			if (spr == null)
 				return false;
 
-			obj.animation.addByPrefix(name, prefix, framerate, loop);
-			if (obj.animation.curAnim == null)
-			{
-				if (obj is ExtendedSprite)
-					cast (obj, ExtendedSprite).playAnim(name, true);
-				else
-					obj.animation.play(name, true);
-			}
+			spr.animation.addByPrefix(name, prefix, framerate, loop);
+			if (spr.animation.curAnim == null)
+				(spr is ExtendedSprite ? cast (spr, ExtendedSprite).playAnim : spr.animation.play)(name, true);
+
 			return true;
 		});
 
 		set("addAnimation", (obj:String, name:String, frames:Array<Int>, framerate:Int = 24, loop:Bool = true) ->
 		{
-			final obj:FlxSprite = LuaUtils.getObjectDirectly(obj, false);
-			if (obj == null)
+			final spr:FlxSprite = LuaUtils.getObjectDirectly(obj, false);
+			if (spr == null)
 				return false;
 
-			obj.animation.add(name, frames, framerate, loop);
-			if (obj.animation.curAnim == null)
-				obj.animation.play(name, true);
+			spr.animation.add(name, frames, framerate, loop);
+			if (spr.animation.curAnim == null)
+				(spr is ExtendedSprite ? cast (spr, ExtendedSprite).playAnim : spr.animation.play)(name, true);
 
 			return true;
 		});
@@ -894,49 +890,46 @@ class FunkinLua
 
 		set("playAnim", (obj:String, name:String, forced:Bool = false, ?reverse:Bool = false, ?startFrame:Int = 0) ->
 		{
-			final obj:FlxSprite = LuaUtils.getObjectDirectly(obj, false);
-			if (obj is ExtendedSprite)
-				cast (obj, ExtendedSprite).playAnim(name, forced, reverse, startFrame);
-			else
-				obj.animation.play(name, forced, reverse, startFrame);
+			final spr:FlxSprite = LuaUtils.getObjectDirectly(obj, false);
+			(spr is ExtendedSprite ? cast (spr, ExtendedSprite).playAnim : spr.animation.play)(name, forced, reverse, startFrame);
 			return true;
 		});
 		set("addOffset", (obj:String, anim:String, x:Float, y:Float) ->
 		{
-			final obj:ExtendedSprite = LuaUtils.getObjectDirectly(obj, false);
-			if (obj == null)
+			final spr:ExtendedSprite = LuaUtils.getObjectDirectly(obj, false);
+			if (spr == null)
 				return false;
 
-			obj.addOffset(anim, x, y);
+			spr.addOffset(anim, x, y);
 			return true;
 		});
 		set("setOffset", (obj:String, ?x:Float, ?y:Float) ->
 		{
-			final obj:FlxSprite = LuaUtils.getObjectDirectly(obj, false);
-			if (obj == null)
+			final spr:FlxSprite = LuaUtils.getObjectDirectly(obj, false);
+			if (spr == null)
 				return false;
 
 			final setX = x != null;
 			final setY = y != null;
 
 			if (setX)
-				obj.offset.x = x;
+				spr.offset.x = x;
 			if (setY)
-				obj.offset.y = y;
+				spr.offset.y = y;
 
 			return (setX || setY);
 		});
 
 		set("setScrollFactor", (obj:String, scrollX:Float, scrollY:Float) ->
 		{
-			final luaObj:FlxObject = game.getLuaObject(obj,false);
-			if (luaObj != null)
+			var object:FlxObject = game.getLuaObject(obj,false);
+			if (object != null)
 			{
-				luaObj.scrollFactor.set(scrollX, scrollY);
+				object.scrollFactor.set(scrollX, scrollY);
 				return;
 			}
 
-			final object:FlxObject = Reflect.getProperty(LuaUtils.getTargetInstance(), obj);
+			object = Reflect.getProperty(LuaUtils.getTargetInstance(), obj);
 			if (object != null)
 				object.scrollFactor.set(scrollX, scrollY);
 		});
@@ -945,93 +938,90 @@ class FunkinLua
 			if (!game.modchartSprites.exists(tag))
 				return;
 
-			final shit:ExtendedSprite = game.modchartSprites.get(tag);
+			final spr:ExtendedSprite = game.modchartSprites.get(tag);
 			if (front)
-				LuaUtils.getTargetInstance().add(shit);
+				LuaUtils.getTargetInstance().add(spr);
 			else
 			{
 				if (game.isDead)
-					GameOverSubstate.instance.insert(GameOverSubstate.instance.members.indexOf(GameOverSubstate.instance.boyfriend), shit);
+					GameOverSubstate.instance.insert(GameOverSubstate.instance.members.indexOf(GameOverSubstate.instance.boyfriend), spr);
 				else
-					game.insert(game.members.indexOf(LuaUtils.getLowestCharacterGroup()), shit);
+					game.insert(game.members.indexOf(LuaUtils.getLowestCharacterGroup()), spr);
 			}
 		});
 		set("setGraphicSize", (obj:String, x:Int, y:Int = 0, updateHitbox:Bool = true) ->
 		{
-			final shit:FlxSprite = game.getLuaObject(obj);
-			if (shit != null)
+			var spr:FlxSprite = game.getLuaObject(obj);
+			if (spr != null)
 			{
-				shit.setGraphicSize(x, y);
+				spr.setGraphicSize(x, y);
 				if (updateHitbox)
-					shit.updateHitbox();
+					spr.updateHitbox();
 				return;
 			}
 
 			final split = obj.split(".");
-			final poop:FlxSprite = (split.length > 1)
+			spr = (split.length > 1)
 				? LuaUtils.getVarInArray(LuaUtils.getPropertyLoop(split), split[split.length-1])
 				: LuaUtils.getObjectDirectly(split[0]);
 
-			if (poop != null)
+			if (spr != null)
 			{
-				poop.setGraphicSize(x, y);
+				spr.setGraphicSize(x, y);
 				if (updateHitbox)
-					poop.updateHitbox();
+					spr.updateHitbox();
 				return;
 			}
 			luaTrace('setGraphicSize: Couldnt find object: $obj', false, false, FlxColor.RED);
 		});
 		set("scaleObject", (obj:String, x:Float, y:Float, updateHitbox:Bool = true) ->
 		{
-			final shit:FlxSprite = game.getLuaObject(obj);
-			if (shit != null)
+			var spr:FlxSprite = game.getLuaObject(obj);
+			if (spr != null)
 			{
-				shit.scale.set(x, y);
+				spr.scale.set(x, y);
 				if (updateHitbox)
-					shit.updateHitbox();
+					spr.updateHitbox();
 				return;
 			}
 
 			final split = obj.split(".");
-			final poop:FlxSprite = (split.length > 1)
+			spr = (split.length > 1)
 				? LuaUtils.getVarInArray(LuaUtils.getPropertyLoop(split), split[split.length-1])
 				: LuaUtils.getObjectDirectly(split[0]);
 
-			if (poop != null)
+			if (spr != null)
 			{
-				poop.scale.set(x, y);
+				spr.scale.set(x, y);
 				if (updateHitbox)
-					poop.updateHitbox();
+					spr.updateHitbox();
 				return;
 			}
 			luaTrace('scaleObject: Couldnt find object: $obj', false, false, FlxColor.RED);
 		});
 		set("updateHitbox", (obj:String) ->
 		{
-			final shit:FlxSprite = game.getLuaObject(obj);
-			if (shit != null)
-			{
-				shit.updateHitbox();
-				return;
-			}
+			var spr:FlxSprite = game.getLuaObject(obj);
+			if (spr != null)
+				return spr.updateHitbox();
 
-			final poop:FlxSprite = Reflect.getProperty(LuaUtils.getTargetInstance(), obj);
-			if (poop != null)
-			{
-				poop.updateHitbox();
-				return;
-			}
+			spr = Reflect.getProperty(LuaUtils.getTargetInstance(), obj);
+			if (spr != null)
+				return spr.updateHitbox();
+
 			luaTrace('updateHitbox: Couldnt find object: $obj', false, false, FlxColor.RED);
 		});
 		set("updateHitboxFromGroup", (group:String, index:Int) ->
 		{
 			final obj:Dynamic = Reflect.getProperty(LuaUtils.getTargetInstance(), group);
+			if (obj == null)
+				return;
+
 			final isSpriteGroup = obj is FlxTypedSpriteGroup;
 			if ((obj is FlxTypedGroup) || isSpriteGroup)
 			{
-				final members = isSpriteGroup ? cast (obj, FlxTypedSpriteGroup<Dynamic>).members : cast (obj, FlxTypedGroup<Dynamic>).members;
-				cast (members[index], FlxSprite).updateHitbox();
-				return;
+				final members = (isSpriteGroup ? cast (obj, FlxTypedSpriteGroup<Dynamic>).group : cast (obj, FlxTypedGroup<Dynamic>)).members;
+				return cast (members[index], FlxSprite).updateHitbox();
 			}
 			cast (cast (obj, Array<Dynamic>)[index], FlxSprite).updateHitbox();
 		});
@@ -1041,11 +1031,11 @@ class FunkinLua
 			if (!game.modchartSprites.exists(tag))
 				return;
 
-			final pee:ExtendedSprite = game.modchartSprites.get(tag);
-			LuaUtils.getTargetInstance().remove(pee, true);
+			final spr:ExtendedSprite = game.modchartSprites.get(tag);
+			LuaUtils.getTargetInstance().remove(spr, true);
 			if (destroy)
 			{
-				pee.destroy();
+				spr.destroy();
 				game.modchartSprites.remove(tag);
 			}
 		});
@@ -1059,21 +1049,21 @@ class FunkinLua
 
 		set("setObjectCamera", (obj:String, camera:String = "") ->
 		{
-			final real:FlxBasic = game.getLuaObject(obj);
-			if (real != null)
+			var basic:FlxBasic = game.getLuaObject(obj);
+			if (basic != null)
 			{
-				real.cameras = [LuaUtils.cameraFromString(camera)];
+				basic.cameras = [LuaUtils.cameraFromString(camera)];
 				return true;
 			}
 
 			final split = obj.split(".");
-			final object:FlxBasic = (split.length > 1)
+			basic = (split.length > 1)
 				? LuaUtils.getVarInArray(LuaUtils.getPropertyLoop(split), split[split.length-1])
 				: LuaUtils.getObjectDirectly(split[0]);
 
-			if (object != null)
+			if (basic != null)
 			{
-				object.cameras = [LuaUtils.cameraFromString(camera)];
+				basic.cameras = [LuaUtils.cameraFromString(camera)];
 				return true;
 			}
 			luaTrace('setObjectCamera: Object $obj doesn\'t exist!', false, false, FlxColor.RED);
@@ -1081,15 +1071,15 @@ class FunkinLua
 		});
 		set("setBlendMode", (obj:String, blend:String = "") ->
 		{
-			final real:FlxSprite = game.getLuaObject(obj);
-			if (real != null)
+			var spr:FlxSprite = game.getLuaObject(obj);
+			if (spr != null)
 			{
-				real.blend = LuaUtils.blendModeFromString(blend);
+				spr.blend = LuaUtils.blendModeFromString(blend);
 				return true;
 			}
 
 			final split:Array<String> = obj.split(".");
-			final spr:FlxSprite = (split.length > 1)
+			spr = (split.length > 1)
 				? LuaUtils.getVarInArray(LuaUtils.getPropertyLoop(split), split[split.length-1])
 				: LuaUtils.getObjectDirectly(split[0]);
 
@@ -1116,7 +1106,7 @@ class FunkinLua
 			{
 				var axis = XY;
 				try { axis = FlxAxes.fromString(pos.trim().toLowerCase()); }
-				catch(e) trace("screenCenter: " + e.message);
+				catch(e) trace('screenCenter: $e');
 				spr.screenCenter(axis);
 			}
 
@@ -1124,9 +1114,9 @@ class FunkinLua
 		});
 		set("objectsOverlap", (obj1:String, obj2:String) ->
 		{
-			final real1:FlxBasic = game.getLuaObject(obj1) ?? Reflect.getProperty(LuaUtils.getTargetInstance(), obj1);
-			final real2:FlxBasic = game.getLuaObject(obj2) ?? Reflect.getProperty(LuaUtils.getTargetInstance(), obj2);
-			return (!(real1 == null || real2 == null) && FlxG.overlap(real1, real2));
+			final basic1:FlxBasic = game.getLuaObject(obj1) ?? Reflect.getProperty(LuaUtils.getTargetInstance(), obj1);
+			final basic2:FlxBasic = game.getLuaObject(obj2) ?? Reflect.getProperty(LuaUtils.getTargetInstance(), obj2);
+			return (!(basic1 == null || basic2 == null) && FlxG.overlap(basic1, basic2));
 		});
 		set("getPixelColor", (obj:String, x:Int, y:Int) ->
 		{
@@ -1159,13 +1149,13 @@ class FunkinLua
 				return false;
 			}
 
-			final shit = DialogueBoxPsych.parseDialogue(path);
-			if (shit.dialogue.length == 0)
+			final parsed = DialogueBoxPsych.parseDialogue(path);
+			if (parsed.dialogue.length == 0)
 			{
 				luaTrace("startDialogue: Your dialogue file is badly formatted!", false, false, FlxColor.RED);
 				return false;
 			}
-			game.startDialogue(shit, music);
+			game.startDialogue(parsed, music);
 			luaTrace("startDialogue: Successfully loaded dialogue", false, false, FlxColor.GREEN);
 			return true;
 		});
@@ -1304,7 +1294,9 @@ class FunkinLua
 		});
 		#end
 
-		set("debugPrint", (text:Dynamic = "", color:String = "WHITE") -> PlayState.instance.addTextToDebug(text, CoolUtil.colorFromString(color)));
+		set("debugPrint", (text:Dynamic = "", ?color:LuaColor) ->
+			game.addTextToDebug(text, color == null ? FlxColor.WHITE : LuaUtils.resolveColor(color))
+		);
 		
 		addLocalCallback("close", () ->
 		{

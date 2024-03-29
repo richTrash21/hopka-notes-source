@@ -6,10 +6,11 @@ import hxdiscord_rpc.Types;
 
 class DiscordClient
 {
-	public static var isInitialized:Bool = false;
-	public static var clientID(default, set):String = _defaultID;
-	static final _defaultID:String = "1141827456693711011";
-	static final presence = DiscordRichPresence.create();
+	@:noCompletion inline static final _defaultID = "1141827456693711011";
+	@:noCompletion static final presence = DiscordRichPresence.create();
+
+	public static var clientID(default, set) = _defaultID;
+	public static var isInitialized = false;
 
 	// I HAVE TO ADD EVERY SINGLE FUCKING ICON INTO THIS BY MYSELF, FUCKING HELL
 	inline static final DEFAULT_ICON = "icon";
@@ -31,7 +32,14 @@ class DiscordClient
 		if (!isInitialized && ClientPrefs.data.discordRPC)
 			initialize();
 
-		lime.app.Application.current.window.onClose.add(() -> if (isInitialized) shutdown());
+		if (!lime.app.Application.current.window.onClose.has(onCloseWindow))
+			lime.app.Application.current.window.onClose.add(onCloseWindow);
+	}
+
+	static function onCloseWindow()
+	{
+		if (isInitialized)
+			shutdown();
 	}
 
 	public static function shutdown()
@@ -42,33 +50,31 @@ class DiscordClient
 	
 	static function onReady(request:cpp.RawConstPointer<DiscordUser>):Void
 	{
-		// final requestPtr:cpp.Star<DiscordUser> = cpp.ConstPointer.fromRaw(request).ptr;
+		// final discriminator = cast (request[0].discriminator, String);
+		var str = "Connected to User - " + cast (request[0].username, String); // New Discord IDs/Discriminator system
+		// if (discriminator != "0")
+		//	str += '#$discriminator'; // Old discriminators
 
-		final discriminator = cast (request[0].discriminator, String); // cast (requestPtr.discriminator, String);
-		var str = "Connected to User (" + cast (request[0].username, String); // cast (requestPtr.username, String); // New Discord IDs/Discriminator system
-		if (Std.parseInt(discriminator) != 0)
-			str += '#$discriminator'; // Old discriminators
-
-		trace('$str)');
+		trace(str);
 		changePresence();
 	}
 
 	inline static function onError(errorCode:Int, message:cpp.ConstCharStar):Void
 	{
-		trace('Error ($errorCode: ' + cast (message, String) + ")");
+		trace('Error [$errorCode]: ' + cast (message, String));
 	}
 
 	inline static function onDisconnected(errorCode:Int, message:cpp.ConstCharStar):Void
 	{
-		trace('Disconnected ($errorCode: ' + cast (message, String) + ")");
+		trace('Disconnected [$errorCode]: ' + cast (message, String));
 	}
 
 	public static function initialize()
 	{
-		final discordHandlers = DiscordEventHandlers.create();
-		discordHandlers.ready = cpp.Function.fromStaticFunction(onReady);
+		final discordHandlers		 = DiscordEventHandlers.create();
+		discordHandlers.ready		 = cpp.Function.fromStaticFunction(onReady);
 		discordHandlers.disconnected = cpp.Function.fromStaticFunction(onDisconnected);
-		discordHandlers.errored = cpp.Function.fromStaticFunction(onError);
+		discordHandlers.errored		 = cpp.Function.fromStaticFunction(onError);
 		Discord.Initialize(clientID, cpp.RawPointer.addressOf(discordHandlers), 1, null);
 
 		if (!isInitialized)
@@ -76,16 +82,20 @@ class DiscordClient
 
 		sys.thread.Thread.create(() ->
 		{
+			#if MODS_ALLOWED
 			final localID = clientID;
 			while (localID == clientID)
+			#else
+			while (true)
+			#end
 			{
 				#if DISCORD_DISABLE_IO_THREAD
 				Discord.UpdateConnection();
 				#end
 				Discord.RunCallbacks();
 
-				// Wait 0.5 seconds until the next loop...
-				Sys.sleep(0.5);
+				// Wait 2 seconds until the next loop...
+				Sys.sleep(2);
 			}
 		});
 		isInitialized = true;
@@ -137,7 +147,7 @@ class DiscordClient
 	#if MODS_ALLOWED
 	public static function loadModRPC()
 	{
-		final pack:Dynamic = Mods.getPack();
+		final pack = Mods.getPack();
 		if (pack?.discordRPC != null && pack.discordRPC != clientID)
 		{
 			clientID = pack.discordRPC;

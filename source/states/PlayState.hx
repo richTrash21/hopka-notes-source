@@ -1087,6 +1087,7 @@ class PlayState extends MusicBeatState
 
 					case 4:
 						tick = START;
+						startTimer = null;
 				}
 				#if FLX_PITCH
 				if (countSound != null)
@@ -1500,7 +1501,7 @@ class PlayState extends MusicBeatState
 			if (!isStoryMode && !skipArrowStartTween)
 			{
 				babyArrow.alpha = 0;
-				FlxTween.tween(babyArrow, {alpha: targetAlpha}, 1, {ease: FlxEase.circOut, startDelay: 0.5 + (0.2 * i)});
+				FlxTween.tween(babyArrow, {alpha: targetAlpha}, 1, {ease: FlxEase.circOut, startDelay: 0.5 + 0.2 * i});
 			}
 			else
 				babyArrow.alpha = targetAlpha;
@@ -1535,7 +1536,7 @@ class PlayState extends MusicBeatState
 				startTimer.active = false;
 			if (finishTimer != null && !finishTimer.finished)
 				finishTimer.active = false;
-			if (songSpeedTween != null)
+			if (songSpeedTween != null && !songSpeedTween.finished)
 				songSpeedTween.active = false;
 
 			/*for (char in charList)
@@ -1997,7 +1998,7 @@ class PlayState extends MusicBeatState
 
 	public function checkEventNote()
 	{
-		while (eventNotes.length > 0)
+		while (eventNotes.length != 0)
 		{
 			if (Conductor.songPosition < eventNotes[0].strumTime)
 				return;
@@ -2018,13 +2019,13 @@ class PlayState extends MusicBeatState
 		{
 			case "Hey!":
 				final value = switch (value1.toLowerCase().trim())
-					{
-						case "bf" | "boyfriend" | "0":   0;
-						case "gf" | "girlfriend" | "1":  1;
-						default:						 2;
-					}
+				{
+					case "bf" | "boyfriend" | "0":   0;
+					case "gf" | "girlfriend" | "1":  1;
+					default:						 2;
+				}
 
-				if (flValue2 == null || flValue2 <= 0)
+				if (flValue2 == null || flValue2 <= 0.0)
 					flValue2 = 0.6;
 
 				if (value != 0)
@@ -2046,7 +2047,7 @@ class PlayState extends MusicBeatState
 				}
 
 			case "Set GF Speed":
-				if (flValue1 == null || flValue1 < 1)
+				if (flValue1 == null || flValue1 < 1.0)
 					flValue1 = 1;
 				gfSpeed = Math.round(flValue1);
 
@@ -2066,17 +2067,11 @@ class PlayState extends MusicBeatState
 
 			case "Play Animation":
 				final char = switch (value2.toLowerCase().trim())
-					{
-						case "bf" | "boyfriend":   boyfriend;
-						case "gf" | "girlfriend":  gf;
-						default:
-							switch(flValue2 == null ? 0 : Std.int(flValue2))
-							{
-								case 1:   boyfriend;
-								case 2:   gf;
-								default:  dad;
-							}
-					}
+				{
+					case "gf" | "girlfriend" | "2":  gf;
+					case "bf" | "boyfriend" | "1":   boyfriend;
+					default:						 dad;
+				}
 
 				if (char != null)
 				{
@@ -2090,9 +2085,9 @@ class PlayState extends MusicBeatState
 				{
 					isCameraOnForcedPos = true;
 					if (flValue1 == null)
-						flValue1 = 0;
+						flValue1 = 0.0;
 					if (flValue2 == null)
-						flValue2 = 0;
+						flValue2 = 0.0;
 
 					_camFollow.x = flValue1;
 					_camFollow.y = flValue2;
@@ -2100,46 +2095,34 @@ class PlayState extends MusicBeatState
 
 			case "Alt Idle Animation":
 				final char = switch (value1.toLowerCase().trim())
-					{
-						case "gf" | "girlfriend":  gf;
-						case "boyfriend" | "bf":   boyfriend;
-						default:
-							final val = Std.parseInt(value1);
-							switch(Math.isNaN(val) ? 0 : val)
-							{
-								case 1:   boyfriend;
-								case 2:   gf;
-								default:  dad;
-							}
-					}
+				{
+					case "gf" | "girlfriend" | "2":  gf;
+					case "boyfriend" | "bf" | "1":   boyfriend;
+					default:						 dad;
+				}
 
 				if (char != null)
 					char.idleSuffix = value2;
 
 			case "Screen Shake":
-				final valuesArray = [value1, value2];
-				final targetsArray = [camGame, camHUD];
-				for (i in 0...targetsArray.length)
+				inline function shakeCamera(camera:FlxCamera, params:String)
 				{
-					final split = valuesArray[i].split(",");
-					var duration  = split[0] == null ? 0.0 : Std.parseFloat(split[0].trim());
-					var intensity = split[1] == null ? 0.0 : Std.parseFloat(split[1].trim());
-					if (Math.isNaN(duration))
-						duration = 0.0;
-					if (Math.isNaN(intensity))
-						intensity = 0.0;
-
+					final split = params.split(",");
+					final duration  = CoolUtil.nullifyNaN(Std.parseFloat(split[0])) ?? 0.0;
+					final intensity = CoolUtil.nullifyNaN(Std.parseFloat(split[1])) ?? 0.0;
 					if (duration > 0.0 && intensity != 0.0)
-						targetsArray[i].shake(intensity, duration);
+						camera.shake(intensity, duration);
 				}
 
+				shakeCamera(camGame, value1);
+				shakeCamera(camGame, value2);
 
 			case "Change Character":
 				final charType = switch (value1.toLowerCase().trim())
 				{
-					case "gf" | "girlfriend": 2;
-					case "dad" | "opponent":  1;
-					default:				  flValue1 == null ? 0 : Std.int(flValue1);
+					case "gf" | "girlfriend" | "2":  2;
+					case "dad" | "opponent" | "1":   1;
+					default:						 0;
 				}
 
 				switch (charType)
@@ -2222,20 +2205,23 @@ class PlayState extends MusicBeatState
 						flValue2 = 0.0;
 
 					final newValue = SONG.speed * ClientPrefs.getGameplaySetting("scrollspeed") * flValue1;
-					if (flValue2 <= 0.0)
-						songSpeed = newValue;
-					else
+					if (flValue2 > 0.0)
 						songSpeedTween = FlxTween.num(songSpeed, newValue, flValue2, {onComplete: (_) -> songSpeedTween = null}, set_songSpeed);
+					else
+						songSpeed = newValue;
 				}
 
 			case "Set Property":
 				try
 				{
-					final split = value1.split(".");
-					if (split.length > 1)
-						LuaUtils.setVarInArray(LuaUtils.getPropertyLoop(split), split[split.length-1], value2);
+					final v2 = LuaUtils.boolCkeck(value2);
+					if (value1.contains("."))
+					{
+						final split = value1.split(".");
+						LuaUtils.setVarInArray(LuaUtils.getPropertyLoop(split), split[split.length-1], v2);
+					}
 					else
-						LuaUtils.setVarInArray(this, value1, value2);
+						LuaUtils.setVarInArray(this, value1, v2);
 				}
 				catch(e)
 				{
@@ -2244,7 +2230,7 @@ class PlayState extends MusicBeatState
 			
 			case "Play Sound":
 				if (flValue2 == null)
-					flValue2 = 1;
+					flValue2 = 1.0;
 				FlxG.sound.play(Paths.sound(value1), flValue2);
 		}
 		
@@ -2310,10 +2296,10 @@ class PlayState extends MusicBeatState
 			vocals.pause();
 			vocals.volume = 0;
 		}
-		if (ClientPrefs.data.noteOffset <= 0 || ignoreNoteOffset)
+		if (ClientPrefs.data.noteOffset < 1 || ignoreNoteOffset)
 			endCallback();
 		else
-			finishTimer = new FlxTimer().start(ClientPrefs.data.noteOffset * 0.001, (_) -> endCallback());
+			finishTimer = new FlxTimer().start(ClientPrefs.data.noteOffset * 0.001, (_) -> { finishTimer = null; endCallback(); });
 	}
 
 	public var transitioning = false;

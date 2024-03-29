@@ -5,55 +5,64 @@ import flixel.input.keyboard.FlxKey;
 import flixel.input.gamepad.FlxGamepadInputID;
 
 // Add a variable here and it will get automatically saved
-@:structInit class SaveVariables
+@:publicFields @:structInit class SaveVariables
 {
-	public var downScroll:Bool			= false;
-	public var middleScroll:Bool		= false;
-	public var opponentStrums:Bool		= true;
-	public var camScript:Bool			= true;
-	public var camScriptNote:Bool		= true;
-	public var showFPS:Bool				= true;
-	public var flashing:Bool			= true;
-	public var autoPause:Bool			= true;
-	public var lostFocusDeafen:Bool		= false;
-	public var antialiasing:Bool		= true;
-	public var noteSkin:String			= "Default";
-	public var splashSkin:String		= "Default";
-	public var splashAlpha:Float		= 0.6;
-	public var susAlpha:Float			= 0.6;
-	public var lowQuality:Bool			= false;
-	public var shaders:Bool				= true;
-	public var cacheOnGPU:Bool			= #if switch true #else false #end; // From Stilic
-	public var framerate:Int			= 60;
-	public var fixedTimestep:Bool		= false;
-	public var camZooms:Bool			= true;
-	public var hideHud:Bool				= false;
-	public var noteOffset:Int			= 0;
+	var downScroll		= false;
+	var middleScroll	= false;
+	var opponentStrums	= true;
+	var camScript		= true;
+	var camScriptNote	= true;
+	var showFPS			= true;
+	var flashing		= true;
+	var autoPause		= true;
+	var lostFocusDeafen	= false;
+	var antialiasing	= true;
+	var noteSkin		= "Default";
+	var splashSkin		= "Default";
+	var splashAlpha		= 0.6;
+	var susAlpha		= 0.6;
+	var lowQuality		= false;
+	var shaders			= true;
+	var cacheOnGPU		= #if switch true #else false #end; // From Stilic
+	var framerate		= 60;
+	var fixedTimestep	= false;
+	var camZooms		= true;
+	var hideHud			= false;
+	var noteOffset		= 0;
 
-	public var arrowRGB:Array<Array<FlxColor>> = [
+	var ghostTapping	= true;
+	var timeBarType		= "Time Left";
+	var scoreZoom		= true;
+	var noReset			= false;
+	var healthBarAlpha	= 1.0;
+	var hitsoundVolume	= 0.0;
+	var pauseMusic		= "Noodles";
+	var checkForUpdates	= true;
+	var enableCombo		= true;
+	var comboStacking	= true;
+
+	var comboOffset		= [0, 0, 0, 0];
+	var ratingOffset	= 0;
+	var sickWindow		= 45;
+	var goodWindow		= 90;
+	var badWindow		= 135;
+	var safeFrames		= 10.0;
+	var discordRPC		= true;
+
+	var arrowRGB:Array<Array<FlxColor>> = [
 		[0xFFC24B99, 0xFFFFFFFF, 0xFF3C1F56],
 		[0xFF00FFFF, 0xFFFFFFFF, 0xFF1542B7],
 		[0xFF12FA05, 0xFFFFFFFF, 0xFF0A4447],
 		[0xFFF9393F, 0xFFFFFFFF, 0xFF651038]
 	];
-	public var arrowRGBPixel:Array<Array<FlxColor>> = [
+	var arrowRGBPixel:Array<Array<FlxColor>> = [
 		[0xFFE276FF, 0xFFFFF9FF, 0xFF60008D],
 		[0xFF3DCAFF, 0xFFF4FFFF, 0xFF003060],
 		[0xFF71E300, 0xFFF6FFE6, 0xFF003100],
 		[0xFFFF884E, 0xFFFFFAF5, 0xFF6C0000]
 	];
 
-	public var ghostTapping:Bool		= true;
-	public var timeBarType:String		= "Time Left";
-	public var scoreZoom:Bool			= true;
-	public var noReset:Bool				= false;
-	public var healthBarAlpha:Float		= 1;
-	public var hitsoundVolume:Float		= 0;
-	public var pauseMusic:String		= "Noodles";
-	public var checkForUpdates:Bool		= true;
-	public var enableCombo:Bool			= true;
-	public var comboStacking:Bool		= true;
-	public var gameplaySettings:Map<String, Dynamic> = [
+	var gameplaySettings:Map<String, Dynamic> = [
 		"scrollspeed"	=> 1.0,
 		"scrolltype"	=> "multiplicative", 
 		// anyone reading this, amod is multiplicative speed mod, cmod is constant speed mod, and xmod is bpm based speed mod.
@@ -75,14 +84,6 @@ import flixel.input.gamepad.FlxGamepadInputID;
 		"showcase"		=> false,
 		"opponentplay"	=> false
 	];
-
-	public var comboOffset:Array<Int>	= [0, 0, 0, 0];
-	public var ratingOffset:Int			= 0;
-	public var sickWindow:Int			= 45;
-	public var goodWindow:Int			= 90;
-	public var badWindow:Int			= 135;
-	public var safeFrames:Float			= 10;
-	public var discordRPC:Bool			= true;
 }
 
 class ClientPrefs
@@ -135,8 +136,8 @@ class ClientPrefs
 		"reset"			=> [BACK]
 	];
 
-	public static var defaultKeys:Map<String, Array<FlxKey>> = null;
-	public static var defaultButtons:Map<String, Array<FlxGamepadInputID>> = null;
+	public static var defaultKeys:Map<String, Array<FlxKey>>;
+	public static var defaultButtons:Map<String, Array<FlxGamepadInputID>>;
 
 	public static function resetKeys(?controller:Bool) // Null = both, False = Keyboard, True = Controller
 	{
@@ -246,7 +247,7 @@ class ClientPrefs
 		reloadVolumeKeys();
 	}
 
-	inline public static function getGameplaySetting(name:String, defaultValue:Dynamic = null, ?customDefaultValue:Bool = false):Dynamic
+	inline public static function getGameplaySetting(name:String, ?defaultValue:Dynamic, ?customDefaultValue:Bool = false):Dynamic
 	{
 		return (data.gameplaySettings.exists(name) ? data.gameplaySettings.get(name) : (customDefaultValue ? defaultValue : defaultData.gameplaySettings.get(name)));
 	}

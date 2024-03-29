@@ -129,9 +129,13 @@ class HScript extends Interp
 		// tested
 		setVar('createCallback', function(name:String, func:Dynamic, ?funk:FunkinLua)
 		{
-			if (funk == null) funk = parentLua;
-			if (parentLua != null) funk.addLocalCallback(name, func);
-			else FunkinLua.luaTrace('createCallback ($name): 3rd argument is null', false, false, FlxColor.RED);
+			if (funk == null)
+				funk = parentLua;
+
+			if (funk == null)
+				FunkinLua.luaTrace('createCallback ($name): 3rd argument is null', false, false, FlxColor.RED);
+			else
+				funk.addLocalCallback(name, func);
 		});
 
 		setVar('addHaxeLibrary', function(libName:String, ?libPackage:String = '') {
@@ -147,7 +151,7 @@ class HScript extends Interp
 
 		setVar('Function_Stop',			FunkinLua.Function_Stop);
 		setVar('Function_Continue',		FunkinLua.Function_Continue);
-		setVar('Function_StopLua',		FunkinLua.Function_StopLua); //doesnt do much cuz HScript has a lower priority than Lua
+		setVar('Function_StopLua',		FunkinLua.Function_StopLua); // doesnt do much cuz HScript has a lower priority than Lua
 		setVar('Function_StopHScript',	FunkinLua.Function_StopHScript);
 		setVar('Function_StopAll',		FunkinLua.Function_StopAll);
 	}

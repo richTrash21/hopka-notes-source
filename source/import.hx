@@ -1,14 +1,14 @@
 #if !macro
 // Discord API
 #if hxdiscord_rpc
-import backend.Discord;
+import backend.DiscordClient;
 #end
 
 #if ACHIEVEMENTS_ALLOWED
 import backend.Achievements;
 #end
 
-//Psych
+// Psych
 import backend.Paths;
 import backend.Controls;
 import backend.CoolUtil;
@@ -26,7 +26,7 @@ import objects.ExtendedSprite;
 import states.PlayState;
 import states.LoadingState;
 
-//Flixel
+// Flixel
 import flixel.sound.FlxSound;
 import flixel.FlxG;
 import flixel.FlxSprite;
@@ -41,7 +41,7 @@ import flixel.tweens.FlxTween;
 import flixel.group.FlxSpriteGroup;
 import flixel.group.FlxGroup.FlxTypedGroup;
 
-using StringTools;
 using objects.ExtendedSprite;
+using StringTools;
 
 #end

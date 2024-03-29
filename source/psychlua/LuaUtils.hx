@@ -19,6 +19,8 @@ typedef LuaTweenOptions = {
 	ease:EaseFunction
 }
 
+typedef LuaColor = haxe.extern.EitherType<Float, String>;
+
 class LuaUtils
 {
 	@:allow(Init)
@@ -39,8 +41,8 @@ class LuaUtils
 
 	public static function setVarInArray(instance:Dynamic, variable:String, value:Dynamic, ?allowMaps = false, ?bypassAccessor = false):Any
 	{
-		if (value is String)
-			value = boolCkeck(value);
+		// if (value is String)
+		//	value = boolCkeck(value);
 
 		final splitProps = variable.split("[");
 		if (splitProps.length > 1)
@@ -53,7 +55,7 @@ class LuaUtils
 					target = retVal;
 			}
 			else
-				target = bypassAccessor ? Reflect.field(instance, splitProps[0]) : Reflect.getProperty(instance, splitProps[0]);
+				target = (bypassAccessor ? Reflect.field : Reflect.getProperty)(instance, splitProps[0]);
 
 			for (i in 1...splitProps.length)
 			{
@@ -77,7 +79,7 @@ class LuaUtils
 			PlayState.instance.variables.set(variable, value);
 			return value;
 		}
-		bypassAccessor ? Reflect.setField(instance, variable, value) : Reflect.setProperty(instance, variable, value);
+		(bypassAccessor ? Reflect.setField : Reflect.setProperty)(instance, variable, value);
 		return value;
 	}
 
@@ -113,7 +115,7 @@ class LuaUtils
 			if (retVal != null)
 				return retVal;
 		}
-		return bypassAccessor ? Reflect.field(instance, variable) : Reflect.getProperty(instance, variable);
+		return (bypassAccessor ? Reflect.field : Reflect.getProperty)(instance, variable);
 	}
 	
 	inline public static function isMap(variable:Dynamic):Bool
@@ -123,8 +125,8 @@ class LuaUtils
 
 	public static function setGroupStuff(leArray:Dynamic, variable:String, value:Dynamic, ?allowMaps:Bool = false, ?bypassAccessor:Bool = false):Any
 	{
-		if (value is String)
-			value = boolCkeck(value);
+		// if (value is String)
+		//	value = boolCkeck(value);
 
 		final split = variable.split(".");
 		if (split.length > 1)
@@ -139,7 +141,7 @@ class LuaUtils
 		if (allowMaps && isMap(leArray))
 			leArray.set(variable, value);
 		else
-			bypassAccessor ? Reflect.setField(leArray, variable, value) : Reflect.setProperty(leArray, variable, value);
+			(bypassAccessor ? Reflect.setField : Reflect.setProperty)(leArray, variable, value);
 
 		return value;
 	}
@@ -159,7 +161,7 @@ class LuaUtils
 		if (allowMaps && isMap(leArray))
 			return leArray.get(variable);
 	
-		return bypassAccessor ? Reflect.field(leArray, variable) : Reflect.getProperty(leArray, variable);
+		return (bypassAccessor ? Reflect.field : Reflect.getProperty)(leArray, variable);
 	}
 
 	public static function getPropertyLoop(split:Array<String>, ?checkForTextsToo:Bool = true, ?getProperty:Bool=true, ?allowMaps:Bool = false):Any
@@ -196,13 +198,12 @@ class LuaUtils
 		return false;
 	}
 
-	inline public static function boolCkeck(value:String):Any // should fix bool values
-	{
-		if (value == null)
-			return value;
+	static final BOOL_REGEX = ~/^(tru|fals)e$//*i*/;
+	// static final TRUE_REGEX = ~/^true$/i;
 
-		value = value.toLowerCase();
-		return (value == "true" || value == "false") ? value == "true" : value;
+	inline public static function boolCkeck(value:Any):Any // should fix bool values
+	{
+		return BOOL_REGEX.match(value) ? value == "true" /*TRUE_REGEX.match(value)*/ : value;
 	}
 	
 	public static inline function getTargetInstance()
@@ -284,6 +285,18 @@ class LuaUtils
 			default:  obj.getMidpoint(_lePoint);
 		};
 		return y ? _lePoint.y : _lePoint.x;
+	}
+
+	// resolves old string color input and new number color input (why does lua passes every number as float it's so annoyinggg)
+	inline public static function resolveColor(color:LuaColor):FlxColor
+	{
+		if (color is String)
+			return CoolUtil.colorFromString(color);
+
+		final c:FlxColor = Std.int(color);
+		/*if (c > 0xFFFFFFFF && c <= 0xFFFFFF) // no alpha chanel - add it
+			c.alpha = 1;*/
+		return c;
 	}
 
 	inline public static function keyJustPressed(key:String):Bool
