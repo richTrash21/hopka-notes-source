@@ -151,7 +151,7 @@ class PauseSubState extends MusicBeatSubstate
 				if (LEFT || controls.UI_RIGHT)
 				{
 					if ((holdTime += elapsed) > 0.5)
-						curTime = FlxMath.wrap(Std.int(curTime + 45000 * elapsed) * (LEFT ? -1 : 1), 0, Std.int(FlxG.sound.music.length)-1);
+						curTime = FlxMath.wrap(Std.int(curTime + 45000 * elapsed * (LEFT ? -1 : 1)), 0, Std.int(FlxG.sound.music.length)-1);
 					updateSkipTimeText();
 				}
 		}
@@ -384,7 +384,7 @@ class PauseSubState extends MusicBeatSubstate
 		changeSelection();
 	}
 	
-	function updateSkipTextStuff()
+	inline function updateSkipTextStuff()
 	{
 		if (skipTimeText == null || skipTimeTracker == null)
 			return;

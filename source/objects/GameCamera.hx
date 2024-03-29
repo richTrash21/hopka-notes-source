@@ -62,9 +62,6 @@ class GameCamera extends FlxCamera
 	@:access(flixel.tweens.FlxTweenManager.forEachTweensOf)
 	override public function update(elapsed:Float):Void
 	{
-		if (!active)
-			return;
-
 		if (checkForTweens)
 		{
 			// once per half of current framerate (hope it won't backfire tho)
@@ -113,13 +110,13 @@ class GameCamera extends FlxCamera
 		return checkForTweens = bool;
 	}
 
-	@:noCompletion override function set_active(bool:Bool):Bool
+	/*@:noCompletion override function set_active(bool:Bool):Bool
 	{
 		if (!bool)
 			tweeningZoom = false;
 
 		return active = bool;
-	}
+	}*/
 
 	/*@:noCompletion function set_updateLerp(bool:Bool):Bool
 	{
