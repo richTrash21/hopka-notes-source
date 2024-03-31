@@ -1,5 +1,6 @@
 package states;
 
+import flixel.addons.transition.FlxTransitionableState;
 import flixel.addons.display.FlxBackdrop;
 import flixel.input.keyboard.FlxKey;
 
@@ -7,6 +8,7 @@ class DoiseRoomLMAO extends MusicBeatState
 {
 	override public function create()
 	{
+		// FlxTransitionableState.skipNextTransOut = FlxTransitionableState.skipNextTransIn = true;
 		MainMenuState.doiseTrans = true;
 		TitleState.skippedIntro = true;
 
@@ -104,10 +106,19 @@ class DoiseRoomLMAO extends MusicBeatState
 		if (updateRpc)
 			if ((rpcTimer += elapsed) > 1)
 			{
-				DiscordClient.changePresence("???");
+				DiscordClient.changePresence("April fooled lmao");
 				updateRpc = false;
 			}
 		#end
+
+		// APRIL FOOLS!!!
+		/*if (FlxG.keys.pressed.ESCAPE && subState == null)
+		{
+			if (FlxG.random.bool(40)) // кино 😎🍿
+				MusicBeatState.switchState(TestVideoState.new);
+			else
+				openSubState(new DoiseJumpscare());
+		}*/
 
 		if (FlxG.keys.justPressed.ANY && subState == null)
 		{
@@ -116,9 +127,6 @@ class DoiseRoomLMAO extends MusicBeatState
 				return;
 
 			escapeInput.push(firstKey);
-			/*while (escapeInput.length > escapeCode.length)
-				escapeInput.shift();*/
-
 			if (escapeInput.length == escapeCode.length)
 			{
 				var matched = false;

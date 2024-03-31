@@ -133,7 +133,7 @@ class Init extends flixel.FlxState
 				upateOutlineColor();
 			}],
 			[2.5833, FlxG.camera.fade.bind(FlxColor.BLACK, 1.375, false, null, false)],
-			[4, leave]
+			[4, () -> leave()]
 		];
 	}
 
@@ -177,7 +177,7 @@ class Init extends flixel.FlxState
 		super.update(elapsed);
 	}
 
-	inline function upateOutlineColor()
+	extern inline function upateOutlineColor()
 	{
 		curColor = ++curColor % hxPalette.length;
 		hxOutline.color = hxPalette[curColor];
@@ -198,7 +198,7 @@ class Init extends flixel.FlxState
 		text = null;
 	}
 
-	inline function leave()
+	@:noCompletion extern inline function leave()
 	{
 		var switchTo:flixel.util.typeLimit.NextState = Main.game.initialState;
 		if (FlxG.save.data.flashing == null && !FlashingState.leftState)

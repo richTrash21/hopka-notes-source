@@ -37,14 +37,14 @@ You've been warned!";
 				else
 				{
 					FlxG.sound.play(Paths.sound("cancelMenu"));
-					FlxG.camera.fade(__next);
+					FlxG.camera.fade(() -> __next());
 				}
 			}
 		}
 		super.update(elapsed);
 	}
 
-	@:noCompletion inline function __next()
+	@:noCompletion extern inline function __next()
 	{
 		MusicBeatState.switchState(Main.game.initialState);
 	}

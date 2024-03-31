@@ -76,7 +76,7 @@ class StateTransition extends openfl.display.Bitmap
 	@:noCompletion function finish()
 	{
 		active = false;
-		if (_nextState == null && _startPos < 0)
+		if (_nextState == null && _startPos > 0)
 			FlxG.resetState();
 		else
 		{
@@ -90,7 +90,7 @@ class StateTransition extends openfl.display.Bitmap
 	@:noCompletion function onResize(_, _)
 	{
 		if (active)
-			prepare(_startPos < 0);
+			prepare(_startPos > 0);
 	}
 
 	@:noCompletion function onStateSwitched()
