@@ -41,7 +41,7 @@ class MainMenuPCState extends MusicBeatState
 		for (i => option in optionShit)
 			menuItems.add(new FlxText(225, 140 + 33 * i, option.name, 32).setBorderStyle(OUTLINE_FAST, FlxColor.BLACK, 2)).alpha = .5;
 
-		add(new FlxText(6, FlxG.height - 56, "NOT FINAL!!! (hi redar!)", 46).setBorderStyle(OUTLINE_FAST, FlxColor.BLACK, 4));
+		add(new FlxText(6, FlxG.height - 56, "NOT FINAL!!! (hi redar!) - Rich\nHi! - Redar", 46).setBorderStyle(OUTLINE_FAST, FlxColor.BLACK, 4));
 		changeItem();
 		super.create();
 	}

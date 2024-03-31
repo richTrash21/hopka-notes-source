@@ -74,7 +74,8 @@ class MainMenuState extends MusicBeatState
 		magenta.active = magenta.visible = false;
 		add(magenta.screenCenter());
 
-		final grid = new flixel.addons.display.FlxBackdrop(flixel.addons.display.FlxGridOverlay.createGrid(80, 80, 160, 160, true, 0x33FFFFFF, 0x0));
+		final grid = new flixel.addons.display.FlxBackdrop(flixel.addons.display.FlxGridOverlay.createGrid(1, 1, 2, 2, true, 0x33FFFFFF, 0x0));
+		grid.scale.scale(80);
 		grid.scrollFactor.set(0, yScroll);
 		grid.velocity.set(40, 40);
 		add(grid);
@@ -231,7 +232,7 @@ class MainMenuState extends MusicBeatState
 			else if (FlxG.keys.justPressed.EIGHT) // pc state testing
 			{
 				selectedSomethin = true;
-				MusicBeatState.switchState(MainMenuPCState.new);
+				MusicBeatState.switchState(PCState.new);
 			}
 			else if (FlxG.keys.justPressed.NINE) // video testing
 			{
