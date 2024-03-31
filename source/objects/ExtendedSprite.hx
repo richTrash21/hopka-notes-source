@@ -191,7 +191,7 @@ class ExtendedSprite extends FlxSprite
 	{
 		width = Math.abs(scale.x) * frameWidth;
 		height = Math.abs(scale.y) * frameHeight;
-		updateOfsset();
+		updateOffset();
 		centerOrigin();
 	}
 
@@ -199,7 +199,7 @@ class ExtendedSprite extends FlxSprite
 		A part from updateHitbox() that gives sprites propper offset.
 		@return Adjusted offset.
 	**/
-	inline public function updateOfsset():FlxPoint
+	inline public function updateOffset():FlxPoint
 	{
 		return offset.set(-0.5 * (width - frameWidth), -0.5 * (height - frameHeight));
 	}

@@ -164,7 +164,6 @@
 	<haxedef name='no-deprecation-warnings' />
 	
 	<!--Macro fixes-->
-	<haxeflag name="--macro" value="allowPackage('flash')" />
 	<haxeflag name="--macro" value="include('my.pack')" />
 
 	<!-- _________________________________ Custom _______________________________ -->

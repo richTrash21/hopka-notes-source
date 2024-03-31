@@ -22,13 +22,13 @@ class Main extends Sprite
 {
 	public static final game =
 	{
-		width: 1280,							 // WINDOW width
-		height: 720,							 // WINDOW height
-		initialState: states.MainMenuState.new,	 // initial game state
-		zoom: -1.0,								 // game state bounds
-		framerate: 60,							 // default framerate
-		skipSplash: true,						 // if the default flixel splash screen should be skipped
-		startFullscreen: false					 // if the game should start at fullscreen mode
+		width: 1280,					  	  // WINDOW width
+		height: 720,					  	  // WINDOW height
+		initialState: states.TitleState.new,  // initial game state
+		zoom: -1.0,							  // game state bounds
+		framerate: 60,						  // default framerate
+		skipSplash: true,					  // if the default flixel splash screen should be skipped
+		startFullscreen: false				  // if the game should start at fullscreen mode
 	};
 
 	public static var fpsVar(default, null):FPSCounter;
