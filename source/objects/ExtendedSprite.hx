@@ -1,7 +1,7 @@
 package objects;
 
 import flixel.animation.FlxAnimation;
-import flixel.math.FlxPoint;
+import flixel.util.FlxArrayUtil;
 import flixel.math.FlxRect;
 
 /**
@@ -9,6 +9,8 @@ import flixel.math.FlxRect;
 **/
 class ExtendedSprite extends FlxSprite
 {
+	static final __animsHelper = new Array<String>();
+
 	/**
 		Checks if object is in the rectangles bounds.
 
@@ -28,23 +30,57 @@ class ExtendedSprite extends FlxSprite
 	**/
 	inline public static function precache<T:FlxSprite>(sprite:T):T
 	{
-		final originalAlpha = sprite.alpha;
-		sprite.alpha = 0.00001;
-		sprite.draw();
-		sprite.alpha = originalAlpha;
+		if (sprite != null)
+		{
+			final originalAlpha = sprite.alpha;
+			sprite.alpha = 0.00001;
+			sprite.draw();
+			sprite.alpha = originalAlpha;
+		}
 		return sprite;
 	}
 
-	public static function scaleBySize<T:FlxSprite>(sprite:T, ?maxWidth:Float, ?maxHeight:Float):T
+	inline public static function scaleBySize<T:FlxSprite>(sprite:T, ?maxWidth:Float, ?maxHeight:Float):T
 	{
-		if (maxWidth == null)
-			maxWidth = FlxG.width;
-		if (maxHeight == null)
-			maxHeight = FlxG.height;
+		if (sprite != null)
+		{
+			if (maxWidth == null)
+				maxWidth = FlxG.width;
+			if (maxHeight == null)
+				maxHeight = FlxG.height;
 
-		final ratio1 = sprite.width / sprite.height;
-		final ratio2 = FlxG.width / FlxG.height;
-		sprite.setGraphicSize(ratio1 >= ratio2 ? maxWidth : 0.0, ratio2 >= ratio1 ? maxHeight : 0.0);
+			final ratio1 = sprite.width / sprite.height;
+			final ratio2 = FlxG.width / FlxG.height;
+			sprite.setGraphicSize(ratio1 >= ratio2 ? maxWidth : 0.0, ratio2 >= ratio1 ? maxHeight : 0.0);
+		}
+		return sprite;
+	}
+
+	// by redar
+	public static function autoAnimations<T:FlxSprite>(sprite:T, animIndex = -1):T
+	{
+		FlxArrayUtil.clearArray(__animsHelper);
+		if (sprite != null && sprite.frames != null && sprite.frames.numFrames != 0)
+		{
+			var name:String = null;
+			var prevAnim:String;
+			for (anim in sprite.frames.framesHash.keys())
+			{
+				prevAnim = name;
+				name = anim.substr(0, anim.length - 4);
+				if (name != prevAnim) // !__animsHelper.contains(name)
+				{
+					__animsHelper.push(name);
+					sprite.animation.addByPrefix(name, name, 24, true);
+				}
+			}
+
+			if (animIndex > -1)
+				sprite.animation.play(__animsHelper[FlxMath.minInt(animIndex, __animsHelper.length)]);
+		}
+		else
+			trace("No animations found, damn... :(");
+
 		return sprite;
 	}
 
@@ -68,7 +104,7 @@ class ExtendedSprite extends FlxSprite
 	public function new(?x = 0., ?y = 0., ?simpleGraphic:flixel.system.FlxAssets.FlxGraphicAsset, ?antialiasing = true):Void
 	{
 		super(x, y, Paths.resolveGraphicAsset(simpleGraphic));
-		this.antialiasing = ClientPrefs.data.antialiasing ? antialiasing : false;
+		this.antialiasing = ClientPrefs.data.antialiasing && antialiasing;
 	}
 
 	override public function graphicLoaded():Void

@@ -366,7 +366,7 @@ class FreeplayState extends MusicBeatState
 				exceptionError(e);
 				return super.update(elapsed);
 			}
-			// LoadingState.prepareToSong();
+			LoadingState.prepareToSong();
 			LoadingState.loadAndSwitchState(new PlayState());
 			MainMenuState.pizzaTime = false;
 

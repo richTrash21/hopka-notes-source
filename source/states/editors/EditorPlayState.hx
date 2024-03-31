@@ -91,10 +91,8 @@ class EditorPlayState extends MusicBeatSubstate
 		add(strumLineNotes = new FlxTypedGroup());
 		add(scoreGroup = new FlxTypedGroup()).ID = 0;
 		add(grpNoteSplashes = new FlxTypedGroup());
-		
-		var splash:NoteSplash = new NoteSplash(100, 100);
-		grpNoteSplashes.add(splash);
-		splash.alpha = 0.000001; //cant make it invisible or it won't allow precaching
+
+		grpNoteSplashes.add(__splashFactory()).precache();
 
 		opponentStrums = new FlxTypedGroup<StrumNote>();
 		playerStrums = new FlxTypedGroup<StrumNote>();
@@ -136,9 +134,10 @@ class EditorPlayState extends MusicBeatSubstate
 
 	override function update(elapsed:Float)
 	{
-		if(controls.BACK || FlxG.keys.justPressed.ESCAPE)
+		if (controls.BACK || FlxG.keys.justPressed.ESCAPE)
 		{
 			endSong();
+			FlxG.state.persistentUpdate = true;
 			super.update(elapsed);
 			return;
 		}
@@ -147,24 +146,24 @@ class EditorPlayState extends MusicBeatSubstate
 		{
 			timerToStart -= elapsed * 1000;
 			Conductor.songPosition = startPos - timerToStart;
-			if(timerToStart < 0) startSong();
+			if (timerToStart < 0)
+				startSong();
 		}
-		else Conductor.songPosition += elapsed * 1000 * playbackRate;
+		else
+			Conductor.songPosition += elapsed * 1000 * playbackRate;
 
 		if (unspawnNotes[0] != null)
 		{
-			var time:Float = spawnTime * playbackRate;
-			if(songSpeed < 1) time /= songSpeed;
-			if(unspawnNotes[0].multSpeed < 1) time /= unspawnNotes[0].multSpeed;
+			var time = spawnTime * playbackRate;
+			if (songSpeed < 1)
+				time /= songSpeed;
+			if (unspawnNotes[0].multSpeed < 1)
+				time /= unspawnNotes[0].multSpeed;
 
 			while (unspawnNotes.length > 0 && unspawnNotes[0].strumTime - Conductor.songPosition < time)
 			{
-				var dunceNote:Note = unspawnNotes[0];
-				notes.insert(0, dunceNote);
-				dunceNote.spawned = true;
-
-				var index:Int = unspawnNotes.indexOf(dunceNote);
-				unspawnNotes.splice(index, 1);
+				var dunceNote:Note = unspawnNotes.shift();
+				notes.insert(0, dunceNote).spawned = true;
 			}
 		}
 
@@ -213,11 +212,10 @@ class EditorPlayState extends MusicBeatSubstate
 	{
 		if (FlxG.sound.music.time >= -ClientPrefs.data.noteOffset)
 		{
-			if (Math.abs(FlxG.sound.music.time - (Conductor.songPosition - Conductor.offset)) > (20 * playbackRate)
-				|| (PlayState.SONG.needsVoices && Math.abs(vocals.time - (Conductor.songPosition - Conductor.offset)) > (20 * playbackRate)))
-			{
+			final maxDelay = 20 * playbackRate;
+			final realTime = Conductor.songPosition - Conductor.offset;
+			if (Math.abs(FlxG.sound.music.time - realTime) > maxDelay || (PlayState.SONG.needsVoices && Math.abs(vocals.time - realTime) > maxDelay))
 				resyncVocals();
-			}
 		}
 		super.stepHit();
 
@@ -297,11 +295,8 @@ class EditorPlayState extends MusicBeatSubstate
 		notes = new FlxTypedGroup<Note>();
 		add(notes);
 
-		var noteData:Array<SwagSection>;
-
 		// NEW SHIT
-		noteData = songData.notes;
-		for (section in noteData)
+		for (section in songData.notes)
 		{
 			for (songNotes in section.sectionNotes)
 			{
@@ -716,10 +711,10 @@ class EditorPlayState extends MusicBeatSubstate
 		}
 	}
 
-	function spawnNoteSplash(x:Float, y:Float, data:Int, ?note:Note = null) {
-		var splash:NoteSplash = grpNoteSplashes.recycle(NoteSplash);
-		splash.setupNoteSplash(x, y, data, note);
-		grpNoteSplashes.add(splash);
+	static final __splashFactory = () -> { final s = new NoteSplash(); s.scrollFactor.set(); return s; };
+	inline function spawnNoteSplash(x:Float, y:Float, data:Int, ?note:Note)
+	{
+		grpNoteSplashes.add(grpNoteSplashes.recycle(NoteSplash, __splashFactory)).setupNoteSplash(x, y, data, note);
 	}
 	
 	function resyncVocals():Void

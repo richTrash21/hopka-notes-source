@@ -155,7 +155,7 @@ class Character extends objects.ExtendedSprite
 			healthColor = FlxColor.fromRGB(json.healthbar_colors[0], json.healthbar_colors[1], json.healthbar_colors[2]);
 
 		// antialiasing
-		antialiasing = ClientPrefs.data.antialiasing ? !(noAntialiasing = json.no_antialiasing) : false;
+		antialiasing = ClientPrefs.data.antialiasing && !(noAntialiasing = json.no_antialiasing);
 
 		// animations
 		animationsArray = json.animations;

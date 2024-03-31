@@ -31,10 +31,10 @@ typedef SwagSong =
 	@:optional var splashSkin:String;
 }
 
-@:structInit class Song
+/*@:structInit*/ class Song
 {
 	// IDFK WHAT THESE ARE BUT APARENTLY THEY WERE IN VS FORDICK'S CHARTS LMAO
-	//public static final invalidFields = ["player3", "validScore", "isHey", "cutsceneType", "isSpooky", "isMoody", "uiType", "sectionLengths"];
+	// public static final invalidFields = ["player3", "validScore", "isHey", "cutsceneType", "isSpooky", "isMoody", "uiType", "sectionLengths"];
 	public static final validFields = Type.getInstanceFields(Song);
 
 	public static function loadFromJson(jsonInput:String, ?folder:String):Song
@@ -103,7 +103,7 @@ typedef SwagSong =
 	}
 
 	public var song:String = "";
-	public var notes:Array<SwagSection>;
+	public var notes:Array<Section>;
 	public var events:Array<Dynamic>;
 	public var bpm:Float = 100;
 	public var needsVoices:Bool = true;
@@ -129,7 +129,9 @@ typedef SwagSong =
 	{
 		for (field in Reflect.fields(SONG))
 		{
-			if (validFields.contains(field))
+			if (field == "notes")
+				notes = [for (section in SONG.notes) new Section(section)];
+			else if (validFields.contains(field))
 				Reflect.setField(this, field, Reflect.field(SONG, field));
 			else
 			{

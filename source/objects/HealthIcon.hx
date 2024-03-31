@@ -106,7 +106,7 @@ class HealthIcon extends ExtendedSprite
 		updateHitbox();
 		// offset.set();
 
-		antialiasing = char.endsWith("-pixel") ? false : (ClientPrefs.data.antialiasing ? json.antialias ?? true : false);
+		antialiasing = char.endsWith("-pixel") ? false : (ClientPrefs.data.antialiasing && json.antialias);
 
 		if (!animExists(char))
 			addAnim(char, [for (i in 0...numFrames) i], 0, false, flip);

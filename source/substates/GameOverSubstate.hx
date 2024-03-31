@@ -45,7 +45,7 @@ class GameOverSubstate extends MusicBeatSubstate
 	public static var instance(default, null):GameOverSubstate;
 	public static var game(default, null):PlayState;
 
-	public static function resetVariables(_song:backend.Song.SwagSong)
+	public static function resetVariables(_song:backend.Song)
 	{
 		if (_song == null)
 			return;

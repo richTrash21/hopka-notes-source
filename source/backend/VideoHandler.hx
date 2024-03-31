@@ -126,7 +126,12 @@ import openfl.display.BitmapData;
 
 class VideoHandler extends hxvlc.openfl.Video
 {
-	@:noCompletion override function this_onEnterFrame(event:openfl.events.Event):Void
+	public function new(smoothing = true)
+	{
+		super(ClientPrefs.data.antialiasing && smoothing);
+	}
+
+	@:noCompletion override function this_onEnterFrame(_):Void
 	{
 		if (!events.contains(true))
 			return;

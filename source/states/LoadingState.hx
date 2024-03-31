@@ -26,6 +26,7 @@ class LoadingState extends flixel.FlxState
 	public static var loadMax:Int = 0;
 
 	static var dontPreloadDefaultVoices:Bool = false;
+	static var __preloadSong:Bool = false;
 
 	static final requestedBitmaps = new Map<String, BitmapData>();
 	static final imagesToPrepare = new Array<String>();
@@ -35,7 +36,7 @@ class LoadingState extends flixel.FlxState
 
 	static final mutex = new Mutex();
 
-	inline static public function loadAndSwitchState(target:NextState, stopMusic = false, intrusive = true)
+	inline static public function loadAndSwitchState(target:NextState, stopMusic = false, intrusive = false)
 	{
 		MusicBeatState.switchState(getNextState(target, stopMusic, intrusive));
 	}
@@ -43,7 +44,7 @@ class LoadingState extends flixel.FlxState
 	static function checkLoaded():Bool
 	{
 		for (key => bitmap in requestedBitmaps)
-			trace(((bitmap == null || Paths.cacheBitmap(key, bitmap) == null) ? "failed to cache" : "finished preloading") + 'image $key');
+			trace(((bitmap == null || Paths.cacheBitmap(key, bitmap) == null) ? "failed to cache" : "finished preloading") + ' image $key');
 
 		requestedBitmaps.clear();
 		return (loaded == loadMax);
@@ -73,24 +74,30 @@ class LoadingState extends flixel.FlxState
 		if (stopMusic && FlxG.sound.music != null)
 			FlxG.sound.music.stop();
 		
-		if (doPrecache)
-		{
-			startThreads();
-			while (true)
+		if (doPrecache) // preload before state creation
+			FlxG.signals.preStateCreate.addOnce((state) ->
 			{
-				if (checkLoaded())
+				state.alive = state.exists = false; // bypass killMembers()
+				startThreads();
+				prepareToSong();
+				__preloadSong = false;
+				while (true)
 				{
-					imagesToPrepare.clearArray();
-					soundsToPrepare.clearArray();
-					musicToPrepare.clearArray();
-					songsToPrepare.clearArray();
-					break;
-				}
+					if (checkLoaded())
+					{
+						imagesToPrepare.clearArray();
+						soundsToPrepare.clearArray();
+						musicToPrepare.clearArray();
+						songsToPrepare.clearArray();
+						state.alive = state.exists = true;
+						break;
+					}
 
-				// wait 0.01 sec until next loop...
-				Sys.sleep(.01);
-			}
-		}
+					// wait 0.01 sec until next loop...
+					Sys.sleep(.01);
+				}
+			});
+
 		return target;
 	}
 
@@ -115,6 +122,12 @@ class LoadingState extends flixel.FlxState
 
 	public static function prepareToSong()
 	{
+		if (!__preloadSong)
+		{
+			__preloadSong = true;
+			return;
+		}
+		__preloadSong = false;
 		final folder = Paths.formatToSongPath(PlayState.SONG.song);
 		/*try
 		{
@@ -233,7 +246,7 @@ class LoadingState extends flixel.FlxState
 		for (music in musicToPrepare)
 			initThread(() -> Paths.music(music), 'music $music');
 		for (song in songsToPrepare)
-			initThread(() -> Paths.returnSound(null, song, 'songs'), 'song $song');
+			initThread(() -> Paths.returnSound("songs", song), 'song $song');
 
 		// for images, they get to have their own thread
 		for (image in imagesToPrepare)
@@ -246,7 +259,7 @@ class LoadingState extends flixel.FlxState
 					var bitmap:BitmapData = null;
 					#if MODS_ALLOWED
 					file = Paths.modsImages(image);
-					if (Paths.currentTrackedAssets.exists(file))
+					if (Paths.hasGraphic(file)) // Paths.currentTrackedAssets.exists(file)
 					{
 						mutex.release();
 						loaded++;
@@ -258,7 +271,7 @@ class LoadingState extends flixel.FlxState
 					#end
 					{
 						file = Paths.getPath('images/$image.png', IMAGE);
-						if (Paths.currentTrackedAssets.exists(file))
+						if (Paths.hasGraphic(file)) // Paths.currentTrackedAssets.exists(file)
 						{
 							mutex.release();
 							loaded++;
@@ -356,7 +369,8 @@ class LoadingState extends flixel.FlxState
 		this.target = target;
 		this.stopMusic = stopMusic;
 		startThreads();
-		
+		prepareToSong();
+		__preloadSong = false;
 		super();
 	}
 

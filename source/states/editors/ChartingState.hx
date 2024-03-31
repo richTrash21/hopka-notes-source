@@ -407,7 +407,7 @@ class ChartingState extends MusicBeatUIState
 			#end
 			{
 				clearEvents();
-				final events:SwagSong = Song.loadFromJson('events', songName);
+				final events = Song.loadFromJson('events', songName);
 				_song.events = _song.events.concat(events.events);
 				changeSection(curSec);
 			}
@@ -1598,6 +1598,7 @@ class ChartingState extends MusicBeatUIState
 		{
 			if (FlxG.keys.justPressed.ESCAPE)
 			{
+				persistentUpdate = false;
 				FlxG.sound.music.pause();
 				if(vocals != null) vocals.pause();
 
@@ -2625,7 +2626,7 @@ class ChartingState extends MusicBeatUIState
 
 	private function addSection(sectionBeats:Float = 4):Void
 	{
-		final sec:SwagSection = {
+		_song.notes.push(new Section({
 			sectionBeats: sectionBeats,
 			bpm: _song.bpm,
 			changeBPM: false,
@@ -2634,9 +2635,7 @@ class ChartingState extends MusicBeatUIState
 			sectionNotes: [],
 			typeOfSection: 0,
 			altAnim: false
-		};
-
-		_song.notes.push(sec);
+		}));
 	}
 
 	function selectNote(note:Note):Void

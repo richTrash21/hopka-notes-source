@@ -118,6 +118,11 @@ class VideoSprite extends flixel.FlxSprite
 	public var bitmap(default, null):VideoHandler;
 
 	public var autoScale = true;
+	public var volume = 1.0;
+
+	#if FLX_SOUND_SYSTEM
+	@:noCompletion var __volume = FlxG.sound.volume;
+	#end
  
 	/**
 	 * Creates a `FlxVideoSprite` at a specified position.
@@ -130,8 +135,10 @@ class VideoSprite extends flixel.FlxSprite
 		super(x, y);
 
 		makeGraphic(1, 1, FlxColor.TRANSPARENT);
+		@:bypassAccessor
+		antialiasing = ClientPrefs.data.antialiasing;
 
-		bitmap = new VideoHandler(antialiasing);
+		bitmap = new VideoHandler();
 		bitmap.onOpening.add(() -> bitmap.role = hxvlc.externs.Types.LibVLC_Media_Player_Role_T.LibVLC_Role_Game);
 		bitmap.onFormatSetup.add(() -> { loadGraphic(bitmap.bitmapData); adjustSize(); });
 		// bitmap.visible = false;
@@ -257,32 +264,40 @@ class VideoSprite extends flixel.FlxSprite
 
 	public override function update(elapsed:Float):Void
 	{
-		#if FLX_SOUND_SYSTEM
 		if (autoVolumeHandle)
-		{
-			final curVolume:Int = Math.floor((FlxG.sound.muted || FlxG.sound.volume == 0) ? 0 : FlxG.sound.volume * 100 + 40);
-
-			if (bitmap.volume != curVolume)
-				bitmap.volume = curVolume;
-		}
-		#end
+			updateVolume();
 
 		super.update(elapsed);
 	}
 
-	@:noCompletion function cameraResized(camera:FlxCamera)
+	extern inline function updateVolume():Void
+	{
+		var mute:Bool;
+		#if FLX_SOUND_SYSTEM
+		mute = (FlxG.sound.muted || FlxG.sound.volume == 0.0 || volume == 0.0);
+		#else
+		mute = (volume == 0.0);
+		#end
+	
+		final curVolume = mute ? 0 : Math.floor(#if FLX_SOUND_SYSTEM FlxG.sound.volume * #end volume * 100 + 40);
+		if (bitmap.volume != curVolume)
+			bitmap.volume = curVolume;
+	}
+
+	@:noCompletion function cameraResized(camera:FlxCamera):Void
 	{
 		if (camera == this.camera)
 			adjustSize();
 	}
 
-	@:noCompletion function adjustSize()
+	@:noCompletion function adjustSize():Void
 	{
 		if (autoScale)
 		{
 			setGraphicSize(camera.width / camera.scaleX, camera.height / camera.scaleY);
 			updateHitbox();
-			screenCenter();
+			// screenCenter();
+			centerOffsets();
 		}
 	}
 
@@ -292,6 +307,17 @@ class VideoSprite extends flixel.FlxSprite
 			bitmap.smoothing = value;
 
 		return antialiasing = value;
+	}
+
+	@:noCompletion function set_volume(value:Float):Float
+	{
+		value = FlxMath.bound(value, 0.0, 1.0);
+		if (volume != value)
+		{
+			volume = value;
+			updateVolume();
+		}
+		return value;
 	}
 }
 #end

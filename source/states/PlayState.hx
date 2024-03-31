@@ -971,7 +971,7 @@ class PlayState extends MusicBeatState
 		videoPlayer.load(filepath);
 		videoPlayer.play();
 		#end
-		videoPlayer.antialiasing = ClientPrefs.data.antialiasing ? antialias : false;
+		videoPlayer.antialiasing = ClientPrefs.data.antialiasing && antialias;
 		return true;
 		#else
 		FlxG.log.warn("Platform not supported!");
@@ -2432,7 +2432,7 @@ class PlayState extends MusicBeatState
 				FlxG.sound.music.stop();
 
 				cancelMusicFadeTween();
-				// LoadingState.prepareToSong();
+				LoadingState.prepareToSong();
 				LoadingState.loadAndSwitchState(PlayState.new);
 			}
 		}

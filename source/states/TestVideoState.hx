@@ -5,25 +5,33 @@ import backend.VideoSprite;
 
 class TestVideoState extends flixel.FlxState
 {
-	static final videos = ["flopa", "pep", "yap"];
+	static final videos = ["flopa", "pep", "yap", "developing", "baraki"];
 	var video:VideoSprite;
 
 	override public function create()
 	{
 		FlxG.sound.music.volume = 0;
 		FlxTransitionableState.skipNextTransOut = FlxTransitionableState.skipNextTransIn = true;
-		video = new VideoSprite();
-		final status = video.load(Paths.video(FlxG.random.getObject(videos)));
-		video.bitmap.onEndReached.add(MusicBeatState.switchState.bind(MainMenuState.new), true);
-		add(video);
-		video.play();
-		trace('video loaded: $status');
+
+		final loading = new FlxText("LOADING...", 32);
+		add(loading.screenCenter());
+
+		sys.thread.Thread.create(() ->
+		{
+			video = new VideoSprite();
+			video.bitmap.onEndReached.add(MusicBeatState.switchState.bind(MainMenuState.new), true);
+			add(video);
+			final status = video.load(Paths.video(FlxG.random.getObject(videos)));
+			trace('video loaded: $status');
+			video.play();
+			loading.kill();
+		});
 	}
 
 	override public function update(elapsed:Float)
 	{
 		super.update(elapsed);
-		if (FlxG.keys.justPressed.SPACE)
+		if (FlxG.keys.justPressed.SPACE && video != null)
 		{
 			if (video.bitmap.isPlaying)
 				video.pause();
