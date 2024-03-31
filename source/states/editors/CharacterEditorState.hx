@@ -64,6 +64,8 @@ class CharacterEditorState extends backend.MusicBeatUIState
 
 	override function create()
 	{
+		HealthIcon.jsonCache.clear();
+		Character.jsonCache.clear();
 		if (ClientPrefs.data.cacheOnGPU)
 		{
 			Paths.clearUnusedMemory();
@@ -121,7 +123,7 @@ class CharacterEditorState extends backend.MusicBeatUIState
 		add(ghost);
 
 		// addCharacter();
-		character = new Character(0, 0, _char, !predictCharacterIsNotPlayer(_char));
+		character = new Character(0, 0, _char, !predictCharacterIsNotPlayer(_char), true, false);
 		character.debugMode = true;
 		add(character);
 
@@ -135,7 +137,7 @@ class CharacterEditorState extends backend.MusicBeatUIState
 		add(healthBar);
 		healthBar.cameras = [camHUD];
 
-		healthIcon = new HealthIcon(character.healthIcon, false, false);
+		healthIcon = new HealthIcon(character.healthIcon, false, false, false);
 		healthIcon.y = FlxG.height - 150;
 		add(healthIcon);
 		healthIcon.cameras = [camHUD];
@@ -275,19 +277,16 @@ class CharacterEditorState extends backend.MusicBeatUIState
 			ghost.animation.play(character.animation.curAnim.name, true, false, character.animation.curAnim.curFrame);
 			ghost.animation.pause();
 
-			if (ghost != null)
-			{
-				ghost.setPosition(character.x, character.y);
-				ghost.antialiasing = character.antialiasing;
-				ghost.flipX = character.flipX;
-				ghost.alpha = ghostAlpha;
+			ghost.setPosition(character.x, character.y);
+			ghost.antialiasing = character.antialiasing;
+			ghost.flipX = character.flipX;
+			ghost.alpha = ghostAlpha;
 
-				ghost.scale.copyFrom(character.scale);
-				ghost.updateHitbox();
+			ghost.scale.copyFrom(character.scale);
+			ghost.updateHitbox();
 
-				ghost.offset.copyFrom(character.curAnimOffset);
-				ghost.visible = true;
-			}
+			ghost.offset.copyFrom(character.animOffsets.get(character.animation.curAnim.name));
+			ghost.visible = true;
 			/*hideGhostButton.active = true;
 			hideGhostButton.alpha = 1;*/
 			trace("created ghost image");
@@ -905,7 +904,7 @@ class CharacterEditorState extends backend.MusicBeatUIState
 			}
 		}
 
-		final offset = character.curAnimOffset;
+		final offset = character.animation.curAnim == null ? null : character.animOffsets.get(character.animation.curAnim.name);
 
 		var changedOffset = false;
 		var moveKeysP = [FlxG.keys.justPressed.LEFT,	FlxG.keys.justPressed.RIGHT,	FlxG.keys.justPressed.UP,	FlxG.keys.justPressed.DOWN];

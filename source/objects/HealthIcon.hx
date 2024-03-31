@@ -53,11 +53,11 @@ class HealthIcon extends ExtendedSprite
 
 	var _speed = 9.0;
 
-	public function new(char = "bf", isPlayer = false, allowGPU = true)
+	public function new(char = "bf", isPlayer = false, allowGPU = true, ?useCache = true)
 	{
 		super();
 		this.isPlayer = isPlayer;
-		changeIcon(char, allowGPU);
+		changeIcon(char, allowGPU, useCache);
 	}
 
 	override function update(elapsed:Float)

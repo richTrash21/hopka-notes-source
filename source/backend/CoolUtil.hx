@@ -120,14 +120,11 @@ class CoolUtil
 		return Math.isNaN(num) ? null : num;
 	}
 
-	public static function fwrap(value:Float, min:Float, max:Float):Float
+	// should work ig
+	inline public static function fwrap(value:Float, min:Float, max:Float):Float
 	{
-		final range = max - min + 1;
-
-		if (value < min)
-			value += range * ((min - value) / range + 1);
-
-		return min + (value - min) % range;
+		final range = max - min;
+		return min + ((value < min ? value + range : value) - min) % (range + FlxPoint.EPSILON_SQUARED); // FlxPoint.EPSILON // less acurate solution
 	}
 
 	/**

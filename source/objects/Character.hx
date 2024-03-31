@@ -11,6 +11,7 @@ import openfl.utils.Assets;
 class Character extends objects.ExtendedSprite
 {
 	inline public static final DEFAULT_CHARACTER = "bf"; // In case a character is missing, it will use BF on its place
+	inline public static final UNKNOWN_CHARACTER = "__unknown__character__";
 	public static final jsonCache = new Map<String, CharacterFile>();
 
 	public static function resolveCharacterData(data:CharacterData, ?useCache = true):CharacterFile
@@ -18,11 +19,12 @@ class Character extends objects.ExtendedSprite
 		// from character name
 		if (data is String)
 		{
-			if (useCache && jsonCache.exists(data))
-				return jsonCache.get(data);
+			final name = cast (data, String);
+			if (useCache && jsonCache.exists(name))
+				return jsonCache.get(name);
 
 			var path:String;
-			final characterPath = 'characters/$data.json';
+			final characterPath = 'characters/$name.json';
 			#if MODS_ALLOWED
 			path = Paths.modFolders(characterPath);
 			if (!FileSystem.exists(path))
@@ -37,7 +39,7 @@ class Character extends objects.ExtendedSprite
 	
 			final json:CharacterFile = cast haxe.Json.parse(#if MODS_ALLOWED sys.io.File.getContent(path) #else Assets.getText(path) #end);
 			if (useCache)
-				jsonCache.set(data, json);
+				jsonCache.set(name, json);
 			return json;
 		}
 		// nvmd just standart character file data
@@ -83,29 +85,30 @@ class Character extends objects.ExtendedSprite
 	public var cameraPosition(get, set):Array<Float>;
 	public var healthColorArray(get, set):Array<Int>;
 
-	public function new(?x = 0., ?y = 0., character:String, isPlayer = false, ?allowGPU = true)
+	public function new(?x = 0., ?y = 0., character:String, isPlayer = false, ?allowGPU = true, ?useCache = true)
 	{
 		super(x, y);
 		camFollowOffset = new FlxCallbackPoint(updateCamFollow);
 		// curCharacter = character;
 
-		loadCharacter(character, allowGPU);
+		loadCharacter(character, allowGPU, useCache);
 		this.isPlayer = isPlayer;
 		firstSetup = false;
 	}
 
 	public function loadCharacter(data:CharacterData, ?gpu = true, ?useCache = true)
 	{
-		final isCharName = data is String;
-		final json = resolveCharacterData(data, useCache);
-		if (!debugMode && isCharName && data == curCharacter)
+		final name = data is String ? cast (data, String) : UNKNOWN_CHARACTER;
+		if (!debugMode && name == curCharacter)
 			return;
+
+		final json = resolveCharacterData(data, useCache);
 
 		// remove old positioning
 		subtractPosition(position.x, position.y);
 
 		// reset data
-		curCharacter = isCharName ? data : "unknown";
+		curCharacter = name;
 		hasMissAnimations = specialAnim = skipDance = danceIdle = stunned = false;
 		settingCharacterUp = true;
 		holdTimer = heyTimer = 0;

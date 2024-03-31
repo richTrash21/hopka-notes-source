@@ -110,14 +110,6 @@ class GameCamera extends FlxCamera
 		return checkForTweens = bool;
 	}
 
-	/*@:noCompletion override function set_active(bool:Bool):Bool
-	{
-		if (!bool)
-			tweeningZoom = false;
-
-		return active = bool;
-	}*/
-
 	/*@:noCompletion function set_updateLerp(bool:Bool):Bool
 	{
 		if (!bool)
@@ -142,9 +134,8 @@ class GameCamera extends FlxCamera
 		}
 		else
 		{
-			var edge:Float;
-			var targetX:Float = target.x + targetOffset.x;
-			var targetY:Float = target.y + targetOffset.y;
+			final targetX = target.x + targetOffset.x;
+			final targetY = target.y + targetOffset.y;
 
 			if (style == SCREEN_BY_SCREEN)
 			{
@@ -171,7 +162,7 @@ class GameCamera extends FlxCamera
 			}
 			else
 			{
-				edge = targetX - deadzone.x;
+				var edge = targetX - deadzone.x;
 				if (_scrollTarget.x > edge)
 				{
 					_scrollTarget.x = edge;

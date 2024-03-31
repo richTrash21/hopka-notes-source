@@ -5,18 +5,17 @@ import flixel.util.FlxStringUtil;
 using flixel.util.FlxArrayUtil;
 
 /**  FlxText.hx jumpscare!!  **/
+@:allow(Init)
 class Subtitles extends FlxText
 {
-	@:allow(Init)
 	static var _markup = new Array<FlxTextFormatMarkerPair>();
-	@:allow(Init)
 	static var __posY = 0.;
 
 	public var lineID(default, null):Int;
-	public var playing(get, never):Bool;
+	public var playing(default, null):Bool;
 	public var useMarkup:Bool = true;
 
-	var _parsedLines:Array<SRTData>;
+	var _parsedLines = new Array<SRTData>();
 	var _time:Float;
 
 	public function new(?data:String, ?alignment:FlxTextAlign)
@@ -25,51 +24,63 @@ class Subtitles extends FlxText
 		font = Paths.font("vcr.ttf");
 		this.alignment = alignment ?? CENTER;
 		setBorderStyle(OUTLINE, FlxColor.BLACK, 2);
-		loadSubtitles(data).screenCenter(X).y = FlxG.height * 0.75;
+		if (data != null)
+			loadSubtitles(data);
+		screenCenter(X).y = FlxG.height * 0.75;
 		offset.y = height * 0.5;
 	}
 
 	override function update(elapsed:Float)
 	{
 		super.update(elapsed);
-		if (_parsedLines?.length == 0) // нету парснутых лайнов - идешь нахуй :3
+		if (_parsedLines.length == 0) // нету парснутых лайнов - идешь нахуй :3
 			return; // ну а если серьезно, то это позволяет использовать субтитры как обычный текст, а затем просто загрузить в него реальные субтитры
 
 		_time += elapsed;
-		for (line in _parsedLines)
+		// for (line in _parsedLines)
+		var line:SRTData;
+		while (_time >= _parsedLines[0].start)
 		{
+			line = _parsedLines[0];
 			if (_time > line.end) // чистим мусор
 			{
-				_parsedLines.fastSplice(line).sort(SRTData.sortLines);
+				// _parsedLines.fastSplice(line).sort(SRTData.sortLines);
+				_parsedLines.shift();
+				text = "";
 				if (_parsedLines.length == 0)
 				{
-					text = "";
-					visible = true;
+					// visible = true;
+					playing = false;
+					break;
 				}
 				continue;
 			}
 
-			if (FlxMath.inBounds(_time, line.start, line.end))
+			// if (FlxMath.inBounds(_time, line.start, line.end))
+			// {
+			if (lineID != line.id)
 			{
-				if (lineID != line.id)
-				{
-					lineID = line.id;
-					setText(line.text, true);
-				}
-				break;
+				lineID = line.id;
+				setText(line.text, true);
 			}
-			else
-				text = "";
+			break;
+			// }
+			// else
+			//	text = "";
 		}
 	}
 
 	public function loadSubtitles(data:String):Subtitles
 	{
-		_parsedLines = SRTData.parseSRT(data);
-		_time = 0.0;
-		lineID = 0;
-		text = "";
-		trace('Parsed subtitles: $_parsedLines');
+		SRTData.parseSRT(data, _parsedLines);
+		if (_parsedLines.length != 0)
+		{
+			playing = true;
+			_time = 0.0;
+			lineID = 0;
+			text = "";
+			trace('Parsed subtitles: $_parsedLines');
+		}
 		return this;
 	}
 
@@ -79,7 +90,7 @@ class Subtitles extends FlxText
 		_time = 0.0;
 		lineID = 0;
 		text = "";
-		trace("Stoped subtitles!!");
+		trace("Stoped subtitles!");
 		return this;
 	}
 
@@ -96,10 +107,18 @@ class Subtitles extends FlxText
 		return this;
 	}
 
-	@:noCompletion inline function get_playing():Bool
+	override function destroy()
+	{
+		if (_parsedLines != null)
+			_parsedLines.clearArray();
+		_parsedLines = null;
+		super.destroy();
+	}
+
+	/*@:noCompletion inline function get_playing():Bool
 	{
 		return _parsedLines?.length > 0;
-	}
+	}*/
 }
 
 @:structInit class SRTData

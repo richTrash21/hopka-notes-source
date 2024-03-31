@@ -5,7 +5,7 @@ import backend.VideoSprite;
 
 class TestVideoState extends flixel.FlxState
 {
-	static final videos = ["flopa", "pep"];
+	static final videos = ["flopa", "pep", "yap"];
 	var video:VideoSprite;
 
 	override public function create()

@@ -330,7 +330,7 @@ class PlayState extends MusicBeatState
 		// for lua
 		instance = this;
 
-		PauseSubState.songName = null; //Reset to default
+		PauseSubState.songName = null; // Reset to default
 		playbackRate = ClientPrefs.getGameplaySetting("songspeed");
 
 		if (FlxG.sound.music != null)
@@ -613,6 +613,18 @@ class PlayState extends MusicBeatState
 		subtitles = new Subtitles();
 		subtitles.camera = camOther;
 		add(subtitles);
+
+		#if (VIDEOS_ALLOWED && !hxCodec)
+		// reusable player, finally!!
+		videoPlayer = new VideoHandler();
+		videoPlayer.camera = camOther;
+		videoPlayer.bitmap.onEndReached.add(endVideo);
+		videoPlayer.bitmap.onOpening.add(playVideo, true); // only when sprite was just created
+		videoPlayer.bitmap.onDisplay.add(playVideo); // let graphic change first and then revive the sprite
+		videoPlayer.bitmap.onEncounteredError.add(videoError);
+		// insert(members.indexOf(subtitles), videoPlayer);
+		add(videoPlayer);
+		#end
 		
 		scoreGroup.camera	=	strumLineNotes.camera	=	grpNoteSplashes.camera	=
 		notes.camera		=	healthBar.camera		=	iconP1.camera			=
@@ -861,9 +873,7 @@ class PlayState extends MusicBeatState
 	{
 		if (gfCheck && char.curCharacter.startsWith("gf")) // IF DAD IS GIRLFRIEND, HE GOES TO HER POSITION
 		{
-			// char.setPosition(GF_POS.x, GF_POS.y);
-			char.setPosition(GF_POS.x, GF_POS.y);
-			char.addPosition(char.position.x, char.position.y);
+			char.setPosition(GF_POS.x + char.position.x, GF_POS.y + char.position.y);
 			char.danceEveryNumBeats = 2;
 		}
 		// char.addPosition(char.position.x, char.position.y);
@@ -871,14 +881,62 @@ class PlayState extends MusicBeatState
 
 	#if VIDEOS_ALLOWED
 	public var videoPlayer:VideoHandler;
-	#end
 	public var subtitles:Subtitles;
-	public function startVideo(name:String, antialias = true):Bool // TODO: actual subtitles (done!!)
+
+	#if !hxCodec
+	@:noCompletion var __reviveVideo = false;
+	#end
+
+	@:noCompletion function playVideo()
+	{
+		inline function __subtitles()
+		{
+			if (subtitles.playing)
+				subtitles.revive();
+		}
+
+		#if hxCodec
+		__subtitles();
+		#else
+		if (__reviveVideo)
+		{
+			__subtitles();
+			videoPlayer.exists = true;
+			__reviveVideo = false;
+		}
+		#end
+	}
+
+	@:noCompletion function endVideo()
+	{
+		startAndEnd();
+
+		#if hxCodec
+		if (videoPlayer != null)
+			remove(videoPlayer);
+		videoPlayer = FlxDestroyUtil.destroy(videoPlayer);
+		#else
+		videoPlayer.stop();
+		videoPlayer.exists = false;
+		#end
+
+		if (subtitles.playing)
+			subtitles.stopSubtitles();
+	}
+
+	@:noCompletion function videoError(msg:String)
+	{
+		trace('startVideo: $msg');
+		endVideo();
+	}
+	#end
+
+	public function startVideo(name:String, antialias = true):Bool
 	{
 		#if VIDEOS_ALLOWED
 		inCutscene = true;
 
-		final filepath:String = Paths.video(name);
+		final filepath = Paths.video(name);
 		if (#if sys !FileSystem.exists(filepath) #else !OpenFlAssets.exists(filepath) #end)
 		{
 			FlxG.log.warn('Couldnt find video file: $name');
@@ -886,20 +944,18 @@ class PlayState extends MusicBeatState
 			return false;
 		}
 
-		function loadSubtitles()
+		final subs = Paths.getTextFromFile(Paths.srt(name), false, true);
+		if (subs != null)
 		{
-			final subs = Paths.getTextFromFile(Paths.srt(name), false, true);
-			if (subs != null)
-			{
-				subtitles.loadSubtitles(subs);
-				insert(members.indexOf(videoPlayer), remove(subtitles, true));
-			}
+			subtitles.loadSubtitles(subs);
+			subtitles.kill(); // stop subtitles from updating until video is loaded
 		}
 
+		#if hxCodec
 		videoPlayer = new VideoHandler();
 		videoPlayer.camera = camOther;
-		videoPlayer.antialiasing = ClientPrefs.data.antialiasing ? antialias : false;
-		#if hxCodec
+		insert(members.indexOf(subtitles), videoPlayer);
+		// add(videoPlayer);
 		#if (hxCodec >= "3.0.0")
 		// Recent versions
 		videoPlayer.play(filepath);
@@ -908,20 +964,14 @@ class PlayState extends MusicBeatState
 		// Older versions
 		videoPlayer.playVideo(filepath);
 		videoPlayer.finishCallback = endVideo;
-		videoPlayer.readyCallback = loadSubtitles;
+		videoPlayer.readyCallback = playVideo;
 		#end
 		#else
+		__reviveVideo = true;
 		videoPlayer.load(filepath);
-		videoPlayer.bitmap.onEndReached.add(endVideo, true);
-		videoPlayer.bitmap.onOpening.add(loadSubtitles, true);
-		final loaded = videoPlayer.play();
-		if (!loaded)
-		{
-			endVideo();
-			return false;
-		}
+		videoPlayer.play();
 		#end
-		add(videoPlayer);
+		videoPlayer.antialiasing = ClientPrefs.data.antialiasing ? antialias : false;
 		return true;
 		#else
 		FlxG.log.warn("Platform not supported!");
@@ -929,17 +979,6 @@ class PlayState extends MusicBeatState
 		return true;
 		#end
 	}
-
-	#if VIDEOS_ALLOWED
-	function endVideo()
-	{
-		startAndEnd();
-		remove(videoPlayer);
-		videoPlayer = FlxDestroyUtil.destroy(videoPlayer);
-		if (subtitles.playing)
-			subtitles.stopSubtitles();
-	}
-	#end
 
 	inline function startAndEnd() return endingSong ? endSong() : startCountdown();
 
@@ -1950,8 +1989,6 @@ class PlayState extends MusicBeatState
 		DiscordClient.resetClientID();
 		#end
 		MusicBeatState.switchState(CharacterEditorState.new.bind(SONG.player2, true));
-		HealthIcon.jsonCache.clear();
-		Character.jsonCache.clear();
 	}
 	#end
 
@@ -2322,8 +2359,6 @@ class PlayState extends MusicBeatState
 		canPause = false;
 		deathCounter = 0;
 
-		//FlxG.camera.pixelPerfectRender = false;
-		//camHUD.pixelPerfectRender = false;
 		timeBar.visible = timeTxt.visible = seenCutscene = camZooming = inCutscene = updateTime = false;
 
 		#if ACHIEVEMENTS_ALLOWED
@@ -2339,6 +2374,13 @@ class PlayState extends MusicBeatState
 		#end
 		playbackRate = 1.0;
 
+		// clear json cache on leaving playstate
+		if (chartingMode || (isStoryMode && storyPlaylist.length < 2) || !isStoryMode)
+		{
+			HealthIcon.jsonCache.clear();
+			Character.jsonCache.clear();
+		}
+
 		#if !RELESE_BUILD_FR
 		if (chartingMode)
 		{
@@ -2351,8 +2393,7 @@ class PlayState extends MusicBeatState
 		{
 			campaignScore += songScore;
 			campaignMisses += songMisses;
-
-			storyPlaylist.remove(storyPlaylist[0]);
+			storyPlaylist.shift();
 
 			if (storyPlaylist.length == 0)
 			{
@@ -2374,6 +2415,7 @@ class PlayState extends MusicBeatState
 					FlxG.save.flush();
 				}
 				changedDifficulty = false;
+
 			}
 			else
 			{
@@ -2390,7 +2432,8 @@ class PlayState extends MusicBeatState
 				FlxG.sound.music.stop();
 
 				cancelMusicFadeTween();
-				LoadingState.loadAndSwitchState(new PlayState());
+				// LoadingState.prepareToSong();
+				LoadingState.loadAndSwitchState(PlayState.new);
 			}
 		}
 		else
@@ -2922,8 +2965,6 @@ class PlayState extends MusicBeatState
 		FlxArrayUtil.clearArray(Note.globalRgbShaders);
 		backend.NoteTypesConfig.clearNoteTypesData();
 		Note._lastValidChecked = null;
-		HealthIcon.jsonCache.clear();
-		Character.jsonCache.clear();
 
 		// properly destroys custom substates now, finally!!!
 		super.destroy();
@@ -3358,7 +3399,7 @@ class PlayState extends MusicBeatState
 			final unlock = if (name.endsWith("_nomiss")) // any FC achievements, name should be "weekFileName_nomiss", e.g: "week3_nomiss";
 			{
 				(isStoryMode && campaignMisses + songMisses < 1 && Difficulty.getString().toUpperCase() == "HARD"
-					&& storyPlaylist.length <= 1 && !changedDifficulty && !usedPractice);
+					&& storyPlaylist.length < 2 && !changedDifficulty && !usedPractice);
 			}
 			else // common achievements
 			{
@@ -3366,9 +3407,9 @@ class PlayState extends MusicBeatState
 				{
 					case "ur_bad":		 ratingPercent < 0.2 && !practiceMode;
 
-					case "ur_good":		 ratingPercent == 1 && !usedPractice;
+					case "ur_good":		 ratingPercent == 1.0 && !usedPractice;
 
-					case "oversinging":	 boyfriend.holdTimer >= 10 && !usedPractice;
+					case "oversinging":	 boyfriend.holdTimer >= 10.0 && !usedPractice;
 
 					case "hype":		 !boyfriendIdled && !usedPractice;
 

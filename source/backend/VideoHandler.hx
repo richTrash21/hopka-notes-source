@@ -122,6 +122,129 @@ class VideoHandler extends vlc.bitmap.VlcBitmap
 	}
 }
 #else
-typedef VideoHandler = hxvlc.openfl.Video;
+import openfl.display.BitmapData;
+
+class VideoHandler extends hxvlc.openfl.Video
+{
+	@:noCompletion override function this_onEnterFrame(event:openfl.events.Event):Void
+	{
+		if (!events.contains(true))
+			return;
+
+		if (events[0])
+		{
+			events[0] = false;
+
+			onOpening.dispatch();
+		}
+
+		if (events[1])
+		{
+			events[1] = false;
+
+			onPlaying.dispatch();
+		}
+
+		if (events[2])
+		{
+			events[2] = false;
+
+			onStopped.dispatch();
+		}
+
+		if (events[3])
+		{
+			events[3] = false;
+
+			onPaused.dispatch();
+		}
+
+		if (events[4])
+		{
+			events[4] = false;
+
+			onEndReached.dispatch();
+		}
+
+		if (events[5])
+		{
+			events[5] = false;
+
+			final errmsg:String = cast(hxvlc.externs.LibVLC.errmsg(), String);
+
+			onEncounteredError.dispatch(errmsg != null && errmsg.length > 0 ? errmsg : 'Could not specify the error');
+		}
+
+		if (events[6])
+		{
+			events[6] = false;
+
+			onMediaChanged.dispatch();
+		}
+
+		if (events[7])
+		{
+			events[7] = false;
+
+			var mustRecreate:Bool = false;
+
+			if (bitmapData != null)
+			{
+				if (bitmapData.width != formatWidth && bitmapData.height != formatHeight)
+				{
+					bitmapData.dispose();
+
+					if (texture != null)
+						texture.dispose();
+
+					mustRecreate = true;
+				}
+			}
+			else
+				mustRecreate = true;
+
+			if (mustRecreate)
+			{
+				try
+				{
+					if (ClientPrefs.data.cacheOnGPU)
+						texture = FlxG.stage.context3D.createTexture(formatWidth, formatHeight, BGRA, true);
+					else // 1gb cache guaranteed!
+					{
+						// lime.utils.Log.warn('Failed to use texture, resorting to CPU based image');
+
+						bitmapData = new BitmapData(formatWidth, formatHeight, true, 0);
+					}
+				}
+				catch (e:haxe.Exception)
+					lime.utils.Log.error('Failed to create video\'s texture');
+
+				if (texture != null)
+					bitmapData = BitmapData.fromTexture(texture);
+
+				onFormatSetup.dispatch();
+			}
+		}
+
+		if (events[8])
+		{
+			events[8] = false;
+
+			if (__renderable && planes != null)
+			{
+				final planesData:haxe.io.BytesData = cpp.Pointer.fromRaw(planes).toUnmanagedArray(formatWidth * formatHeight * 4);
+
+				if (texture != null)
+					texture.uploadFromByteArray(planesData, 0);
+				else if (bitmapData != null && bitmapData.image != null)
+					bitmapData.setPixels(bitmapData.rect, planesData);
+
+				__setRenderDirty();
+			}
+
+			onDisplay.dispatch();
+		}
+	}
+}
 #end
 #end

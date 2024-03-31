@@ -82,12 +82,8 @@ class DiscordClient
 
 		sys.thread.Thread.create(() ->
 		{
-			#if MODS_ALLOWED
 			final localID = clientID;
 			while (localID == clientID)
-			#else
-			while (true)
-			#end
 			{
 				#if DISCORD_DISABLE_IO_THREAD
 				Discord.UpdateConnection();

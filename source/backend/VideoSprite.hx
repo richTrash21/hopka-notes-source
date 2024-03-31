@@ -96,10 +96,7 @@ class VideoSprite extends flixel.FlxSprite
 	}
 }
 #else
-
-import hxvlc.util.OneOfThree;
 import sys.FileSystem;
-import haxe.io.Bytes;
 
 class VideoSprite extends flixel.FlxSprite
 {
@@ -152,7 +149,7 @@ class VideoSprite extends flixel.FlxSprite
 	 *
 	 * @return `true` if the video loaded successfully or `false` if there's an error.
 	 */
-	public function load(location:OneOfThree<String, Int, Bytes>, ?options:Array<String>):Bool
+	public function load(location:hxvlc.util.OneOfThree<String, Int, haxe.io.Bytes>, ?options:Array<String>):Bool
 	{
 		if (bitmap == null)
 			return false;

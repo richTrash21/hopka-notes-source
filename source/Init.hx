@@ -45,15 +45,15 @@ class Init extends flixel.FlxState
 			FlxG.fixedTimestep = ClientPrefs.data.fixedTimestep;
 			FlxG.game.focusLostFramerate = 60;
 			FlxG.keys.preventDefaultKeys = [TAB];
-
 			FlxG.updateFramerate = FlxG.drawFramerate = ClientPrefs.data.framerate;
+
+			if (Controls.instance == null)
+				Controls.instance = new Controls();
+			ClientPrefs.loadDefaultKeys();
 
 			#if LUA_ALLOWED
 			llua.Lua.set_callbacks_function(cpp.Callable.fromStaticFunction(psychlua.CallbackHandler.call));
 			#end
-			if (Controls.instance == null)
-				new Controls();
-			ClientPrefs.loadDefaultKeys();
 			#if ACHIEVEMENTS_ALLOWED
 			Achievements.load();
 			#end

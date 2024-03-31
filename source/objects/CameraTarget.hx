@@ -1,5 +1,6 @@
 package objects;
 
+import flixel.util.FlxDestroyUtil;
 import flixel.util.FlxStringUtil;
 import flixel.FlxObject;
 
@@ -27,13 +28,25 @@ class CameraTarget extends FlxObject
 	@:noCompletion override function initVars()
 	{
 		flixelType = OBJECT;
+		last = FlxPoint.get(x, y);
 		pixelPerfectPosition = FlxObject.defaultPixelPerfectPosition;
 	}
 
+	override public function destroy():Void
+	{
+		exists = false;
+		_cameras = null;
+		last = FlxDestroyUtil.put(last);
+		_point = FlxDestroyUtil.put(_point);
+		_rect = FlxDestroyUtil.put(_rect);
+	}
+
+	#if FLX_DEBUG @:access(flixel.FlxBasic.activeCount) #end
 	override public function update(elapsed:Float)
 	{
+		last.set(x, y);
 		#if FLX_DEBUG
-		@:access(flixel.FlxBasic.activeCount) flixel.FlxBasic.activeCount++;
+		flixel.FlxBasic.activeCount++;
 		#end
 	}
 

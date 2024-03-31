@@ -35,9 +35,22 @@ class ExtendedSprite extends FlxSprite
 		return sprite;
 	}
 
+	public static function scaleBySize<T:FlxSprite>(sprite:T, ?maxWidth:Float, ?maxHeight:Float):T
+	{
+		if (maxWidth == null)
+			maxWidth = FlxG.width;
+		if (maxHeight == null)
+			maxHeight = FlxG.height;
+
+		final ratio1 = sprite.width / sprite.height;
+		final ratio2 = FlxG.width / FlxG.height;
+		sprite.setGraphicSize(ratio1 >= ratio2 ? maxWidth : 0.0, ratio2 >= ratio1 ? maxHeight : 0.0);
+		return sprite;
+	}
+
 	public var onGraphicLoaded:()->Void;
 	public var animOffsets:Map<String, FlxPoint> = [];
-	public var curAnimOffset(get, never):Null<FlxPoint>;
+	// public var curAnimOffset(get, never):Null<FlxPoint>;
 
 	public var deltaX(default, null):Float;
 	public var deltaY(default, null):Float;
@@ -116,14 +129,15 @@ class ExtendedSprite extends FlxSprite
 	/*inline*/ public function addAnim(name:String, ?prefix:String, ?indices:Array<Int>, frameRate = 24., looped = true,
 			?flipX = false, ?flipY = false, ?loopPoint = 0):FlxAnimation
 	{
+		final indicesEmpty = (indices == null || indices.length == 0);
 		if (prefix != null)
 		{
-			if (indices?.length == 0)
+			if (indicesEmpty)
 				animation.addByPrefix(name, prefix, frameRate, looped, flipX, flipY);
 			else
 				animation.addByIndices(name, prefix, indices, "", frameRate, looped, flipX, flipY);
 		}
-		else if (indices?.length > 0)
+		else if (!indicesEmpty)
 			animation.add(name, indices, frameRate, looped, flipX, flipY);
 
 		final addedAnim = getAnimByName(name);
@@ -200,30 +214,6 @@ class ExtendedSprite extends FlxSprite
 		return point;
 	}
 
-	// bunch of overrides to implement animation offsets
-	/*override public function draw()
-	{
-		if (alpha == 0 || _frame.type == flixel.graphics.frames.FlxFrame.FlxFrameType.EMPTY)
-			return;
-
-		if (animation.curAnim == null)
-		{
-			super.draw();
-			return;
-		}
-
-		// get current animation's offsets
-		final __offset = animOffsets.get(animation.curAnim.name);
-		// add them to the current one's
-		if (__offset != null)
-			offset.addPoint(__offset);
-		// draw sprite
-		super.draw();
-		// revert
-		if (__offset != null)
-			offset.subtractPoint(__offset);
-	}*/
-
 	@:noCompletion override function drawSimple(camera:FlxCamera):Void
 	{
 		// skip if no animation is playing (it's null) or there is no offset for this animation
@@ -231,10 +221,10 @@ class ExtendedSprite extends FlxSprite
 			return super.drawSimple(camera);
 
 		__drawingWithOffset = true;
-		final __offset = curAnimOffset; // get current animation's offsets
-		offset.addPoint(__offset);		// add them to the current one's
-		super.drawSimple(camera);		// draw sprite
-		offset.subtractPoint(__offset);	// revert
+		final offset = animOffsets.get(animation.curAnim.name);	// get current animation's offsets
+		this.offset.addPoint(offset);							// add them to the current one's
+		super.drawSimple(camera);								// draw sprite
+		this.offset.subtractPoint(offset);						// revert
 		__drawingWithOffset = false;
 	}
 
@@ -246,10 +236,10 @@ class ExtendedSprite extends FlxSprite
 
 		__drawingWithOffset = true;
 		// get current animation's offsets
-		final __offset = curAnimOffset; // get current animation's offsets
-		offset.addPoint(__offset);		// add them to the current one's
-		super.drawComplex(camera);		// draw sprite
-		offset.subtractPoint(__offset);	// revert
+		final offset = animOffsets.get(animation.curAnim.name);	// get current animation's offsets
+		this.offset.addPoint(offset);							// add them to the current one's
+		super.drawComplex(camera);								// draw sprite
+		this.offset.subtractPoint(offset);						// revert
 		__drawingWithOffset = false;
 	}
 
@@ -258,10 +248,10 @@ class ExtendedSprite extends FlxSprite
 		if (animation.curAnim == null || !animOffsets.exists(animation.curAnim.name) || __drawingWithOffset)
 			return super.getScreenBounds(newRect, camera);
 
-		final __offset = curAnimOffset;						// get current animation's offsets
-		offset.addPoint(__offset);							// add them to the current one's
-		final ret = super.getScreenBounds(newRect, camera);	// super
-		offset.subtractPoint(__offset);						// revert
+		final offset = animOffsets.get(animation.curAnim.name);	// get current animation's offsets
+		this.offset.addPoint(offset);							// add them to the current one's
+		final ret = super.getScreenBounds(newRect, camera);		// super
+		this.offset.subtractPoint(offset);						// revert
 		return ret;
 	}
 
@@ -271,10 +261,10 @@ class ExtendedSprite extends FlxSprite
 			return super.transformWorldToPixelsSimple(worldPoint, result);
 
 		// get current animation's offsets
-		final __offset = animOffsets.get(animation.curAnim.name);
-		offset.addPoint(__offset);											// add them to the current one's
+		final offset = animOffsets.get(animation.curAnim.name);
+		this.offset.addPoint(offset);										// add them to the current one's
 		final ret = super.transformWorldToPixelsSimple(worldPoint, result);	// super
-		offset.subtractPoint(__offset);										// revert
+		this.offset.subtractPoint(offset);									// revert
 		return ret;
 	}
 
@@ -284,17 +274,17 @@ class ExtendedSprite extends FlxSprite
 			return super.transformWorldToPixels(worldPoint, camera, result);
 
 		// get current animation's offsets
-		final __offset = animOffsets.get(animation.curAnim.name);
-		offset.addPoint(__offset);												// add them to the current one's
+		final offset = animOffsets.get(animation.curAnim.name);
+		this.offset.addPoint(offset);											// add them to the current one's
 		final ret = super.transformWorldToPixels(worldPoint, camera, result);	// super
-		offset.subtractPoint(__offset);											// revert
+		this.offset.subtractPoint(offset);										// revert
 		return ret;
 	}
 
-	@:noCompletion inline function get_curAnimOffset():Null<FlxPoint>
+	/*@:noCompletion inline function get_curAnimOffset():Null<FlxPoint>
 	{
 		return animation.curAnim == null ? null : animOffsets.get(animation.curAnim.name);
-	}
+	}*/
 
 	@:noCompletion inline function set_boundBox(rect:FlxRect):FlxRect
 	{

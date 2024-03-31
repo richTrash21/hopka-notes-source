@@ -295,7 +295,7 @@ class LuaUtils
 
 		final c:FlxColor = Std.int(color);
 		/*if (c > 0xFFFFFFFF && c <= 0xFFFFFF) // no alpha chanel - add it
-			c.alpha = 1;*/
+			c.alpha = 0xFF;*/
 		return c;
 	}
 

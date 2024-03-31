@@ -17,6 +17,7 @@ import flixel.input.gamepad.FlxGamepadInputID;
 class Controls
 {
 	// main class instance
+	@:allow(Init)
 	public static var instance(default, null):Controls;
 
 	// Pressed buttons (directions)
@@ -90,7 +91,7 @@ class Controls
 		return __gamepadHelper(keys, FlxG.gamepads.anyJustReleased);
 	}
 
-	@:noCompletion /*inline*/ function __inputHelper(key:String, f1:(Array<FlxKey>)->Bool, f2:(Array<FlxGamepadInputID>)->Bool):Bool
+	@:noCompletion function __inputHelper(key:String, f1:(Array<FlxKey>)->Bool, f2:(Array<FlxGamepadInputID>)->Bool):Bool
 	{
 		final result = f1(keyboardBinds[key]);
 		if (result)
@@ -142,9 +143,9 @@ class Controls
 	@:noCompletion inline function get_RESET():Bool			return justPressed("reset");
 
 	// IGNORE!!!
-	@:allow(Init) function new()
+	@:allow(Init)
+	function new()
 	{
-		Controls.instance = this;
 		keyboardBinds = ClientPrefs.keyBinds;
 		gamepadBinds = ClientPrefs.gamepadBinds;
 	}
