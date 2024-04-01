@@ -185,6 +185,7 @@ class TitleState extends MusicBeatState
 		}
 	}
 
+	var fakeBeat = -1;
 	override function beatHit():Void
 	{
 		gf.animation.play(FlxMath.isEven(curBeat) ? "left" : "right", true);
@@ -192,23 +193,27 @@ class TitleState extends MusicBeatState
 
 		if (!skippedIntro)
 		{
-			ngSpr.visible = curBeat == 7;
-			switch (curBeat)
+			do
 			{
-				case 1:   createText(["ninjamuffin99", "PhantomArcade", "Kawai Sprite", "evilsk8er"]);
-				case 3:   addMoreText("present");
-				case 4:   deleteText();
-				case 5:   createText(["In association", "with"], -40);
-				case 7:   addMoreText("Newgrounds", -40);
-				case 8:   deleteText();
-				case 9:   createText([randomPhrase[0]]);
-				case 11:  addMoreText(randomPhrase[1]);
-				case 12:  deleteText();
-				case 13:  addMoreText("Friday");
-				case 14:  addMoreText("Night");
-				case 15:  addMoreText("Funkin");
-				case 16:  skipIntro();
+				ngSpr.visible = ++fakeBeat == 7;
+				switch (fakeBeat)
+				{
+					case 1:   createText(["ninjamuffin99", "PhantomArcade", "Kawai Sprite", "evilsk8er"]);
+					case 3:   addMoreText("present");
+					case 4:   deleteText();
+					case 5:   createText(["In association", "with"], -40);
+					case 7:   addMoreText("Newgrounds", -40);
+					case 8:   deleteText();
+					case 9:   createText([randomPhrase[0]]);
+					case 11:  addMoreText(randomPhrase[1]);
+					case 12:  deleteText();
+					case 13:  addMoreText("Friday");
+					case 14:  addMoreText("Night");
+					case 15:  addMoreText("Funkin");
+					case 16:  skipIntro();
+				}
 			}
+			while (fakeBeat != curBeat);
 	  }
   }
 
@@ -233,7 +238,7 @@ class TitleState extends MusicBeatState
 	
 	inline function deleteText()
 	{
-		while (textGroup.members.length > 0)
+		while (textGroup.members.length != 0)
 			textGroup.remove(textGroup.members[0], true).destroy();
 	}
 }

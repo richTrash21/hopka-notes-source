@@ -446,10 +446,7 @@ class CharacterEditorState extends backend.MusicBeatUIState
 		animationDropDown = new DropDownAdvanced(15, animationInputText.y - 55, FlxUIDropDownMenu.makeStrIdLabelArray([""], true), (pressed:String) ->
 		{
 			if (character.animationsArray.length == 0)
-			{
-				final t = "Trying to switch to null animation!";
-				return #if debug FlxG.log.warn(t) #else trace('WARNING!! - $t') #end;
-			}
+				return Main.warn("Trying to switch to null animation!");
 
 			final anim:AnimArray = character.animationsArray[Std.parseInt(pressed)];
 			animationInputText.text = anim.anim;
@@ -523,10 +520,7 @@ class CharacterEditorState extends backend.MusicBeatUIState
 		var removeButton = new FlxButton(180, animationIndicesInputText.y + 60, "Remove", () ->
 		{
 			if (character.animationsArray.length == 0)
-			{
-				final t = "No animation to remove!";
-				return #if debug FlxG.log.warn(t) #else trace('WARNING!! - $t') #end;
-			}
+				return Main.warn("No animation to remove!");
 
 			for (anim in character.animationsArray)
 				if (animationInputText.text == anim.anim)
@@ -1157,7 +1151,7 @@ class CharacterEditorState extends backend.MusicBeatUIState
 			breakPos = animsTxt.text.length;
 
 		final t = animsTxt.text.substring(textPos, breakPos);		
-		trace('curAnim: $curAnimName | newText: $t');
+		// trace('curAnim: $curAnimName | newText: $t');
 		animsTxt.applyMarkup(animsTxt.text.replace(t, '<l>$t<l>'), textMarkup);
 	}
 

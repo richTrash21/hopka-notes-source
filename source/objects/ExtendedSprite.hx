@@ -153,16 +153,13 @@ class ExtendedSprite extends FlxSprite
 	{
 		// if there is no animation named "name" then just skips the whole shit
 		if (name == null || !animExists(name))
-		{
-			final txt = 'No animation called "$name"';
-			return #if debug FlxG.log.warn(txt) #else trace(txt) #end;
-		}
+			return Main.warn('No animation called "$name"');
 
 		animation.play(name, forced, reverse, startFrame);
 	}
 
 	// quick n' easy animation setup
-	/*inline*/ public function addAnim(name:String, ?prefix:String, ?indices:Array<Int>, frameRate = 24., looped = true,
+	public function addAnim(name:String, ?prefix:String, ?indices:Array<Int>, frameRate = 24., looped = true,
 			?flipX = false, ?flipY = false, ?loopPoint = 0):FlxAnimation
 	{
 		final indicesEmpty = (indices == null || indices.length == 0);

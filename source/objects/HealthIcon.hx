@@ -130,6 +130,15 @@ class HealthIcon extends ExtendedSprite
 
 	@:noCompletion inline function set_baseScale(scale:Float):Float
 	{
-		return baseScale = setScale(scale).x;
+		if (baseScale != scale)
+		{
+			if (baseScale == 0.0 || scale == 0.0) // set to zero to avoid division by zero
+				this.scale.set();
+			else // remove old scale and add new
+				this.scale.scale(1 / baseScale).scale(scale);
+
+			baseScale = scale;
+		}
+		return scale;
 	}
 }

@@ -25,6 +25,12 @@ class FPSCounter extends openfl.text.TextField
 	**/
 	public var memoryMegas(get, never):Int;
 
+	/**
+		**BETA**
+		The current memory usage of GPU. (WARNING: this show ALL of GPU memory usage, not just for the game)
+	**/
+	public var memoryMegasGPU(get, never):Int;
+
 	@:noCompletion var times:Array<Float>;
 
 	public function new(x = 10.0, y = 10.0):Void
@@ -45,7 +51,7 @@ class FPSCounter extends openfl.text.TextField
 
 		shader = new shaders.OutlineShader();
 
-		// i think it is optimization -Redar
+		// i think it is optimization - Redar
 		removeEventListener(FocusEvent.FOCUS_IN, this_onFocusIn);
 		removeEventListener(FocusEvent.FOCUS_OUT, this_onFocusOut);
 		removeEventListener(MouseEvent.MOUSE_DOWN, this_onMouseDown);
@@ -72,9 +78,8 @@ class FPSCounter extends openfl.text.TextField
 		final currentCount = times.length;
 		if (currentCount != cacheCount)
 		{
-			final newFPS = Std.int((currentCount + cacheCount) * .5);
 			// caping new framerate to the maximum fps possible so it wont go above
-			currentFPS = FlxMath.minInt(newFPS, FlxG.updateFramerate);
+			currentFPS = FlxMath.minInt(Std.int((currentCount + cacheCount) * .5), FlxG.updateFramerate);
 			cacheCount = currentCount;
 		}
 		updateText();
@@ -82,13 +87,24 @@ class FPSCounter extends openfl.text.TextField
 
 	public dynamic function updateText():Void // so people can override it in hscript
 	{
-		text = 'FPS: $currentFPS\n';
-		text += "Memory: " + flixel.util.FlxStringUtil.formatBytes(memoryMegas);
+		text = 'FPS: $currentFPS';
+		text += "\nMemory: " + flixel.util.FlxStringUtil.formatBytes(memoryMegas);
+		if (ClientPrefs.data.cacheOnGPU)
+		{
+			final gpuMem = memoryMegasGPU;
+			if (gpuMem != 0)
+				text += "\nGPU Memory: " + flixel.util.FlxStringUtil.formatBytes(memoryMegasGPU);
+		}
 		textColor = (currentFPS < 30 /*FlxG.drawFramerate * 0.5*/) ? 0xFF0000 : 0xFFFFFF;
 	}
 
 	@:noCompletion inline function get_memoryMegas():Int
 	{
 		return cast (openfl.system.System.totalMemory, UInt);
+	}
+
+	@:noCompletion inline function get_memoryMegasGPU():Int
+	{
+		return FlxG.stage.context3D.totalGPUMemory;
 	}
 }

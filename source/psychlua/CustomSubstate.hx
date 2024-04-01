@@ -4,7 +4,7 @@ import flixel.FlxObject;
 
 class CustomSubstate extends MusicBeatSubstate
 {
-	public static var name:String = 'unnamed';
+	public static var name = "unnamed";
 	public static var instance:CustomSubstate;
 
 	public static function implement(funk:FunkinLua)
@@ -18,28 +18,28 @@ class CustomSubstate extends MusicBeatSubstate
 	
 	public static function openCustomSubstate(name:String, ?pauseGame:Bool = false)
 	{
-		if(pauseGame)
+		if (pauseGame)
 		{
-			FlxG.camera.followLerp = 0;
+			// FlxG.camera.followLerp = 0;
 			PlayState.instance.persistentUpdate = false;
 			PlayState.instance.persistentDraw = true;
 			PlayState.instance.paused = true;
-			FlxTween.globalManager.forEach(function(tween:FlxTween) tween.active = false); //so pause tweens wont stop
-			FlxTimer.globalManager.forEach(function(timer:FlxTimer) timer.active = false);
+			FlxTween.globalManager.forEach((tween) -> tween.active = false); // so pause tweens wont stop
+			FlxTimer.globalManager.forEach((timer) -> timer.active = false);
 			FlxG.sound.pause();
-			/*if(FlxG.sound.music != null) {
+			/*if (FlxG.sound.music != null) {
 				FlxG.sound.music.pause();
 				PlayState.instance.vocals.pause();
 			}*/
 		}
 		PlayState.instance.openSubState(new CustomSubstate(name));
-		PlayState.instance.setOnHScript('customSubstate', instance);
-		PlayState.instance.setOnHScript('customSubstateName', name);
+		PlayState.instance.setOnHScript("customSubstate", instance);
+		PlayState.instance.setOnHScript("customSubstateName", name);
 	}
 
 	public static function closeCustomSubstate()
 	{
-		if(instance != null)
+		if (instance != null)
 		{
 			PlayState.instance.closeSubState();
 			instance = null;
@@ -50,15 +50,20 @@ class CustomSubstate extends MusicBeatSubstate
 
 	public static function insertToCustomSubstate(tag:String, ?pos:Int = -1)
 	{
-		if(instance != null)
+		if (instance != null)
 		{
-			var tagObject:FlxObject = cast (PlayState.instance.variables.get(tag), FlxObject);
-			#if LUA_ALLOWED if(tagObject == null) tagObject = cast (PlayState.instance.modchartSprites.get(tag), FlxObject); #end
+			var tagObject:FlxObject = cast PlayState.instance.variables.get(tag);
+			#if LUA_ALLOWED
+			if (tagObject == null)
+				tagObject = cast PlayState.instance.modchartSprites.get(tag);
+			#end
 
-			if(tagObject != null)
+			if (tagObject != null)
 			{
-				if(pos < 0) instance.add(tagObject);
-				else instance.insert(pos, tagObject);
+				if (pos < 0)
+					instance.add(tagObject);
+				else
+					instance.insert(pos, tagObject);
 				return true;
 			}
 		}
@@ -68,33 +73,32 @@ class CustomSubstate extends MusicBeatSubstate
 	override function create()
 	{
 		instance = this;
-
-		PlayState.instance.callOnScripts('onCustomSubstateCreate', [name]);
+		PlayState.instance.callOnScripts("onCustomSubstateCreate", [name]);
 		super.create();
-		PlayState.instance.callOnScripts('onCustomSubstateCreatePost', [name]);
+		PlayState.instance.callOnScripts("onCustomSubstateCreatePost", [name]);
 	}
 	
 	public function new(name:String)
 	{
-		CustomSubstate.name = name;
 		super();
+		CustomSubstate.name = name;
 		cameras = [FlxG.cameras.list[FlxG.cameras.list.length - 1]];
 	}
 	
 	override function update(elapsed:Float)
 	{
-		PlayState.instance.callOnScripts('onCustomSubstateUpdate', [name, elapsed]);
+		PlayState.instance.callOnScripts("onCustomSubstateUpdate", [name, elapsed]);
 		super.update(elapsed);
-		PlayState.instance.callOnScripts('onCustomSubstateUpdatePost', [name, elapsed]);
+		PlayState.instance.callOnScripts("onCustomSubstateUpdatePost", [name, elapsed]);
 	}
 
 	override function destroy()
 	{
-		PlayState.instance.callOnScripts('onCustomSubstateDestroy', [name]);
-		name = 'unnamed';
+		PlayState.instance.callOnScripts("onCustomSubstateDestroy", [name]);
+		name = "unnamed";
 
-		PlayState.instance.setOnHScript('customSubstate', null);
-		PlayState.instance.setOnHScript('customSubstateName', name);
+		PlayState.instance.setOnHScript("customSubstate", null);
+		PlayState.instance.setOnHScript("customSubstateName", name);
 		super.destroy();
 		instance = null;
 	}

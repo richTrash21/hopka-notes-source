@@ -452,7 +452,7 @@ class PauseSubState extends MusicBeatSubstate
 
 		openCallback = () ->
 		{
-			trace('ERROR! $exception');
+			Main.warn('ERROR! $exception');
 			var errorStr = exception.toString();
 			if (errorStr.startsWith("[file_contents,assets/data/"))
 				errorStr = "Missing file: " + errorStr.substring(27, errorStr.length-1); // Missing chart

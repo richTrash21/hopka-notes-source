@@ -410,7 +410,6 @@ class Note extends FlxSprite implements INote
 			alpha = myStrum.alpha * multAlpha;
 
 		final angleDir = myStrum.direction * Math.PI * 0.005555555555555556; // / 180
-		// trace(angleDir, myStrum.direction * Math.PI / 180);
 		if (copyX)
 			x = myStrum.x + offsetX + Math.cos(angleDir) * distance;
 

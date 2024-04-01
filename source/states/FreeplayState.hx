@@ -81,7 +81,7 @@ class FreeplayState extends MusicBeatState
 		// prevent crash
 		if (songs.length == 0)
 		{
-			trace("WARNING!! No songs loaded, defaulting to \"Test\" to prevent crash!");
+			Main.warn("WARNING!! No songs loaded, defaulting to \"Test\" to prevent crash!");
 			addSong("Test", 0, "dad", 0xFF7C7C7C); // "songs": [["Test", "dad", [124, 124, 124]]]
 		}
 

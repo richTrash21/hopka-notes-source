@@ -151,11 +151,11 @@ class NoteSplash extends FlxSprite implements ISortable
 		frames = Paths.getSparrowAtlas(skin);
 		if (frames == null)
 		{
-			trace('skin "$skin" failed to load!!');
+			Main.warn('skin "$skin" failed to load!!');
 			frames = Paths.getSparrowAtlas(skin = defaultNoteSplash + getSplashSkinPostfix());
 			if (frames == null) // if you really need this, you really fucked something up
 			{
-				trace('skin "$skin" failed to load!! (AGAIN)');
+				Main.warn('skin "$skin" failed to load!! (AGAIN)');
 				frames = Paths.getSparrowAtlas(skin = defaultNoteSplash);
 			}
 		}

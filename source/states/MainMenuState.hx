@@ -100,17 +100,17 @@ class MainMenuState extends MusicBeatState
 			menuItem.scrollFactor.set(0, itemScrollY);
 		}
 
-		final psychVersion = new FlxText(12, FlxG.height - 64, 0, 'Psych Engine v$psychEngineVersion', 16);
+		final psychVersion = new FlxText(12, FlxG.height - 44, 0, "Build #" + FlxG.stage.application.meta.get("build"), 16);
 		psychVersion.active = false;
 		psychVersion.scrollFactor.set();
 		psychVersion.font = Paths.font("vcr.ttf");
 		add(psychVersion.setBorderStyle(OUTLINE_FAST, FlxColor.BLACK));
 
-		final fnfVersion = new FlxText(12, FlxG.height - 44, 0, "Friday Night Funkin v" + lime.app.Application.current.meta.get("version"), 16);
+		/*final fnfVersion = new FlxText(12, FlxG.height - 44, 0, "Friday Night Funkin v" + FlxG.stage.application.meta.get("version"), 16);
 		fnfVersion.active = false;
 		fnfVersion.scrollFactor.set();
 		fnfVersion.font = Paths.font("vcr.ttf");
-		add(fnfVersion.setBorderStyle(OUTLINE_FAST, FlxColor.BLACK));
+		add(fnfVersion.setBorderStyle(OUTLINE_FAST, FlxColor.BLACK));*/
 
 		final doiseTrap = new FlxText(12, FlxG.height - 24, 0, "NOTE: Press F1 for the funny!" , 16);
 		doiseTrap.active = false;

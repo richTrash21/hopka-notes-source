@@ -15,11 +15,6 @@ import hscript.Interp;
 **/
 class HScript extends Interp
 {
-	public var active:Bool = true;
-	public var parser:Parser;
-	public var parentLua:FunkinLua;
-	public var exception:haxe.Exception;
-
 	public static function initHaxeModule(parent:FunkinLua)
 	{
 		if (parent.hscript == null)
@@ -37,13 +32,17 @@ class HScript extends Interp
 			parent.hscript.executeCode(code);
 	}
 
-	public static function hscriptTrace(text:String, color:FlxColor = FlxColor.WHITE)
+	inline public static function hscriptTrace(text:String, color = FlxColor.WHITE)
 	{
 		PlayState.instance.addTextToDebug(text, color);
-		//trace(text);
 	}
 
 	public var origin:String;
+	public var active:Bool = true;
+	public var parser:Parser;
+	public var parentLua:FunkinLua;
+	public var exception:haxe.Exception;
+
 	public function new(?parent:FunkinLua, ?file:String)
 	{
 		super();
@@ -127,7 +126,7 @@ class HScript extends Interp
 		});
 
 		// tested
-		setVar('createCallback', function(name:String, func:Dynamic, ?funk:FunkinLua)
+		setVar('createCallback', (name:String, func:Dynamic, ?funk:FunkinLua) ->
 		{
 			if (funk == null)
 				funk = parentLua;
@@ -138,9 +137,13 @@ class HScript extends Interp
 				funk.addLocalCallback(name, func);
 		});
 
-		setVar('addHaxeLibrary', function(libName:String, ?libPackage:String = '') {
-			final str:String = libPackage.length > 0 ? libPackage + '.' : '';
-			setVar(libName, resolveClassOrEnum(str + libName));
+		setVar('addHaxeLibrary', (libName:String, ?libPackage:String = "") ->
+		{
+			var str = "";
+			if (libPackage != null && libPackage.length != 0)
+				str += '$libPackage.';
+			str += libName;
+			setVar(libName, resolveClassOrEnum(str));
 		});
 		setVar('parentLua',				parentLua);
 		setVar('this',					this);
@@ -173,15 +176,11 @@ class HScript extends Interp
 
 	public function executeFunction(?funcToRun:String, ?funcArgs:Array<Dynamic>):Dynamic
 	{
-		if (funcToRun == null || !active)
-			return FunkinLua.Function_Continue;
-
-		if (variables.exists(funcToRun))
+		if (active && funcToRun != null && variables.exists(funcToRun))
 		{
 			try
 			{
-				final ret:Dynamic = Reflect.callMethod(null, variables.get(funcToRun), funcArgs ?? []);
-				return ret ?? FunkinLua.Function_Continue;
+				return Reflect.callMethod(null, variables.get(funcToRun), funcArgs ?? []) ?? FunkinLua.Function_Continue;
 			}
 			catch(e)
 				exception = e;
@@ -192,7 +191,7 @@ class HScript extends Interp
 	#if LUA_ALLOWED
 	public static function implement(funk:FunkinLua)
 	{
-		funk.addLocalCallback("runHaxeCode", function(codeToRun:String, ?varsToBring:Any = null, ?funcToRun:String = null, ?funcArgs:Array<Dynamic> = null):Dynamic
+		funk.addLocalCallback("runHaxeCode", (codeToRun:String, ?varsToBring:Any, ?funcToRun:String, ?funcArgs:Array<Dynamic>) ->
 		{
 			initHaxeModule(funk);
 			if (!funk.hscript.active)
@@ -220,11 +219,10 @@ class HScript extends Interp
 				funk.hscript.active = false;
 				FunkinLua.luaTrace('ERROR (${funk.lastCalledFunction}) - ${funk.hscript.exception}', false, false, FlxColor.RED);
 			}
-
 			return retVal;
 		});
 
-		funk.addLocalCallback("runHaxeFunction", function(funcToRun:String, ?funcArgs:Array<Dynamic>)
+		funk.addLocalCallback("runHaxeFunction", (funcToRun:String, ?funcArgs:Array<Dynamic>) ->
 		{
 			if (!funk.hscript.active)
 				return null;
@@ -239,7 +237,7 @@ class HScript extends Interp
 			return retVal;
 		});
 		// This function is unnecessary because import already exists in hscript-improved as a native feature
-		funk.addLocalCallback("addHaxeLibrary", function(libName:String, ?libPackage:String)
+		funk.addLocalCallback("addHaxeLibrary", (libName:String, ?libPackage:String) ->
 		{
 			initHaxeModule(funk);
 			if (!funk.hscript.active)
@@ -249,8 +247,7 @@ class HScript extends Interp
 				libName = "";
 			try
 			{
-				final c:Dynamic = resolveClassOrEnum((libPackage == null || libPackage.length == 0) ? libName : '$libPackage.$libName');
-				funk.hscript.setVar(libName, c);
+				funk.hscript.setVar(libName, resolveClassOrEnum((libPackage == null || libPackage.length == 0) ? libName : '$libPackage.$libName'));
 			}
 			catch(e)
 			{

@@ -16,11 +16,10 @@ class CoolUtil
 	inline static final IDK = 0x00CE4F2F;
 	inline static final IDK2 = 0x019C9E5E;
 
+	// changed so this actually works lol
 	inline public static function quantize(f:Float, snap:Float):Float
 	{
-		// changed so this actually works lol
-		trace(snap);
-		return (Math.fround(f * snap) / snap);
+		return Math.fround(f * snap) / snap;
 	}
 
 	inline public static function capitalize(text:String):String

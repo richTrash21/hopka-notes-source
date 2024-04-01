@@ -79,7 +79,7 @@ class Subtitles extends FlxText
 			_time = 0.0;
 			lineID = 0;
 			text = "";
-			trace('Parsed subtitles: $_parsedLines');
+			// trace('Parsed subtitles: $_parsedLines');
 		}
 		return this;
 	}
@@ -90,7 +90,7 @@ class Subtitles extends FlxText
 		_time = 0.0;
 		lineID = 0;
 		text = "";
-		trace("Stoped subtitles!");
+		// trace("Stoped subtitles!");
 		return this;
 	}
 

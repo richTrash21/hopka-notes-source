@@ -1,24 +1,20 @@
 package;
 
+import flixel.input.keyboard.FlxKey;
+import lime.app.Application;
+import openfl.Lib;
+
 import backend.StateTransition;
 import debug.FPSCounter;
 
-import openfl.Lib;
-import openfl.display.Sprite;
-
-import lime.app.Application;
-
-import flixel.FlxGame;
-import flixel.input.keyboard.FlxKey;
-
-//crash handler stuff
+// crash handler stuff
 #if CRASH_HANDLER
 import openfl.events.UncaughtErrorEvent;
 import sys.FileSystem;
 import haxe.CallStack;
 #end
 
-class Main extends Sprite
+class Main
 {
 	public static final game =
 	{
@@ -32,44 +28,24 @@ class Main extends Sprite
 	};
 
 	public static var fpsVar(default, null):FPSCounter;
-	@:noCompletion static var _focusVolume:Float = 1; // ignore
+	public static var transition(default, null):StateTransition;
 
-	public static var muteKeys:Array<FlxKey> = [FlxKey.ZERO];
-	public static var volumeDownKeys:Array<FlxKey> = [FlxKey.NUMPADMINUS, FlxKey.MINUS];
-	public static var volumeUpKeys:Array<FlxKey> = [FlxKey.NUMPADPLUS, FlxKey.PLUS];
+	public static var volumeDownKeys = [NUMPADMINUS, MINUS];
+	public static var volumeUpKeys = [NUMPADPLUS, PLUS];
+	public static var muteKeys = [ZERO];
 
-	public static var transition:StateTransition;
-	static var __log = "";
+	@:noCompletion static var _focusVolume = 1.0; // ignore
+	@:noCompletion static var __warns = new Array<String>();
+	@:noCompletion static var __log = "";
 
 	// You can pretty much ignore everything from here on - your code should go in your states.
 
-	public function new()
+	static function main()
 	{
 		// cool ass log by me yeah
 		haxe.Log.trace = (v:Dynamic, ?pos:haxe.PosInfos) ->
 		{
-			// based on haxe.Log.formatOutput()
-			inline function formatOutput(v:Dynamic, pos:haxe.PosInfos):String
-			{
-				final t = "<" + Date.now().toString().substr(11) + ">";
-				var s = Std.string(v);
-				if (pos == null)
-					return '$t > $s';
-				var p = pos.fileName + ":" + pos.lineNumber;
-				if (pos.methodName != null && pos.methodName.length != 0)
-				{
-					p += " - ";
-					if (pos.className != null && pos.className.length != 0)
-						p += pos.className + ".";
-					p += pos.methodName + "()";
-				}
-				if (pos.customParams != null)
-					for (_v in pos.customParams)
-						s += ", " + Std.string(_v);
-				return '$t [$p] > $s';
-			}
-
-			final str = formatOutput(v, pos);
+			final str = Main.formatOutput(v, pos);
 			__log += '$str\n';
 			#if js
 			if (js.Syntax.typeof(untyped console) != "undefined" && (untyped console).log != null)
@@ -83,30 +59,8 @@ class Main extends Sprite
 			#end
 		}
 
-		super();
-		setupGame();
-		Application.current.window.onClose.add(volumeOnFocus, true);
-	}
-
-	static function volumeOnFocus() // dont ask
-	{
-		if (ClientPrefs.data.lostFocusDeafen && !FlxG.sound.muted)
-			FlxG.sound.volume = _focusVolume;
-	}
-
-	static function volumeOnFocusLost() // dont ask
-	{
-		if (ClientPrefs.data.lostFocusDeafen && !FlxG.sound.muted)
-		{
-			_focusVolume = Math.ffloor(FlxG.sound.volume * 10.0) * 0.1;
-			FlxG.sound.volume = FlxG.sound.volume * 0.5; // Math.ffloor(FlxG.sound.volume * 5.0) * 0.1;
-		}
-	}
-
-	private function setupGame():Void
-	{
-		final g = new FlxGame(game.width, game.height, Init, game.framerate, game.framerate, game.skipSplash, game.startFullscreen);
-		addChild(g);
+		final g = new flixel.FlxGame(game.width, game.height, Init, game.framerate, game.framerate, game.skipSplash, game.startFullscreen);
+		Lib.application.window.stage.addChild(g);
 		transition = new StateTransition();
 		g.addChildAt(transition, 0);
 
@@ -139,24 +93,14 @@ class Main extends Sprite
 		FlxG.signals.focusGained.add(volumeOnFocus);
 		FlxG.signals.focusLost.add(volumeOnFocusLost);
 		FlxG.signals.gameResized.add(shaderFix);
-	}
-
-	// shader coords fix
-	@:access(openfl.display.DisplayObject.__cleanup)
-	static function shaderFix(_, _):Void
-	{
-		for (cam in FlxG.cameras.list)
-			if (cam != null && cam.filters != null)
-				cam.flashSprite.__cleanup();
-
-		FlxG.game.__cleanup();
+		Application.current.window.onClose.add(volumeOnFocus, true);
 	}
 
 	// Code was entirely made by sqirra-rng for their fnf engine named "Izzy Engine", big props to them!!!
 	// very cool person for real they don't get enough credit for their work
 	// by sqirra-rng
 	#if CRASH_HANDLER
-	function onCrash(e:UncaughtErrorEvent):Void
+	static function onCrash(e:UncaughtErrorEvent):Void
 	{
 		final path = "./crash/CrashLog_" + Date.now().toString().replace(" ", "_").replace(":", "'") + ".txt";
 		var errMsg = "";
@@ -189,4 +133,68 @@ class Main extends Sprite
 		Sys.exit(1);
 	}
 	#end
+
+	// shader coords fix
+	@:access(openfl.display.DisplayObject.__cleanup)
+	static function shaderFix(_, _):Void
+	{
+		for (cam in FlxG.cameras.list)
+			if (cam != null && cam.filters != null)
+				cam.flashSprite.__cleanup();
+
+		FlxG.game.__cleanup();
+	}
+
+	static function volumeOnFocus() // dont ask
+	{
+		if (ClientPrefs.data.lostFocusDeafen && !FlxG.sound.muted)
+			FlxG.sound.volume = _focusVolume;
+	}
+
+	static function volumeOnFocusLost() // dont ask
+	{
+		if (ClientPrefs.data.lostFocusDeafen && !FlxG.sound.muted)
+		{
+			_focusVolume = Math.ffloor(FlxG.sound.volume * 10.0) * 0.1;
+			FlxG.sound.volume = FlxG.sound.volume * 0.5; // Math.ffloor(FlxG.sound.volume * 5.0) * 0.1;
+		}
+	}
+
+	#if FLX_DEBUG inline #end public static function warn(data:Dynamic #if !FLX_DEBUG , ?pos:haxe.PosInfos #end)
+	{
+		#if FLX_DEBUG
+		FlxG.log.warn(data);
+		#else
+		final s = Std.string(data);
+		if (!__warns.contains(s))
+		{
+			__warns.push(s);
+			haxe.Log.trace('[WARN] $s', pos);
+		}
+		#end
+	}
+
+	// based on haxe.Log.formatOutput()
+	static function formatOutput(v:Dynamic, pos:haxe.PosInfos):String
+	{
+		final t = "<" + Date.now().toString().substr(11) + ">";
+		var s = Std.string(v);
+		if (pos == null)
+			return '$t > $s';
+
+		var p = pos.fileName + ":" + pos.lineNumber;
+		if (pos.methodName != null && pos.methodName.length != 0)
+		{
+			p += " - ";
+			if (pos.className != null && pos.className.length != 0)
+				p += pos.className + ".";
+			p += pos.methodName + "()";
+		}
+
+		if (pos.customParams != null)
+			for (_v in pos.customParams)
+				s += ", " + Std.string(_v);
+
+		return '$t [$p] > $s';
+	}
 }

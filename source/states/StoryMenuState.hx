@@ -260,7 +260,7 @@ class StoryMenuState extends MusicBeatState
 				PlayState.campaignScore = 0;
 				PlayState.campaignMisses = 0;
 			}
-			catch(e:Dynamic)
+			catch(e)
 			{
 				trace('ERROR! $e');
 				return;

@@ -62,7 +62,7 @@ class Paths
 		for (key in currentTrackedAssets)
 		{
 			// if it is not currently contained within the used local assets
-			if (localTrackedAssets.contains(key) || dumpExclusions.contains(key))
+			if (localTrackedAssets.contains(key) || dumpExclusions.contains(key) || key.endsWith('.$SOUND_EXT'))
 				continue;
 
 			obj = FlxG.bitmap.get(key);
@@ -88,6 +88,7 @@ class Paths
 			if (currentTrackedAssets.contains(key) || obj == null /*|| obj.useCount != 0*/)
 				continue;
 
+			localTrackedAssets.remove(key);
 			OpenFlAssets.cache.removeBitmapData(key);
 			FlxG.bitmap._cache.remove(key);
 			destroyGraphic(obj);
@@ -268,7 +269,7 @@ class Paths
 		var t = 'Image with key "$key" could not be found';
 		if (library != null)
 			t += ' in the library "$library"';
-		trace('$t! (${posInfos.fileName}, ${posInfos.lineNumber})');
+		Main.warn('$t! (${posInfos.fileName}, ${posInfos.lineNumber})');
 		return null;
 	}
 
@@ -419,8 +420,8 @@ class Paths
 		}
 		catch(e)
 		{
-			trace('[getSparrowAtlas] - ERROR WHILE LOADING "$key" xml: ${e.message}.');
-			lime.app.Application.current.window.alert('${e.message}\n\ntl;dr; no spritesheet lmao.\nbtw, this message won\'t crash the game! :D', 'XML ERROR!!');
+			Main.warn('[getSparrowAtlas] - ERROR WHILE LOADING "$key" xml: $e.');
+			lime.app.Application.current.window.alert('$e\n\ntl;dr; no spritesheet lmao.\nbtw, this message won\'t crash the game! :D', "XML ERROR!!");
 			return null;
 		}
 	}
@@ -490,7 +491,7 @@ class Paths
 		}
 		catch(e) // FUCKING OPENFL - richTrash21
 		{
-			trace('$e (fucking openfl...)');
+			Main.warn('$e (fucking openfl...)');
 			return sound;
 		}
 	}

@@ -49,7 +49,7 @@ class Character extends objects.ExtendedSprite
 	public var hasMissAnimations(default, null):Bool;
 	public var animationsArray:Array<AnimArray>;
 	public var isPlayer(default, set):Bool;
-	public var curCharacter:String;
+	public var curCharacter(default, null):String;
 
 	// public var colorTween:FlxTween;
 	public var holdTimer:Float;
@@ -59,6 +59,7 @@ class Character extends objects.ExtendedSprite
 	public var singDuration:Float; // Multiplier of how long a character holds the sing pose
 	public var idleSuffix(default, set):String;
 	public var danceIdle:Bool; // Character use "danceLeft" and "danceRight" instead of "idle"
+	public var maxDance(default, null):Int;
 	public var skipDance:Bool;
 
 	public var healthIcon:String = "face";
@@ -67,6 +68,9 @@ class Character extends objects.ExtendedSprite
 	public var camFollow(default, null) = new CameraTarget();
 	public var cameraOffset = FlxPoint.get();
 	public var position = FlxPoint.get();
+
+	public var danceEveryNumBeats:Int = 2;
+	public var danced:Bool = false;
 
 	// Used on Character Editor
 	var imageFile:String;
@@ -79,6 +83,8 @@ class Character extends objects.ExtendedSprite
 	var camFollowOffset(default, null):FlxPoint;
 	var debugMode:Bool;
 	var firstSetup = true;
+	var settingCharacterUp = true;
+	var curDance = -1;
 
 	// DEPRECATED!!!!!
 	public var positionArray(get, set):Array<Float>;
@@ -168,12 +174,12 @@ class Character extends objects.ExtendedSprite
 		originalFlipX = flipX;
 		originalFlipY = flipY;
 
-		for (name => offset in animOffsets)
+		/*for (name => offset in animOffsets)
 			if (name.startsWith("sing") && name.contains("miss"))
 			{
 				hasMissAnimations = true;
 				break;
-			}
+			}*/
 
 		if (!firstSetup)
 			isPlayer = wasPlayer;
@@ -238,7 +244,10 @@ class Character extends objects.ExtendedSprite
 			playAnim(animation.curAnim.name + "-loop");
 
 		super.update(elapsed);
-		camFollow.update(elapsed);
+		#if FLX_DEBUG
+		if (camFollow.active && camFollow.exists)
+			camFollow.update(elapsed);
+		#end
 	}
 
 	#if FLX_DEBUG
@@ -271,8 +280,6 @@ class Character extends objects.ExtendedSprite
 		super.destroy();
 	}
 
-	public var danced:Bool = false;
-
 	/**
 	 * FOR GF DANCING SHIT
 	 */
@@ -284,20 +291,29 @@ class Character extends objects.ExtendedSprite
 		if (animation.curAnim != null && animation.curAnim.looped && animation.curAnim.loopPoint != 0 && animation.curAnim.curFrame >= animation.curAnim.loopPoint)
 			animation.finish(); // fix for characters that have loopPoint > 0
 
-		playAnim((danceIdle ? "dance" + ((danced = !danced) ? "Right" : "Left") : "idle") + idleSuffix, force);
+		var a:String;
+		if (danceIdle)
+		{
+			a = "dance";
+			if (maxDance == -1)
+				a += (danced = !danced) ? "Right" : "Left";
+			else
+				a += (curDance = ++curDance % maxDance);
+		}
+		else
+			a = "idle";
+
+		playAnim(a + idleSuffix, force);
 	}
 
 	override public function playAnim(animName:String, force = false, ?reversed = false, ?frame = 0):Void
 	{
 		specialAnim = false;
 		if (animName == null || !animExists(animName))
-		{
-			final txt = 'No animation called "$animName"';
-			return #if debug FlxG.log.warn(txt) #else trace(txt) #end;
-		}
+			return Main.warn('No animation called "$animName"');
 
 		animation.play(animName, force, reversed, frame);
-		if (curCharacter.startsWith("gf") || danceIdle) // idk
+		if (curCharacter.startsWith("gf") || (danceIdle && maxDance == -1)) // idk
 			switch (animName)
 			{
 				case "singLEFT":			 danced = true;
@@ -306,13 +322,21 @@ class Character extends objects.ExtendedSprite
 			}
 	}
 
-	var settingCharacterUp = true;
-	public var danceEveryNumBeats:Int = 2;
-
 	public function recalculateDanceIdle()
 	{
 		final lastDanceIdle = danceIdle;
-		danceIdle = (animExists('danceLeft$idleSuffix') && animExists('danceRight$idleSuffix'));
+		// danceIdle = (animExists('danceLeft$idleSuffix') && animExists('danceRight$idleSuffix'));
+
+		// new (numbered) dance anims (stolen from twist engine ehehehe) - rich >:3
+		if (animExists('dance0$idleSuffix'))
+		{
+			maxDance = 0;
+			while (animExists("dance" + ++maxDance + idleSuffix)) { /*aaaaaand it does nothing*/ }
+		}
+		else
+			maxDance = -1;
+
+		danceIdle = (maxDance > 1 || animExists('danceLeft$idleSuffix') && animExists('danceRight$idleSuffix'));
 
 		if (settingCharacterUp)
 		{
@@ -320,7 +344,7 @@ class Character extends objects.ExtendedSprite
 			settingCharacterUp = false;
 		}
 		else if (lastDanceIdle != danceIdle)
-			danceEveryNumBeats = FlxMath.maxInt(danceIdle ? Math.round(danceEveryNumBeats * 0.5) : danceEveryNumBeats * 2, 1);
+			danceEveryNumBeats = FlxMath.maxInt(danceIdle ? Math.round(danceEveryNumBeats * 0.5) : (danceEveryNumBeats * 2), 1);
 	}
 
 	/**
@@ -337,6 +361,9 @@ class Character extends objects.ExtendedSprite
 		final animOffsets = (data.offsets == null || data.offsets.length < 2) ? [0.0, 0.0] : data.offsets;
 		addAnim(animAnim, "" + data.name, data.indices, data.fps, data.loop, data.animflip_x, data.animflip_y, data.loop_point);
 		addOffset(animAnim, animOffsets[0], animOffsets[1]);
+
+		if (!hasMissAnimations && animAnim.startsWith("sing") && animAnim.contains("miss"))
+			hasMissAnimations = true;
 	}
 
 	@:noCompletion function set_idleSuffix(value:String):String
