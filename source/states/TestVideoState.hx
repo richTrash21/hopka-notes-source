@@ -34,7 +34,7 @@ class TestVideoState extends flixel.FlxState
 		sys.thread.Thread.create(() ->
 		{
 			video = new VideoSprite();
-			video.bitmap.onEndReached.add(MusicBeatState.switchState.bind(DoiseRoomLMAO.new), true);
+			video.bitmap.onEndReached.add(() -> exit(), true);
 			add(video);
 			final status = video.load(FlxG.random.getObject(videos));
 			trace('video loaded: $status');
@@ -55,8 +55,13 @@ class TestVideoState extends flixel.FlxState
 		}
 		if (FlxG.keys.justPressed.ESCAPE)
 		{
-			// FlxG.sound.music.volume = 1;
-			MusicBeatState.switchState(DoiseRoomLMAO.new);
+			FlxG.sound.music.volume = 1;
+			exit();
 		}
+	}
+
+	@:noCompletion extern inline function exit()
+	{
+		MusicBeatState.switchState(MainMenuState.new);
 	}
 }

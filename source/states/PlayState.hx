@@ -1212,7 +1212,10 @@ class PlayState extends MusicBeatState
 			if (doDance && !anim.name.startsWith("sing") && !char.stunned)
 			{
 				// fixes danceEveryNumBeats = 1 on idle dances
-				char.dance(char.danceEveryNumBeats == 1 && anim.curFrame > (anim.frameDuration == 0 ? 0 : Math.floor(4 / (24 * anim.frameDuration))));
+				var force = false;
+				if (!char.danceIdle && char.danceEveryNumBeats == 1)
+					force = anim.curFrame > (anim.frameDuration == 0 ? 0 : Math.floor(4 / (24 * anim.frameDuration)));
+				char.dance(force);
 			}
 		}
 	}
