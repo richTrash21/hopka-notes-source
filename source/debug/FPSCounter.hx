@@ -29,7 +29,7 @@ class FPSCounter extends openfl.text.TextField
 		**BETA**
 		The current memory usage of GPU. (WARNING: this show ALL of GPU memory usage, not just for the game)
 	**/
-	public var memoryMegasGPU(get, never):Int;
+	// public var memoryMegasGPU(get, never):Int;
 
 	@:noCompletion var times:Array<Float>;
 
@@ -89,12 +89,12 @@ class FPSCounter extends openfl.text.TextField
 	{
 		text = 'FPS: $currentFPS';
 		text += "\nMemory: " + flixel.util.FlxStringUtil.formatBytes(memoryMegas);
-		if (ClientPrefs.data.cacheOnGPU)
+		/*if (ClientPrefs.data.cacheOnGPU)
 		{
 			final gpuMem = memoryMegasGPU;
 			if (gpuMem != 0)
 				text += "\nGPU Memory: " + flixel.util.FlxStringUtil.formatBytes(memoryMegasGPU);
-		}
+		}*/
 		textColor = (currentFPS < 30 /*FlxG.drawFramerate * 0.5*/) ? 0xFF0000 : 0xFFFFFF;
 	}
 
@@ -103,8 +103,8 @@ class FPSCounter extends openfl.text.TextField
 		return cast (openfl.system.System.totalMemory, UInt);
 	}
 
-	@:noCompletion inline function get_memoryMegasGPU():Int
+	/*@:noCompletion inline function get_memoryMegasGPU():Int
 	{
 		return FlxG.stage.context3D.totalGPUMemory;
-	}
+	}*/
 }

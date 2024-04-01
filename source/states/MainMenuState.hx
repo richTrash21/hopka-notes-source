@@ -100,7 +100,7 @@ class MainMenuState extends MusicBeatState
 			menuItem.scrollFactor.set(0, itemScrollY);
 		}
 
-		final psychVersion = new FlxText(12, FlxG.height - 44, 0, "Build #" + FlxG.stage.application.meta.get("build"), 16);
+		final psychVersion = new FlxText(12, FlxG.height - 44, 0, "Commit #" + FlxG.stage.application.meta.get("build"), 16);
 		psychVersion.active = false;
 		psychVersion.scrollFactor.set();
 		psychVersion.font = Paths.font("vcr.ttf");
