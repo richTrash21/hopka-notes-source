@@ -45,7 +45,7 @@ class Main extends flixel.FlxGame
 	@:noCompletion var __fps:FPSCounter;
 
 	@:noCompletion var __focusVolume = 1.0; // ignore
-	// @:noCompletion var __totalTime = 0;
+	@:noCompletion var __totalTime = 0;
 
 	public function new()
 	{
@@ -105,8 +105,10 @@ class Main extends flixel.FlxGame
 
 		super.create(_);
 
-		// __totalTime = getTimer();
-		// getTimer = () -> __totalTime; // hope it will not completely break the game :clueless:
+		__totalTime = _startTime;		// get the most recent timestamp and only then replace getTimer()
+		getTimer = () -> __totalTime;	// hope it will not completely break the game :clueless:
+										// UPD: nothing changed lmao, exept computing elapsed now less expensive
+										// will break on flash but nobody cares about flash - rich
 
 		#if !mobile
 		addChild(__fps = new FPSCounter(10, 3)).visible = ClientPrefs.data.showFPS;
@@ -230,11 +232,18 @@ class Main extends flixel.FlxGame
 	}
 	#end
 
-	/*@:noCompletion override function __enterFrame(deltaTime:Int)
+	@:noCompletion override function __enterFrame(deltaTime:Int)
 	{
-		__totalTime += deltaTime;
+		// ig it will sync better like that
+		// if (_state != null && _state.active && _state.visible && _state.exists)
+		// {
+		// final t = __totalTime;
+		__totalTime += deltaTime; // not as accurate but it works ig
+		// if ((t % 1000) > (__totalTime % 1000))
+		//	trace('__enterFrame($deltaTime): ' + getTicks(), "openfl.Lib.getTimer(): " + (Lib.getTimer() - _startTime));
+		// }
 		super.__enterFrame(deltaTime);
-	}*/
+	}
 
 	// shader coords fix
 	@:access(openfl.display.DisplayObject.__cleanup)

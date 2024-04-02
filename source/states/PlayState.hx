@@ -419,10 +419,9 @@ class PlayState extends MusicBeatState
 		// NEVERMIND
 		// gfGroup.scrollFactor.set(0.95, 0.95); // fixed gf paralax lmao
 
-		curStageObj = switch (curStage) // lol
+		switch (curStage) // lol
 		{
-			case "stage": new states.stages.StageWeek1(); // Week 1
-			default:	  null;
+			case "stage": curStageObj = new states.stages.StageWeek1(); // Week 1
 		}
 
 		add(gfGroup);
