@@ -144,15 +144,15 @@ class PCState extends MusicBeatState
 		justblack.scrollFactor.copyFrom(taskBarStuff.scrollFactor.copyFrom(screenStuff.scrollFactor.copyFrom(monitor.scrollFactor)));
 
 		// Taskbar
-		taskBarStuff.add(createSprite(151.2, 530, Paths.image("mainMenuPC/taskbar")));
-		var startButton = createSprite(79.2, 530, Paths.getSparrowAtlas("mainMenuPC/start_button"), false);
-		startButton.animation.addByPrefix("idle", "start_button0000", 0, true);
-		startButton.animation.addByPrefix("selected", "start_button0001", 0, true);
+		taskBarStuff.add(createSprite(151.2, 531, Paths.image("mainMenuPC/taskbar")));
+		var startButton = createSprite(79.2, 531, Paths.getSparrowAtlas("mainMenuPC/start_button"), false);
+		startButton.animation.addByPrefix("idle", "start_button", 0, true);
+		// startButton.animation.addByPrefix("selected", "start_button0001", 0, true);
 		startButton.animation.play("idle");
 		FlxMouseEvent.add(startButton, null,
 			(_) -> FlxG.sound.play(Paths.sound("lego"), 0.2),
-			(_) -> startButton.animation.play("selected"),
-			(_) -> startButton.animation.play("idle"), false, true, false);
+			(_) -> startButton.animation.curAnim.curFrame = 1, // startButton.animation.play("selected")
+			(_) -> startButton.animation.curAnim.curFrame = 0, false, true, false); // startButton.animation.play("idle")
 		taskBarStuff.add(startButton);
 		
 		var objHitbox = createHitbox(932.5, 655, 60, 25.5, monitor.scrollFactor);

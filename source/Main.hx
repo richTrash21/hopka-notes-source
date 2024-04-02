@@ -1,10 +1,13 @@
 package;
 
-import flixel.input.keyboard.FlxKey;
 import lime.app.Application;
 import openfl.Lib;
 
+import flixel.addons.transition.FlxTransitionableState;
+import flixel.input.keyboard.FlxKey;
+
 import backend.StateTransition;
+import backend.Subtitles;
 import debug.FPSCounter;
 
 // crash handler stuff
@@ -14,34 +17,39 @@ import sys.FileSystem;
 import haxe.CallStack;
 #end
 
-class Main
+class Main extends flixel.FlxGame
 {
-	public static final game =
+	public static final game:GameProperties =
 	{
 		width: 1280,					  	  // WINDOW width
 		height: 720,					  	  // WINDOW height
 		initialState: states.TitleState.new,  // initial game state
-		zoom: -1.0,							  // game state bounds
+		// zoom: -1.0,							  // game state bounds
 		framerate: 60,						  // default framerate
 		skipSplash: true,					  // if the default flixel splash screen should be skipped
 		startFullscreen: false				  // if the game should start at fullscreen mode
 	};
 
-	public static var fpsVar(default, null):FPSCounter;
-	public static var transition(default, null):StateTransition;
+	public static var fpsVar(get, never):FPSCounter;
+	public static var transition(get, never):StateTransition;
 
-	public static var volumeDownKeys = [NUMPADMINUS, MINUS];
-	public static var volumeUpKeys = [NUMPADPLUS, PLUS];
-	public static var muteKeys = [ZERO];
+	public static var volumeDownKeys:Array<FlxKey>;
+	public static var volumeUpKeys:Array<FlxKey>;
+	public static var muteKeys:Array<FlxKey>;
 
-	@:noCompletion static var _focusVolume = 1.0; // ignore
 	@:noCompletion static var __warns = new Array<String>();
 	@:noCompletion static var __log = "";
+	@:noCompletion static var __main:Main;
 
-	// You can pretty much ignore everything from here on - your code should go in your states.
+	@:noCompletion var __transition:StateTransition;
+	@:noCompletion var __fps:FPSCounter;
 
-	static function main()
+	@:noCompletion var __focusVolume = 1.0; // ignore
+	// @:noCompletion var __totalTime = 0;
+
+	public function new()
 	{
+		__main = this;
 		// cool ass log by me yeah
 		haxe.Log.trace = (v:Dynamic, ?pos:haxe.PosInfos) ->
 		{
@@ -59,18 +67,87 @@ class Main
 			#end
 		}
 
-		final g = new flixel.FlxGame(game.width, game.height, Init, game.framerate, game.framerate, game.skipSplash, game.startFullscreen);
-		Lib.application.window.stage.addChild(g);
-		transition = new StateTransition();
-		g.addChildAt(transition, 0);
+		// sexy subtitle markups
+		for (name => color in FlxColor.colorLookup)
+		{
+			if (color == 0)
+				continue;
+
+			name = name.toLowerCase();
+			Subtitles._markup.push(new FlxTextFormatMarkerPair(new FlxTextFormat(color), '<$name>'));
+			Subtitles._markup.push(new FlxTextFormatMarkerPair(new FlxTextFormat(null, null, null, color), '<border-$name>'));
+		}
+
+		// var field:Dynamic;
+		for (f in Type.getClassFields(FlxEase))
+			if (f.toUpperCase() != f) // Type.typeof(field = Reflect.field(FlxEase, f)) == TFunction
+				psychlua.LuaUtils.__easeMap.set(f.toLowerCase(), Reflect.field(FlxEase, f)); // cast field
+
+		FlxG.save.bind("funkin", CoolUtil.getSavePath());
+		super(game.width, game.height, Init, game.framerate, game.framerate, game.skipSplash, game.startFullscreen);
+		Subtitles.__posY = FlxG.height * 0.75;
+
+		// reset cache on restart
+		FlxG.signals.preGameReset.add(() -> { Paths.clearStoredMemory(); Paths.clearUnusedMemory(); });
+		// sync save data on restart
+		FlxG.signals.postGameReset.add(() -> { FlxG.autoPause = ClientPrefs.data.autoPause; FlxG.fixedTimestep = ClientPrefs.data.fixedTimestep; });
+
+		ClientPrefs.loadDefaultKeys();
+		ClientPrefs.loadPrefs();
+	}
+
+	override function create(_)
+	{
+		if (stage == null)
+			return;
+
+		addChild(__transition = new StateTransition());
+
+		super.create(_);
+
+		// __totalTime = getTimer();
+		// getTimer = () -> __totalTime; // hope it will not completely break the game :clueless:
 
 		#if !mobile
-		g.addChild(fpsVar = new FPSCounter(10, 3));
-		fpsVar.visible = ClientPrefs.data.showFPS;
+		addChild(__fps = new FPSCounter(10, 3)).visible = ClientPrefs.data.showFPS;
 		#end
 
-		_focusVolume = FlxG.sound.volume;
-		#if debug // это рофлс
+		FlxTransitionableState.skipNextTransOut = /*FlxTransitionableState.skipNextTransIn =*/ true;
+
+		#if LUA_ALLOWED
+		Mods.pushGlobalMods();
+		#end
+		Mods.loadTopMod();
+
+		Controls.instance = new Controls();
+		// ClientPrefs.loadDefaultKeys();
+
+		#if LUA_ALLOWED
+		llua.Lua.set_callbacks_function(cpp.Callable.fromStaticFunction(psychlua.CallbackHandler.call));
+		#end
+		#if ACHIEVEMENTS_ALLOWED
+		Achievements.load();
+		#end
+		backend.Highscore.load();
+
+		if (FlxG.save.data.weekCompleted != null)
+			states.StoryMenuState.weekCompleted = FlxG.save.data.weekCompleted;
+
+		__focusVolume = FlxG.sound.volume;
+		FlxG.fullscreen = FlxG.save.data.fullscreen;
+		#if debug
+		FlxG.console.registerClass(Main);
+		FlxG.console.registerClass(Paths);
+		FlxG.console.registerClass(PlayState);
+		FlxG.console.registerClass(ClientPrefs);
+		#if ACHIEVEMENTS_ALLOWED
+		FlxG.console.registerClass(Achievements);
+		#end
+		FlxG.console.registerClass(MusicBeatState);
+		FlxG.console.registerObject("controls", Controls.instance);
+		FlxG.console.registerFunction("switchState", (n:String, ?p:Array<Dynamic>) -> MusicBeatState.switchState(Type.createInstance(Type.resolveClass(n), p ?? [])));
+
+		// это рофлс
 		FlxG.game.soundTray.volumeUpSound = "assets/sounds/metal";
 		FlxG.game.soundTray.volumeDownSound = "assets/sounds/lego";
 		#else
@@ -90,10 +167,29 @@ class Main
 		DiscordClient.prepare();
 		#end
 
-		FlxG.signals.focusGained.add(volumeOnFocus);
-		FlxG.signals.focusLost.add(volumeOnFocusLost);
 		FlxG.signals.gameResized.add(shaderFix);
-		Application.current.window.onClose.add(volumeOnFocus, true);
+		// Application.current.window.onClose.add(() -> FlxG.sound.volume = __focusVolume, true);
+
+		// im sorry but some mods are annoying with this
+		FlxG.signals.preStateSwitch.add(() -> FlxG.cameras.bgColor = FlxColor.BLACK);
+	}
+
+	override function onFocus(_)
+	{
+		if (!FlxG.autoPause && ClientPrefs.data.lostFocusDeafen && !FlxG.sound.muted)
+			FlxG.sound.volume = __focusVolume;
+
+		super.onFocus(_);
+	}
+
+	override function onFocusLost(event:openfl.events.Event)
+	{
+		if (!FlxG.autoPause && ClientPrefs.data.lostFocusDeafen && !FlxG.sound.muted)
+		{
+			__focusVolume = Math.ffloor(FlxG.sound.volume * 10.0) * 0.1;
+			FlxG.sound.volume = FlxG.sound.volume * 0.5; // Math.ffloor(FlxG.sound.volume * 5.0) * 0.1;
+		}
+		super.onFocusLost(event);
 	}
 
 	// Code was entirely made by sqirra-rng for their fnf engine named "Izzy Engine", big props to them!!!
@@ -134,30 +230,21 @@ class Main
 	}
 	#end
 
+	/*@:noCompletion override function __enterFrame(deltaTime:Int)
+	{
+		__totalTime += deltaTime;
+		super.__enterFrame(deltaTime);
+	}*/
+
 	// shader coords fix
 	@:access(openfl.display.DisplayObject.__cleanup)
-	static function shaderFix(_, _):Void
+	@:noCompletion function shaderFix(_, _):Void
 	{
 		for (cam in FlxG.cameras.list)
 			if (cam != null && cam.filters != null)
 				cam.flashSprite.__cleanup();
 
-		FlxG.game.__cleanup();
-	}
-
-	static function volumeOnFocus() // dont ask
-	{
-		if (ClientPrefs.data.lostFocusDeafen && !FlxG.sound.muted)
-			FlxG.sound.volume = _focusVolume;
-	}
-
-	static function volumeOnFocusLost() // dont ask
-	{
-		if (ClientPrefs.data.lostFocusDeafen && !FlxG.sound.muted)
-		{
-			_focusVolume = Math.ffloor(FlxG.sound.volume * 10.0) * 0.1;
-			FlxG.sound.volume = FlxG.sound.volume * 0.5; // Math.ffloor(FlxG.sound.volume * 5.0) * 0.1;
-		}
+		this.__cleanup();
 	}
 
 	#if FLX_DEBUG inline #end public static function warn(data:Dynamic #if !FLX_DEBUG , ?pos:haxe.PosInfos #end)
@@ -175,7 +262,7 @@ class Main
 	}
 
 	// based on haxe.Log.formatOutput()
-	static function formatOutput(v:Dynamic, pos:haxe.PosInfos):String
+	@:noCompletion static function formatOutput(v:Dynamic, pos:haxe.PosInfos):String
 	{
 		final t = "<" + Date.now().toString().substr(11) + ">";
 		var s = Std.string(v);
@@ -197,4 +284,25 @@ class Main
 
 		return '$t [$p] > $s';
 	}
+
+	@:noCompletion inline static function get_fpsVar():FPSCounter
+	{
+		return __main.__fps;
+	}
+
+	@:noCompletion inline static function get_transition():StateTransition
+	{
+		return __main.__transition;
+	}
+}
+
+@:noCompletion @:publicFields @:structInit private class GameProperties
+{
+	var width:Int;
+	var height:Int;
+	var initialState:flixel.util.typeLimit.NextState;
+	// var zoom:Float;
+	var framerate:Int;
+	var skipSplash:Bool;
+	var startFullscreen:Bool;
 }

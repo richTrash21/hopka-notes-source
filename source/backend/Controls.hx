@@ -17,7 +17,7 @@ import flixel.input.gamepad.FlxGamepadInputID;
 class Controls
 {
 	// main class instance
-	@:allow(Init)
+	@:allow(Main)
 	public static var instance(default, null):Controls;
 
 	// Pressed buttons (directions)
@@ -143,7 +143,7 @@ class Controls
 	@:noCompletion inline function get_RESET():Bool			return justPressed("reset");
 
 	// IGNORE!!!
-	@:allow(Init)
+	@:allow(Main)
 	function new()
 	{
 		keyboardBinds = ClientPrefs.keyBinds;

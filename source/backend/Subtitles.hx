@@ -5,7 +5,7 @@ import flixel.util.FlxStringUtil;
 using flixel.util.FlxArrayUtil;
 
 /**  FlxText.hx jumpscare!!  **/
-@:allow(Init)
+@:allow(Main)
 class Subtitles extends FlxText
 {
 	static var _markup = new Array<FlxTextFormatMarkerPair>();

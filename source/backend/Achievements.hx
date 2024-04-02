@@ -81,7 +81,7 @@ class Achievements
 		if (_originalLength < 0)
 			init();
 
-		if (FlxG.save.data != null)
+		if (!FlxG.save.data.isEmpty())
 		{
 			if (FlxG.save.data.achievementsUnlocked != null)
 				achievementsUnlocked = cast FlxG.save.data.achievementsUnlocked;

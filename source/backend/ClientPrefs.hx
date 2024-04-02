@@ -7,6 +7,9 @@ import flixel.input.gamepad.FlxGamepadInputID;
 // Add a variable here and it will get automatically saved
 @:publicFields @:structInit class SaveVariables
 {
+	@:allow(backend.ClientPrefs)
+	private static final __fields = Type.getInstanceFields(SaveVariables);
+
 	var downScroll		= false;
 	var middleScroll	= false;
 	var opponentStrums	= true;
@@ -95,7 +98,7 @@ class ClientPrefs
 	inline public static final MAX_FPS = 360;
 
 	// Every key has two binds, add your key bind down here and then add your control on options/ControlsSubState.hx and Controls.hx
-	public static var keyBinds:Map<String, Array<FlxKey>> = [
+	public static var defaultKeys:Map<String, Array<FlxKey>> = [
 		"note_up"		=> [W, UP],
 		"note_left"		=> [A, LEFT],
 		"note_down"		=> [S, DOWN],
@@ -119,7 +122,7 @@ class ClientPrefs
 		"debug_2"		=> [EIGHT]
 	];
 
-	public static var gamepadBinds:Map<String, Array<FlxGamepadInputID>> = [
+	public static var defaultButtons:Map<String, Array<FlxGamepadInputID>> = [
 		"note_up"		=> [DPAD_UP, Y],
 		"note_left"		=> [DPAD_LEFT, X],
 		"note_down"		=> [DPAD_DOWN, A],
@@ -136,8 +139,10 @@ class ClientPrefs
 		"reset"			=> [BACK]
 	];
 
-	public static var defaultKeys:Map<String, Array<FlxKey>>;
-	public static var defaultButtons:Map<String, Array<FlxGamepadInputID>>;
+	// Placing this in a separate save so that it can be manually deleted without removing your Score and stuff
+	public static final saveControls = new FlxSave();
+	public static var keyBinds:Map<String, Array<FlxKey>>;
+	public static var gamepadBinds:Map<String, Array<FlxGamepadInputID>>;
 
 	public static function resetKeys(?controller:Bool) // Null = both, False = Keyboard, True = Controller
 	{
@@ -154,55 +159,54 @@ class ClientPrefs
 
 	public static function clearInvalidKeys(key:String)
 	{
-		final keyBind = keyBinds.get(key);
-		while (keyBind != null && keyBind.contains(NONE))
-			keyBind.remove(NONE);
+		var bind:Null<Array<Int>> = keyBinds.get(key);
+		while (bind != null && bind.contains(FlxKey.NONE))
+			bind.remove(FlxKey.NONE);
 
-		final gamepadBind = gamepadBinds.get(key);
-		while (gamepadBind != null && gamepadBind.contains(NONE))
-			gamepadBind.remove(NONE);
+		bind = gamepadBinds.get(key);
+		while (bind != null && bind.contains(FlxGamepadInputID.NONE))
+			bind.remove(FlxGamepadInputID.NONE);
 	}
 
-	inline public static function loadDefaultKeys()
+	public static function loadDefaultKeys()
 	{
-		defaultKeys = keyBinds.copy();
-		defaultButtons = gamepadBinds.copy();
+		if (keyBinds == null)
+			keyBinds = [for (k => v in defaultKeys) k => v.copy()];
+		if (gamepadBinds == null)
+			gamepadBinds = [for (k => v in defaultButtons) k => v.copy()];
 	}
 
 	public static function saveSettings()
 	{
-		for (key in Reflect.fields(data))
+		for (key in SaveVariables.__fields)
 			Reflect.setField(FlxG.save.data, key, Reflect.field(data, key));
 
 		#if ACHIEVEMENTS_ALLOWED
-		FlxG.save.data.achievementsMap = Achievements.achievementsMap;
-		FlxG.save.data.henchmenDeath   = Achievements.henchmenDeath;
+		Achievements.save();
 		#end
 		FlxG.save.flush();
 
-		//Placing this in a separate save so that it can be manually deleted without removing your Score and stuff
-		final save = new FlxSave();
-		save.bind("controls_v3", CoolUtil.getSavePath());
-		save.data.keyboard = keyBinds;
-		save.data.gamepad = gamepadBinds;
-		save.flush();
+		saveControls.data.keyboard = [for (k => v in keyBinds) k => v.copy()];
+		saveControls.data.gamepad = [for (k => v in gamepadBinds) k => v.copy()];
+		saveControls.flush();
 		FlxG.log.add("Settings saved!");
+		// trace("Settings saved!");
 	}
 
 	public static function loadPrefs()
 	{
-		for (key in Reflect.fields(data))
+		for (key in SaveVariables.__fields)
 			if (key != "gameplaySettings" && Reflect.hasField(FlxG.save.data, key))
 				Reflect.setField(data, key, Reflect.field(FlxG.save.data, key));
-		
-		if (Main.fpsVar != null)
-			Main.fpsVar.visible = ClientPrefs.data.showFPS;
+
+		FlxG.game.focusLostFramerate = 60;
+		FlxG.keys.preventDefaultKeys = [TAB];
+		// FlxG.fixedTimestep = data.fixedTimestep;
 
 		#if (!html5 && !switch)
-		FlxG.autoPause = ClientPrefs.data.autoPause;
-
+		// FlxG.autoPause = data.autoPause;
 		if (FlxG.save.data.framerate == null)
-			data.framerate = CoolUtil.boundInt(openfl.Lib.application.window.displayMode.refreshRate, MIN_FPS, MAX_FPS);
+			data.framerate = CoolUtil.boundInt(FlxG.stage.application.window.displayMode.refreshRate, MIN_FPS, MAX_FPS);
 		#end
 
 		if (data.framerate > FlxG.drawFramerate)
@@ -218,36 +222,42 @@ class ClientPrefs
 		}
 		
 		// flixel automatically saves your volume!
-		if (FlxG.save.data.volume != null)
+		// ...and loads too (lmao vanila psych is so garbage) - rich
+		/*if (FlxG.save.data.volume != null)
 			FlxG.sound.volume = FlxG.save.data.volume;
 		if (FlxG.save.data.mute != null)
-			FlxG.sound.muted = FlxG.save.data.mute;
+			FlxG.sound.muted = FlxG.save.data.mute;*/
 
 		#if hxdiscord_rpc
 		DiscordClient.check();
 		#end
 
 		// controls on a separate save file
-		final save = new FlxSave();
-		save.bind("controls_v3", CoolUtil.getSavePath());
-		if (save.data.keyboard != null)
+		saveControls.bind("controls_v3", CoolUtil.getSavePath());
+		if (!saveControls.isEmpty())
 		{
-			final loadedControls:Map<String, Array<FlxKey>> = save.data.keyboard;
-			for (control => keys in loadedControls)
-				if (keyBinds.exists(control))
-					keyBinds.set(control, keys);
-		}
-		if (save.data.gamepad != null)
-		{
-			final loadedControls:Map<String, Array<FlxGamepadInputID>> = save.data.gamepad;
-			for (control => keys in loadedControls)
-				if (gamepadBinds.exists(control))
-					gamepadBinds.set(control, keys);
+			inline function loadKeys<K, V>(saveTo:Map<K, V>, saveFrom:Map<K, V>):Map<K, V>
+			{
+				if (saveFrom == null)
+					return null;
+
+				// if (saveTo == null)
+				//	return [for (control => keys in saveFrom) control => keys];
+
+				for (control => keys in saveFrom)
+					if (saveTo.exists(control))
+						saveTo.set(control, keys);
+
+				return saveTo;
+			}
+
+			keyBinds = loadKeys(keyBinds, saveControls.data.keyboard);
+			gamepadBinds = loadKeys(gamepadBinds, saveControls.data.gamepad);
 		}
 		reloadVolumeKeys();
 	}
 
-	inline public static function getGameplaySetting(name:String, ?defaultValue:Dynamic, ?customDefaultValue:Bool = false):Dynamic
+	inline public static function getGameplaySetting(name:String, ?defaultValue:Dynamic, ?customDefaultValue = false):Dynamic
 	{
 		return (data.gameplaySettings.exists(name) ? data.gameplaySettings.get(name) : (customDefaultValue ? defaultValue : defaultData.gameplaySettings.get(name)));
 	}
@@ -262,8 +272,17 @@ class ClientPrefs
 
 	public static function toggleVolumeKeys(turnOn:Bool)
 	{
-		FlxG.sound.volumeDownKeys = turnOn ? Main.volumeDownKeys : [];
-		FlxG.sound.volumeUpKeys	  = turnOn ? Main.volumeUpKeys	 : [];
-		FlxG.sound.muteKeys 	  = turnOn ? Main.muteKeys		 : [];
+		if (turnOn)
+		{
+			FlxG.sound.volumeDownKeys = Main.volumeDownKeys;
+			FlxG.sound.volumeUpKeys   = Main.volumeUpKeys;
+			FlxG.sound.muteKeys       = Main.muteKeys;
+		}
+		else
+		{
+			FlxG.sound.volumeDownKeys = null;
+			FlxG.sound.volumeUpKeys   = null;
+			FlxG.sound.muteKeys       = null;
+		}
 	}
 }

@@ -23,7 +23,7 @@ typedef LuaColor = haxe.extern.EitherType<Float, String>;
 
 class LuaUtils
 {
-	@:allow(Init)
+	@:allow(Main)
 	@:noCompletion static final __easeMap = new Map<String, EaseFunction>();
 
 	public static function getLuaTween(options:Dynamic):LuaTweenOptions

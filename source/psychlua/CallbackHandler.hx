@@ -5,7 +5,7 @@ package psychlua;
 import llua.Lua;
 import llua.Convert;
 
-@:allow(Init)
+@:allow(Main)
 class CallbackHandler
 {
 	inline /*public*/ static function call(l:llua.State, fname:String):Int

@@ -70,14 +70,12 @@
 	<library name="videos" /> <!-- preload="true" -->
 	<section if="PRELOAD_ALL">
 		<library name="songs"			preload="true" />
-		<!-- <library name="shared"			preload="true" /> -->
 		<assets path="assets/preload"	rename="assets"		preload="true"/>
 		<library name="week_assets"		preload="true" />
 	</section>
 	
 	<section if="NO_PRELOAD_ALL">
 		<library name="songs"			preload="false" />
-		<!-- <library name="shared"			preload="false" /> -->
 		<assets path="assets/preload"	rename="assets"		preload="false"/>
 		<library name="week_assets"		preload="false" />
 	</section>
@@ -85,8 +83,6 @@
 	<assets path="assets/videos"        library="videos"        if="VIDEOS_ALLOWED"/>
 	<assets path="assets/songs"         library="songs"         exclude="*.ogg" if="web"/>
 	<assets path="assets/songs"         library="songs"         exclude="*.mp3" unless="web"/>
-	<!-- <assets path="assets/shared"        library="shared"        exclude="*.ogg" if="web"/> -->
-	<!-- <assets path="assets/shared"        library="shared"        exclude="*.mp3" unless="web"/> -->
 	<assets path="assets/week_assets"   library="week_assets"   rename="assets" exclude="*.ogg" if="web"/>
 	<assets path="assets/week_assets"   library="week_assets"   rename="assets" exclude="*.mp3" unless="web"/>
 	<assets path="assets/preload"		library="default"		rename="assets"	exclude="*.ogg" if="web"/>
@@ -95,7 +91,6 @@
 	<section if="MODS_ALLOWED">
 		<assets path='example_mods'		rename='mods' embed='false'/>
 	</section>
-	<!-- <assets path='art/readme.txt'		rename='do NOT readme.txt' /> -->
 
 	<!-- _______________________________ Libraries ______________________________ -->
 
@@ -106,9 +101,8 @@
 	<!-- Psych stuff needed -->
 	<haxelib name="linc_luajit"			if="LUA_ALLOWED"/>
 	<haxelib name="hscript-improved"	if="HSCRIPT_ALLOWED"/>
-	<!-- <haxelib name="hxCodec"				if="VIDEOS_ALLOWED" version="2.5.1"/> -->
 	<haxelib name="hxvlc"				if="VIDEOS_ALLOWED"/>
-	<haxelib name="hxdiscord_rpc"			if="desktop"/>
+	<haxelib name="hxdiscord_rpc"		if="desktop"/>
 	<haxedef name="openflPos" />
 	<haxedef name="hscriptPos" />
 
@@ -117,7 +111,6 @@
 	<haxedef name="NO_PRECOMPILED_HEADERS" if="linux" />
 
 	<!-- Enables a terminal log prompt on debug builds -->
-	<!--<haxelib name="hscript"				if="debug"/>-->
 	<haxelib name="hxcpp-debug-server"	if="debug"/>
 	<haxedef name="HXVLC_LOGGING"		if="VIDEOS_ALLOWED debug" />
 	<haxedef name="HXC_LIBVLC_LOGGING"	if="VIDEOS_ALLOWED debug" />
