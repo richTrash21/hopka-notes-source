@@ -1,7 +1,7 @@
 package backend;
 
+import haxe.PosInfos;
 import flixel.util.FlxArrayUtil;
-import flixel.util.FlxDestroyUtil;
 import flixel.system.FlxAssets.FlxGraphicAsset;
 import flixel.graphics.frames.FlxAtlasFrames;
 import flixel.graphics.FlxGraphic;
@@ -51,6 +51,9 @@ class Paths
 	public static final localTrackedAssets = new Array<String>();   // all assets
 	public static final currentTrackedAssets = new Array<String>(); // graphics
 	public static final currentTrackedSounds = new Array<String>(); // sounds
+
+	static final INVALID_CHARS = ~/[~&\\;:<>#]/;
+	static final HIDE_CHARS = ~/[.,'"%?!]/;
 
 	// haya I love you for the base cache dump I took to the max
 	public static function clearUnusedMemory()
@@ -102,7 +105,6 @@ class Paths
 			if (localTrackedAssets.contains(key) || dumpExclusions.contains(key))
 				continue;
 
-			// trace('test: ' + dumpExclusions, key);
 			OpenFlAssets.cache.removeSound(key);
 			currentTrackedSounds.remove(key);
 		}
@@ -204,34 +206,34 @@ class Paths
 		return 'assets/videos/$key.$SUB_EXT';
 	}
 
-	inline static public function sound(key:String, ?library:String):Sound
-		return returnSound('sounds', key, library);
+	inline static public function sound(key:String, ?library:String, ?pos:PosInfos):Sound
+		return returnSound('sounds', key, library, pos);
 
-	inline static public function soundRandom(key:String, min:Int, max:Int, ?library:String)
-		return sound(key + FlxG.random.int(min, max), library);
+	inline static public function soundRandom(key:String, min:Int, max:Int, ?library:String, ?pos:PosInfos)
+		return sound(key + FlxG.random.int(min, max), library, pos);
 
-	inline static public function music(key:String, ?library:String):Sound
-		return returnSound('music', key, library);
+	inline static public function music(key:String, ?library:String, ?pos:PosInfos):Sound
+		return returnSound('music', key, library, pos);
 
-	inline static public function voices(song:String):#if html5 String #else Sound #end
+	inline static public function voices(song:String, ?pos:PosInfos):#if html5 String #else Sound #end
 	{
 		#if html5
 		return 'songs:assets/songs/${formatToSongPath(song)}/Voices.$SOUND_EXT';
 		#else
-		return returnSound('songs', '${formatToSongPath(song)}/Voices');
+		return returnSound('songs', '${formatToSongPath(song)}/Voices', null, pos);
 		#end
 	}
 
-	inline static public function inst(song:String):#if html5 String #else Sound #end
+	inline static public function inst(song:String, ?pos:PosInfos):#if html5 String #else Sound #end
 	{
 		#if html5
 		return 'songs:assets/songs/${formatToSongPath(song)}/Inst.$SOUND_EXT';
 		#else
-		return returnSound('songs', '${formatToSongPath(song)}/Inst');
+		return returnSound('songs', '${formatToSongPath(song)}/Inst', null, pos);
 		#end
 	}
 
-	static public function image(key:String, ?library:String, ?allowGPU = true, ?posInfos:haxe.PosInfos):FlxGraphic
+	static public function image(key:String, ?library:String, ?allowGPU = true, ?pos:PosInfos):FlxGraphic
 	{
 		var bitmap:BitmapData = null;
 		var file:String;
@@ -269,7 +271,7 @@ class Paths
 		var t = 'Image with key "$key" could not be found';
 		if (library != null)
 			t += ' in the library "$library"';
-		Main.warn('$t! (${posInfos.fileName}, ${posInfos.lineNumber})');
+		Main.warn('$t!', pos);
 		return null;
 	}
 
@@ -316,9 +318,9 @@ class Paths
 	}
 
 	// use internal asset system only when asset is String and path is not absolete
-	inline public static function resolveGraphicAsset(asset:FlxGraphicAsset):FlxGraphicAsset
+	inline public static function resolveGraphicAsset(asset:FlxGraphicAsset, ?pos:PosInfos):FlxGraphicAsset
 	{
-		return ((asset is String && !(asset.startsWith("assets/") || PNG_REGEX.match(asset))) ? image(asset) : asset);
+		return ((asset is String && !(asset.startsWith("assets/") || PNG_REGEX.match(asset))) ? image(asset, pos) : asset);
 	}
 
 	static public function getTextFromFile(key:String, ?ignoreMods = false, ?absolute = false):String
@@ -406,46 +408,43 @@ class Paths
 		return getPackerAtlas(key, library, allowGPU);
 	}
 
-	inline static public function getSparrowAtlas(key:String, ?library:String, ?allowGPU = true):FlxAtlasFrames
+	/*inline*/ static public function getSparrowAtlas(key:String, ?library:String, ?allowGPU = true, ?pos:PosInfos):FlxAtlasFrames
 	{
 		try
 		{
 			#if MODS_ALLOWED
 			final xml = modsXml(key);
-			return FlxAtlasFrames.fromSparrow(image(key, allowGPU) ?? image(key, library, allowGPU),
+			return FlxAtlasFrames.fromSparrow(image(key, allowGPU, pos) ?? image(key, library, allowGPU, pos),
 										(FileSystem.exists(xml) ? File.getContent(xml) : getPath('images/$key.xml', library)));
 			#else
-			return FlxAtlasFrames.fromSparrow(image(key, library, allowGPU), getPath('images/$key.xml', library));
+			return FlxAtlasFrames.fromSparrow(image(key, library, allowGPU, pos), getPath('images/$key.xml', library));
 			#end
 		}
 		catch(e)
 		{
-			Main.warn('[getSparrowAtlas] - ERROR WHILE LOADING "$key" xml: $e.');
+			Main.warn('[getSparrowAtlas] - ERROR WHILE LOADING "$key" xml: $e.', pos);
 			lime.app.Application.current.window.alert('$e\n\ntl;dr; no spritesheet lmao.\nbtw, this message won\'t crash the game! :D', "XML ERROR!!");
 			return null;
 		}
 	}
 
-	inline static public function getPackerAtlas(key:String, ?library:String = null, ?allowGPU:Bool = true):FlxAtlasFrames
+	/*inline*/ static public function getPackerAtlas(key:String, ?library:String = null, ?allowGPU:Bool = true, ?pos:PosInfos):FlxAtlasFrames
 	{
 		#if MODS_ALLOWED
 		final txt = modsTxt(key);
-		return FlxAtlasFrames.fromSpriteSheetPacker(image(key, allowGPU) ?? image(key, library, allowGPU),
+		return FlxAtlasFrames.fromSpriteSheetPacker(image(key, allowGPU, pos) ?? image(key, library, allowGPU, pos),
 												(FileSystem.exists(txt) ? File.getContent(txt) : getPath('images/$key.txt', library)));
 		#else
-		return FlxAtlasFrames.fromSpriteSheetPacker(image(key, library, allowGPU), getPath('images/$key.txt', library));
+		return FlxAtlasFrames.fromSpriteSheetPacker(image(key, library, allowGPU, pos), getPath('images/$key.txt', library));
 		#end
 	}
 
 	inline static public function formatToSongPath(path:String)
 	{
-		final invalidChars = ~/[~&\\;:<>#]/;
-		final hideChars = ~/[.,'"%?!]/;
-		final path = invalidChars.split(path.replace(' ', '-')).join("-");
-		return hideChars.split(path).join("").toLowerCase();
+		return HIDE_CHARS.split(INVALID_CHARS.split(path.replace(" ", "-")).join("-")).join("").toLowerCase();
 	}
 
-	public static function returnSound(path:String, key:String, ?library:String):Sound
+	public static function returnSound(path:String, key:String, ?library:String, ?pos:PosInfos):Sound
 	{
 		var sound:Sound = null;
 		try
@@ -471,7 +470,6 @@ class Paths
 			// I hate this so god damn much
 			file = getPath('$path/$key.$SOUND_EXT', SOUND, library);
 			file = file.substring(file.indexOf(":") + 1, file.length);
-			// trace(file);
 			if (hasSound(file))
 				sound = OpenFlAssets.getSound(file);
 			else
@@ -491,7 +489,7 @@ class Paths
 		}
 		catch(e) // FUCKING OPENFL - richTrash21
 		{
-			Main.warn('$e (fucking openfl...)');
+			Main.warn('$e (fucking openfl...)', pos);
 			return sound;
 		}
 	}
