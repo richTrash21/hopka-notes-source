@@ -1,5 +1,6 @@
 package states.editors;
 
+import flixel.FlxSubState;
 #if !RELESE_BUILD_FR
 import flixel.util.FlxStringUtil;
 import flash.geom.Rectangle;
@@ -1283,19 +1284,22 @@ class ChartingState extends MusicBeatUIState
 	var playtestingOnComplete:Void->Void = null;
 	override function closeSubState()
 	{
-		if(playtesting)
+		if (playtesting)
 		{
 			FlxG.sound.music.pause();
 			FlxG.sound.music.time = playtestingTime;
 			FlxG.sound.music.onComplete = playtestingOnComplete;
-			if(instVolume != null) FlxG.sound.music.volume = instVolume.value;
-			if(check_mute_inst != null && check_mute_inst.checked) FlxG.sound.music.volume = 0;
+			if (instVolume != null)
+				FlxG.sound.music.volume = instVolume.value;
+			if (check_mute_inst != null && check_mute_inst.checked)
+				FlxG.sound.music.volume = 0;
 
-			if(vocals != null)
+			if (vocals != null)
 			{
 				vocals.pause();
 				vocals.time = playtestingTime;
-				if (voicesVolume != null) vocals.volume = (check_mute_vocals != null && check_mute_vocals.checked) ? 0 : voicesVolume.value;
+				if (voicesVolume != null)
+					vocals.volume = (check_mute_vocals != null && check_mute_vocals.checked) ? 0 : voicesVolume.value;
 				//if (check_mute_vocals != null && check_mute_vocals.checked) vocals.volume = 0;
 			}
 
@@ -1304,20 +1308,31 @@ class ChartingState extends MusicBeatUIState
 			DiscordClient.changePresence("Chart Editor", StringTools.replace(_song.song, '-', ' '));
 			#end
 		}
+		persistentUpdate = true;
 		super.closeSubState();
 	}
 
-	function generateSong() {
+	override public function openSubState(subState:FlxSubState)
+	{
+		persistentUpdate = false;
+		super.openSubState(subState);
+	}
+
+	function generateSong()
+	{
 		FlxG.sound.playMusic(Paths.inst(currentSongName), 0.6/*, false*/);
 		FlxG.sound.music.autoDestroy = false;
-		if (instVolume != null) FlxG.sound.music.volume = instVolume.value;
-		if (check_mute_inst != null && check_mute_inst.checked) FlxG.sound.music.volume = 0;
+		if (instVolume != null)
+			FlxG.sound.music.volume = instVolume.value;
+		if (check_mute_inst != null && check_mute_inst.checked)
+			FlxG.sound.music.volume = 0;
 
 		FlxG.sound.music.onComplete = function()
 		{
 			FlxG.sound.music.pause();
 			Conductor.songPosition = 0;
-			if(vocals != null) {
+			if (vocals != null)
+			{
 				vocals.pause();
 				vocals.time = 0;
 			}
@@ -1610,7 +1625,7 @@ class ChartingState extends MusicBeatUIState
 			}
 			if (FlxG.keys.justPressed.ENTER)
 			{
-				persistentUpdate = true;
+				persistentUpdate = false;
 				autosaveSong();
 				// FlxG.mouse.visible = false;
 				PlayState.SONG = _song;

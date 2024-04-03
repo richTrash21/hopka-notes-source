@@ -554,7 +554,13 @@ class FunkinLua
 				? removeTween.bind(_, tag)
 				: (t) -> { game.callOnLuas(myOptions.onComplete, [tag, vars]); removeTween(t, tag); }
 
-			game.modchartTweens.set(tag, FlxTween.tween(penisExam, values, duration, tweenOptions));
+			try
+			{
+				final t = FlxTween.tween(penisExam, values, duration, tweenOptions);
+				game.modchartTweens.set(tag, t);
+			}
+			catch(e)
+				luaTrace('startTween: Tween error for $vars: $e', true, false, FlxColor.RED);
 		});
 
 		/*set("doTweenX", (tag:String, vars:String, value:Dynamic, duration:Float, ease:String) ->
@@ -1481,7 +1487,7 @@ class FunkinLua
 		// }
 	}
 	
-	public static function luaTrace(text:String, ignoreCheck:Bool = false, deprecated:Bool = false, color:FlxColor = FlxColor.WHITE)
+	public static function luaTrace(text:String, ignoreCheck:Bool = false, deprecated:Bool = false, color:FlxColor = FlxColor.WHITE, ?pos:haxe.PosInfos)
 	{
 		#if LUA_ALLOWED
 		if (ignoreCheck || getBool("luaDebugMode"))
@@ -1489,8 +1495,8 @@ class FunkinLua
 			if (deprecated && !getBool("luaDeprecatedWarnings"))
 				return;
 
-			PlayState.instance.addTextToDebug(text, color);
-			trace(text);
+			PlayState.instance.addTextToDebug(text, color, pos);
+			// trace(text);
 		}
 		#end
 	}
@@ -1548,12 +1554,12 @@ class FunkinLua
 		if (v == null || v == "")
 		{
 			return switch(status)
-				{
-					case Lua.LUA_ERRRUN:	"Runtime Error";
-					case Lua.LUA_ERRMEM:	"Memory Allocation Error";
-					case Lua.LUA_ERRERR:	"Critical Error";
-					default:				"Unknown Error";
-				}
+			{
+				case Lua.LUA_ERRRUN:	"Runtime Error";
+				case Lua.LUA_ERRMEM:	"Memory Allocation Error";
+				case Lua.LUA_ERRERR:	"Critical Error";
+				default:				"Unknown Error";
+			}
 		}
 
 		return v;
@@ -1565,12 +1571,12 @@ class FunkinLua
 	{
 		#if LUA_ALLOWED
 		callbacks.set(name, myFunction);
-		Lua_helper.add_callback(lua, name, null); //just so that it gets called
+		Lua_helper.add_callback(lua, name, null); // just so that it gets called
 		#end
 	}
 	
 	#if (MODS_ALLOWED && !flash && sys)
-	public var runtimeShaders:Map<String, Array<String>> = new Map<String, Array<String>>();
+	public var runtimeShaders = new Map<String, RuntimeShaderData>();
 	#end
 	public function initLuaShader(name:String, ?glslVersion:Int = 120)
 	{
@@ -1585,43 +1591,28 @@ class FunkinLua
 		}
 
 		final foldersToCheck = [Paths.mods("shaders/")];
-		if (Mods.currentModDirectory != null && Mods.currentModDirectory.length > 0)
+		if (Mods.currentModDirectory != null && Mods.currentModDirectory.length != 0)
 			foldersToCheck.insert(0, Paths.mods(Mods.currentModDirectory + "/shaders/"));
 
 		for (mod in Mods.getGlobalMods())
 			foldersToCheck.insert(0, Paths.mods('$mod/shaders/'));
 		
 		for (folder in foldersToCheck)
-		{
-			if(FileSystem.exists(folder))
+			if (FileSystem.exists(folder))
 			{
 				var frag = '$folder$name.frag';
 				var vert = '$folder$name.vert';
-				var found = false;
-				if (FileSystem.exists(frag))
-				{
-					frag = File.getContent(frag);
-					found = true;
-				}
-				else
-					frag = null;
 
-				if (FileSystem.exists(vert))
-				{
-					vert = File.getContent(vert);
-					found = true;
-				}
-				else
-					vert = null;
+				frag = FileSystem.exists(frag) ? File.getContent(frag) : null;
+				vert = FileSystem.exists(vert) ? File.getContent(vert) : null;
 
-				if (found)
+				if (!(frag == null && vert == null))
 				{
 					runtimeShaders.set(name, [frag, vert]);
-					//trace("Found shader $name!");
 					return true;
 				}
 			}
-		}
+
 		luaTrace('Missing shader $name .frag AND .vert files!', false, false, FlxColor.RED);
 		#else
 		luaTrace("This platform doesn\'t support Runtime Shaders!", false, false, FlxColor.RED);

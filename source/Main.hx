@@ -19,7 +19,8 @@ import haxe.CallStack;
 
 class Main extends flixel.FlxGame
 {
-	public static final game:GameProperties =
+	public static final initialState:flixel.util.typeLimit.NextState = states.TitleState.new;
+	/*public static final game:GameProperties =
 	{
 		width: 1280,					  	  // WINDOW width
 		height: 720,					  	  // WINDOW height
@@ -28,10 +29,10 @@ class Main extends flixel.FlxGame
 		framerate: 60,						  // default framerate
 		skipSplash: true,					  // if the default flixel splash screen should be skipped
 		startFullscreen: false				  // if the game should start at fullscreen mode
-	};
+	};*/
 
-	public static var fpsVar(get, never):FPSCounter;
-	public static var transition(get, never):StateTransition;
+	public static var fpsVar(default, null):FPSCounter; // (get, never)
+	public static var transition(default, null):StateTransition; // (get, never)
 
 	public static var volumeDownKeys:Array<FlxKey>;
 	public static var volumeUpKeys:Array<FlxKey>;
@@ -41,11 +42,11 @@ class Main extends flixel.FlxGame
 	@:noCompletion static var __log = "";
 	@:noCompletion static var __main:Main;
 
-	@:noCompletion var __transition:StateTransition;
-	@:noCompletion var __fps:FPSCounter;
+	// @:noCompletion var __transition:StateTransition;
+	// @:noCompletion var __fps:FPSCounter;
 
 	@:noCompletion var __focusVolume = 1.0; // ignore
-	@:noCompletion var __totalTime = 0;
+	// @:noCompletion var __totalTime = 0;
 
 	public function new()
 	{
@@ -66,6 +67,10 @@ class Main extends flixel.FlxGame
 			throw new haxe.exceptions.NotImplementedException()
 			#end
 		}
+			
+		#if CRASH_HANDLER
+		Lib.current.loaderInfo.uncaughtErrorEvents.addEventListener(UncaughtErrorEvent.UNCAUGHT_ERROR, onCrash);
+		#end
 
 		// sexy subtitle markups
 		for (name => color in FlxColor.colorLookup)
@@ -78,19 +83,116 @@ class Main extends flixel.FlxGame
 			Subtitles._markup.push(new FlxTextFormatMarkerPair(new FlxTextFormat(null, null, null, color), '<border-$name>'));
 		}
 
-		// var field:Dynamic;
 		for (f in Type.getClassFields(FlxEase))
-			if (f.toUpperCase() != f) // Type.typeof(field = Reflect.field(FlxEase, f)) == TFunction
-				psychlua.LuaUtils.__easeMap.set(f.toLowerCase(), Reflect.field(FlxEase, f)); // cast field
+			if (f.toUpperCase() != f) // a function field name
+				psychlua.LuaUtils.__easeMap.set(f.toLowerCase(), Reflect.field(FlxEase, f));
 
-		FlxG.save.bind("funkin", CoolUtil.getSavePath());
-		super(game.width, game.height, Init, game.framerate, game.framerate, game.skipSplash, game.startFullscreen);
-		Subtitles.__posY = FlxG.height * 0.75;
+		// shader coords fix
+		FlxG.signals.gameResized.add(shaderFix);
 
-		// reset cache on restart
-		FlxG.signals.preGameReset.add(() -> { Paths.clearStoredMemory(); Paths.clearUnusedMemory(); });
+		// reset local cache on restart
+		FlxG.signals.preGameReset.add(() ->
+		{
+			Paths.clearStoredMemory();
+			Paths.clearUnusedMemory();
+		});
+
 		// sync save data on restart
-		FlxG.signals.postGameReset.add(() -> { FlxG.autoPause = ClientPrefs.data.autoPause; FlxG.fixedTimestep = ClientPrefs.data.fixedTimestep; });
+		FlxG.signals.postGameReset.add(() ->
+		{
+			#if (!html5 && !switch)
+			FlxG.autoPause = ClientPrefs.data.autoPause;
+			#end
+			FlxG.fixedTimestep = ClientPrefs.data.fixedTimestep;
+		});
+
+		// im sorry but some mods are annoying with this
+		FlxG.signals.preStateSwitch.add(() -> FlxG.cameras.bgColor = FlxColor.BLACK);
+
+		// propper game initialization
+		FlxG.signals.preGameStart.addOnce(() ->
+		{	
+			FlxG.keys.preventDefaultKeys = [TAB];
+			Controls.instance = new Controls();
+
+			#if LUA_ALLOWED
+			llua.Lua.set_callbacks_function(cpp.Callable.fromStaticFunction(psychlua.CallbackHandler.call));
+			Mods.pushGlobalMods();
+			#end
+			Mods.loadTopMod();
+			#if ACHIEVEMENTS_ALLOWED
+			Achievements.load();
+			#end
+			backend.Highscore.load();
+	
+			if (FlxG.save.data.weekCompleted != null)
+				states.StoryMenuState.weekCompleted = FlxG.save.data.weekCompleted;
+	
+			// FlxG.fullscreen = FlxG.save.data.fullscreen;
+			FlxG.sound.volume = Math.ffloor(FlxG.sound.volume * 10) * 0.1;
+			__focusVolume = FlxG.sound.volume;
+			#if debug
+			FlxG.console.registerClass(Main);
+			FlxG.console.registerClass(Paths);
+			FlxG.console.registerClass(PlayState);
+			FlxG.console.registerClass(ClientPrefs);
+			#if ACHIEVEMENTS_ALLOWED
+			FlxG.console.registerClass(Achievements);
+			#end
+			FlxG.console.registerClass(MusicBeatState);
+			FlxG.console.registerObject("controls", Controls.instance);
+			FlxG.console.registerFunction("switchState", (n:String, ?p:Array<Dynamic>) ->
+			{
+				if (p == null)
+					p = [];
+
+				final f = Type.resolveClass(n);
+				var c = f;
+				while (c != null)
+				{
+					if (flixel.util.FlxStringUtil.sameClassName(c, flixel.FlxState))
+					{
+						MusicBeatState.switchState(() -> Type.createInstance(f, p));
+						FlxG.log.add('Switching state (class: $f | parameters: $p)');
+						return;
+					}
+					c = Type.getSuperClass(c);
+				}
+				FlxG.log.warn('"$n" is not an FlxState class!');
+			});
+	
+			// это рофлс
+			FlxG.game.soundTray.volumeUpSound = "assets/sounds/metal";
+			FlxG.game.soundTray.volumeDownSound = "assets/sounds/lego";
+			#else
+			FlxG.game.soundTray.volumeUpSound = "assets/sounds/up_volume";
+			FlxG.game.soundTray.volumeDownSound = "assets/sounds/down_volume";
+			#end
+	
+			#if !html5
+			FlxG.mouse.useSystemCursor = true;
+			#end
+	
+			#if hxdiscord_rpc
+			DiscordClient.prepare();
+			#end
+
+			FlxTransitionableState.skipNextTransOut = /*FlxTransitionableState.skipNextTransIn =*/ true;
+		});
+
+		// bound local save so flixels default save won't initialize
+		FlxG.save.bind("funkin", CoolUtil.getSavePath());
+
+		var framerate:Int;
+		#if (html5 || switch)
+		framerate = 60;
+		#else
+		framerate = (!FlxG.save.isEmpty() && FlxG.save.data.framerate != null) ? FlxG.save.data.framerate : Application.current.window.displayMode.refreshRate;
+		framerate = CoolUtil.boundInt(framerate, ClientPrefs.MIN_FPS, ClientPrefs.MAX_FPS);
+		#end
+
+		focusLostFramerate = 60;
+		super(Init, framerate, framerate, true, FlxG.save.data.fullscreen);
 
 		ClientPrefs.loadDefaultKeys();
 		ClientPrefs.loadPrefs();
@@ -101,79 +203,19 @@ class Main extends flixel.FlxGame
 		if (stage == null)
 			return;
 
-		addChild(__transition = new StateTransition());
+		addChild(transition = new StateTransition()); // __transition
 
 		super.create(_);
 
-		__totalTime = _startTime;		// get the most recent timestamp and only then replace getTimer()
-		getTimer = () -> __totalTime;	// hope it will not completely break the game :clueless:
-										// UPD: nothing changed lmao, exept computing elapsed now less expensive
-										// will break on flash but nobody cares about flash - rich
-
 		#if !mobile
-		addChild(__fps = new FPSCounter(10, 3)).visible = ClientPrefs.data.showFPS;
+		addChild(fpsVar = new FPSCounter(10, 3)).visible = ClientPrefs.data.showFPS; // __fps
 		#end
 
-		FlxTransitionableState.skipNextTransOut = /*FlxTransitionableState.skipNextTransIn =*/ true;
-
-		#if LUA_ALLOWED
-		Mods.pushGlobalMods();
-		#end
-		Mods.loadTopMod();
-
-		Controls.instance = new Controls();
-		// ClientPrefs.loadDefaultKeys();
-
-		#if LUA_ALLOWED
-		llua.Lua.set_callbacks_function(cpp.Callable.fromStaticFunction(psychlua.CallbackHandler.call));
-		#end
-		#if ACHIEVEMENTS_ALLOWED
-		Achievements.load();
-		#end
-		backend.Highscore.load();
-
-		if (FlxG.save.data.weekCompleted != null)
-			states.StoryMenuState.weekCompleted = FlxG.save.data.weekCompleted;
-
-		__focusVolume = FlxG.sound.volume;
-		FlxG.fullscreen = FlxG.save.data.fullscreen;
-		#if debug
-		FlxG.console.registerClass(Main);
-		FlxG.console.registerClass(Paths);
-		FlxG.console.registerClass(PlayState);
-		FlxG.console.registerClass(ClientPrefs);
-		#if ACHIEVEMENTS_ALLOWED
-		FlxG.console.registerClass(Achievements);
-		#end
-		FlxG.console.registerClass(MusicBeatState);
-		FlxG.console.registerObject("controls", Controls.instance);
-		FlxG.console.registerFunction("switchState", (n:String, ?p:Array<Dynamic>) -> MusicBeatState.switchState(Type.createInstance(Type.resolveClass(n), p ?? [])));
-
-		// это рофлс
-		FlxG.game.soundTray.volumeUpSound = "assets/sounds/metal";
-		FlxG.game.soundTray.volumeDownSound = "assets/sounds/lego";
-		#else
-		FlxG.game.soundTray.volumeUpSound = "assets/sounds/up_volume";
-		FlxG.game.soundTray.volumeDownSound = "assets/sounds/down_volume";
-		#end
-
-		#if !html5
-		FlxG.mouse.useSystemCursor = true;
-		#end
-		
-		#if CRASH_HANDLER
-		Lib.current.loaderInfo.uncaughtErrorEvents.addEventListener(UncaughtErrorEvent.UNCAUGHT_ERROR, onCrash);
-		#end
-
-		#if hxdiscord_rpc
-		DiscordClient.prepare();
-		#end
-
-		FlxG.signals.gameResized.add(shaderFix);
-		// Application.current.window.onClose.add(() -> FlxG.sound.volume = __focusVolume, true);
-
-		// im sorry but some mods are annoying with this
-		FlxG.signals.preStateSwitch.add(() -> FlxG.cameras.bgColor = FlxColor.BLACK);
+		// __totalTime = _startTime;		// get the most recent timestamp and only then replace getTimer()
+		// getTimer = () -> __totalTime;	// hope it will not completely break the game :clueless:
+										// UPD: nothing changed lmao, exept computing elapsed now less expensive (lie)
+										// will break on flash but nobody cares about flash - rich
+										// UPDD: reverted cuz im stupid yeah
 	}
 
 	override function onFocus(_)
@@ -232,7 +274,7 @@ class Main extends flixel.FlxGame
 	}
 	#end
 
-	@:noCompletion override function __enterFrame(deltaTime:Int)
+	/*@:noCompletion override function __enterFrame(deltaTime:Int)
 	{
 		// ig it will sync better like that
 		// if (_state != null && _state.active && _state.visible && _state.exists)
@@ -243,9 +285,8 @@ class Main extends flixel.FlxGame
 		//	trace('__enterFrame($deltaTime): ' + getTicks(), "openfl.Lib.getTimer(): " + (Lib.getTimer() - _startTime));
 		// }
 		super.__enterFrame(deltaTime);
-	}
+	}*/
 
-	// shader coords fix
 	@:access(openfl.display.DisplayObject.__cleanup)
 	@:noCompletion function shaderFix(_, _):Void
 	{
@@ -256,7 +297,7 @@ class Main extends flixel.FlxGame
 		this.__cleanup();
 	}
 
-	#if FLX_DEBUG inline #end public static function warn(data:Dynamic #if !FLX_DEBUG , ?pos:haxe.PosInfos #end)
+	#if FLX_DEBUG inline #end public static function warn(data:Dynamic, ?pos:haxe.PosInfos)
 	{
 		#if FLX_DEBUG
 		FlxG.log.warn(data);
@@ -294,7 +335,7 @@ class Main extends flixel.FlxGame
 		return '$t [$p] > $s';
 	}
 
-	@:noCompletion inline static function get_fpsVar():FPSCounter
+	/*@:noCompletion inline static function get_fpsVar():FPSCounter
 	{
 		return __main.__fps;
 	}
@@ -302,10 +343,10 @@ class Main extends flixel.FlxGame
 	@:noCompletion inline static function get_transition():StateTransition
 	{
 		return __main.__transition;
-	}
+	}*/
 }
 
-@:noCompletion @:publicFields @:structInit private class GameProperties
+/*@:noCompletion @:publicFields @:structInit private class GameProperties
 {
 	var width:Int;
 	var height:Int;
@@ -314,4 +355,4 @@ class Main extends flixel.FlxGame
 	var framerate:Int;
 	var skipSplash:Bool;
 	var startFullscreen:Bool;
-}
+}*/

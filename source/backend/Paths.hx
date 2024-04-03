@@ -240,11 +240,10 @@ class Paths
 
 		#if MODS_ALLOWED
 		file = modsImages(key);
-		if (hasGraphic(file)) // currentTrackedAssets.exists(file)
+		if (hasGraphic(file))
 		{
-			// localTrackedAssets.push(file);
 			tryPush(localTrackedAssets, file);
-			return FlxG.bitmap.get(file); // currentTrackedAssets.get(file)
+			return FlxG.bitmap.get(file);
 		}
 		else if (FileSystem.exists(file))
 			bitmap = BitmapData.fromFile(file);
@@ -254,9 +253,8 @@ class Paths
 			file = getPath('images/$key.png', IMAGE, library);
 			if (hasGraphic(file))
 			{
-				// localTrackedAssets.push(file);
 				tryPush(localTrackedAssets, file);
-				return FlxG.bitmap.get(file); // currentTrackedAssets.get(file)
+				return FlxG.bitmap.get(file);
 			}
 			else if (OpenFlAssets.exists(file, IMAGE))
 				bitmap = OpenFlAssets.getBitmapData(file);
@@ -323,7 +321,7 @@ class Paths
 		return ((asset is String && !(asset.startsWith("assets/") || PNG_REGEX.match(asset))) ? image(asset, pos) : asset);
 	}
 
-	static public function getTextFromFile(key:String, ?ignoreMods = false, ?absolute = false):String
+	static public function getTextFromFile(key:String, ?ignoreMods = false, ?absolute = false, ?pos:PosInfos):String
 	{
 		if (absolute)
 		{
@@ -334,6 +332,7 @@ class Paths
 			if (OpenFlAssets.exists(key, TEXT))
 				return Assets.getText(key);
 
+			Main.warn('Counld not find "$key" text file', pos);
 			return null;
 		}
 		#if sys
@@ -342,8 +341,6 @@ class Paths
 			return File.getContent(modFolders(key));
 		#end
 
-		// if (FileSystem.exists(getPreloadPath(key)))
-		//	return File.getContent(getPreloadPath(key));
 		if (FileSystem.exists(getSharedPath(key)))
 			return File.getContent(getSharedPath(key));
 
@@ -351,7 +348,7 @@ class Paths
 		{
 			if (currentLevel != "default")
 			{
-				final levelPath = getLibraryPathForce(key, 'week_assets', currentLevel);
+				final levelPath = getLibraryPathForce(key, "week_assets", currentLevel);
 				if (FileSystem.exists(levelPath))
 					return File.getContent(levelPath);
 			}
@@ -365,6 +362,7 @@ class Paths
 		if (OpenFlAssets.exists(path, TEXT))
 			return Assets.getText(path);
 
+		Main.warn('Counld not find "$key" text file', pos);
 		return null;
 	}
 

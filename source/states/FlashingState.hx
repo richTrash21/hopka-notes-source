@@ -16,7 +16,7 @@ You've been warned!";
 		if (leftState)
 			return __next();
 
-		add(new FlxText(0, 0, FlxG.width,WARN_TEXT, 32).setFormat("VCR OSD Mono", 32, FlxColor.WHITE, CENTER).screenCenter());
+		add(new FlxText(0, 0, FlxG.width, WARN_TEXT, 32).setFormat("VCR OSD Mono", 32, FlxColor.WHITE, CENTER).screenCenter());
 	}
 
 	override function update(elapsed:Float)
@@ -46,6 +46,6 @@ You've been warned!";
 
 	@:noCompletion extern inline function __next()
 	{
-		MusicBeatState.switchState(Main.game.initialState);
+		MusicBeatState.switchState(Main.initialState);
 	}
 }

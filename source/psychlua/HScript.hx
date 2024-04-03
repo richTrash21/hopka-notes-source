@@ -17,12 +17,12 @@ class HScript extends Interp
 {
 	public static function initHaxeModule(parent:FunkinLua)
 	{
-		if (parent.hscript == null)
-		{
-			final times = Date.now().getTime();
-			parent.hscript = new HScript(parent);
-			trace('initialized hscript interp successfully: ${parent.scriptName} (${Std.int(Date.now().getTime() - times)}ms)');
-		}
+		if (parent.hscript != null)
+			return;
+
+		final times = Date.now().getTime();
+		parent.hscript = new HScript(parent);
+		trace('initialized hscript interp successfully: ${parent.scriptName} (${Std.int(Date.now().getTime() - times)}ms)');
 	}
 
 	public static function initHaxeModuleCode(parent:FunkinLua, code:String)
@@ -110,7 +110,7 @@ class HScript extends Interp
 		setVar('setVar',	 PlayState.instance.variables.set);
 		setVar('getVar',	 PlayState.instance.variables.get);
 		setVar('removeVar',	 PlayState.instance.variables.remove);
-		setVar('debugPrint', PlayState.instance.addTextToDebug);
+		setVar('debugPrint', (t:String, c:FlxColor) -> PlayState.instance.addTextToDebug(t, c, posInfos()));
 
 		// For adding your own callbacks
 

@@ -199,34 +199,12 @@ class ClientPrefs
 			if (key != "gameplaySettings" && Reflect.hasField(FlxG.save.data, key))
 				Reflect.setField(data, key, Reflect.field(FlxG.save.data, key));
 
-		FlxG.game.focusLostFramerate = 60;
-		FlxG.keys.preventDefaultKeys = [TAB];
-		// FlxG.fixedTimestep = data.fixedTimestep;
-
-		#if (!html5 && !switch)
-		// FlxG.autoPause = data.autoPause;
-		if (FlxG.save.data.framerate == null)
-			data.framerate = CoolUtil.boundInt(FlxG.stage.application.window.displayMode.refreshRate, MIN_FPS, MAX_FPS);
-		#end
-
-		if (data.framerate > FlxG.drawFramerate)
-			FlxG.drawFramerate = FlxG.updateFramerate = data.framerate;
-		else
-			FlxG.updateFramerate = FlxG.drawFramerate = data.framerate;
-
 		if (FlxG.save.data.gameplaySettings != null)
 		{
 			final savedMap:Map<String, Dynamic> = FlxG.save.data.gameplaySettings;
 			for (name => value in savedMap)
 				data.gameplaySettings.set(name, value);
 		}
-		
-		// flixel automatically saves your volume!
-		// ...and loads too (lmao vanila psych is so garbage) - rich
-		/*if (FlxG.save.data.volume != null)
-			FlxG.sound.volume = FlxG.save.data.volume;
-		if (FlxG.save.data.mute != null)
-			FlxG.sound.muted = FlxG.save.data.mute;*/
 
 		#if hxdiscord_rpc
 		DiscordClient.check();

@@ -356,7 +356,7 @@ class PlayState extends MusicBeatState
 		persistentUpdate = persistentDraw = true;
 
 		if (SONG == null)
-			SONG = Song.loadFromJson("test");
+			SONG = Song.loadFromJson("test", "test");
 
 		Conductor.mapBPMChanges(SONG);
 		Conductor.bpm = SONG.bpm;
@@ -704,14 +704,14 @@ class PlayState extends MusicBeatState
 		startCallback();
 	}
 
-	public function addTextToDebug(text:String, ?color:FlxColor/*, ?pos:haxe.PosInfos*/)
+	public function addTextToDebug(text:String, ?color:FlxColor, ?pos:haxe.PosInfos)
 	{
 		#if LUA_ALLOWED
 		if (isDead) // ACTUALLY CAN CAUSES MEMORY LEAK!!!
-			return trace(text);
+			return haxe.Log.trace(text, pos);
 
 		if (luaDebugGroup == null)
-			return trace("can't add debug text - 'luaDebugGroup' is null!!!");
+			return haxe.Log.trace("can't add debug text - 'luaDebugGroup' is null!!!", pos);
 
 		final newText = luaDebugGroup.recycle(DebugLuaText);
 		newText.text = text;
@@ -721,7 +721,7 @@ class PlayState extends MusicBeatState
 		luaDebugGroup.forEachAlive((spr) -> spr.y += newText.height + 2);
 		luaDebugGroup.add(newText);
 		#end
-		trace(text);
+		haxe.Log.trace(text, pos);
 	}
 
 	inline public function reloadHealthBarColors()

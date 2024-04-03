@@ -5,11 +5,11 @@ import flixel.util.FlxStringUtil;
 using flixel.util.FlxArrayUtil;
 
 /**  FlxText.hx jumpscare!!  **/
-@:allow(Main)
 class Subtitles extends FlxText
 {
+	@:allow(Main)
 	static var _markup = new Array<FlxTextFormatMarkerPair>();
-	static var __posY = 0.;
+	static var __posY = 540.;
 
 	public var lineID(default, null):Int;
 	public var playing(default, null):Bool;

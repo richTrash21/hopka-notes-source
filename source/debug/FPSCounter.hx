@@ -47,8 +47,7 @@ class FPSCounter extends openfl.text.TextField
 		multiline = true;
 		text = "FPS: ";
 
-		times = [];
-
+		times = new Array();
 		shader = new shaders.OutlineShader();
 
 		// i think it is optimization - Redar

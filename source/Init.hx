@@ -130,7 +130,7 @@ class Init extends flixel.FlxState
 
 	@:noCompletion extern inline function leave()
 	{
-		var switchTo:flixel.util.typeLimit.NextState = Main.game.initialState;
+		var switchTo:flixel.util.typeLimit.NextState = Main.initialState;
 		if (FlxG.save.data.flashing == null && !FlashingState.leftState)
 		{
 			FlxTransitionableState.skipNextTransIn = true;
