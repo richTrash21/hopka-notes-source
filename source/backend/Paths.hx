@@ -527,7 +527,7 @@ class Paths
 			library = "";
 
 		for (path in bank)
-			if (path.endsWith(suffix) && path.contains(library))
+			if (path.contains(library) && path.endsWith(suffix))
 				__bySuffixArray.push(path);
 
 		// priorities: 'mods/$currentMod' > 'mods/' > 'assets/'
