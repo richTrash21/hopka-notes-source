@@ -1,9 +1,10 @@
 package backend;
 
-import flixel.FlxBasic;
+import openfl.media.Sound;
 import flixel.FlxObject;
-import backend.MusicBeatState;
+import flixel.FlxBasic;
 
+import backend.MusicBeatState;
 import objects.Note.EventNote;
 import objects.Character;
 
@@ -43,12 +44,11 @@ class BaseStage extends FlxBasic
 	
 	var game:MusicBeatState;
 	var playState:PlayState; // to get rid of Dynamic type on game variable and avoid casting
-	public var onPlayState:Bool;
+	public var onPlayState(get, never):Bool;
 
 	@:noCompletion inline function resolveState():MusicBeatState
 	{
-		// FlxG.state is states.PlayState
-		return (onPlayState = PlayState.instance != null) ? (playState = PlayState.instance) : cast FlxG.state; // avoid casting me say?
+		return PlayState.instance == null ? cast FlxG.state : (playState = PlayState.instance); // avoid casting me say?
 	}
 
 	public function new()
@@ -74,7 +74,6 @@ class BaseStage extends FlxBasic
 		super.destroy();
 		game = null;
 		playState = null;
-		onPlayState = false;
 	}
 
 	//main callbacks
@@ -129,15 +128,12 @@ class BaseStage extends FlxBasic
 		return onPlayState ? insert(members.indexOf(playState.dadGroup), obj) : obj;
 	}
 
-	public function setDefaultGF(name:String) //Fix for the Chart Editor on Base Game stages
+	public function setDefaultGF(name:String) // Fix for the Chart Editor on Base Game stages
 	{
 		if (onPlayState)
 		{
-			final gfVersion:String = PlayState.SONG.gfVersion;
-			if (gfVersion == null || gfVersion.length < 1)
-			{
+			if (PlayState.SONG.gfVersion.isNullOrEmpty())
 				PlayState.SONG.gfVersion = name;
-			}
 		}
 		/* else
 			FlxG.log.warn("setDefaultGF: Current state is NOT PlayState!"); */
@@ -159,33 +155,27 @@ class BaseStage extends FlxBasic
 			FlxG.log.warn("setEndCallback: Current state is NOT PlayState!"); */
 	}
 
-	//precache functions
-	public function precacheImage(key:String)
+	// precache functions
+	inline public function precacheImage(key:String):flixel.graphics.FlxGraphic
 	{
-		precache(key, 'image');
+		return Paths.image(key);
 	}
-	public function precacheSound(key:String)
+	inline public function precacheSound(key:String):Sound
 	{
-		precache(key, 'sound');
+		return Paths.sound(key);
 	}
-	public function precacheMusic(key:String)
+	inline public function precacheMusic(key:String):Sound
 	{
-		precache(key, 'music');
+		return Paths.music(key);
 	}
 
 	public function precache(key:String, type:String)
 	{
-		if (onPlayState)
-			playState.precacheList.set(key, type);
-
-		switch(type)
+		switch (type)
 		{
-			case 'image':
-				Paths.image(key);
-			case 'sound':
-				Paths.sound(key);
-			case 'music':
-				Paths.music(key);
+			case "image": precacheImage(key);
+			case "sound": precacheSound(key);
+			case "music": precacheMusic(key);
 		}
 	}
 
@@ -297,5 +287,10 @@ class BaseStage extends FlxBasic
 	@:noCompletion inline function get_camFollow():FlxObject
 	{
 		return onPlayState ? playState.camFollow : null;
+	}
+
+	@:noCompletion inline function get_onPlayState():Bool
+	{
+		return playState != null;
 	}
 }

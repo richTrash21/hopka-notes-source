@@ -58,9 +58,10 @@ class GameOverSubstate extends MusicBeatSubstate
 		if (!PlayState.instance.boyfriendMap.exists('GameOverSubstate__$characterName'))
 		{
 			// PlayState.instance.addCharacterToList('GameOverSubstate__$characterName', 0);
-			final char = new Character(0, 0, characterName, true);
+			final char = new Character(characterName, true);
 			PlayState.instance.boyfriendMap.set('GameOverSubstate__$characterName', char);
 			char.precache();
+			char.kill();
 			PlayState.instance.startCharacterScripts(char.curCharacter);
 		}
 
@@ -82,14 +83,14 @@ class GameOverSubstate extends MusicBeatSubstate
 		if (game.boyfriendMap.exists('GameOverSubstate__$characterName'))
 		{
 			boyfriend = game.boyfriendMap.get('GameOverSubstate__$characterName');
-			boyfriend.setPosition(x, y);
-			boyfriend.alpha = 1;
+			boyfriend.addPosition(x, y);
+			boyfriend.revive();
 		}
 		else
 			boyfriend = new Character(x, y, characterName, true);
 
-		boyfriend.x += boyfriend.position.x;
-		boyfriend.y += boyfriend.position.y;
+		// boyfriend.x += boyfriend.position.x;
+		// boyfriend.y += boyfriend.position.y;
 		add(boyfriend);
 
 		FlxG.sound.play(Paths.sound(deathSoundName));

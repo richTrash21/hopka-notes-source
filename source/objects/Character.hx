@@ -187,7 +187,7 @@ class Character extends objects.ExtendedSprite
 		recalculateDanceIdle();
 		updateCamFollow();
 
-		if (debugMode || oldAnim == null || !animExists(oldAnim))
+		if (debugMode || oldAnim == null || !animation.exists(oldAnim))
 			dance();
 		else
 			playAnim(oldAnim, oldFrame);
@@ -309,7 +309,7 @@ class Character extends objects.ExtendedSprite
 	override public function playAnim(animName:String, force = false, ?reversed = false, ?frame = 0):Void
 	{
 		specialAnim = false;
-		if (animName == null || !animExists(animName))
+		if (animName == null || !animation.exists(animName))
 			return Main.warn('No animation called "$animName", for character "$curCharacter"');
 
 		animation.play(animName, force, reversed, frame);
@@ -325,18 +325,18 @@ class Character extends objects.ExtendedSprite
 	public function recalculateDanceIdle()
 	{
 		final lastDanceIdle = danceIdle;
-		// danceIdle = (animExists('danceLeft$idleSuffix') && animExists('danceRight$idleSuffix'));
+		// danceIdle = (animation.exists('danceLeft$idleSuffix') && animation.exists('danceRight$idleSuffix'));
 
 		// new (numbered) dance anims (stolen from twist engine ehehehe) - rich >:3
-		if (animExists('dance0$idleSuffix'))
+		if (animation.exists('dance0$idleSuffix'))
 		{
 			maxDance = 0;
-			while (animExists("dance" + ++maxDance + idleSuffix)) { /*aaaaaand it does nothing*/ }
+			while (animation.exists("dance" + ++maxDance + idleSuffix)) { /*aaaaaand it does nothing*/ }
 		}
 		else
 			maxDance = -1;
 
-		danceIdle = (maxDance > 1 || animExists('danceLeft$idleSuffix') && animExists('danceRight$idleSuffix'));
+		danceIdle = (maxDance > 1 || animation.exists('danceLeft$idleSuffix') && animation.exists('danceRight$idleSuffix'));
 
 		if (settingCharacterUp)
 		{

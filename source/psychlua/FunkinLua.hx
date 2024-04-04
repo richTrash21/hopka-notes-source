@@ -702,7 +702,7 @@ class FunkinLua
 		set("addHealth", (value:Float = 0) -> game.health += value);
 		set("getHealth", 				() -> game.health);
 
-		//Identical functions
+		// Identical functions
 		set("FlxColor", 			FlxColor.fromString);
 		set("getColorFromName", 	FlxColor.fromString);
 		set("getColorFromString", 	FlxColor.fromString);
@@ -713,7 +713,7 @@ class FunkinLua
 			game.addCharacterToList(name,
 				switch (type.toLowerCase())
 				{
-					case "dad" | "opponent" | "1": 	1;
+					case "dad" | "opponent" | "1":	1;
 					case "gf" | "girlfriend" | "2":	2;
 					default:						0;
 				})
@@ -1592,10 +1592,10 @@ class FunkinLua
 
 		final foldersToCheck = [Paths.mods("shaders/")];
 		if (Mods.currentModDirectory != null && Mods.currentModDirectory.length != 0)
-			foldersToCheck.insert(0, Paths.mods(Mods.currentModDirectory + "/shaders/"));
+			foldersToCheck.unshift(Paths.mods(Mods.currentModDirectory + "/shaders/"));
 
 		for (mod in Mods.getGlobalMods())
-			foldersToCheck.insert(0, Paths.mods('$mod/shaders/'));
+			foldersToCheck.unshift(Paths.mods('$mod/shaders/'));
 		
 		for (folder in foldersToCheck)
 			if (FileSystem.exists(folder))

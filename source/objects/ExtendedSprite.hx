@@ -86,7 +86,6 @@ class ExtendedSprite extends FlxSprite
 
 	public var onGraphicLoaded:()->Void;
 	public var animOffsets:Map<String, FlxPoint> = [];
-	// public var curAnimOffset(get, never):Null<FlxPoint>;
 
 	public var deltaX(default, null):Float;
 	public var deltaY(default, null):Float;
@@ -152,15 +151,14 @@ class ExtendedSprite extends FlxSprite
 	public function playAnim(name:String, forced = false, ?reverse = false, ?startFrame = 0):Void
 	{
 		// if there is no animation named "name" then just skips the whole shit
-		if (name == null || !animExists(name))
+		if (name == null || !animation.exists(name))
 			return Main.warn('No animation called "$name"');
 
 		animation.play(name, forced, reverse, startFrame);
 	}
 
 	// quick n' easy animation setup
-	public function addAnim(name:String, ?prefix:String, ?indices:Array<Int>, frameRate = 24., looped = true,
-			?flipX = false, ?flipY = false, ?loopPoint = 0):FlxAnimation
+	public function addAnim(name:String, ?prefix:String, ?indices:Array<Int>, frameRate = 24., looped = true, flipX = false, flipY = false, loopPoint = 0):FlxAnimation
 	{
 		final indicesEmpty = (indices == null || indices.length == 0);
 		if (prefix != null)
@@ -173,7 +171,7 @@ class ExtendedSprite extends FlxSprite
 		else if (!indicesEmpty)
 			animation.add(name, indices, frameRate, looped, flipX, flipY);
 
-		final addedAnim = getAnimByName(name);
+		final addedAnim = animation.getByName(name);
 		if (addedAnim != null)
 		{
 			addedAnim.loopPoint = loopPoint; // better than -loop anims lmao
@@ -181,7 +179,7 @@ class ExtendedSprite extends FlxSprite
 		return addedAnim;
 	}
 
-	inline public function animExists(name:String):Bool
+	/*inline public function animExists(name:String):Bool
 	{
 		return animation.exists(name);
 	}
@@ -189,13 +187,6 @@ class ExtendedSprite extends FlxSprite
 	inline public function getAnimByName(name:String):FlxAnimation
 	{
 		return animation.getByName(name);
-	}
-
-	/*public function getScaledGraphicMidpoint(?point:FlxPoint):FlxPoint
-	{
-		if (point == null)
-			point = FlxPoint.get();
-		return point.set(x + (frameWidth * scale.x) * 0.5, y + (frameHeight * scale.y) * 0.5);
 	}*/
 
 	// kinda like setGraphicSize, but with just scale value
@@ -313,11 +304,6 @@ class ExtendedSprite extends FlxSprite
 		this.offset.subtractPoint(offset);										// revert
 		return ret;
 	}
-
-	/*@:noCompletion inline function get_curAnimOffset():Null<FlxPoint>
-	{
-		return animation.curAnim == null ? null : animOffsets.get(animation.curAnim.name);
-	}*/
 
 	@:noCompletion inline function set_boundBox(rect:FlxRect):FlxRect
 	{

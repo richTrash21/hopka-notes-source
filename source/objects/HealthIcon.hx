@@ -108,7 +108,7 @@ class HealthIcon extends ExtendedSprite
 
 		antialiasing = char.endsWith("-pixel") ? false : (ClientPrefs.data.antialiasing && json.antialias);
 
-		if (!animExists(char))
+		if (!animation.exists(char))
 			addAnim(char, [for (i in 0...numFrames) i], 0, false, flip);
 
 		playAnim(char, false, prevFrame);

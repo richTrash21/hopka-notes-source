@@ -238,6 +238,10 @@ class Paths
 		var bitmap:BitmapData = null;
 		var file:String;
 
+		/*file = gatGraphicPathBySuffix(key);
+		if (file != null)
+			return FlxG.bitmap.get(file);*/
+
 		#if MODS_ALLOWED
 		file = modsImages(key);
 		if (hasGraphic(file))
@@ -311,7 +315,6 @@ class Paths
 
 		currentTrackedAssets.push(file);
 		tryPush(localTrackedAssets, file);
-		// localTrackedAssets.push(file);
 		return graph;
 	}
 
@@ -394,16 +397,12 @@ class Paths
 	}
 
 	// less optimized but automatic handling
-	static public function getAtlas(key:String, ?library:String, ?allowGPU = true):FlxAtlasFrames
+	static public function getAtlas(key:String, ?library:String, ?allowGPU = true, ?pos:PosInfos):FlxAtlasFrames
 	{
-		#if MODS_ALLOWED
-		if (FileSystem.exists(modsXml(key)) || OpenFlAssets.exists(getPath('images/$key.xml', library), TEXT))
-		#else
-		if (OpenFlAssets.exists(getPath('images/$key.xml', library)))
-		#end
-			return getSparrowAtlas(key, library, allowGPU);
+		if (#if MODS_ALLOWED FileSystem.exists(modsXml(key)) || #end OpenFlAssets.exists(getPath('images/$key.xml', library), TEXT))
+			return getSparrowAtlas(key, library, allowGPU, pos);
 
-		return getPackerAtlas(key, library, allowGPU);
+		return getPackerAtlas(key, library, allowGPU, pos);
 	}
 
 	/*inline*/ static public function getSparrowAtlas(key:String, ?library:String, ?allowGPU = true, ?pos:PosInfos):FlxAtlasFrames
@@ -460,7 +459,6 @@ class Paths
 					OpenFlAssets.cache.setSound(file, sound);
 					currentTrackedSounds.push(file);
 				}
-				// localTrackedAssets.push(file);
 				tryPush(localTrackedAssets, file);
 				return sound;
 			}
@@ -482,7 +480,6 @@ class Paths
 				currentTrackedSounds.push(file);
 			}
 			tryPush(localTrackedAssets, file);
-			// localTrackedAssets.push(file);
 			return sound;
 		}
 		catch(e) // FUCKING OPENFL - richTrash21
@@ -499,12 +496,67 @@ class Paths
 
 	inline public static function hasSound(key:String):Bool
 	{
-		return currentTrackedSounds.contains(key); // OpenFlAssets.cache.hasSound(key);
+		return currentTrackedSounds.contains(key);
 	}
 
 	inline public static function hasGraphic(key:String):Bool
 	{
-		return currentTrackedAssets.contains(key); // FlxG.bitmap._cache.exists(key);
+		return currentTrackedAssets.contains(key);
+	}
+
+	// much quicker ways of searching asset
+	inline public static function getSoundPathBySuffix(suffix:String, ?library:String):String
+	{
+		return __bySuffixHelper(currentTrackedSounds, suffix, library, '.$SOUND_EXT');
+	}
+
+	inline public static function gatGraphicPathBySuffix(suffix:String, ?library:String):String
+	{
+		return __bySuffixHelper(currentTrackedAssets, suffix, library, ".png");
+	}
+
+	static final __bySuffixArray = new Array<String>();
+
+	static function __bySuffixHelper(bank:Array<String>, suffix:String, library:String, ext:String):String
+	{
+		FlxArrayUtil.clearArray(__bySuffixArray);
+		if (!suffix.endsWith(ext))
+			suffix += ext;
+
+		if (library == null)
+			library = "";
+
+		for (path in bank)
+			if (path.endsWith(suffix) && path.contains(library))
+				__bySuffixArray.push(path);
+
+		// priorities: 'mods/$currentMod' > 'mods/' > 'assets/'
+		__bySuffixArray.sort((s1, s2) ->
+		{
+			inline function alphabeticalOrder(a:String, b:String):Int
+			{
+				a = a.toLowerCase();
+				b = b.toLowerCase();
+				return a < b ? -1 : (a > b ? 1 : 0);
+			}
+
+			#if MODS_ALLOWED
+			var curMods1 = false;
+			var curMods2 = false;
+			if (!Mods.currentModDirectory.isNullOrEmpty())
+			{
+				curMods1 = s1.startsWith("mods/" + Mods.currentModDirectory + "/");
+				curMods2 = s2.startsWith("mods/" + Mods.currentModDirectory + "/");
+			}
+
+			// current loaded mod > mods priority
+			if (s1.startsWith("mods/") || s2.startsWith("mods/"))
+				return curMods1 && !curMods2 ? -1 : (!curMods1 && curMods2 ? 1 : 0); // alphabeticalOrder(s1, s2)
+			#end
+			return alphabeticalOrder(s1, s2);
+		});
+
+		return null;
 	}
 
 	#if MODS_ALLOWED
