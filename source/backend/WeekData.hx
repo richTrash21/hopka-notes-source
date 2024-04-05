@@ -109,17 +109,17 @@ class WeekData
 		weeksList = [];
 		weeksLoaded.clear();
 		#if MODS_ALLOWED
-		final directories:Array<String> = [Paths.mods(), Paths.getPreloadPath()];
+		final directories:Array<String> = [Paths.mods(), Paths.getSharedPath()];
 		final originalLength:Int = directories.length;
 
 		for (mod in Mods.parseList().enabled)
 			directories.push(Paths.mods('$mod/'));
 		#else
-		final directories:Array<String> = [Paths.getPreloadPath()];
+		final directories:Array<String> = [Paths.getSharedPath()];
 		final originalLength:Int = directories.length;
 		#end
 
-		final sexList:Array<String> = CoolUtil.coolTextFile(Paths.getPreloadPath('weeks/weekList.txt'));
+		final sexList:Array<String> = CoolUtil.coolTextFile(Paths.getSharedPath('weeks/weekList.txt'));
 		for (i in 0...sexList.length)
 		{
 			for (j in 0...directories.length)

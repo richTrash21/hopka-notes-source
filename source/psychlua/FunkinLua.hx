@@ -1524,7 +1524,7 @@ class FunkinLua
 		if (!scriptFile.endsWith(ext))
 			scriptFile += ext;
 
-		final preloadPath = Paths.getPreloadPath(scriptFile);
+		final preloadPath = Paths.getSharedPath(scriptFile);
 		#if MODS_ALLOWED
 		final path = Paths.modFolders(scriptFile);
 		if (FileSystem.exists(scriptFile))

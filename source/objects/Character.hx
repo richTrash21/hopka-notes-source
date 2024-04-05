@@ -28,14 +28,14 @@ class Character extends objects.ExtendedSprite
 			#if MODS_ALLOWED
 			path = Paths.modFolders(characterPath);
 			if (!FileSystem.exists(path))
-				path = Paths.getPreloadPath(characterPath);
+				path = Paths.getSharedPath(characterPath);
 	
 			if (!FileSystem.exists(path))
 			#else
-			path = Paths.getPreloadPath(characterPath);
+			path = Paths.getSharedPath(characterPath);
 			if (!Assets.exists(path))
 			#end
-				path = Paths.getPreloadPath('characters/$DEFAULT_CHARACTER.json'); // If a character couldn't be found, change him to BF just to prevent a crash
+				path = Paths.getSharedPath('characters/$DEFAULT_CHARACTER.json'); // If a character couldn't be found, change him to BF just to prevent a crash
 	
 			final json:CharacterFile = cast haxe.Json.parse(#if MODS_ALLOWED sys.io.File.getContent(path) #else Assets.getText(path) #end);
 			if (useCache)

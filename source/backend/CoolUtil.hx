@@ -32,7 +32,7 @@ class CoolUtil
 		var daList:String = null;
 	
 		#if (sys && MODS_ALLOWED)
-		final colonIndex:Int = path.indexOf(":"); //prevent "shared:", "preload:" and other library names on file path
+		final colonIndex = path.indexOf(":"); // prevent "shared:", "preload:" and other library names on file path
 		if (colonIndex != -1)
 			path = path.substring(colonIndex+1);
 		if (sys.FileSystem.exists(path))

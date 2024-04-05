@@ -79,7 +79,7 @@ class Mods
 	/*inline*/ public static function mergeAllTextsNamed(path:String, ?defaultDirectory:String, allowDuplicates:Bool = false)
 	{
 		if (defaultDirectory == null)
-			defaultDirectory = Paths.getPreloadPath();
+			defaultDirectory = Paths.getSharedPath();
 
 		defaultDirectory = defaultDirectory.trim();
 		if (!defaultDirectory.endsWith("/"))

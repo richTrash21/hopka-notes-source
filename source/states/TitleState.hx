@@ -124,7 +124,7 @@ class TitleState extends MusicBeatState
 	{
 		var firstArray:Array<String>;
 		#if MODS_ALLOWED
-		firstArray = Mods.mergeAllTextsNamed("data/introText.txt", Paths.getPreloadPath());
+		firstArray = Mods.mergeAllTextsNamed("data/introText.txt", Paths.getSharedPath());
 		#else
 		firstArray = Assets.getText(Paths.txt("introText")).split("\n");
 		#end

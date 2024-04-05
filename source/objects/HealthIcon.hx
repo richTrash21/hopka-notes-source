@@ -25,11 +25,11 @@ class HealthIcon extends ExtendedSprite
 		#if MODS_ALLOWED
 		path = Paths.modFolders(iconPath);
 		if (!FileSystem.exists(path))
-			path = Paths.getPreloadPath(iconPath);
+			path = Paths.getSharedPath(iconPath);
 
 		if (FileSystem.exists(path))
 		#else
-		path = Paths.getPreloadPath(iconPath);
+		path = Paths.getSharedPath(iconPath);
 		if (Assets.exists(path))
 		#end
 			config = cast haxe.Json.parse(#if MODS_ALLOWED sys.io.File.getContent(path) #else Assets.getText(path) #end);

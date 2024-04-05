@@ -168,6 +168,7 @@ class Main extends flixel.FlxGame
 			FlxG.game.soundTray.volumeUpSound = "assets/sounds/up_volume";
 			FlxG.game.soundTray.volumeDownSound = "assets/sounds/down_volume";
 			#end
+			FlxG.signals.preStateCreate.add(LoadingState.preloadState);
 	
 			#if !html5
 			FlxG.mouse.useSystemCursor = true;

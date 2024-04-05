@@ -19,6 +19,15 @@ class DiscordClient
 		"streamer-fright", "casement", "real-huggies", "birthday", // placeholders
 	];
 
+	public static var state(get, set):String;
+	public static var details(get, set):String;
+	public static var smallImageKey(get, set):String;
+	public static var largeImageKey(get, set):String;
+	public static var largeImageText(get, set):String;
+
+	public static var startTimestamp(get, set):Int;
+	public static var endTimestamp(get, set):Int;
+
 	public static function check()
 	{
 		if (ClientPrefs.data.discordRPC)
@@ -90,30 +99,29 @@ class DiscordClient
 				#end
 				Discord.RunCallbacks();
 
-				// Wait 2 seconds until the next loop...
-				Sys.sleep(2);
+				// Wait a second until the next loop...
+				Sys.sleep(1);
 			}
 		});
 		isInitialized = true;
 	}
 
-	public static function changePresence(?details:String = "In the Menus", ?state:String, ?smallImageKey:String, ?hasStartTimestamp:Bool, ?endTimestamp:Float, ?largeImageKey:String)
+	public static function changePresence(details = "In the Menus", ?state:String, ?smallImageKey:String, hasStartTimestamp = false, ?endTimestamp:Float, ?largeImageKey:String)
 	{
 		final startTimestamp:Null<Float> = hasStartTimestamp ? Date.now().getTime() : null;
 		if (endTimestamp > 0)
 			endTimestamp = startTimestamp + endTimestamp;
 
-		presence.details		= details;
 		presence.state			= state;
-		presence.largeImageKey	= VALID_ICONS.contains(largeImageKey) ? largeImageKey : DEFAULT_ICON;
-		presence.largeImageText	= null; // "Engine Version: " + states.MainMenuState.psychEngineVersion;
+		presence.details		= details;
 		presence.smallImageKey	= smallImageKey;
+		presence.largeImageKey	= VALID_ICONS.contains(largeImageKey) ? largeImageKey : DEFAULT_ICON;
+		presence.largeImageText	= null; // "Engine Version: " + states.MainMenuState.psychEngineVersion
 
 		// Obtained times are in milliseconds so they are divided so Discord can use it
 		presence.startTimestamp	= startTimestamp == null ? 0 : Std.int(startTimestamp * 0.001);
 		presence.endTimestamp	= endTimestamp == null ? 0 : Std.int(endTimestamp * 0.001);
 		updatePresence();
-
 		// trace('Discord RPC Updated. Arguments: $details, $state, $smallImageKey, $hasStartTimestamp, $endTimestamp, $largeImageKey');
 	}
 
@@ -125,19 +133,6 @@ class DiscordClient
 	inline public static function resetClientID()
 	{
 		clientID = _defaultID;
-	}
-
-	@:noCompletion static function set_clientID(newID:String)
-	{
-		final change = clientID != newID;
-		clientID = newID;
-		if (change && isInitialized)
-		{
-			shutdown();
-			initialize();
-			updatePresence();
-		}
-		return newID;
 	}
 
 	#if MODS_ALLOWED
@@ -159,5 +154,87 @@ class DiscordClient
 		funk.set("changeDiscordClientID", (?newID:String) -> clientID = newID ?? _defaultID);
 	}
 	#end
+
+	@:noCompletion static function set_clientID(newID:String):String
+	{
+		if (clientID != newID && isInitialized)
+		{
+			clientID = newID;
+			shutdown();
+			initialize();
+			updatePresence();
+		}
+		return newID;
+	}
+
+	@:noCompletion inline static function get_state():String
+	{
+		return presence.state;
+	}
+
+	@:noCompletion inline static function set_state(value:String):String
+	{
+		return presence.state = value;
+	}
+
+	@:noCompletion inline static function get_details():String
+	{
+		return presence.details;
+	}
+
+	@:noCompletion inline static function set_details(value:String):String
+	{
+		return presence.details = value;
+	}
+
+	@:noCompletion inline static function get_smallImageKey():String
+	{
+		return presence.smallImageKey;
+	}
+
+	@:noCompletion inline static function set_smallImageKey(value:String):String
+	{
+		return presence.smallImageKey = value;
+	}
+
+	@:noCompletion inline static function get_largeImageKey():String
+	{
+		return presence.largeImageKey;
+	}
+	
+	@:noCompletion inline static function set_largeImageKey(value:String):String
+	{
+		return presence.largeImageKey = value;
+	}
+
+	@:noCompletion inline static function get_largeImageText():String
+	{
+		return presence.largeImageText;
+	}
+
+	@:noCompletion inline static function set_largeImageText(value:String):String
+	{
+		return presence.largeImageText = value;
+	}
+
+	@:noCompletion inline static function get_startTimestamp():Int
+	{
+		return presence.startTimestamp;
+	}
+
+	@:noCompletion inline static function set_startTimestamp(value:Int):Int
+	{
+		return presence.startTimestamp = value;
+	}
+
+	@:noCompletion inline static function get_endTimestamp():Int
+	{
+		return presence.endTimestamp;
+	}
+
+	@:noCompletion inline static function set_endTimestamp(value:Int):Int
+	{
+		return presence.endTimestamp = value;
+	}
 }
 #end

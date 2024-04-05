@@ -480,7 +480,7 @@ class PlayState extends MusicBeatState
 
 		// "GLOBAL" SCRIPTS
 		#if (LUA_ALLOWED || HSCRIPT_ALLOWED)
-		for (folder in Mods.directoriesWithFile(Paths.getPreloadPath(), "scripts/"))
+		for (folder in Mods.directoriesWithFile(Paths.getSharedPath(), "scripts/"))
 			for (file in FileSystem.readDirectory(folder))
 				scriptHelper(file, folder);
 		#end
@@ -687,7 +687,7 @@ class PlayState extends MusicBeatState
 
 		// SONG SPECIFIC SCRIPTS
 		#if (LUA_ALLOWED || HSCRIPT_ALLOWED)
-		for (folder in Mods.directoriesWithFile(Paths.getPreloadPath(), 'data/$songName/'))
+		for (folder in Mods.directoriesWithFile(Paths.getSharedPath(), 'data/$songName/'))
 			for (file in FileSystem.readDirectory(folder))
 				scriptHelper(file, folder);
 		#end
@@ -831,11 +831,11 @@ class PlayState extends MusicBeatState
 		}
 		else
 		{
-			luaFile = Paths.getPreloadPath(luaFile);
+			luaFile = Paths.getSharedPath(luaFile);
 			doPush = FileSystem.exists(luaFile);
 		}
 		#else
-		luaFile = Paths.getPreloadPath(luaFile);
+		luaFile = Paths.getSharedPath(luaFile);
 		if (Assets.exists(luaFile))
 			doPush = true;
 		#end
@@ -867,7 +867,7 @@ class PlayState extends MusicBeatState
 		}
 		else
 		{
-			scriptFile = Paths.getPreloadPath(scriptFile);
+			scriptFile = Paths.getSharedPath(scriptFile);
 			doPush = FileSystem.exists(scriptFile);
 		}
 		
@@ -1703,7 +1703,7 @@ class PlayState extends MusicBeatState
 	#if hxdiscord_rpc
 	@:noCompletion extern inline function __get_RPC_state():String
 	{
-		return storyDifficultyText == Difficulty.defaultDifficulty ? SONG.song + ' ($storyDifficultyText)' : SONG.song;
+		return storyDifficultyText == Difficulty.defaultDifficulty ? SONG.song : SONG.song + ' ($storyDifficultyText)';
 	}
 	#end
 
@@ -3120,10 +3120,10 @@ class PlayState extends MusicBeatState
 		#if MODS_ALLOWED
 		luaToLoad = Paths.modFolders(luaFile);
 		if (!FileSystem.exists(luaToLoad))
-			luaToLoad = Paths.getPreloadPath(luaFile);
+			luaToLoad = Paths.getSharedPath(luaFile);
 		if (FileSystem.exists(luaToLoad))
 		#else
-		luaToLoad = Paths.getPreloadPath(luaFile);
+		luaToLoad = Paths.getSharedPath(luaFile);
 		if (OpenFlAssets.exists(luaToLoad))
 		#end
 		{
@@ -3145,10 +3145,10 @@ class PlayState extends MusicBeatState
 		#if MODS_ALLOWED
 		var scriptToLoad = Paths.modFolders(scriptFile);
 		if (!FileSystem.exists(scriptToLoad))
-			scriptToLoad = Paths.getPreloadPath(scriptFile);
+			scriptToLoad = Paths.getSharedPath(scriptFile);
 		if (FileSystem.exists(scriptToLoad))
 		#else
-		scriptToLoad = Paths.getPreloadPath(scriptFile);
+		scriptToLoad = Paths.getSharedPath(scriptFile);
 		if (OpenFlAssets.exists(scriptToLoad))
 		#end
 		{

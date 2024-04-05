@@ -1,15 +1,14 @@
 package states;
 
-import sys.io.File;
-import sys.FileSystem;
-import haxe.Json;
-import lime.utils.Assets;
+import openfl.utils.Assets as OpenFlAssets;
 import openfl.display.BitmapData;
 import openfl.utils.AssetType;
-import openfl.utils.Assets as OpenFlAssets;
+import lime.utils.Assets;
+
 import flixel.addons.transition.FlxTransitionableState;
-import flixel.graphics.FlxGraphic;
 import flixel.util.typeLimit.NextState;
+import flixel.graphics.FlxGraphic;
+import flixel.FlxState;
 
 import backend.Song;
 import backend.StageData;
@@ -17,16 +16,19 @@ import objects.Character;
 
 import sys.thread.Thread;
 import sys.thread.Mutex;
+import sys.FileSystem;
+import sys.io.File;
+import haxe.Json;
 
 using flixel.util.FlxArrayUtil;
 
-class LoadingState extends flixel.FlxState
+class LoadingState extends FlxState
 {
-	public static var loaded:Int = 0;
-	public static var loadMax:Int = 0;
+	public static var loaded = 0;
+	public static var loadMax = 0;
 
-	static var dontPreloadDefaultVoices:Bool = false;
-	static var __preloadSong:Bool = false;
+	static var dontPreloadDefaultVoices = false;
+	static var __preloadSong = false;
 
 	static final requestedBitmaps = new Map<String, BitmapData>();
 	static final imagesToPrepare = new Array<String>();
@@ -35,6 +37,34 @@ class LoadingState extends flixel.FlxState
 	static final songsToPrepare = new Array<String>();
 
 	static final mutex = new Mutex();
+
+	static var __preloadPending = false;
+
+	@:allow(Main)
+	static function preloadState(state:FlxState)
+	{
+		if (!__preloadPending)
+			return;
+
+		state.alive = state.exists = false; // bypass killMembers()
+		startThreads();
+		prepareToSong();
+		__preloadSong = false;
+		while (true)
+		{
+			if (checkLoaded())
+				break;
+
+			// wait 0.01 sec until next loop...
+			Sys.sleep(.01);
+		}
+		imagesToPrepare.clearArray();
+		soundsToPrepare.clearArray();
+		musicToPrepare.clearArray();
+		songsToPrepare.clearArray();
+		state.alive = state.exists = true;
+		__preloadPending = false;
+	}
 
 	inline static public function loadAndSwitchState(target:NextState, stopMusic = false, intrusive = false)
 	{
@@ -60,43 +90,17 @@ class LoadingState extends flixel.FlxState
 		Paths.currentLevel = directory;
 		trace('Setting asset folder to $directory');
 
-		var doPrecache = false;
 		clearInvalids();
-
 		if (intrusive)
 		{
 			if (imagesToPrepare.length != 0 || soundsToPrepare.length != 0 || musicToPrepare.length != 0 || songsToPrepare.length != 0)
 				return LoadingState.new.bind(target, stopMusic);
 		}
-		else
-			doPrecache = true;
+		else // preload before state creation
+			__preloadPending = true;
 
 		if (stopMusic && FlxG.sound.music != null)
 			FlxG.sound.music.stop();
-		
-		if (doPrecache) // preload before state creation
-			FlxG.signals.preStateCreate.addOnce((state) ->
-			{
-				state.alive = state.exists = false; // bypass killMembers()
-				startThreads();
-				prepareToSong();
-				__preloadSong = false;
-				while (true)
-				{
-					if (checkLoaded())
-					{
-						imagesToPrepare.clearArray();
-						soundsToPrepare.clearArray();
-						musicToPrepare.clearArray();
-						songsToPrepare.clearArray();
-						state.alive = state.exists = true;
-						break;
-					}
-
-					// wait 0.01 sec until next loop...
-					Sys.sleep(.01);
-				}
-			});
 
 		return target;
 	}
@@ -259,7 +263,7 @@ class LoadingState extends flixel.FlxState
 					var bitmap:BitmapData = null;
 					#if MODS_ALLOWED
 					file = Paths.modsImages(image);
-					if (Paths.hasGraphic(file)) // Paths.currentTrackedAssets.exists(file)
+					if (Paths.hasGraphic(file))
 					{
 						mutex.release();
 						loaded++;
@@ -271,7 +275,7 @@ class LoadingState extends flixel.FlxState
 					#end
 					{
 						file = Paths.getPath('images/$image.png', IMAGE);
-						if (Paths.hasGraphic(file)) // Paths.currentTrackedAssets.exists(file)
+						if (Paths.hasGraphic(file))
 						{
 							mutex.release();
 							loaded++;

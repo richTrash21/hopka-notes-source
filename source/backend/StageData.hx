@@ -61,7 +61,7 @@ class StageData
 	inline public static function getStageFile(stage:String):StageFile
 	{
 		var rawJson:String = null;
-		final path = Paths.getPreloadPath('stages/$stage.json');
+		final path = Paths.getSharedPath('stages/$stage.json');
 		#if MODS_ALLOWED
 		final modPath = Paths.modFolders('stages/$stage.json');
 		if (FileSystem.exists(modPath))
