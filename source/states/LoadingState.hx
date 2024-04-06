@@ -116,22 +116,17 @@ class LoadingState extends FlxState
 		addItems(images, imagesToPrepare);
 		addItems(sounds, soundsToPrepare);
 		addItems(music, musicToPrepare);
-		/*if (images != null)
-			imagesToPrepare = imagesToPrepare.concat(images);
-		if (sounds != null)
-			soundsToPrepare = soundsToPrepare.concat(sounds);
-		if (music != null)
-			musicToPrepare = musicToPrepare.concat(music);*/
 	}
 
 	public static function prepareToSong()
 	{
+		trace("preloading song pending: " + __preloadSong);
 		if (!__preloadSong)
 		{
 			__preloadSong = true;
 			return;
 		}
-		__preloadSong = false;
+
 		final folder = Paths.formatToSongPath(PlayState.SONG.song);
 		/*try
 		{
@@ -139,10 +134,7 @@ class LoadingState extends FlxState
 			var path = Paths.json('$folder/preload');
 			#if MODS_ALLOWED
 			var moddyFile:String = Paths.modsJson('$folder/preload');
-			json =	if (FileSystem.exists(moddyFile))
-						Json.parse(File.getContent(moddyFile));
-					else
-						Json.parse(File.getContent(path));
+			json = Json.parse(File.getContent(FileSystem.exists(moddyFile) ? moddyFile : path));
 			#else
 			json = Json.parse(Assets.getText(path));
 			#end
@@ -176,6 +168,7 @@ class LoadingState extends FlxState
 		
 		if (!dontPreloadDefaultVoices && PlayState.SONG.needsVoices)
 			pushSong(prefixVocals);
+		__preloadSong = false;
 	}
 
 	inline static function pushSong(song:String)
@@ -332,19 +325,12 @@ class LoadingState extends FlxState
 		try
 		{
 			// also caches jsons
-			var character:CharacterFile = Character.resolveCharacterData(char);
-			/*var path:String = Paths.getPath('characters/$char.json', TEXT, null, true);
-			#if MODS_ALLOWED
-			character = cast Json.parse(File.getContent(path));
-			#else
-			character = cast Json.parse(Assets.getText(path));
-			#end*/
-			
+			var character = Character.resolveCharacterData(char);			
 			imagesToPrepare.push(character.image);
 			if (prefixVocals != null)
 			{
-				// pushSong(prefixVocals + "-Opponent");
-				// pushSong(prefixVocals + "-Player");
+				pushSong(prefixVocals + "-Opponent");
+				pushSong(prefixVocals + "-Player");
 				pushSong(prefixVocals);
 				if (char == PlayState.SONG.player1)
 					dontPreloadDefaultVoices = true;

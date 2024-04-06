@@ -234,24 +234,20 @@ class Paths
 		return returnSound("music", key, library, pos);
 	}
 
-	inline static public function voices(song:String, ?pos:PosInfos):#if html5 String #else Sound #end
+	inline static public function voices(song:String, ?suffix:String, ?pos:PosInfos):#if html5 String #else Sound #end
 	{
 		song = formatToSongPath(song);
-		#if html5
-		return 'songs:assets/songs/$song/Voices.$SOUND_EXT';
-		#else
-		return returnSound("songs", '$song/Voices', null, pos);
-		#end
+		var file = #if html5 'songs:assets/songs/$song/Voices' #else '$song/Voices' #end;
+		if (suffix != null)
+			file += suffix.startsWith("-") ? suffix : '-$suffix';
+
+		return #if html5 '$file.$SOUND_EXT' #else returnSound("songs", file, null, pos) #end;
 	}
 
 	inline static public function inst(song:String, ?pos:PosInfos):#if html5 String #else Sound #end
 	{
 		song = formatToSongPath(song);
-		#if html5
-		return 'songs:assets/songs/$song/Inst.$SOUND_EXT';
-		#else
-		return returnSound("songs", '$song/Inst', null, pos);
-		#end
+		return #if html5 'songs:assets/songs/$song/Inst.$SOUND_EXT' #else returnSound("songs", '$song/Inst', null, pos) #end;
 	}
 
 	static public function image(key:String, ?library:String, allowGPU = true, ?pos:PosInfos):FlxGraphic
@@ -402,7 +398,7 @@ class Paths
 				if (FileSystem.exists(mods('$mod/$key')))
 					return true;
 
-			if (FileSystem.exists(mods('${Mods.currentModDirectory}/$key')) || FileSystem.exists(mods(key)))
+			if (FileSystem.exists(mods(Mods.currentModDirectory + '/$key')) || FileSystem.exists(mods(key)))
 				return true;
 		}
 		#end
@@ -478,10 +474,10 @@ class Paths
 
 	public static function returnSound(path:String, key:String, ?library:String, ?pos:PosInfos):Sound
 	{
-		var file:String;
-		var sound:Sound = null;
 		try
 		{
+			var file:String;
+			var sound:Sound = null;
 			#if MODS_ALLOWED
 			file = modsSounds(path, key);
 			if (hasSound(file))
@@ -499,9 +495,13 @@ class Paths
 				return sound;
 			}
 			#end
+
 			// I hate this so god damn much
 			file = getPath('$path/$key.$SOUND_EXT', SOUND, library);
-			file = file.substring(file.indexOf(":") + 1, file.length);
+			final i = file.indexOf(":");
+			if (i != -1)
+				file = file.substring(i+1, file.length);
+
 			if (hasSound(file))
 				sound = OpenFlAssets.getSound(file);
 			else
@@ -510,19 +510,17 @@ class Paths
 				sound = Sound.fromFile('./$file');
 				OpenFlAssets.cache.setSound(file, sound);
 				#else
-				sound = OpenFlAssets.getSound((path == "songs" ? "songs:" : "") + getPath('$path/$key.$SOUND_EXT', SOUND, library));
+				sound = OpenFlAssets.getSound(path == "songs" ? '$path:$file' : file);
 				#end
 				currentTrackedSounds.push(file);
 			}
-			if (sound != null)
-				tryPush(localTrackedAssets, file);
-
+			tryPush(localTrackedAssets, file);
 			return sound;
 		}
 		catch(e) // FUCKING OPENFL - richTrash21
 		{
 			Main.warn('$e (fucking openfl...)', pos);
-			return sound;
+			return null;
 		}
 	}
 

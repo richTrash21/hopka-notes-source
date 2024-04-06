@@ -23,6 +23,7 @@ class EditorPlayState extends MusicBeatSubstate
 	var startingSong:Bool = true;
 
 	var playbackRate:Float = 1;
+	var opponentVocals:FlxSound;
 	var vocals:FlxSound;
 	var inst:FlxSound;
 	
@@ -168,7 +169,7 @@ class EditorPlayState extends MusicBeatSubstate
 		}
 
 		keysCheck();
-		if(notes.length > 0)
+		if (notes.length != 0)
 		{
 			// var fakeCrochet:Float = 60 / PlayState.SONG.bpm * 1000;
 			notes.forEachAlive(function(daNote:Note)
@@ -214,7 +215,8 @@ class EditorPlayState extends MusicBeatSubstate
 		{
 			final maxDelay = 20 * playbackRate;
 			final realTime = Conductor.songPosition - Conductor.offset;
-			if (Math.abs(FlxG.sound.music.time - realTime) > maxDelay || (PlayState.SONG.needsVoices && Math.abs(vocals.time - realTime) > maxDelay))
+			if (Math.abs(FlxG.sound.music.time - realTime) > maxDelay || (PlayState.SONG.needsVoices && (Math.abs(vocals.time - realTime) > maxDelay
+				|| (opponentVocals != null && Math.abs(opponentVocals.time - realTime) > maxDelay))))
 				resyncVocals();
 		}
 		super.stepHit();
@@ -258,9 +260,20 @@ class EditorPlayState extends MusicBeatSubstate
 		FlxG.sound.music.time = startPos;
 		#if FLX_PITCH FlxG.sound.music.pitch = playbackRate; #end
 		FlxG.sound.music.onComplete = finishSong;
-		vocals.volume = 1;
-		vocals.time = startPos;
-		vocals.play();
+		if (PlayState.SONG.needsVoices)
+		{
+			vocals.volume = 1;
+			vocals.time = startPos;
+			#if FLX_PITCH vocals.pitch = playbackRate; #end
+			vocals.play();
+			if (opponentVocals != null)
+			{
+				opponentVocals.volume = 1;
+				opponentVocals.time = startPos;
+				#if FLX_PITCH opponentVocals.pitch = playbackRate; #end
+				opponentVocals.play();
+			}
+		}
 
 		// Song duration in a float, useful for the time left feature
 		songLength = FlxG.sound.music.length;
@@ -269,34 +282,38 @@ class EditorPlayState extends MusicBeatSubstate
 	// Borrowed from PlayState
 	function generateSong(dataPath:String)
 	{
-		songSpeed = PlayState.SONG.speed;
-		var songSpeedType:String = ClientPrefs.getGameplaySetting('scrolltype');
-		switch(songSpeedType)
+		songSpeed = switch (ClientPrefs.getGameplaySetting("scrolltype"))
 		{
-			case "multiplicative": songSpeed = PlayState.SONG.speed * ClientPrefs.getGameplaySetting('scrollspeed');
-			case "constant": songSpeed = ClientPrefs.getGameplaySetting('scrollspeed');
+			case "multiplicative":	PlayState.SONG.speed * ClientPrefs.getGameplaySetting("scrollspeed");
+			case "constant":		ClientPrefs.getGameplaySetting("scrollspeed");
+			default:				PlayState.SONG.speed;
 		}
 		noteKillOffset = Math.max(Conductor.stepCrochet, 350 / songSpeed * playbackRate);
 
-		var songData = PlayState.SONG;
-		Conductor.bpm = songData.bpm;
+		Conductor.bpm = PlayState.SONG.bpm;
 
-		vocals = new FlxSound();
-		if (songData.needsVoices) vocals.loadEmbedded(Paths.voices(songData.song));
-		vocals.volume = 0;
-
-		#if FLX_PITCH vocals.pitch = playbackRate; #end
-		FlxG.sound.list.add(vocals);
-
-		inst = new FlxSound().loadEmbedded(Paths.inst(songData.song));
-		FlxG.sound.list.add(inst);
+		inst = FlxG.sound.load(Paths.inst(PlayState.SONG.song));
 		FlxG.sound.music.volume = 0;
+
+		if (PlayState.SONG.needsVoices)
+		{
+			final splitP1 = Paths.voices(PlayState.SONG.song, "-Player") ?? Paths.voices(PlayState.SONG.song);
+			final splitP2 = Paths.voices(PlayState.SONG.song, "-Opponent");
+
+			vocals = FlxG.sound.load(splitP1);
+			vocals.volume = 0.;
+			if (splitP2 != null)
+			{
+				opponentVocals = FlxG.sound.load(splitP2);
+				opponentVocals.volume = 0.;
+			}
+		}
 
 		notes = new FlxTypedGroup<Note>();
 		add(notes);
 
 		// NEW SHIT
-		for (section in songData.notes)
+		for (section in PlayState.SONG.notes)
 		{
 			for (songNotes in section.sectionNotes)
 			{
@@ -395,9 +412,17 @@ class EditorPlayState extends MusicBeatSubstate
 
 	public function endSong()
 	{
-		vocals.pause();
-		vocals.destroy();
-		if(finishTimer != null)
+		if (PlayState.SONG.needsVoices)
+		{
+			vocals.pause();
+			vocals.destroy();
+			if (opponentVocals != null)
+			{
+				opponentVocals.pause();
+				opponentVocals.destroy();
+			}
+		}
+		if (finishTimer != null)
 		{
 			finishTimer.cancel();
 			finishTimer.destroy();
@@ -427,26 +452,19 @@ class EditorPlayState extends MusicBeatSubstate
 
 	private function popUpScore(note:Note = null):Void
 	{
-		var noteDiff:Float = Math.abs(note.strumTime - Conductor.songPosition + ClientPrefs.data.ratingOffset);
-
-		vocals.volume = 1;
-		var placement:Float = FlxG.width * 0.35;
-		var score:Int = 350;
-		var antialias:Bool = ClientPrefs.data.antialiasing;
-
-		//tryna do MS based judgment due to popular demand
-		var daRating:Rating = Conductor.judgeNote(ratingsData, noteDiff / playbackRate);
+		// tryna do MS based judgment due to popular demand
+		final daRating = Conductor.judgeNote(ratingsData, Math.abs(note.strumTime - Conductor.songPosition + ClientPrefs.data.ratingOffset) / playbackRate);
 
 		totalNotesHit += daRating.ratingMod;
 		note.ratingMod = daRating.ratingMod;
 		if(!note.ratingDisabled) daRating.hits++;
 		note.rating = daRating.name;
-		score = daRating.score;
+		final score = daRating.score;
 
-		if(daRating.noteSplash && !note.noteSplashData.disabled)
+		if (daRating.noteSplash && !note.noteSplashData.disabled)
 			spawnNoteSplashOnNote(note);
 
-		if(!note.ratingDisabled)
+		if (!note.ratingDisabled)
 		{
 			songHits++;
 			totalPlayed++;
@@ -626,7 +644,7 @@ class EditorPlayState extends MusicBeatSubstate
 	
 	function opponentNoteHit(note:Note):Void
 	{
-		if (PlayState.SONG.needsVoices)
+		if (PlayState.SONG.needsVoices && opponentVocals == null)
 			vocals.volume = 1;
 
 		var strum:StrumNote = opponentStrums.members[Std.int(Math.abs(note.noteData))];
@@ -674,8 +692,10 @@ class EditorPlayState extends MusicBeatSubstate
 			}
 
 			var spr:StrumNote = playerStrums.members[note.noteData];
-			if(spr != null) spr.playAnim('confirm', true);
-			vocals.volume = 1;
+			if (spr != null)
+				spr.playAnim('confirm', true);
+			if (PlayState.SONG.needsVoices)
+				vocals.volume = 1;
 
 			if (!note.isSustainNote)
 			{
@@ -686,7 +706,8 @@ class EditorPlayState extends MusicBeatSubstate
 		}
 	}
 	
-	function noteMiss(daNote:Note):Void { //You didn't hit the key and let it go offscreen, also used by Hurt Notes
+	function noteMiss(daNote:Note):Void //You didn't hit the key and let it go offscreen, also used by Hurt Notes
+	{
 		//Dupe note remove
 		notes.forEachAlive(function(note:Note) {
 			if (daNote != note && daNote.mustPress && daNote.noteData == note.noteData && daNote.isSustainNote == note.isSustainNote && Math.abs(daNote.strumTime - note.strumTime) < 1) {
@@ -700,7 +721,8 @@ class EditorPlayState extends MusicBeatSubstate
 		songMisses++;
 		totalPlayed++;
 		RecalculateRating(true);
-		vocals.volume = 0;
+		if (PlayState.SONG.needsVoices)
+			vocals.volume = 0;
 		combo = 0;
 	}
 
@@ -719,19 +741,24 @@ class EditorPlayState extends MusicBeatSubstate
 	
 	function resyncVocals():Void
 	{
-		if(finishTimer != null) return;
+		if (finishTimer != null)
+			return;
 
-		//vocals.pause();
-
-		//FlxG.sound.music.play();
 		#if FLX_PITCH FlxG.sound.music.pitch = playbackRate; #end
 		Conductor.songPosition = FlxG.sound.music.time;
-		if (Conductor.songPosition <= vocals.length)
+		if (PlayState.SONG.needsVoices)
 		{
-			vocals.time = Conductor.songPosition;
-			#if FLX_PITCH vocals.pitch = playbackRate; #end
+			if (Conductor.songPosition <= vocals.length)
+			{
+				vocals.time = Conductor.songPosition;
+				#if FLX_PITCH vocals.pitch = playbackRate; #end
+			}
+			if (opponentVocals != null && Conductor.songPosition <= opponentVocals.length)
+			{
+				opponentVocals.time = Conductor.songPosition;
+				#if FLX_PITCH opponentVocals.pitch = playbackRate; #end
+			}
 		}
-		//vocals.play();
 	}
 
 	function RecalculateRating(badHit:Bool = false) {
