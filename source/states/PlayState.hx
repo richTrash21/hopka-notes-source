@@ -219,7 +219,7 @@ class PlayState extends MusicBeatState
 	public var uiPrefix:String = "";
 	public var uiSuffix:String = "";
 
-	public var inst:FlxSound;
+	public var inst:openfl.media.Sound;
 	public var vocals:FlxSound;
 	public var opponentVocals:FlxSound;
 
@@ -258,10 +258,10 @@ class PlayState extends MusicBeatState
 
 	public var ratingsData = Rating.loadDefault();
 
-	private var generatedMusic:Bool = false;
+	var generatedMusic:Bool = false;
 	public var endingSong:Bool = false;
 	public var startingSong:Bool = false;
-	private var updateTime:Bool = true;
+	var updateTime:Bool = true;
 
 	//Gameplay settings
 	public var healthGain:Float = 1.0;
@@ -323,7 +323,7 @@ class PlayState extends MusicBeatState
 	// Lua shit
 	public var luaArray = new Array<FunkinLua>();
 	#if LUA_ALLOWED
-	private var luaDebugGroup:FlxTypedSpriteGroup<DebugLuaText>;
+	var luaDebugGroup:FlxTypedSpriteGroup<DebugLuaText>;
 	#end
 
 	public var songName(default, null):String;
@@ -1332,12 +1332,11 @@ class PlayState extends MusicBeatState
 	}		
 
 	// var showcaseTxt:FlxText;
-	@:access(flixel.sound.FlxSound._sound)
 	function startSong():Void
 	{
 		startingSong = false;
 
-		FlxG.sound.playMusic(inst._sound, 1, false);
+		FlxG.sound.playMusic(inst, 1, false);
 		#if FLX_PITCH FlxG.sound.music.pitch = playbackRate; #end
 		FlxG.sound.music.onComplete = finishSong.bind();
 		if (SONG.needsVoices)
@@ -1400,7 +1399,7 @@ class PlayState extends MusicBeatState
 		Conductor.bpm = SONG.bpm;
 		curSong = SONG.song;
 
-		inst = FlxG.sound.load(Paths.inst(SONG.song));
+		inst = Paths.inst(SONG.song);
 		if (SONG.needsVoices)
 		{
 			final splitP1 = Paths.voices(SONG.song, "-Player") ?? Paths.voices(SONG.song);
@@ -1566,7 +1565,7 @@ class PlayState extends MusicBeatState
 	}
 
 	public var skipArrowStartTween:Bool = false; //for lua
-	private function generateStaticArrows(player:Int):Void
+	function generateStaticArrows(player:Int):Void
 	{
 		final strumLineX = ClientPrefs.data.middleScroll ? STRUM_X_MIDDLESCROLL : STRUM_X;
 		final strumLineY = ClientPrefs.data.downScroll ? (FlxG.height - 150) : 50.0;
@@ -2518,7 +2517,7 @@ class PlayState extends MusicBeatState
 	public var showComboNum:Bool = true;
 	public var showRating:Bool	 = true;
 
-	private function cachePopUpScore()
+	function cachePopUpScore()
 	{
 		if (!ClientPrefs.data.enableCombo)
 			return;
@@ -2528,29 +2527,42 @@ class PlayState extends MusicBeatState
 		for (i in 0...10)
 			Paths.image(uiPrefix + 'num$i' + uiSuffix);
 
-		// preloading first group objects (please work please work please work please work please work)
-		// UPD: IT DOESN'T WAAAAAAAAAAAHHHH😭😭😭
 		// https://preview.redd.it/7nskgql0k1w91.png?width=960&crop=smart&auto=webp&s=84099357cf2f7d30075e6c9989b15ef81bda9037
-		/*var rating:FlxSprite = new FlxSprite(0, 0, Paths.image(uiPrefix + 'sick'  + uiSuffix));
-		var combo:FlxSprite  = new FlxSprite(0, 0, Paths.image(uiPrefix + 'combo' + uiSuffix));
-		var score:FlxSprite  = new FlxSprite(0, 0, Paths.image(uiPrefix + 'num0'  + uiSuffix));
-		rating.alpha = combo.alpha = score.alpha = 0.000001;
-		scoreGroup.add(rating);
-		scoreGroup.add(combo);
-		scoreGroup.add(score);*/
+		inline function __cachePopUp(__factory:()->PopupSprite, __image:String)
+		{
+			scoreGroup.add(__factory()).loadGraphic(Paths.image(uiPrefix + __image + uiSuffix)).precache().kill();
+		}
+
+		__cachePopUp(__ratingFactory, ratingsData[0].image);
+		__cachePopUp(__numScoreFactory, "num0");
+		__cachePopUp(__numScoreFactory, "num1");
+		__cachePopUp(__numScoreFactory, "num2");
 	}
 
 	// cache factories for later use
 	@:allow(states.editors.EditorPlayState)
-	@:noCompletion static final __ratingFactory = PopupSprite.new.bind(-10, -1, -175, -140, 0, 0, 550, 550);
-	@:allow(states.editors.EditorPlayState)
-	@:noCompletion static final __numScoreFactory = PopupScore.new.bind(-10, -1, -175, -140, 0, 0, 550, 550);
+	@:noCompletion static function __ratingFactory()
+	{
+		final rating = new PopupSprite(-10, -1, -175, -140, 0, 0, 550, 550);
+		if (isPixelStage)
+			rating.antialiasing = false;
+		return rating;
+	}
 
-	private function popUpScore(?note:Note):Void
+	@:allow(states.editors.EditorPlayState)
+	@:noCompletion static function __numScoreFactory()
+	{
+		final rating = new PopupScore(-10, -1, -175, -140, 0, 0, 550, 550);
+		if (isPixelStage)
+			rating.antialiasing = false;
+		return rating;
+	}
+	@:noCompletion extern inline static final __popup__placement = 448.;
+
+	function popUpScore(?note:Note):Void
 	{
 		// tryna do MS based judgment due to popular demand
-		final MS = Math.abs(note.strumTime - Conductor.songPosition + ClientPrefs.data.ratingOffset) / playbackRate;
-		final daRating = Conductor.judgeNote(ratingsData, MS);
+		final daRating = Conductor.judgeNote(ratingsData, Math.abs(note.strumTime - Conductor.songPosition + ClientPrefs.data.ratingOffset) / playbackRate);
 
 		totalNotesHit += daRating.ratingMod;
 		note.ratingMod = daRating.ratingMod;
@@ -2576,7 +2588,6 @@ class PlayState extends MusicBeatState
 		if (!ClientPrefs.data.enableCombo || ClientPrefs.data.hideHud || (!showRating && !showComboNum))
 			return;
 
-		final placement = FlxG.width * 0.35;
 		var scaleMult   = 0.7;
 		var numScale    = 0.5;
 		if (isPixelStage)
@@ -2590,13 +2601,11 @@ class PlayState extends MusicBeatState
 		{
 			final rating = scoreGroup.recycle(PopupSprite, __ratingFactory, true);
 			rating.loadGraphic(Paths.image(uiPrefix + daRating.image + uiSuffix));
-			rating.x = placement - 40 + ClientPrefs.data.comboOffset[0];
+			rating.x = __popup__placement - 40 + ClientPrefs.data.comboOffset[0];
 			rating.screenCenter(Y).y -= 60 + ClientPrefs.data.comboOffset[1];
+			rating.setAngleVelocity(-rating.velocity.x, rating.velocity.x);
 			rating.setScale(scaleMult);
 			rating.updateHitbox();
-			rating.setAngleVelocity(-rating.velocity.x, rating.velocity.x);
-			if (isPixelStage)
-				rating.antialiasing = false;
 			scoreGroup.add(rating);
 
 			rating.fadeTime = Conductor.crochet * 0.001;
@@ -2613,15 +2622,13 @@ class PlayState extends MusicBeatState
 			{
 				final numScore = scoreGroup.recycle(PopupScore, __numScoreFactory, true);
 				numScore.loadGraphic(Paths.image(uiPrefix + 'num$v' + uiSuffix));
-				numScore.x = placement + (45 * i) - 90 + ClientPrefs.data.comboOffset[2];
+				numScore.x = __popup__placement + (45 * i) - 90 + ClientPrefs.data.comboOffset[2];
 				numScore.screenCenter(Y).y += 80 - ClientPrefs.data.comboOffset[3];
 
 				numScore.setScale(numScale);
 				numScore.updateHitbox();
 				numScore.offset.add(FlxG.random.float(-1, 1), FlxG.random.float(-1, 1));
 				numScore.angularVelocity = -numScore.velocity.x;
-				if (isPixelStage)
-					numScore.antialiasing = false;
 				scoreGroup.add(numScore);
 
 				numScore.fadeTime = Conductor.crochet * 0.001;
@@ -2715,14 +2722,14 @@ class PlayState extends MusicBeatState
 		callOnScripts("onKeyPress", [key]);
 	}
 
-	private function onKeyRelease(event:KeyboardEvent):Void
+	function onKeyRelease(event:KeyboardEvent):Void
 	{
 		final key = getKeyFromEvent(keysArray, event.keyCode);
 		if (!controls.controllerMode && key != -1)
 			keyReleased(key);
 	}
 
-	private function keyReleased(key:Int)
+	function keyReleased(key:Int)
 	{
 		if (cpuControlled || !startedCountdown || paused)
 			return;
@@ -2737,7 +2744,7 @@ class PlayState extends MusicBeatState
 	}
 
 	// Hold notes
-	private function keysCheck():Void
+	function keysCheck():Void
 	{
 		// HOLDING
 		final holdArray = new Array<Bool>();
@@ -2859,10 +2866,7 @@ class PlayState extends MusicBeatState
 			final char = note.gfNote ? gf : dad;
 
 			if (char != null)
-			{
 				char.playAnim(animToPlay, true);
-				char.holdTimer = 0;
-			}
 		}
 		if (SONG.needsVoices && opponentVocals == null)
 			vocals.volume = 1;
@@ -2920,27 +2924,28 @@ class PlayState extends MusicBeatState
 
 		if (!note.noAnimation)
 		{
-			final animToPlay:String = singAnimations[note.noteData];
-			var char:Character = boyfriend;
-			var animCheck:String = "hey";
+			final animToPlay = singAnimations[note.noteData];
+			var animCheck = "hey";
+			var char = boyfriend;
 			if (note.gfNote)
 			{
-				char = gf;
 				animCheck = "cheer";
+				char = gf;
 			}
 
 			if (char != null)
 			{
-				char.playAnim(animToPlay + note.animSuffix, true);
-				char.holdTimer = 0;
-
 				if (note.noteType == "Hey!")
-					if (char.animOffsets.exists(animCheck))
+				{
+					if (char.animation.exists(animCheck))
 					{
 						char.playAnim(animCheck, true);
 						char.specialAnim = true;
 						char.heyTimer = 0.6;
 					}
+				}
+				else	
+					char.playAnim(animToPlay + note.animSuffix, true);
 			}
 		}
 

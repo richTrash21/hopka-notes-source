@@ -340,6 +340,11 @@ class Paths
 
 	static public function getTextFromFile(key:String, ignoreMods = false, absolute = false, ?pos:PosInfos):String
 	{
+		inline function warn(k:String, p:PosInfos)
+		{
+			Main.warn('Counld not find "$k"!', p);
+		}
+
 		if (absolute)
 		{
 			#if sys
@@ -349,7 +354,7 @@ class Paths
 			if (OpenFlAssets.exists(key, TEXT))
 				return Assets.getText(key);
 
-			Main.warn('Counld not find "$key" text file', pos);
+			warn(key, pos);
 			return null;
 		}
 		var path:String;
@@ -375,7 +380,7 @@ class Paths
 		if (OpenFlAssets.exists(path = getPath(key, TEXT), TEXT))
 			return Assets.getText(path);
 
-		Main.warn('Counld not find "$key" text file', pos);
+		warn(key, pos);
 		return null;
 	}
 

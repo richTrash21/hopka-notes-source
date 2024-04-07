@@ -129,7 +129,7 @@ class Main extends flixel.FlxGame
 				states.StoryMenuState.weekCompleted = FlxG.save.data.weekCompleted;
 	
 			// FlxG.fullscreen = FlxG.save.data.fullscreen;
-			FlxG.sound.volume = Math.ffloor(FlxG.sound.volume * 10) * 0.1;
+			FlxG.sound.volume = Math.fceil(FlxG.sound.volume * 10) * 0.1;
 			__focusVolume = FlxG.sound.volume;
 			#if debug
 			FlxG.console.registerClass(Main);

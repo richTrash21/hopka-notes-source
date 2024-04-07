@@ -51,7 +51,6 @@ class Character extends objects.ExtendedSprite
 	public var isPlayer(default, set):Bool;
 	public var curCharacter(default, null):String;
 
-	// public var colorTween:FlxTween;
 	public var holdTimer:Float;
 	public var heyTimer:Float;
 	public var specialAnim:Bool;
@@ -85,6 +84,7 @@ class Character extends objects.ExtendedSprite
 	var firstSetup = true;
 	var settingCharacterUp = true;
 	var curDance = -1;
+	var oldLoopAnims = new Array<String>();
 
 	// DEPRECATED!!!!!
 	public var positionArray(get, set):Array<Float>;
@@ -174,13 +174,6 @@ class Character extends objects.ExtendedSprite
 		originalFlipX = flipX;
 		originalFlipY = flipY;
 
-		/*for (name => offset in animOffsets)
-			if (name.startsWith("sing") && name.contains("miss"))
-			{
-				hasMissAnimations = true;
-				break;
-			}*/
-
 		if (!firstSetup)
 			isPlayer = wasPlayer;
 
@@ -199,8 +192,9 @@ class Character extends objects.ExtendedSprite
 		{
 			super.update(elapsed);
 			#if FLX_DEBUG
+			// https://upload.wikimedia.org/wikipedia/ru/c/c2/%D0%A1%D0%B0%D0%BC%D1%8B%D0%B9_%D1%83%D0%BC%D0%BD%D1%8B%D0%B9_%D0%A1%D0%A2%D0%A1.jpg
 			if (camFollow.active && camFollow.exists)
-				camFollow.update(elapsed); // https://upload.wikimedia.org/wikipedia/ru/c/c2/%D0%A1%D0%B0%D0%BC%D1%8B%D0%B9_%D1%83%D0%BC%D0%BD%D1%8B%D0%B9_%D0%A1%D0%A2%D0%A1.jpg
+				camFollow.update(elapsed);
 			#end
 			return;
 		}
@@ -208,7 +202,7 @@ class Character extends objects.ExtendedSprite
 		if (heyTimer > 0)
 		{
 			// https://github.com/ShadowMario/FNF-PsychEngine/pull/13591 (nvmd replaced with FlxG.animationTimeScale)
-			if ((heyTimer -= elapsed * FlxG.animationTimeScale) <= 0)
+			if ((heyTimer -= elapsed * FlxG.animationTimeScale) <= 0.0)
 			{
 				if (specialAnim && animation.curAnim.name == "hey" || animation.curAnim.name == "cheer")
 				{
@@ -223,24 +217,28 @@ class Character extends objects.ExtendedSprite
 			specialAnim = false;
 			dance();
 		}
-		else if (animation.curAnim.name.endsWith("miss") && animation.curAnim.finished)
+		/*else if (animation.curAnim.name.endsWith("miss") && animation.curAnim.finished)
 		{
 			dance();
 			animation.finish();
-		}
+		}*/
 
 		if (animation.curAnim.name.startsWith("sing"))
 			holdTimer += elapsed;
 		else if (isPlayer)
-			holdTimer = 0;
+			holdTimer = 0.0;
 
-		if (!isPlayer && holdTimer >= Conductor.stepCrochet * (0.0011 #if FLX_PITCH / (FlxG.sound.music == null ? 1 : FlxG.sound.music.pitch) #end) * singDuration)
+		final maxTimer = __calc__hold__timer();
+		final missAnim = animation.curAnim.name.endsWith("miss");
+		if ((!isPlayer || missAnim) && holdTimer >= maxTimer)
 		{
 			dance();
-			holdTimer = 0;
+			if (missAnim)
+				animation.finish();
+			holdTimer -= maxTimer;
 		}
 
-		if (animation.curAnim.finished && animation.exists(animation.curAnim.name + "-loop"))
+		if (animation.curAnim.finished && oldLoopAnims.contains(animation.curAnim.name))
 			playAnim(animation.curAnim.name + "-loop");
 
 		super.update(elapsed);
@@ -272,6 +270,7 @@ class Character extends objects.ExtendedSprite
 	override public function destroy()
 	{
 		animationsArray = null;
+		oldLoopAnims = null;
 		camFollowOffset = FlxDestroyUtil.destroy(camFollowOffset);
 		camFollow = FlxDestroyUtil.destroy(camFollow);
 		cameraOffset = FlxDestroyUtil.put(cameraOffset);
@@ -291,7 +290,7 @@ class Character extends objects.ExtendedSprite
 		if (animation.curAnim != null && animation.curAnim.looped && animation.curAnim.loopPoint != 0 && animation.curAnim.curFrame >= animation.curAnim.loopPoint)
 			animation.finish(); // fix for characters that have loopPoint > 0
 
-		var a:String;
+		var a = "idle";
 		if (danceIdle)
 		{
 			a = "dance";
@@ -300,15 +299,15 @@ class Character extends objects.ExtendedSprite
 			else
 				a += (curDance = ++curDance % maxDance);
 		}
-		else
-			a = "idle";
-
 		playAnim(a + idleSuffix, force);
 	}
 
 	override public function playAnim(animName:String, force = false, ?reversed = false, ?frame = 0):Void
 	{
 		specialAnim = false;
+		if (animName.startsWith("sing"))
+			holdTimer = 0.0;
+
 		if (animName == null || !animation.exists(animName))
 			return Main.warn('No animation called "$animName", for character "$curCharacter"');
 
@@ -364,6 +363,18 @@ class Character extends objects.ExtendedSprite
 
 		if (!hasMissAnimations && animAnim.startsWith("sing") && animAnim.contains("miss"))
 			hasMissAnimations = true;
+
+		if (animAnim.endsWith("-loop"))
+		{
+			final a = animAnim.substr(0, animAnim.length-5);
+			if (!oldLoopAnims.contains(a))
+				oldLoopAnims.push(a);
+		}
+	}
+
+	@:noCompletion extern inline function __calc__hold__timer():Float
+	{
+		return Conductor.stepCrochet * (0.0011 #if FLX_PITCH / (FlxG.sound.music == null ? 1 : FlxG.sound.music.pitch) #end) * singDuration;
 	}
 
 	@:noCompletion function set_idleSuffix(value:String):String

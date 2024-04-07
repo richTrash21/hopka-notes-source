@@ -15,6 +15,7 @@ class VisualsUISubState extends BaseOptionsMenu
 	{
 		title = "Visuals and UI";
 		rpcTitle = "Visuals & UI Settings Menu"; // for Discord Rich Presence
+		var option:Option;
 
 		// options
 		final noteSkins = Mods.mergeAllTextsNamed("images/noteSkins/list.txt");
@@ -33,7 +34,7 @@ class VisualsUISubState extends BaseOptionsMenu
 				ClientPrefs.data.noteSkin = ClientPrefs.defaultData.noteSkin; // Reset to default if saved noteskin couldnt be found
 
 			noteSkins.insert(0, ClientPrefs.defaultData.noteSkin); // Default skin always comes first
-			final option = new Option("Note Skins:",
+			option = new Option("Note Skins:",
 				"Select your prefered Note skin.",
 				"noteSkin",
 				"string",
@@ -73,7 +74,7 @@ class VisualsUISubState extends BaseOptionsMenu
 			));
 		}
 
-		final option = new Option("Note Splash Opacity",
+		option = new Option("Note Splash Opacity",
 			"How much transparent should the Note Splashes be.",
 			"splashAlpha",
 			"percent");
@@ -84,7 +85,7 @@ class VisualsUISubState extends BaseOptionsMenu
 		option.decimals = 1;
 		addOption(option);
 
-		final option = new Option("Sustain Note Opacity",
+		option = new Option("Sustain Note Opacity",
 			"How much transparent should the Sustain Notes be.",
 			"susAlpha", //i want to kms
 			"percent");
@@ -95,7 +96,7 @@ class VisualsUISubState extends BaseOptionsMenu
 		option.decimals = 1;
 		addOption(option);
 		
-		final option = new Option("Health Bar Opacity",
+		option = new Option("Health Bar Opacity",
 			"How much transparent should the health bar and icons be.",
 			"healthBarAlpha",
 			"percent");
@@ -138,7 +139,7 @@ class VisualsUISubState extends BaseOptionsMenu
 		));
 		
 		#if !mobile
-		final option = new Option("FPS Counter",
+		option = new Option("FPS Counter",
 			"If unchecked, hides FPS Counter.",
 			"showFPS",
 			"bool");
@@ -146,19 +147,18 @@ class VisualsUISubState extends BaseOptionsMenu
 		addOption(option);
 		#end
 		
-		final option = new Option("Pause Screen Song:",
+		option = new Option("Pause Screen Song:",
 			"What song do you prefer for the Pause Screen?",
 			"pauseMusic",
 			"string",
 			["None", "Noodles", "Breakfast", "Tea Time"]);
 		option.change = () ->
 		{
+			changedMusic = true;
 			if (ClientPrefs.data.pauseMusic == "None")
 				FlxG.sound.music.volume = 0;
 			else
 				FlxG.sound.playMusic(Paths.music(Paths.formatToSongPath(ClientPrefs.data.pauseMusic)));
-	
-			changedMusic = true;
 		};
 		addOption(option);
 		

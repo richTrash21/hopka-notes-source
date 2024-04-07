@@ -99,6 +99,8 @@ class ExtendedSprite extends FlxSprite
 	public var onLeaveBounds:(sprite:FlxSprite)->Void;
 
 	var __drawingWithOffset = false;
+	var __drawingOffset:FlxPoint;
+	var __anim:String;
 
 	public function new(?x = 0., ?y = 0., ?simpleGraphic:flixel.system.FlxAssets.FlxGraphicAsset, ?antialiasing = true):Void
 	{
@@ -145,6 +147,7 @@ class ExtendedSprite extends FlxSprite
 		onGraphicLoaded = null;
 		onEnterBounds = null;
 		onLeaveBounds = null;
+		__drawingOffset = null;
 		super.destroy();
 	}
 
@@ -178,16 +181,6 @@ class ExtendedSprite extends FlxSprite
 		}
 		return addedAnim;
 	}
-
-	/*inline public function animExists(name:String):Bool
-	{
-		return animation.exists(name);
-	}
-
-	inline public function getAnimByName(name:String):FlxAnimation
-	{
-		return animation.getByName(name);
-	}*/
 
 	// kinda like setGraphicSize, but with just scale value
 	inline public function setScale(x:Float, ?y:Float):FlxPoint
@@ -240,69 +233,84 @@ class ExtendedSprite extends FlxSprite
 
 	@:noCompletion override function drawSimple(camera:FlxCamera):Void
 	{
-		// skip if no animation is playing (it's null) or there is no offset for this animation
-		if (animation.curAnim == null || !animOffsets.exists(animation.curAnim.name))
-			return super.drawSimple(camera);
-
 		__drawingWithOffset = true;
-		final offset = animOffsets.get(animation.curAnim.name);	// get current animation's offsets
-		this.offset.addPoint(offset);							// add them to the current one's
-		super.drawSimple(camera);								// draw sprite
-		this.offset.subtractPoint(offset);						// revert
+		__update__drawing__offset();	// get current animation's offsets
+		__add__drawing__offset();		// add them to the current one's
+		super.drawSimple(camera);		// draw sprite
+		__remove__drawing__offset();	// revert
 		__drawingWithOffset = false;
 	}
 
 	@:noCompletion override function drawComplex(camera:FlxCamera):Void
 	{
-		// skip if no animation is playing (it's null) or there is no offset for this animation
-		if (animation.curAnim == null || !animOffsets.exists(animation.curAnim.name))
-			return super.drawComplex(camera);
-
 		__drawingWithOffset = true;
-		// get current animation's offsets
-		final offset = animOffsets.get(animation.curAnim.name);	// get current animation's offsets
-		this.offset.addPoint(offset);							// add them to the current one's
-		super.drawComplex(camera);								// draw sprite
-		this.offset.subtractPoint(offset);						// revert
+		__update__drawing__offset();	// get current animation's offsets
+		__add__drawing__offset();		// add them to the current one's
+		super.drawComplex(camera);		// draw sprite
+		__remove__drawing__offset();	// revert
 		__drawingWithOffset = false;
 	}
 
 	override public function getScreenBounds(?newRect:FlxRect, ?camera:FlxCamera):FlxRect
 	{
-		if (animation.curAnim == null || !animOffsets.exists(animation.curAnim.name) || __drawingWithOffset)
+		if (__drawingWithOffset)
 			return super.getScreenBounds(newRect, camera);
 
-		final offset = animOffsets.get(animation.curAnim.name);	// get current animation's offsets
-		this.offset.addPoint(offset);							// add them to the current one's
-		final ret = super.getScreenBounds(newRect, camera);		// super
-		this.offset.subtractPoint(offset);						// revert
+		__update__drawing__offset();
+		__add__drawing__offset();
+		final ret = super.getScreenBounds(newRect, camera);
+		__remove__drawing__offset();
 		return ret;
 	}
 
 	override public function transformWorldToPixelsSimple(worldPoint:FlxPoint, ?result:FlxPoint):FlxPoint
 	{
-		if (animation.curAnim == null || !animOffsets.exists(animation.curAnim.name) /*|| __drawingWithOffset*/)
-			return super.transformWorldToPixelsSimple(worldPoint, result);
+		// if (__drawingWithOffset)
+		//	return super.transformWorldToPixelsSimple(worldPoint, result);
 
-		// get current animation's offsets
-		final offset = animOffsets.get(animation.curAnim.name);
-		this.offset.addPoint(offset);										// add them to the current one's
-		final ret = super.transformWorldToPixelsSimple(worldPoint, result);	// super
-		this.offset.subtractPoint(offset);									// revert
+		__update__drawing__offset();
+		__add__drawing__offset();
+		final ret = super.transformWorldToPixelsSimple(worldPoint, result);
+		__remove__drawing__offset();
 		return ret;
 	}
 
 	override public function transformWorldToPixels(worldPoint:FlxPoint, ?camera:FlxCamera, ?result:FlxPoint):FlxPoint
 	{
-		if (animation.curAnim == null || !animOffsets.exists(animation.curAnim.name) /*|| __drawingWithOffset*/)
-			return super.transformWorldToPixels(worldPoint, camera, result);
+		// if (__drawingWithOffset)
+		//	return super.transformWorldToPixels(worldPoint, camera, result);
 
-		// get current animation's offsets
-		final offset = animOffsets.get(animation.curAnim.name);
-		this.offset.addPoint(offset);											// add them to the current one's
-		final ret = super.transformWorldToPixels(worldPoint, camera, result);	// super
-		this.offset.subtractPoint(offset);										// revert
+		__update__drawing__offset();
+		__add__drawing__offset();
+		final ret = super.transformWorldToPixels(worldPoint, camera, result);
+		__remove__drawing__offset();
 		return ret;
+	}
+
+	@:noCompletion extern inline function __update__drawing__offset()
+	{
+		if (animation.curAnim == null)
+		{
+			__anim = null;
+			__drawingOffset = null;
+		}
+		else if (__anim != animation.curAnim.name)
+		{
+			__anim = animation.curAnim.name;
+			__drawingOffset = animOffsets.get(__anim);
+		}
+	}
+
+	@:noCompletion extern inline function __add__drawing__offset()
+	{
+		if (__drawingOffset != null)
+			offset.addPoint(__drawingOffset);
+	}
+
+	@:noCompletion extern inline function __remove__drawing__offset()
+	{
+		if (__drawingOffset != null)
+			offset.subtractPoint(__drawingOffset);
 	}
 
 	@:noCompletion inline function set_boundBox(rect:FlxRect):FlxRect

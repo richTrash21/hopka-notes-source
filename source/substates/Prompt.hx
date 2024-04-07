@@ -9,7 +9,7 @@ import openfl.geom.Rectangle;
  * ...
  * @author 
  */
-class Prompt extends MusicBeatSubstate
+class Prompt extends flixel.FlxSubState
 {
 	var selected = 0;
 	public var okc:()->Void;
@@ -25,6 +25,10 @@ class Prompt extends MusicBeatSubstate
 	var cornerSize:Int = 10;
 	public function new(promptText:String='', defaultSelected:Int = 0, okCallback:Void->Void, cancelCallback:Void->Void,acceptOnDefault:Bool=false,option1:String=null,option2:String=null) 
 	{
+		super(0x4D000000);
+		if (FlxG.renderTile && FlxG.cameras.list.length != 1)
+			_bgSprite.camera = FlxG.cameras.list[FlxG.cameras.list.length-1];
+
 		selected = defaultSelected;
 		okc = okCallback;
 		cancelc = cancelCallback;
@@ -43,7 +47,6 @@ class Prompt extends MusicBeatSubstate
 			if (cancelc != null) cancelc();
 			close();
 		});
-		super();	
 	}
 	
 	override public function create():Void 

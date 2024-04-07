@@ -7,7 +7,14 @@ import flixel.util.FlxDestroyUtil;
 import flixel.math.FlxPoint;
 
 // stupid alias for popup score numbers
-class PopupScore extends PopupSprite {}
+class PopupScore extends PopupSprite
+{
+	public function new(minVelocityX = 0., maxVelocityX = 0., minVelocityY = 0., maxVelocityY = 0., minAccelerationX = 0., maxAccelerationX = 0.,
+		minAccelerationY = 0., maxAccelerationY = 0.):Void
+	{
+		super(minVelocityX, maxVelocityX, minVelocityY, maxVelocityY, minAccelerationX, maxAccelerationX, minAccelerationY, maxAccelerationY);
+	}
+}
 
 class PopupSprite extends ExtendedSprite implements ISortable
 {

@@ -9,7 +9,8 @@ import flixel.input.gamepad.FlxGamepadInputID;
 {
 	@:allow(backend.ClientPrefs)
 	private static final __fields = Type.getInstanceFields(SaveVariables);
-
+	
+	var fullscreen		= false;
 	var downScroll		= false;
 	var middleScroll	= false;
 	var opponentStrums	= true;

@@ -6,12 +6,13 @@ import backend.VideoSprite;
 class TestVideoState extends flixel.FlxState
 {
 	public static final videos = [
-		Paths.video("flopa"),
-		Paths.video("pep"),
-		Paths.video("yap"),
-		Paths.video("developing"),
-		Paths.video("baraki"),
-		Paths.video("Как налить чай в кружку"),
+		"assets/videos/flopa.mp4",
+		"assets/videos/pep.mp4",
+		"assets/videos/yap.mp4",
+		"assets/videos/developing.mp4",
+		"assets/videos/baraki.mp4",
+		"assets/videos/Как налить чай в кружку.mp4",
+		"assets/videos/usa.mp4",
 		"https://cdn.discordapp.com/attachments/1063500919469252709/1224052634470842460/opening.mp4.mp4.mp4?ex=661c16d9&is=6609a1d9&hm=85aa92e8d05278d6c1ed83cea13122d5354b0a8029e61dcd59837dc16126a66a&",
 		"https://cdn.discordapp.com/attachments/1063500919469252709/1224030815630000138/win.mp4.mp4?ex=661c0287&is=66098d87&hm=6d543370811afa7dc964b42501e3c97659ec7681d16002436ef6ff907ea621c0&",
 		"https://cdn.discordapp.com/attachments/1063500919469252709/1224024590859112518/BALLS.mp4?ex=661bfcbb&is=660987bb&hm=cfccfa5be58850ec349b155f58fb91d0a3e74284b841fa3cd10a1258c49d57e3&",

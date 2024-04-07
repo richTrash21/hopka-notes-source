@@ -65,57 +65,58 @@ class HScript extends Interp
 		scriptObject = PlayState.instance; // allow use vars from playstate without "game" thing
 
 		// for closing scripts
-		setVar('close', function() active = false);
+		setVar("close", function() active = false);
 
 		// classes from SScript (rip)
-		setVar('Date',			Date);
-		setVar('DateTools',		DateTools);
-		setVar('Math',			Math);
-		setVar('Reflect',		Reflect);
-		setVar('Std',			Std);
-		setVar('HScript',		HScript);
-		setVar('StringTools',	StringTools);
-		setVar('Type',			Type);
+		setVar("Date",			Date);
+		setVar("DateTools",		DateTools);
+		setVar("Math",			Math);
+		setVar("Reflect",		Reflect);
+		setVar("Std",			Std);
+		setVar("HScript",		HScript);
+		setVar("StringTools",	StringTools);
+		setVar("Type",			Type);
 		#if sys
-		setVar('File',			sys.io.File);
-		setVar('FileSystem',	sys.FileSystem);
-		setVar('Sys',			Sys);
+		setVar("File",			sys.io.File);
+		setVar("FileSystem",	sys.FileSystem);
+		setVar("Sys",			Sys);
 		#end
-		setVar('Assets',		openfl.Assets);
+		setVar("Assets",		openfl.Assets);
 
 		// Some very commonly used classes
-		setVar('FlxG',				flixel.FlxG);
-		setVar('FlxSprite',			flixel.FlxSprite);
-		setVar('FlxCamera',			flixel.FlxCamera);
-		setVar('FlxTimer',			flixel.util.FlxTimer);
-		setVar('FlxTween',			flixel.tweens.FlxTween);
-		setVar('FlxEase',			flixel.tweens.FlxEase);
-		setVar('FlxColor',			CustomFlxColor);
-		setVar('PlayState',			PlayState);
-		setVar('Paths',				Paths);
-		setVar('Conductor',			Conductor);
-		setVar('ClientPrefs',		ClientPrefs);
-		setVar('ExtendedSprite',	objects.ExtendedSprite);
-		setVar('Character',			objects.Character);
-		setVar('Alphabet',			Alphabet);
-		setVar('Note',				objects.Note);
-		setVar('CustomSubstate',	CustomSubstate);
-		setVar('Countdown',			backend.BaseStage.Countdown);
+		setVar("FlxG",				flixel.FlxG);
+		setVar("FlxSprite",			flixel.FlxSprite);
+		setVar("FlxCamera",			flixel.FlxCamera);
+		setVar("FlxTimer",			flixel.util.FlxTimer);
+		setVar("FlxTween",			flixel.tweens.FlxTween);
+		setVar("FlxEase",			flixel.tweens.FlxEase);
+		setVar("FlxColor",			Type.resolveClass("flixel.util.FlxColor_HSC")); // LMAOOOOOOOO - rich
+		setVar("FlxPoint",			Type.resolveClass("flixel.math.FlxPoint_HSC")); // LMAOOOOOOOO - rich (again)
+		setVar("PlayState",			PlayState);
+		setVar("Paths",				Paths);
+		setVar("Conductor",			Conductor);
+		setVar("ClientPrefs",		ClientPrefs);
+		setVar("ExtendedSprite",	objects.ExtendedSprite);
+		setVar("Character",			objects.Character);
+		setVar("Alphabet",			Alphabet);
+		setVar("Note",				objects.Note);
+		setVar("CustomSubstate",	CustomSubstate);
+		setVar("Countdown",			backend.BaseStage.Countdown);
 		#if (!flash && sys)
-		setVar('FlxRuntimeShader',	flixel.addons.display.FlxRuntimeShader);
+		setVar("FlxRuntimeShader",	flixel.addons.display.FlxRuntimeShader);
 		#end
-		setVar('ShaderFilter',		openfl.filters.ShaderFilter);
+		setVar("ShaderFilter",		openfl.filters.ShaderFilter);
 
 		// Functions & Variables
-		setVar('setVar',	 PlayState.instance.variables.set);
-		setVar('getVar',	 PlayState.instance.variables.get);
-		setVar('removeVar',	 PlayState.instance.variables.remove);
-		setVar('debugPrint', (t:String, c:FlxColor) -> PlayState.instance.addTextToDebug(t, c, posInfos()));
+		setVar("setVar",	 PlayState.instance.variables.set);
+		setVar("getVar",	 PlayState.instance.variables.get);
+		setVar("removeVar",	 PlayState.instance.variables.remove);
+		setVar("debugPrint", (t:String, c:FlxColor) -> PlayState.instance.addTextToDebug(t, c, posInfos()));
 
 		// For adding your own callbacks
 
 		// not very tested but should work
-		setVar('createGlobalCallback', function(name:String, func:Dynamic)
+		setVar("createGlobalCallback", function(name:String, func:Dynamic)
 		{
 			#if LUA_ALLOWED
 			for (script in PlayState.instance.luaArray)
@@ -126,7 +127,7 @@ class HScript extends Interp
 		});
 
 		// tested
-		setVar('createCallback', (name:String, func:Dynamic, ?funk:FunkinLua) ->
+		setVar("createCallback", (name:String, func:Dynamic, ?funk:FunkinLua) ->
 		{
 			if (funk == null)
 				funk = parentLua;
@@ -137,26 +138,26 @@ class HScript extends Interp
 				funk.addLocalCallback(name, func);
 		});
 
-		setVar('addHaxeLibrary', (libName:String, ?libPackage:String = "") ->
+		setVar("addHaxeLibrary", (libName:String, ?libPackage:String = "") ->
 		{
 			var str = "";
-			if (libPackage != null && libPackage.length != 0)
+			if (!libPackage.isNullOrEmpty())
 				str += '$libPackage.';
 			str += libName;
 			setVar(libName, resolveClassOrEnum(str));
 		});
-		setVar('parentLua',				parentLua);
-		setVar('this',					this);
-		setVar('game',					PlayState.instance); // useless cuz u can get vars directly, backward compatibility ig
-		setVar('buildTarget',			LuaUtils.getBuildTarget());
-		setVar('customSubstate',		CustomSubstate.instance);
-		setVar('customSubstateName',	CustomSubstate.name);
+		setVar("parentLua",				parentLua);
+		setVar("this",					this);
+		setVar("game",					PlayState.instance); // useless cuz u can get vars directly, backward compatibility ig
+		setVar("buildTarget",			LuaUtils.getBuildTarget());
+		setVar("customSubstate",		CustomSubstate.instance);
+		setVar("customSubstateName",	CustomSubstate.name);
 
-		setVar('Function_Stop',			FunkinLua.Function_Stop);
-		setVar('Function_Continue',		FunkinLua.Function_Continue);
-		setVar('Function_StopLua',		FunkinLua.Function_StopLua); // doesnt do much cuz HScript has a lower priority than Lua
-		setVar('Function_StopHScript',	FunkinLua.Function_StopHScript);
-		setVar('Function_StopAll',		FunkinLua.Function_StopAll);
+		setVar("Function_Stop",			FunkinLua.Function_Stop);
+		setVar("Function_Continue",		FunkinLua.Function_Continue);
+		setVar("Function_StopLua",		FunkinLua.Function_StopLua); // doesnt do much cuz HScript has a lower priority than Lua
+		setVar("Function_StopHScript",	FunkinLua.Function_StopHScript);
+		setVar("Function_StopAll",		FunkinLua.Function_StopAll);
 	}
 
 	public function executeCode(?codeToRun:String):Dynamic
@@ -280,7 +281,7 @@ class HScript extends Interp
 	}
 }
 
-private class CustomFlxColor
+/*private class CustomFlxColor
 {
 	public static final TRANSPARENT = FlxColor.TRANSPARENT;
 	public static final BLACK       = FlxColor.BLACK;
@@ -349,5 +350,5 @@ private class CustomFlxColor
 	{
 		return FlxColor.subtract(lhs, rhs);
 	}
-}
+}*/
 #end
