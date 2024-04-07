@@ -23,16 +23,6 @@ class GameCamera extends FlxCamera
 	public var zoomDecay:Float = 1.0;
 
 	/**
-	 	Self explanatory innit? (БЛЯТЬ НАХУЙ Я ЮЗАЮ БРИТАНСКИЙ СЛЕНГ ХАЗВХАВЗ)
-	**/
-	// public var cameraSpeed:Float = 1.0;
-
-	/**
-		Should camera lerp be abjusted via `update()`.
-	**/
-	// public var updateLerp(default, set):Bool;
-
-	/**
 		Awfull for optimisation, better for the eyes.
 	**/
 	public var tweeningZoom(default, null):Bool;
@@ -44,15 +34,12 @@ class GameCamera extends FlxCamera
 	@:noCompletion var __tweenTimer = 0.; // okay i actually optimized it???? (kinda)
 
 	// internal values
-	// @:allow(substates.GameOverSubstate)
-	// @:noCompletion var _speed = 2.4;
 	@:noCompletion var _zoomSpeed = 3.2;
 
-	public function new(zoom = 0., bgAlpha = 1., /*updateLerp = false,*/ updateZoom = false):Void
+	public function new(zoom = 0., bgAlpha = 1., updateZoom = false):Void
 	{
 		super(0, 0, 0, 0, zoom);
 		bgColor.alphaFloat = bgAlpha;
-		// this.updateLerp = updateLerp;
 		this.updateZoom = updateZoom;
 		#if (flixel < "6.0.0")
 		followLerp = 1.0;
@@ -74,11 +61,11 @@ class GameCamera extends FlxCamera
 			}
 		}
 
-		// if (target != null && updateLerp)
-		//	followLerp = elapsed * _speed * cameraSpeed * (FlxG.updateFramerate * .016666666666666666); // / 60
-
-		if (updateZoom && !tweeningZoom)
-			zoom = FlxMath.lerp(targetZoom, zoom, Math.exp(-elapsed * _zoomSpeed * zoomDecay));
+		if (updateZoom && !tweeningZoom && zoom != targetZoom)
+		{
+			final factor = Math.exp(-elapsed * _zoomSpeed * zoomDecay);
+			zoom = (factor < 1) ? FlxMath.lerp(targetZoom, zoom, factor) : targetZoom;
+		}
 
 		// implementing flixel's 6.0.0 camera changes early
 		#if (flixel < "6.0.0")
@@ -109,16 +96,6 @@ class GameCamera extends FlxCamera
 
 		return checkForTweens = bool;
 	}
-
-	/*@:noCompletion function set_updateLerp(bool:Bool):Bool
-	{
-		if (!bool)
-		{
-			followLerp = 0;
-			tweeningZoom = false;
-		}
-		return updateLerp = bool;
-	}*/
 
 	// 6.0.0 camera changes
 	#if (flixel < "6.0.0")
@@ -202,9 +179,8 @@ class GameCamera extends FlxCamera
 
 	function _updateLerp(elapsed:Float)
 	{
-		final boundLerp = FlxMath.bound(followLerp, 0, 1);
 		// Adjust lerp based on the current frame rate so lerp is less framerate dependant
-		final adjustedLerp = 1.0 - Math.pow(1.0 - boundLerp, elapsed * 60);
+		final adjustedLerp = 1.0 - Math.pow(1.0 - followLerp, elapsed * 60);
 		if (adjustedLerp >= 1)
 		{
 			scroll.copyFrom(_scrollTarget); // no easing
@@ -268,7 +244,7 @@ class GameCamera extends FlxCamera
 
 	@:noCompletion override inline function set_followLerp(value:Float):Float
 	{
-		return followLerp = value;
+		return followLerp = FlxMath.bound(value, 0, 1);
 	}
 	#end
 }

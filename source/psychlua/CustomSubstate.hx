@@ -16,21 +16,16 @@ class CustomSubstate extends MusicBeatSubstate
 		#end
 	}
 	
-	public static function openCustomSubstate(name:String, ?pauseGame:Bool = false)
+	public static function openCustomSubstate(name:String, pauseGame = false)
 	{
 		if (pauseGame)
 		{
-			// FlxG.camera.followLerp = 0;
 			PlayState.instance.persistentUpdate = false;
 			PlayState.instance.persistentDraw = true;
 			PlayState.instance.paused = true;
-			FlxTween.globalManager.forEach((tween) -> tween.active = false); // so pause tweens wont stop
-			FlxTimer.globalManager.forEach((timer) -> timer.active = false);
-			FlxG.sound.pause();
-			/*if (FlxG.sound.music != null) {
-				FlxG.sound.music.pause();
-				PlayState.instance.vocals.pause();
-			}*/
+			// FlxTween.globalManager.forEach((tween) -> tween.active = false); // so pause tweens wont stop
+			// FlxTimer.globalManager.forEach((timer) -> timer.active = false);
+			// FlxG.sound.pause();
 		}
 		PlayState.instance.openSubState(new CustomSubstate(name));
 		PlayState.instance.setOnHScript("customSubstate", instance);
@@ -39,16 +34,16 @@ class CustomSubstate extends MusicBeatSubstate
 
 	public static function closeCustomSubstate()
 	{
-		if (instance != null)
-		{
-			PlayState.instance.closeSubState();
-			instance = null;
-			return true;
-		}
-		return false;
+		if (instance == null)
+			return false;
+
+		// PlayState.instance.closeSubState();
+		instance.close();
+		instance = null;
+		return true;
 	}
 
-	public static function insertToCustomSubstate(tag:String, ?pos:Int = -1)
+	public static function insertToCustomSubstate(tag:String, pos = -1)
 	{
 		if (instance != null)
 		{

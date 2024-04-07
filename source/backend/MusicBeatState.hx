@@ -4,13 +4,8 @@ import flixel.addons.transition.FlxTransitionableState;
 import flixel.util.typeLimit.NextState;
 import flixel.FlxState;
 
-class MusicBeatState extends FlxState /*FlxTransitionableState*/ implements IMusicBeatState
+class MusicBeatState extends FlxState implements IMusicBeatState
 {
-	// TRANS RIGHTS!!!!
-	// public static final transTime = .45; // uniform transition time
-	// substates that transition can land onto
-	// public static final substatesToTrans:Array<Class<flixel.FlxSubState>> = [substates.PauseSubState, substates.GameOverSubstate, psychlua.CustomSubstate];
-
 	public static var timePassedOnState = 0.;
 
 	@:access(flixel.FlxState._constructor)
@@ -45,23 +40,6 @@ class MusicBeatState extends FlxState /*FlxTransitionableState*/ implements IMus
 		Main.transition.start(nextState, StateTransition.transTime, false);
 	}
 
-	/*inline public static function getState():FlxState
-	{
-		return FlxG.state;
-	}
-
-	inline public static function getSubState():FlxState
-	{
-		return FlxG.state.subState;
-	}*/
-
-	// thx redar
-	// UPD: dont need this anymore lmao
-	// inline static function stateOrSubState():FlxState
-	// {
-	//	return (FlxG.state.subState != null /*&& substatesToTrans.contains(Type.getClass(FlxG.state.subState))*/) ? getSubState() : getState();
-	// }
-
 	var curSection:Int = 0;
 	var stepsToDo:Int = 0;
 
@@ -71,10 +49,8 @@ class MusicBeatState extends FlxState /*FlxTransitionableState*/ implements IMus
 	var curDecStep:Float = 0;
 	var curDecBeat:Float = 0;
 
-	public var controls(get, never):Controls;
-	public var stages:Array<BaseStage> = [];
-
-	// public function new() { super(); }
+	public final controls = Controls.instance;
+	public var stages = new Array<BaseStage>();
 
 	override public function create()
 	{
@@ -113,7 +89,7 @@ class MusicBeatState extends FlxState /*FlxTransitionableState*/ implements IMus
 	// transition is not substate anymore so had to change this a bit
 	override function tryUpdate(elapsed:Float)
 	{
-		if (CoolUtil.updateStateCheck(this))
+		if (CoolUtil.__update__state__check(this))
 			update(elapsed);
 
 		if (_requestSubStateReset)
@@ -217,10 +193,5 @@ class MusicBeatState extends FlxState /*FlxTransitionableState*/ implements IMus
 	@:noCompletion inline function getBeatsOnSection():Float
 	{
 		return PlayState.SONG?.notes[curSection]?.sectionBeats ?? 4;
-	}
-
-	@:noCompletion inline function get_controls():Controls
-	{
-		return Controls.instance;
 	}
 }

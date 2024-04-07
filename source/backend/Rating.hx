@@ -4,32 +4,50 @@ import flixel.util.FlxStringUtil;
 
 @:structInit class Rating
 {
-	public var name:String = "";
-	public var image:String = "";
-	public var ratingMod:Float = 1;
-	public var score:Int = 350;
-	public var noteSplash:Bool = true;
-	public var hitWindow:Int = 0; // ms
-	public var hits = 0;
-
-	/*public function new(name:String, ?image:String, ?hitWindow:Int, ratingMod = 1., score = 350, noteSplash = true)
-	{
-		this.name = name;
-		this.image = image ?? name;
-		this.hitWindow = hitWindow ?? 0; // (Reflect.field(ClientPrefs.data, name + "Window") ?? 0);
-		this.ratingMod = ratingMod;
-		this.score = score;
-		this.noteSplash = noteSplash;
-	}*/
-
 	public static function loadDefault():Array<Rating>
 	{
 		return [
-			{name: "sick", image: "sick", hitWindow: ClientPrefs.data.sickWindow}, // highest rating goes first
-			{name: "good", image: "good", hitWindow: ClientPrefs.data.goodWindow, ratingMod: .67, score: 200, noteSplash: false},
-			{name: "bad",  image: "bad",  hitWindow: ClientPrefs.data.badWindow,  ratingMod: .34, score: 100, noteSplash: false},
-			{name: "shit", image: "shit", hitWindow: 0,							  ratingMod: 0,   score: 50,  noteSplash: false}
+			{name: "sick", hitWindow: ClientPrefs.data.sickWindow}, // highest rating goes first
+			{name: "good", hitWindow: ClientPrefs.data.goodWindow, ratingMod: .67, score: 200, noteSplash: false},
+			{name: "bad",  hitWindow: ClientPrefs.data.badWindow,  ratingMod: .34, score: 100, noteSplash: false},
+			{name: "shit", 										   ratingMod: 0,   score: 50,  noteSplash: false}
 		];
+	}
+
+	public static function getRatingString(ratingsData:Array<Rating>, misses:Int):String
+	{
+		var s = "Clear";
+		if (misses == 0)
+		{
+			if (ratingsData[2].hits + ratingsData[3].hits > 0) // bads and shits
+				s = "FC";
+			else if (ratingsData[1].hits > 0) // goods
+				s = "GFC";
+			else if (ratingsData[0].hits > 0) // sicks
+				s = "SFC";
+		}
+		else if (misses < 10)
+			s = "SDCB";
+
+		return s;
+	}
+
+	public var name:String;
+	public var image:String;
+	public var ratingMod:Float;
+	public var score:Int;
+	public var noteSplash:Bool;
+	public var hitWindow:Int; // ms
+	public var hits = 0;
+
+	public function new(name:String, ?image:String, ?hitWindow:Int, ratingMod = 1., score = 350, noteSplash = true)
+	{
+		this.name = name;
+		this.image = image ?? name;
+		this.hitWindow = hitWindow ?? 0;
+		this.ratingMod = ratingMod;
+		this.score = score;
+		this.noteSplash = noteSplash;
 	}
 
 	public function toString():String
@@ -38,7 +56,8 @@ import flixel.util.FlxStringUtil;
 			LabelValuePair.weak("name", name),
 			LabelValuePair.weak("hitWindow", hitWindow),
 			LabelValuePair.weak("ratingMod", ratingMod),
-			LabelValuePair.weak("score", score)
+			LabelValuePair.weak("score", score),
+			LabelValuePair.weak("hits", hits)
 		]);
 	}
 }

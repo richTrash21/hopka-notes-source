@@ -40,16 +40,16 @@ class HealthIcon extends ExtendedSprite
 		return config;
 	}
 
-	public var isPlayer(default, null):Bool = false;
-	public var baseScale(default, set):Float = 1;
-	public var char(default, null):String = null;
+	public var isPlayer(default, null):Bool;
+	public var baseScale(default, set):Float = 1.0;
+	public var char(default, null):String;
 
 	public var sprTracker:FlxSprite;
-	public var copyX:Bool = true;
-	public var copyY:Bool = true;
+	public var copyX= true;
+	public var copyY= true;
 
-	public var lerpScale:Bool = false;
-	public var lerpSpeed:Float = 1.0;
+	public var lerpScale = false;
+	public var lerpSpeed = 1.0;
 
 	var _speed = 9.0;
 
@@ -62,9 +62,10 @@ class HealthIcon extends ExtendedSprite
 
 	override function update(elapsed:Float)
 	{
-		if (lerpScale && scale.x != baseScale /*&& isOnScreen(camera)*/)
+		if (lerpScale && scale.x != baseScale)
 		{
-			setScale(FlxMath.lerp(baseScale, scale.x, Math.exp(-elapsed * _speed * lerpSpeed))); // Math.max(1 - (_speed * elapsed * lerpSpeed), 0)
+			final factor = Math.exp(-elapsed * _speed * lerpSpeed);
+			setScale(factor < 1 ? FlxMath.lerp(baseScale, scale.x, factor) : baseScale);
 			updateHitbox();
 		}
 

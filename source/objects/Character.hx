@@ -84,7 +84,7 @@ class Character extends objects.ExtendedSprite
 	var firstSetup = true;
 	var settingCharacterUp = true;
 	var curDance = -1;
-	var oldLoopAnims = new Array<String>();
+	var oldLoopAnims:Array<String>;
 
 	// DEPRECATED!!!!!
 	public var positionArray(get, set):Array<Float>;
@@ -201,7 +201,6 @@ class Character extends objects.ExtendedSprite
 
 		if (heyTimer > 0)
 		{
-			// https://github.com/ShadowMario/FNF-PsychEngine/pull/13591 (nvmd replaced with FlxG.animationTimeScale)
 			if ((heyTimer -= elapsed * FlxG.animationTimeScale) <= 0.0)
 			{
 				if (specialAnim && animation.curAnim.name == "hey" || animation.curAnim.name == "cheer")
@@ -209,7 +208,6 @@ class Character extends objects.ExtendedSprite
 					specialAnim = false;
 					dance();
 				}
-				// heyTimer = 0;
 			}
 		}
 		else if (specialAnim && animation.curAnim.finished)
@@ -238,7 +236,7 @@ class Character extends objects.ExtendedSprite
 			holdTimer -= maxTimer;
 		}
 
-		if (animation.curAnim.finished && oldLoopAnims.contains(animation.curAnim.name))
+		if (animation.curAnim.finished && oldLoopAnims != null && oldLoopAnims.contains(animation.curAnim.name))
 			playAnim(animation.curAnim.name + "-loop");
 
 		super.update(elapsed);
@@ -302,7 +300,7 @@ class Character extends objects.ExtendedSprite
 		playAnim(a + idleSuffix, force);
 	}
 
-	override public function playAnim(animName:String, force = false, ?reversed = false, ?frame = 0):Void
+	override public function playAnim(animName:String, force = false, reversed = false, frame = 0):Void
 	{
 		specialAnim = false;
 		if (animName.startsWith("sing"))
@@ -324,10 +322,8 @@ class Character extends objects.ExtendedSprite
 	public function recalculateDanceIdle()
 	{
 		final lastDanceIdle = danceIdle;
-		// danceIdle = (animation.exists('danceLeft$idleSuffix') && animation.exists('danceRight$idleSuffix'));
 
-		// new (numbered) dance anims (stolen from twist engine ehehehe) - rich >:3
-		if (animation.exists('dance0$idleSuffix'))
+		if (animation.exists('dance0$idleSuffix')) // new (numbered) dance anims (stolen from twist engine ehehehe) - rich >:3
 		{
 			maxDance = 0;
 			while (animation.exists("dance" + ++maxDance + idleSuffix)) { /*aaaaaand it does nothing*/ }
@@ -367,6 +363,8 @@ class Character extends objects.ExtendedSprite
 		if (animAnim.endsWith("-loop"))
 		{
 			final a = animAnim.substr(0, animAnim.length-5);
+			if (oldLoopAnims == null)
+				oldLoopAnims = new Array();
 			if (!oldLoopAnims.contains(a))
 				oldLoopAnims.push(a);
 		}
@@ -501,56 +499,4 @@ typedef AnimArray = {
 	offsets:Array<Float>,
 	animflip_x:Bool,
 	animflip_y:Bool
-}
-
-/**
-	A group that stores a bunch of idiots (привет Алик!!). 
-**/
-class CharacterGroup extends FlxTypedSpriteGroup<Character>
-{
-	/**
-		So every character can have a unique string key through which they can be pulled.
-	**/
-	public var membersMap(default, null):Map<String, Character>;
-
-	/**
-		List of active characters that can be used in game.
-	**/
-	public var activeList(default, null):Array<Character>;
-
-	public function new(X:Float = 0, Y:Float = 0)
-	{
-		super(X, Y);
-		membersMap = [];
-		activeList = [];
-	}
-
-	public function setActiveByKey(Keys:Array<String>)
-	{
-		while (activeList.length > 0)
-			diactivate(activeList.pop());
-
-		for (key in Keys)
-			addActiveByKey(key);
-	}
-
-	public function addActiveByKey(Key:String)
-	{
-		if (membersMap.exists(Key))
-			activeList.push(membersMap.get(Key));
-	}
-
-	inline function diactivate(char:Character):Character
-	{
-		char.alpha = 0.00001;
-		char.active = false; // for optimisation!!
-		return char;
-	}
-
-	inline function activate(char:Character):Character
-	{
-		char.alpha = 1;
-		char.active = true;
-		return char;
-	}
 }

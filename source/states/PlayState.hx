@@ -80,17 +80,6 @@ import psychlua.HScript;
 
 import haxe.extern.EitherType;
 
-// https://media.discordapp.net/attachments/1041755661630976052/1180970202079436908/image.png?ex=657f5b35&is=656ce635&hm=477b7411d344068f3cf93abbc76f0fc5457eb03123b25d788c663ef2d58ad107&=&format=webp&quality=lossless&width=517&height=631
-abstract RatingData(Array<EitherType<Float, String>>) from Array<EitherType<Float, String>> to Array<EitherType<Float, String>>
-{
-	public var percent(get, never):Float;
-	public var name(get, never):String;
-
-	@:noCompletion inline function get_percent():Float	return this[0];
-	@:noCompletion inline function get_name():String	return this[1];
-}
-
-// @:access(flixel.math.FlxCallbackPoint._setXCallback)
 class PlayState extends MusicBeatState
 {
 	// по приколу :) - Redar13
@@ -135,6 +124,10 @@ class PlayState extends MusicBeatState
 	public static var deathCounter:Int = 0;
 
 	public static var startOnTime:Float = 0.0;
+
+	// 😔😭
+	// public static var pauseTweenManager = new FlxTweenManager();
+	// public static var pauseTimerManager = new FlxTimerManager();
 
 	inline public static function sortHitNotes(a:Note, b:Note):Int
 	{
@@ -302,9 +295,9 @@ class PlayState extends MusicBeatState
 
 	// i have no fucking idea why i made this - richTrash21
 	// and btw why are they so janky????
-	public var bfCamOffset:FlxPoint; // FlxCallbackPoint
-	public var dadCamOffset:FlxPoint; // FlxCallbackPoint
-	public var gfCamOffset:FlxPoint; // FlxCallbackPoint
+	public var bfCamOffset:FlxPoint;
+	public var dadCamOffset:FlxPoint;
+	public var gfCamOffset:FlxPoint;
 
 	#if hxdiscord_rpc
 	// Discord RPC variables
@@ -355,7 +348,7 @@ class PlayState extends MusicBeatState
 		practiceMode = ClientPrefs.getGameplaySetting("practice");
 		cpuControlled = ClientPrefs.getGameplaySetting("botplay") /*|| ClientPrefs.getGameplaySetting("showcase")*/;
 
-		camGame = new GameCamera(/*0, 0, true*/);
+		camGame = new GameCamera();
 		camHUD = new GameCamera(0, 0);
 		camOther = new GameCamera(0, 0);
 		camGame.checkForTweens = camHUD.checkForTweens = true;
@@ -587,14 +580,6 @@ class PlayState extends MusicBeatState
 		camGame.zoom = defaultCamZoom;
 		camGame.snapToTarget();
 		camHUD.visible = !ClientPrefs.getGameplaySetting("showcase");
-
-		// will give pixel stages more pixelated look (???????????????????)
-		// dont ask why its down here idfk
-		// nvmd have almost no effect
-		//FlxG.camera.pixelPerfectRender = isPixelStage;
-		//camHUD.pixelPerfectRender = isPixelStage;
-
-		//FlxG.worldBounds.set(0, 0, FlxG.width, FlxG.height);
 		moveCameraSection();
 
 		healthBar = new Bar(0, FlxG.height * (ClientPrefs.data.downScroll ? 0.11 : 0.89), "healthBar", () -> health, 0, 2);
@@ -727,8 +712,9 @@ class PlayState extends MusicBeatState
 		startCallback();
 	}
 
-	public function addTextToDebug(text:String, ?color:FlxColor, ?pos:haxe.PosInfos)
+	public function addTextToDebug(text:Dynamic, ?color:FlxColor, ?pos:haxe.PosInfos)
 	{
+		text = Std.string(text);
 		#if LUA_ALLOWED
 		if (isDead) // ACTUALLY CAN CAUSES MEMORY LEAK!!!
 			return haxe.Log.trace(text, pos);
@@ -1225,14 +1211,14 @@ class PlayState extends MusicBeatState
 			}
 	}
 
-	public var charList = new Array<Character>();
-	dynamic public function charsDance(reference:Int) // quick 'n' easy way to bop all characters [[ DEPRECATED ]]
+	@:noCompletion var charList = new Array<Character>();
+	@:noCompletion dynamic public function charsDance(reference:Int) // quick 'n' easy way to bop all characters [[ DEPRECATED ]]
 	{
 		for (char in charList)
 			tryDance(char, reference, char == gf);
 	}
 
-	/*inline*/ public function tryDance(character:Character, reference:Int, ?gfCheck:Bool)
+	public function tryDance(character:Character, reference:Int, ?gfCheck:Bool)
 	{
 		if (character == null || character.stunned || character.animation.curAnim == null || character.animation.curAnim.name.startsWith("sing")
 			|| reference % (gfCheck ? Math.round(gfSpeed * character.danceEveryNumBeats) : character.danceEveryNumBeats) != 0)
@@ -1253,7 +1239,7 @@ class PlayState extends MusicBeatState
 	// `updateScore = function(miss:Bool = false) { ... }
 	// its like if it was a variable but its just a function!
 	// cool right? -Crow
-	public dynamic function updateScore(miss:Bool = false)
+	dynamic public function updateScore(miss:Bool = false)
 	{
 		var str = ratingName;
 		if (totalPlayed != 0)
@@ -1262,10 +1248,13 @@ class PlayState extends MusicBeatState
 			str += ' ($percent%) - $ratingFC';
 		}
 
-		final tempScore = 'Score: $songScore' + (!instakillOnMiss ? ' | Misses: $songMisses' : "") + ' | Rating: $str';
+		var tempScore = 'Score: $songScore';
+		if (!instakillOnMiss)
+			tempScore += ' | Misses: $songMisses';
+		tempScore += ' | Rating: $str';
 		// "tempScore" variable is used to prevent another memory leak, just in case
 		// "\n" here prevents the text from being cut off by beat zooms
-		scoreTxt.text = '$tempScore\n';
+		scoreTxt.text = tempScore;
 
 		if (ClientPrefs.data.scoreZoom && !miss && !cpuControlled && !startingSong)
 		{
@@ -1279,24 +1268,7 @@ class PlayState extends MusicBeatState
 
 	public dynamic function fullComboFunction()
 	{
-		ratingFC = if (songMisses == 0)
-		{
-			if (ratingsData[2].hits + ratingsData[3].hits > 0) // bads and shits
-				"FC";
-			else if (ratingsData[1].hits > 0) // goods
-				"GFC";
-			else if (ratingsData[0].hits > 0) // sicks
-				"SFC";
-			else
-				"";
-		}
-		else
-		{
-			if (songMisses < 10)
-				"SDCB";
-			else
-				"Clear";
-		}
+		ratingFC = Rating.getRatingString(ratingsData, songMisses);
 	}
 
 	public function setSongTime(time:Float)
@@ -1304,28 +1276,16 @@ class PlayState extends MusicBeatState
 		if (time < 0)
 			time = 0;
 
-		// FlxG.sound.music.pause();
 		FlxG.sound.music.time = time;
-		// FlxG.sound.music.play();
-
 		if (SONG.needsVoices)
 		{
-			if (time <= vocals.length)
-			{
-				// vocals.pause();
+			if (vocals != null && time <= vocals.length)
 				vocals.time = time;
-				// if (!startingSong)
-				//	vocals.play();
-			}
+
 			if (opponentVocals != null && time <= opponentVocals.length)
-			{
-				// opponentVocals.pause();
 				opponentVocals.time = time;
-				// if (!startingSong)
-				//	opponentVocals.play();
-			}
 		}
-		if (videoPlayer != null)
+		if (videoPlayer != null && videoPlayer.bitmap.isPlaying)
 			videoPlayer.bitmap.time += Math.round(time - Conductor.songPosition);
 
 		Conductor.songPosition = time;
@@ -1341,7 +1301,8 @@ class PlayState extends MusicBeatState
 		FlxG.sound.music.onComplete = finishSong.bind();
 		if (SONG.needsVoices)
 		{
-			vocals.play();
+			if (vocals != null)
+				vocals.play();
 			if (opponentVocals != null)
 				opponentVocals.play();
 		}
@@ -1355,7 +1316,8 @@ class PlayState extends MusicBeatState
 			FlxG.sound.music.pause();
 			if (SONG.needsVoices)
 			{
-				vocals.pause();
+				if (vocals != null)
+					vocals.pause();
 				if (opponentVocals != null)
 					opponentVocals.pause();
 			}
@@ -1405,8 +1367,11 @@ class PlayState extends MusicBeatState
 			final splitP1 = Paths.voices(SONG.song, "-Player") ?? Paths.voices(SONG.song);
 			final splitP2 = Paths.voices(SONG.song, "-Opponent");
 
-			vocals = FlxG.sound.load(splitP1);
-			#if FLX_PITCH vocals.pitch = playbackRate; #end
+			if (splitP1 != null)
+			{
+				vocals = FlxG.sound.load(splitP1);
+				#if FLX_PITCH vocals.pitch = playbackRate; #end
+			}
 			if (splitP2 != null)
 			{
 				opponentVocals = FlxG.sound.load(splitP2);
@@ -1605,49 +1570,17 @@ class PlayState extends MusicBeatState
 		}
 	}
 
-	override function openSubState(SubState:FlxSubState)
+	override function openSubState(subState:FlxSubState)
 	{
-		stagesFunc((stage) -> stage.openSubState(SubState));
+		stagesFunc((stage) -> stage.openSubState(subState));
 		if (paused)
 		{
-			if (FlxG.sound.music != null)
-			{
-				FlxG.sound.music.pause();
-				if (SONG.needsVoices)
-				{
-					vocals.pause();
-					if (opponentVocals != null)
-						opponentVocals.pause();
-				}
-			}
-
-			if (startTimer != null && !startTimer.finished)
-				startTimer.active = false;
-			if (finishTimer != null && !finishTimer.finished)
-				finishTimer.active = false;
-			if (songSpeedTween != null && !songSpeedTween.finished)
-				songSpeedTween.active = false;
-
-			#if LUA_ALLOWED
-			for (tween in modchartTweens)
-				tween.active = false;
-			for (timer in modchartTimers)
-				timer.active = false;
-			#end
-
-			// TODO: FINISH THIS SHIT
-			/*@:privateAccess FlxTween.globalManager.forEach(function(tween:FlxTween)
-				if (!tween.isTweenOf(SubState)) tween.active = false
-			);
-			// TODO: better way of pausing timers on substate opening
-			FlxTimer.globalManager.forEach(function(timer:FlxTimer) timer.active = false);
-			for (sound in FlxG.sound.list) {
-
-			}*/
+			FlxTween.globalManager.forEach((t) -> __set__tweeen__status(t, false));
+			FlxTimer.globalManager.forEach((t) -> __set__timer__status(t, false));
+			FlxG.sound.pause();
 			FlxG.timeScale = 1.0;
 		}
-
-		super.openSubState(SubState);
+		super.openSubState(subState);
 	}
 
 	override function closeSubState()
@@ -1658,24 +1591,8 @@ class PlayState extends MusicBeatState
 			if (FlxG.sound.music != null && !startingSong)
 				resyncVocals();
 
-			/*
-			if (startTimer != null && !startTimer.finished)
-				startTimer.active = true;
-			if (finishTimer != null && !finishTimer.finished)
-				finishTimer.active = true;
-			if (songSpeedTween != null)
-				songSpeedTween.active = true;
-
-			#if LUA_ALLOWED
-			for (tween in modchartTweens)
-				tween.active = true;
-			for (timer in modchartTimers)
-				timer.active = true;
-			#end
-			*/
-
-			FlxTween.globalManager.forEach((tween) -> tween.active = true);
-			FlxTimer.globalManager.forEach((timer) -> timer.active = true);
+			FlxTween.globalManager.forEach((t) -> __set__tweeen__status(t, true));
+			FlxTimer.globalManager.forEach((t) -> __set__timer__status(t, true));
 			FlxG.sound.resume();
 
 			FlxG.timeScale = playbackRate;
@@ -1683,7 +1600,6 @@ class PlayState extends MusicBeatState
 			callOnScripts("onResume");
 			resetRPC(startTimer?.finished);
 		}
-
 		super.closeSubState();
 	}
 
@@ -1728,13 +1644,6 @@ class PlayState extends MusicBeatState
 		#end
 	}
 
-	#if hxdiscord_rpc
-	@:noCompletion extern inline function __get_RPC_state():String
-	{
-		return storyDifficultyText == Difficulty.defaultDifficulty ? SONG.song : SONG.song + ' ($storyDifficultyText)';
-	}
-	#end
-
 	function resyncVocals():Void
 	{
 		if (finishTimer != null)
@@ -1744,18 +1653,11 @@ class PlayState extends MusicBeatState
 		Conductor.songPosition = FlxG.sound.music.time;
 		if (SONG.needsVoices)
 		{
-			if (Conductor.songPosition <= vocals.length)
-			{
-				// vocals.pause();
+			if (vocals != null && Conductor.songPosition <= vocals.length)
 				vocals.time = Conductor.songPosition;
-				// vocals.play();
-			}
+
 			if (opponentVocals != null && Conductor.songPosition <= opponentVocals.length)
-			{
-				// opponentVocals.pause();
 				opponentVocals.time = Conductor.songPosition;
-				// opponentVocals.play();
-			}
 		}
 	}
 
@@ -1939,13 +1841,8 @@ class PlayState extends MusicBeatState
 			FlxG.resetState();
 		#end
 
-		// okay, what the fuck??????
-		// why does camFollow represent camera position????
-
-		// UPD: much better. need to make this a pull request to official psych lmao
-		// UPD: nvmd won't use anyway
-		setOnScripts("cameraX", camFollow.x /*camGame.scroll.x - (camGame.width * 0.5)*/);
-		setOnScripts("cameraY", camFollow.y /*camGame.scroll.y - (camGame.height * 0.5)*/);
+		setOnScripts("cameraX", camFollow.x); // camGame.scroll.x - (camGame.width * 0.5)
+		setOnScripts("cameraY", camFollow.y); // camGame.scroll.y - (camGame.height * 0.5)
 		callOnScripts("onUpdatePost", [elapsed]);
 	}
 
@@ -1967,12 +1864,8 @@ class PlayState extends MusicBeatState
 		if (playingVideo)
 			videoPlayer.pause();
 
-		// camGame.updateLerp = false;
 		persistentUpdate = false;
 		persistentDraw = paused = true;
-		FlxTween.globalManager.forEach((tween) -> tween.active = false); // so pause tweens wont stop
-		FlxTimer.globalManager.forEach((timer) -> timer.active = false);
-		FlxG.sound.pause();
 
 		if (!cpuControlled)
 			for (note in playerStrums)
@@ -2033,21 +1926,22 @@ class PlayState extends MusicBeatState
 		@:bypassAccessor
 		paused = true;
 
+		FlxG.sound.music.stop();
 		if (SONG.needsVoices)
 		{
-			vocals.stop();
+			if (vocals != null)
+				vocals.stop();
 			if (opponentVocals != null)
 				opponentVocals.stop();
 		}
-		FlxG.sound.music.stop();
 
 		persistentUpdate = persistentDraw = false;
-		#if LUA_ALLOWED
+		/*#if LUA_ALLOWED
 		for (tween in modchartTweens)
 			tween.active = true;
 		for (timer in modchartTimers)
 			timer.active = true;
-		#end
+		#end*/
 		final screenPos = boyfriend.getScreenPosition();
 		openSubState(new GameOverSubstate(screenPos.x - boyfriend.position.x, screenPos.y - boyfriend.position.y));
 		screenPos.put();
@@ -2199,19 +2093,13 @@ class PlayState extends MusicBeatState
 							final lastAlpha = boyfriend.alpha;
 							boyfriendGroup.remove(boyfriend);
 							boyfriend.kill();
-							// charList.remove(boyfriend);
-							// boyfriend.alpha = 0.00001;
-							// boyfriend.active = false;
 
 							boyfriend = boyfriendGroup.add(boyfriendMap.get(value2));
 							boyfriend.alpha = lastAlpha;
 							boyfriend.revive();
-							// charList.push(boyfriend);
-							// boyfriend.active = true;
 
 							iconP1.changeIcon(boyfriend.healthIcon);
 							bfCamOffset.x = bfCamOffset.x;
-							// bfCamOffset._setXCallback(bfCamOffset);
 						}
 						setOnScripts("boyfriendName", boyfriend.curCharacter);
 
@@ -2225,19 +2113,13 @@ class PlayState extends MusicBeatState
 							final wasGf = dad.curCharacter.startsWith("gf-") || dad.curCharacter == "gf";
 							dadGroup.remove(dad);
 							dad.kill();
-							// charList.remove(dad);
-							// dad.alpha = 0.00001;
-							// dad.active = false;
 
 							dad = dadGroup.add(dadMap.get(value2));
 							dad.alpha = lastAlpha;
 							dad.revive();
-							// charList.push(dad);
-							// dad.active = true;
 
 							iconP2.changeIcon(dad.healthIcon);
 							dadCamOffset.x = dadCamOffset.x;
-							// dadCamOffset._setXCallback(dadCamOffset);
 
 							if (gf != null)
 								gf.visible = !(dad.curCharacter.startsWith("gf-") || dad.curCharacter == "gf") && (wasGf || gf.visible);
@@ -2255,18 +2137,12 @@ class PlayState extends MusicBeatState
 								final lastAlpha = gf.alpha;
 								gfGroup.remove(gf);
 								gf.kill();
-								// charList.remove(gf);
-								// gf.alpha = 0.00001;
-								// gf.active = false;
 
 								gf = gfGroup.add(gfMap.get(value2));
 								gf.alpha = lastAlpha;
 								gf.revive();
-								// charList.push(gf);
-								// gf.active = true;
 
 								gfCamOffset.x = gfCamOffset.x;
-								// gfCamOffset._setXCallback(gfCamOffset);
 							}
 							setOnScripts("gfName", gf.curCharacter);
 						}
@@ -2371,8 +2247,11 @@ class PlayState extends MusicBeatState
 		FlxG.sound.music.pause();
 		if (SONG.needsVoices)
 		{
-			vocals.pause();
-			vocals.volume = 0;
+			if (vocals != null)
+			{
+				vocals.pause();
+				vocals.volume = 0;
+			}
 			if (opponentVocals != null)
 			{
 				opponentVocals.pause();
@@ -2845,7 +2724,7 @@ class PlayState extends MusicBeatState
 				gf.specialAnim = true;
 			}
 		}
-		if (SONG.needsVoices)
+		if (SONG.needsVoices && vocals != null)
 			vocals.volume = 0;
 	}
 
@@ -2868,7 +2747,7 @@ class PlayState extends MusicBeatState
 			if (char != null)
 				char.playAnim(animToPlay, true);
 		}
-		if (SONG.needsVoices && opponentVocals == null)
+		if (SONG.needsVoices && vocals != null && opponentVocals == null)
 			vocals.volume = 1;
 
 		strumPlayAnim(true, note.noteData, Conductor.stepCrochet * 1.25 * 0.001 / playbackRate);
@@ -2958,7 +2837,7 @@ class PlayState extends MusicBeatState
 		else
 			strumPlayAnim(false, note.noteData, Conductor.stepCrochet * 1.25 * .001);
 
-		if (SONG.needsVoices)
+		if (SONG.needsVoices && vocals != null)
 			vocals.volume = 1;
 
 		final result:Dynamic = callOnLuas("goodNoteHit", [notes.members.indexOf(note), note.noteData, note.noteType, note.isSustainNote]);
@@ -3072,8 +2951,7 @@ class PlayState extends MusicBeatState
 		{
 			final maxDelay = 20 * playbackRate;
 			final realTime = Conductor.songPosition - Conductor.offset;
-			if (Math.abs(FlxG.sound.music.time - realTime) > maxDelay || (SONG.needsVoices && (Math.abs(vocals.time - realTime) > maxDelay
-				|| (opponentVocals != null && Math.abs(opponentVocals.time - realTime) > maxDelay))))
+			if (__sound__delayed(FlxG.sound.music, realTime, maxDelay) || (SONG.needsVoices && (__sound__delayed(vocals, realTime, maxDelay) || __sound__delayed(opponentVocals, realTime, maxDelay))))
 				resyncVocals();
 		}
 
@@ -3540,21 +3418,46 @@ class PlayState extends MusicBeatState
 	}
 	#end
 
-	inline function calcFollowLerp():Float
+	// bunch of inline helpers that doesn't get compiled after inlining
+	#if hxdiscord_rpc
+	@:noCompletion extern inline function __get_RPC_state():String
+	{
+		return storyDifficultyText == Difficulty.defaultDifficulty ? SONG.song : SONG.song + ' ($storyDifficultyText)';
+	}
+	#end
+
+	@:noCompletion extern inline function __calc__follow__lerp():Float
 	{
 		return camGame.followLerp = 0.04 * cameraSpeed;
 	}
 
+	@:noCompletion extern inline static function __set__tweeen__status(__tween:FlxTween, __status:Bool)
+	{
+		if (__tween != null)
+			__tween.active = __status;
+	}
+
+	@:noCompletion extern inline static function __set__timer__status(__timer:FlxTimer, __status:Bool)
+	{
+		if (__timer != null)
+			__timer.active = __status;
+	}
+
+	@:noCompletion extern inline static function __sound__delayed(__sound:FlxSound, __time:Float, __delay:Float):Bool
+	{
+		return __sound == null ? false : (Math.abs(__sound.time - __time) > __delay);
+	}
+
 	// DEPRECATED!!!
-	@:noCompletion /*extern*/ public var BF_X(get, set):Float;
-	@:noCompletion /*extern*/ public var BF_Y(get, set):Float;
-	@:noCompletion /*extern*/ public var DAD_X(get, set):Float;
-	@:noCompletion /*extern*/ public var DAD_Y(get, set):Float;
-	@:noCompletion /*extern*/ public var GF_X(get, set):Float;
-	@:noCompletion /*extern*/ public var GF_Y(get, set):Float;
-	@:noCompletion /*extern*/ public var boyfriendCameraOffset(get, set):Array<Float>;
-	@:noCompletion /*extern*/ public var opponentCameraOffset(get, set):Array<Float>;
-	@:noCompletion /*extern*/ public var girlfriendCameraOffset(get, set):Array<Float>;
+	@:noCompletion public var BF_X(get, set):Float;
+	@:noCompletion public var BF_Y(get, set):Float;
+	@:noCompletion public var DAD_X(get, set):Float;
+	@:noCompletion public var DAD_Y(get, set):Float;
+	@:noCompletion public var GF_X(get, set):Float;
+	@:noCompletion public var GF_Y(get, set):Float;
+	@:noCompletion public var boyfriendCameraOffset(get, set):Array<Float>;
+	@:noCompletion public var opponentCameraOffset(get, set):Array<Float>;
+	@:noCompletion public var girlfriendCameraOffset(get, set):Array<Float>;
 
 	@:noCompletion inline public function set_isCameraOnForcedPos(force:Bool):Bool
 	{
@@ -3639,8 +3542,8 @@ class PlayState extends MusicBeatState
 	{
 		if (cameraSpeed != speed)
 		{
-			cameraSpeed = /*camGame.cameraSpeed =*/ speed;
-			calcFollowLerp();
+			cameraSpeed = speed;
+			__calc__follow__lerp();
 		}
 		return speed;
 	}
@@ -3757,7 +3660,8 @@ class PlayState extends MusicBeatState
 			FlxG.sound.music.pitch = value;
 			if (SONG.needsVoices)
 			{
-				vocals.pitch = value;
+				if (vocals != null)
+					vocals.pitch = value;
 				if (opponentVocals != null)
 					opponentVocals.pitch = value;
 			}
@@ -3774,18 +3678,27 @@ class PlayState extends MusicBeatState
 
 	@:noCompletion inline function set_paused(bool:Bool):Bool
 	{
-		return paused = !(camGame.active = camHUD.active = !bool);
+		camGame.active = camHUD.active = !bool;
+		return paused = bool;
 	}
 }
 
-// rich: i love abstracts :3
+// i love abstracts <3 - rich
 abstract RuntimeShaderData(Array<String>) from Array<String> to Array<String>
 {
 	public var frag(get, never):String;
 	public var vert(get, never):String;
 
-	@:noCompletion inline function get_frag():String			 return this[0];
-	@:noCompletion inline function get_vert():String			 return this[1];
-	// @:noCompletion inline function set_frag(frag:String):String	 return this[0] = frag;
-	// @:noCompletion inline function set_vert(vert:String):String	 return this[1] = vert;
+	@:noCompletion inline function get_frag():String  return this[0];
+	@:noCompletion inline function get_vert():String  return this[1];
+}
+
+// https://media.discordapp.net/attachments/1041755661630976052/1180970202079436908/image.png?ex=657f5b35&is=656ce635&hm=477b7411d344068f3cf93abbc76f0fc5457eb03123b25d788c663ef2d58ad107&=&format=webp&quality=lossless&width=517&height=631
+abstract RatingData(Array<EitherType<Float, String>>) from Array<EitherType<Float, String>> to Array<EitherType<Float, String>>
+{
+	public var percent(get, never):Float;
+	public var name(get, never):String;
+
+	@:noCompletion inline function get_percent():Float	return this[0];
+	@:noCompletion inline function get_name():String	return this[1];
 }

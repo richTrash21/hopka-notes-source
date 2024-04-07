@@ -111,7 +111,7 @@ class HScript extends Interp
 		setVar("setVar",	 PlayState.instance.variables.set);
 		setVar("getVar",	 PlayState.instance.variables.get);
 		setVar("removeVar",	 PlayState.instance.variables.remove);
-		setVar("debugPrint", (t:String, c:FlxColor) -> PlayState.instance.addTextToDebug(t, c, posInfos()));
+		setVar("debugPrint", (t:String, ?c:FlxColor) -> PlayState.instance.addTextToDebug(t, c, posInfos()));
 
 		// For adding your own callbacks
 

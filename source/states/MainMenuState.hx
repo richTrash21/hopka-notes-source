@@ -33,6 +33,13 @@ class MainMenuState extends MusicBeatState
 
 	override function create()
 	{
+		#if (flixel < "6.0.0")
+		// ну привет редар :) - rich
+		final normalCamera = new objects.GameCamera(true);
+		normalCamera.zoomDecay = 2.375;
+		FlxG.cameras.reset(normalCamera);
+		#end
+
 		if (doiseTrans)
 		{
 			FlxG.fullscreen = false;
@@ -145,9 +152,7 @@ class MainMenuState extends MusicBeatState
 		#end
 
 		super.create();
-		#if (flixel >= "6.0.0")
 		FlxG.camera.followLerp = 0.15;
-		#end
 	}
 
 	var selectedSomethin:Bool = false;
@@ -162,12 +167,10 @@ class MainMenuState extends MusicBeatState
 		if (FlxG.sound.music.volume < 0.8)
 		{
 			FlxG.sound.music.volume += 0.5 * elapsed;
-			if (FreeplayState.vocals.playing)
+			if (FreeplayState.vocals?.playing)
 				FreeplayState.vocals.volume = FlxG.sound.music.volume;
 		}
-		#if (flixel < "6.0.0")
-		FlxG.camera.followLerp = elapsed * 9 * (FlxG.updateFramerate * 0.016666666666666666); // / 60
-		#end
+		Conductor.songPosition = FlxG.sound.music.time;
 
 		if (!selectedSomethin)
 		{
@@ -272,13 +275,6 @@ class MainMenuState extends MusicBeatState
 			}
 		}
 
-		if (pizzaTime)
-		{
-			Conductor.songPosition = FlxG.sound.music.time;
-			if (FlxG.camera.zoom != 1)
-				FlxG.camera.zoom = FlxMath.lerp(1, FlxG.camera.zoom, Math.exp(-elapsed * 7.6));
-		}
-
 		final N = FlxG.keys.justPressed.N;
 		if (N || FlxG.keys.justPressed.P) // just don't ask, i was bored lmao - richTrash21
 		{
@@ -330,7 +326,6 @@ class MainMenuState extends MusicBeatState
 		spr = menuItems.members[curSelected];
 		spr.animation.play("selected");
 		spr.centerOffsets();
-
 		FlxG.camera.target = spr;
 	}
 }

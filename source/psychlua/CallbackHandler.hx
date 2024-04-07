@@ -8,7 +8,7 @@ import llua.Convert;
 @:allow(Main)
 class CallbackHandler
 {
-	inline /*public*/ static function call(l:llua.State, fname:String):Int
+	inline static function call(l:llua.State, fname:String):Int
 	{
 		try
 		{
@@ -28,7 +28,7 @@ class CallbackHandler
 			if (cbf == null)
 				return 0;
 
-			/* return the number of results */
+			// return the number of results
 			final ret:Dynamic = Reflect.callMethod(null, cbf, [for (i in 0...Lua.gettop(l)) Convert.fromLua(l, i + 1)]);
 			if (ret == null)
 				return 0;
@@ -43,8 +43,7 @@ class CallbackHandler
 				llua.LuaL.error(l, 'CALLBACK ERROR! $e');
 				return 0;
 			}
-			trace(e);
-			throw(e);
+			throw e;
 		}
 	}
 }

@@ -62,6 +62,7 @@ class EditorPlayState extends MusicBeatSubstate
 	public function new(playbackRate:Float, vocals:FlxSound, opponentVocals:FlxSound)
 	{
 		super();
+		FlxG.state.persistentDraw = false;
 		
 		/* setting up some important data */
 		this.playbackRate = playbackRate;
@@ -79,8 +80,19 @@ class EditorPlayState extends MusicBeatSubstate
 		cachePopUpScore();
 		if(ClientPrefs.data.hitsoundVolume > 0) Paths.sound('hitsound');
 
+		/*try
+		{
+			final editorImage = new FlxSprite();
+			editorImage.pixels = @:privateAccess FlxG.camera.flashSprite.__cacheBitmap.bitmapData.clone();
+			editorImage.antialiasing = ClientPrefs.data.antialiasing;
+			editorImage.scrollFactor.set();
+			add(editorImage);
+		}
+		catch(e)
+			trace('oh damn... $e...');*/
+
 		/* setting up Editor PlayState stuff */
-		var bg:FlxSprite = new FlxSprite(0, 0, Paths.image('menuDesat'));
+		final bg = new FlxSprite(Paths.image("menuDesat"));
 		bg.antialiasing = ClientPrefs.data.antialiasing;
 		bg.scrollFactor.set();
 		bg.color = 0xFF101010;
@@ -396,6 +408,8 @@ class EditorPlayState extends MusicBeatSubstate
 
 	public function endSong()
 	{
+		FlxG.state.persistentDraw = true;
+		FlxG.sound.music.pause();
 		if (PlayState.SONG.needsVoices)
 		{
 			if (vocals != null)
@@ -755,21 +769,9 @@ class EditorPlayState extends MusicBeatSubstate
 		scoreTxt.text = 'Hits: $songHits | Misses: $songMisses | Rating: ' + (totalPlayed == 0 ? "?" : CoolUtil.floorDecimal(ratingPercent * 100, 2) + '% - $ratingFC');
 	}
 	
-	function fullComboUpdate()
+	inline function fullComboUpdate()
 	{
-		var sicks:Int = ratingsData[0].hits;
-		var goods:Int = ratingsData[1].hits;
-		var bads:Int = ratingsData[2].hits;
-		var shits:Int = ratingsData[3].hits;
-
-		ratingFC = 'Clear';
-		if(songMisses < 1)
-		{
-			if (bads > 0 || shits > 0) ratingFC = 'FC';
-			else if (goods > 0) ratingFC = 'GFC';
-			else if (sicks > 0) ratingFC = 'SFC';
-		}
-		else if (songMisses < 10) ratingFC = 'SDCB';
+		ratingFC = Rating.getRatingString(ratingsData, songMisses);
 	}
 }
 #end

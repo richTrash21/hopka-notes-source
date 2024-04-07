@@ -288,43 +288,37 @@ class LuaUtils
 	}
 
 	// resolves old string color input and new number color input (why does lua passes every number as float it's so annoyinggg)
-	inline public static function resolveColor(color:LuaColor):FlxColor
+	extern inline public static function resolveColor(color:LuaColor):FlxColor
 	{
-		if (color is String)
-			return CoolUtil.colorFromString(color);
-
-		final c:FlxColor = Std.int(color);
-		/*if (c > 0xFFFFFFFF && c <= 0xFFFFFF) // no alpha chanel - add it
-			c.alpha = 0xFF;*/
-		return c;
+		return color is String ? CoolUtil.colorFromString(color) : Std.int(color);
 	}
 
 	inline public static function keyJustPressed(key:String):Bool
 	{
-		return keyUtil(FlxG.keys.justPressed, key);
+		return __key__util(FlxG.keys.justPressed, key);
 	}
 
 	inline public static function keyPressed(key:String):Bool
 	{
-		return keyUtil(FlxG.keys.pressed, key);
+		return __key__util(FlxG.keys.pressed, key);
 	}
 
 	inline public static function keyJustReleased(key:String):Bool
 	{
-		return keyUtil(FlxG.keys.justReleased, key);
+		return __key__util(FlxG.keys.justReleased, key);
 	}
 
 	inline public static function keyReleased(key:String):Bool
 	{
-		return keyUtil(FlxG.keys.released, key);
+		return __key__util(FlxG.keys.released, key);
 	}
 
 	@:access(flixel.input.FlxBaseKeyList.check)
-	inline static function keyUtil(keyList:flixel.input.keyboard.FlxKeyList, key:String):Bool
+	extern inline static function __key__util(__key__list:flixel.input.keyboard.FlxKeyList, __key:String):Bool
 	{
-		final realKey = FlxKey.fromString(key.toUpperCase().trim());
+		final __real__key = FlxKey.fromString(__key.toUpperCase().trim());
 		// had to make NONE always false bc of how old code treated invalid keys as false return
-		return realKey == NONE ? false : keyList.check(realKey); // Reflect.getProperty(keyList, key);
+		return __real__key == NONE ? false : __key__list.check(__real__key);
 	}
 	
 	inline public static function loadFrames(image:String, spriteType:String):flixel.graphics.frames.FlxFramesCollection
@@ -341,39 +335,33 @@ class LuaUtils
 	public static function resetTextTag(tag:String)
 	{
 		#if LUA_ALLOWED
-		if (PlayState.instance.modchartTexts.exists(tag))
-		{
-			final target = PlayState.instance.modchartTexts.get(tag);
-			target.kill();
-			PlayState.instance.remove(target, true).destroy();
-			PlayState.instance.modchartTexts.remove(tag);
-		}
+		if (!PlayState.instance.modchartTexts.exists(tag))
+			return;
+
+		PlayState.instance.remove(PlayState.instance.modchartTexts.get(tag), true).destroy();
+		PlayState.instance.modchartTexts.remove(tag);
 		#end
 	}
 
 	public static function resetSpriteTag(tag:String)
 	{
 		#if LUA_ALLOWED
-		if (PlayState.instance.modchartSprites.exists(tag))
-		{
-			final target = PlayState.instance.modchartSprites.get(tag);
-			target.kill();
-			PlayState.instance.remove(target, true).destroy();
-			PlayState.instance.modchartSprites.remove(tag);
-		}
+		if (!PlayState.instance.modchartSprites.exists(tag))
+			return;
+
+		PlayState.instance.remove(PlayState.instance.modchartSprites.get(tag), true).destroy();
+		PlayState.instance.modchartSprites.remove(tag);
 		#end
 	}
 
 	public static function cancelTween(tag:String)
 	{
 		#if LUA_ALLOWED
-		if (PlayState.instance.modchartTweens.exists(tag))
-		{
-			final leTween = PlayState.instance.modchartTweens.get(tag);
-			leTween.cancel();
-			leTween.destroy();
-			PlayState.instance.modchartTweens.remove(tag);
-		}
+		if (!PlayState.instance.modchartTweens.exists(tag))
+			return;
+
+		PlayState.instance.modchartTweens.get(tag).cancel();
+		PlayState.instance.modchartTweens.remove(tag);
 		#end
 	}
 
@@ -387,13 +375,13 @@ class LuaUtils
 	public static function cancelTimer(tag:String)
 	{
 		#if LUA_ALLOWED
-		if (PlayState.instance.modchartTimers.exists(tag))
-		{
-			final theTimer = PlayState.instance.modchartTimers.get(tag);
-			theTimer.cancel();
-			theTimer.destroy();
-			PlayState.instance.modchartTimers.remove(tag);
-		}
+		if (!PlayState.instance.modchartTimers.exists(tag))
+			return;
+
+		final timer = PlayState.instance.modchartTimers.get(tag);
+		timer.cancel();
+		timer.destroy();
+		PlayState.instance.modchartTimers.remove(tag);
 		#end
 	}
 
@@ -413,47 +401,6 @@ class LuaUtils
 	inline public static function getTweenEaseByString(ease:String):EaseFunction
 	{
 		return __easeMap.get(ease.toLowerCase().trim());
-		/*return switch (ease.toLowerCase().trim())
-		{
-			case "linear":				FlxEase.linear;
-			case "backin":				FlxEase.backIn;
-			case "backinout":			FlxEase.backInOut;
-			case "backout":				FlxEase.backOut;
-			case "bouncein":			FlxEase.bounceIn;
-			case "bounceinout":			FlxEase.bounceInOut;
-			case "bounceout":			FlxEase.bounceOut;
-			case "circin":				FlxEase.circIn;
-			case "circinout":			FlxEase.circInOut;
-			case "circout":				FlxEase.circOut;
-			case "cubein":				FlxEase.cubeIn;
-			case "cubeinout":			FlxEase.cubeInOut;
-			case "cubeout":				FlxEase.cubeOut;
-			case "elasticin":			FlxEase.elasticIn;
-			case "elasticinout":		FlxEase.elasticInOut;
-			case "elasticout":			FlxEase.elasticOut;
-			case "expoin":				FlxEase.expoIn;
-			case "expoinout":			FlxEase.expoInOut;
-			case "expoout":				FlxEase.expoOut;
-			case "quadin":				FlxEase.quadIn;
-			case "quadinout":			FlxEase.quadInOut;
-			case "quadout":				FlxEase.quadOut;
-			case "quartin":				FlxEase.quartIn;
-			case "quartinout":			FlxEase.quartInOut;
-			case "quartout":			FlxEase.quartOut;
-			case "quintin":				FlxEase.quintIn;
-			case "quintinout":			FlxEase.quintInOut;
-			case "quintout":			FlxEase.quintOut;
-			case "sinein":				FlxEase.sineIn;
-			case "sineinout":			FlxEase.sineInOut;
-			case "sineout":				FlxEase.sineOut;
-			case "smoothstepin":		FlxEase.smoothStepIn;
-			case "smoothstepinout":		FlxEase.smoothStepInOut;
-			case "smoothstepout":		FlxEase.smoothStepInOut;
-			case "smootherstepin":		FlxEase.smootherStepIn;
-			case "smootherstepinout":	FlxEase.smootherStepInOut;
-			case "smootherstepout":		FlxEase.smootherStepOut;
-			default:					null; // same as linear (lol)
-		}*/
 	}
 
 	inline public static function blendModeFromString(blend:String):BlendMode
@@ -481,14 +428,42 @@ class LuaUtils
 
 	inline public static function cameraFromString(cam:String):FlxCamera
 	{
-		return (PlayState.instance == null)
-			? FlxG.cameras.list[CoolUtil.boundInt(Std.parseInt(cam), 0, FlxG.cameras.list.length-1)]
-			: switch(cam.toLowerCase().trim())
+		return switch(cam.toLowerCase().trim())
+		{
+			case "camhud" | "hud" | "1":	  PlayState.instance.camHUD;
+			case "camother" | "other" | "2":  PlayState.instance.camOther;
+			default:						  FlxG.camera;
+		}
+		// rework of https://github.com/ShadowMario/FNF-PsychEngine/pull/14430 (lmao) - rich
+		/*cam = cam.toLowerCase().trim();
+		return switch(cam)
+		{
+			case "camgame" | "game" | "0":
+				FlxG.camera; // same as PlayState.instance.camGame
+
+			case "camhud" | "hud" | "1":
+				PlayState.instance.camHUD;
+
+			case "camother" | "other" | "2":
+				PlayState.instance.camOther;
+
+			default:
+				var ret = FlxG.camera;
+				final i = Std.parseInt(cam);
+				if (i == null)
 				{
-					case "camhud" | "hud" | "1":	  PlayState.instance.camHUD;
-					case "camother" | "other" | "2":  PlayState.instance.camOther;
-					default:						  FlxG.camera;
+					if (PlayState.instance.variables.exists(cam))
+					{
+						ret = PlayState.instance.variables.get(cam);
+						if (!(ret is FlxCamera))
+							ret = FlxG.camera;
+					}
 				}
+				else if (FlxMath.inBounds(i, 0, FlxG.cameras.list.length-1))
+					ret =  FlxG.cameras.list[i];
+
+				return ret;
+		}*/
 	}
 
 	//clone functions

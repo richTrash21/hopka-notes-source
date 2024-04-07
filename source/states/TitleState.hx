@@ -61,6 +61,7 @@ class TitleState extends MusicBeatState
 		gf.animation.addByIndices("right", "gfDance", [15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29], "", 24, false);
 
 		gf.animation.play("right");
+		gf.animation.finish();
 		add(gf);
 		gf.precache();
 		gf.visible = false;

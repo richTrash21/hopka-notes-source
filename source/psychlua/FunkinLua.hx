@@ -516,17 +516,10 @@ class FunkinLua
 		set("startTween", (tag:String, vars:String, ?values:Any, duration:Float, ?options:Any) ->
 		{
 			final penisExam:Dynamic = LuaUtils.tweenPrepare(tag, vars);
-			// SHIT WASN'T WORKING, NEEDED TESTING
-			// trace('startTween: (tag: $tag | vars: $vars | values: $values, duration: $duration | options $options | obj: $penisExam)');
-			if (penisExam == null)
+			final notFound = penisExam == null;
+			if (notFound || values == null)
 			{
-				luaTrace('startTween: Couldnt find object: $vars', false, false, FlxColor.RED);
-				return;
-			}
-
-			if (values == null)
-			{
-				luaTrace("startTween: No values on 2nd argument!", false, false, FlxColor.RED);
+				luaTrace("startTween: " + (notFound ? 'Couldnt find object: $vars' : "No values on 2nd argument!"), false, false, FlxColor.RED);
 				return;
 			}
 
@@ -563,22 +556,6 @@ class FunkinLua
 				luaTrace('startTween: Tween error for $vars: $e', true, false, FlxColor.RED);
 		});
 
-		/*set("doTweenX", (tag:String, vars:String, value:Dynamic, duration:Float, ease:String) ->
-			oldTweenFunction(tag, vars, value, duration, ease, "x")
-		);
-		set("doTweenY", (tag:String, vars:String, value:Dynamic, duration:Float, ease:String) ->
-			oldTweenFunction(tag, vars, value, duration, ease, "y")
-		);
-		set("doTweenAngle", (tag:String, vars:String, value:Dynamic, duration:Float, ease:String) ->
-			oldTweenFunction(tag, vars, value, duration, ease, "angle")
-		);
-		set("doTweenAlpha", (tag:String, vars:String, value:Dynamic, duration:Float, ease:String) ->
-			oldTweenFunction(tag, vars, value, duration, ease, "alpha")
-		);
-		set("doTweenZoom", (tag:String, vars:String, value:Dynamic, duration:Float, ease:String) ->
-			oldTweenFunction(tag, vars, value, duration, ease, "zoom")
-		);*/
-
 		set("doTweenColor", (tag:String, vars:String, targetColor:String, duration:Float, ease:String) ->
 		{
 			final spr:FlxSprite = LuaUtils.tweenPrepare(tag, vars);
@@ -601,28 +578,13 @@ class FunkinLua
 			}));	
 		});			
 
+		// quick VarTween setup
 		for (f in ["x", "y", "angle", "alpha", "zoom"])
 		{
 			set("doTween" + CoolUtil.capitalize(f), oldTweenFunction.bind(_, _, _, _, _, f));
 			set("noteTween" + CoolUtil.capitalize(f), noteTweenFunction.bind(_, _, _, _, _, f));
 		}
 
-		// Tween shit, but for strums
-		/*set("noteTweenX", (tag:String, note:Int, value:Dynamic, duration:Float, ease:String) ->
-			noteTweenFunction(tag, note, {x: value}, duration, ease)
-		);
-		set("noteTweenY", (tag:String, note:Int, value:Dynamic, duration:Float, ease:String)  ->
-			noteTweenFunction(tag, note, {y: value}, duration, ease)
-		);
-		set("noteTweenAngle", (tag:String, note:Int, value:Dynamic, duration:Float, ease:String) ->
-			noteTweenFunction(tag, note, {angle: value}, duration, ease)
-		);
-		set("noteTweenDirection", (tag:String, note:Int, value:Dynamic, duration:Float, ease:String) ->
-			noteTweenFunction(tag, note, {direction: value}, duration, ease)
-		);
-		set("noteTweenAlpha", (tag:String, note:Int, value:Dynamic, duration:Float, ease:String) ->
-			noteTweenFunction(tag, note, {alpha: value}, duration, ease)
-		);*/
 		set("cancelTween", LuaUtils.cancelTween);
 
 		set("mouseClicked", (button:String) ->
@@ -1300,9 +1262,7 @@ class FunkinLua
 		});
 		#end
 
-		set("debugPrint", (text:Dynamic = "", ?color:LuaColor) ->
-			game.addTextToDebug(text, color == null ? FlxColor.WHITE : LuaUtils.resolveColor(color))
-		);
+		set("debugPrint", (t:Dynamic, ?c:LuaColor) -> game.addTextToDebug(t, c == null ? FlxColor.WHITE : LuaUtils.resolveColor(c)));
 		
 		addLocalCallback("close", () ->
 		{
@@ -1496,7 +1456,6 @@ class FunkinLua
 				return;
 
 			PlayState.instance.addTextToDebug(text, color, pos);
-			// trace(text);
 		}
 		#end
 	}

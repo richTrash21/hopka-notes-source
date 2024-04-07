@@ -1302,24 +1302,24 @@ class CharacterEditorState extends backend.MusicBeatUIState
 private class HelpSubstate extends flixel.FlxSubState
 {
 	inline static final HELP_TEXT = "CAMERA
-	\nE/Q - Camera Zoom In/Out
-	\nJ/K/L/I - Move Camera
-	\nR - Reset Camera Zoom
-	\n
-	\nCHARACTER
-	\nCtrl + R - Reset Current Offset
-	\nCtrl + C - Copy Current Offset
-	\nCtrl + V - Paste Copied Offset on Current Animation
-	\nCtrl + Z - Undo Last Paste or Reset
-	\nW/S - Previous/Next Animation
-	\nSpace - Replay Animation
-	\nArrow Keys/Mouse & Right Click - Move Offset
-	\nA/D - Frame Advance (Back/Forward)
-	\n
-	\nOTHER
-	\nF12 - Toggle Silhouettes
-	\nHold Shift - Move Offsets 10x faster and Camera 4x faster
-	\nHold Control - Move camera 4x slower";
+\nE/Q - Camera Zoom In/Out
+\nJ/K/L/I - Move Camera
+\nR - Reset Camera Zoom
+\n
+\nCHARACTER
+\nCtrl + R - Reset Current Offset
+\nCtrl + C - Copy Current Offset
+\nCtrl + V - Paste Copied Offset on Current Animation
+\nCtrl + Z - Undo Last Paste or Reset
+\nW/S - Previous/Next Animation
+\nSpace - Replay Animation
+\nArrow Keys/Mouse & Right Click - Move Offset
+\nA/D - Frame Advance (Back/Forward)
+\n
+\nOTHER
+\nF12 - Toggle Silhouettes
+\nHold Shift - Move Offsets 10x faster and Camera 4x faster
+\nHold Control - Move camera 4x slower";
 
 	public function new()
 	{

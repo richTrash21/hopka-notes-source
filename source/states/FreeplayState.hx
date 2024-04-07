@@ -44,8 +44,12 @@ class FreeplayState extends MusicBeatState
 
 	override function create()
 	{
-		//Paths.clearStoredMemory();
-		//Paths.clearUnusedMemory();
+		// Paths.clearStoredMemory();
+		// Paths.clearUnusedMemory();
+
+		#if (flixel < "6.0.0")
+		FlxG.cameras.reset(new objects.GameCamera());
+		#end
 		
 		persistentUpdate = true;
 		PlayState.isStoryMode = false;
@@ -153,7 +157,6 @@ class FreeplayState extends MusicBeatState
 
 		curDifficulty = Math.round(Math.max(0, Difficulty.defaultList.indexOf(lastDifficultyName)));
 		changeSelection();
-		FlxG.camera.snapToTarget();
 
 		final penis = FlxG.height - 26;
 		final txtBG = new FlxSprite(0, penis).makeGraphic(FlxG.width, 26, 0x99000000);
@@ -175,28 +178,29 @@ class FreeplayState extends MusicBeatState
 		add(txtBG);
 		add(text);
 
-		FlxG.sound.list.add(vocals);
+		if (vocals == null)
+		{
+			vocals = FlxG.sound.list.recycle(FlxSound);
+			vocals.persist = true;
+		}
 		super.create();
-		#if (flixel >= "6.0.0")
-		FlxG.camera.followLerp = 0.16;
-		#end
+		FlxG.camera.follow(iconArray[curSelected], NO_DEAD_ZONE, 0.16);
+		FlxG.camera.snapToTarget();
 	}
 
 	override function closeSubState()
 	{
 		changeSelection(0, false);
-		persistentUpdate = true;
-		#if (flixel >= "6.0.0")
-		FlxG.camera.followLerp = 0.16;
-		#end
+		// persistentUpdate = true;
+		// FlxG.camera.followLerp = 0.16;
 		super.closeSubState();
 	}
 
-	override function openSubState(SubState:FlxSubState)
+	/*override function openSubState(SubState:FlxSubState)
 	{
 		FlxG.camera.followLerp = 0;
 		super.openSubState(SubState);
-	}
+	}*/
 
 	inline public function addSong(songName:String, weekNum:Int, songCharacter:String, color:Int)
 	{
@@ -217,18 +221,14 @@ class FreeplayState extends MusicBeatState
 	}
 
 	var instPlaying:Int = -1;
-	public static var vocals:FlxSound = new FlxSound();
+	public static var vocals:FlxSound;
 	var holdTime:Float = 0;
 	override function update(elapsed:Float)
 	{
 		if (FlxG.sound.music.volume < 0.7) 
 			FlxG.sound.music.volume += 0.5 * FlxG.elapsed;
 
-		#if (flixel < "6.0.0")
-		FlxG.camera.followLerp = elapsed * 9.05 * (FlxG.updateFramerate * 0.016666666666666666); // / 60
-		#end
 		Conductor.songPosition = FlxG.sound.music.time;
-
 		lerpScore = if (Math.abs(lerpScore - intendedScore) <= 10)
 						intendedScore;
 					else
@@ -248,6 +248,9 @@ class FreeplayState extends MusicBeatState
 
 		scoreText.text = 'PERSONAL BEST: $lerpScore (' + ratingSplit.join(".") + "%)";
 		positionHighscore();
+
+		if (subState != null)
+			return super.update(elapsed);
 
 		final shiftMult:Int = FlxG.keys.pressed.SHIFT ? 3 : 1;
 		if (songs.length > 1)
@@ -298,7 +301,7 @@ class FreeplayState extends MusicBeatState
 
 		if (FlxG.keys.justPressed.CONTROL)
 		{
-			persistentUpdate = false;
+			// persistentUpdate = false;
 			openSubState(new GameplayChangersSubstate());
 		}
 		else if (FlxG.keys.justPressed.SPACE)
@@ -320,7 +323,6 @@ class FreeplayState extends MusicBeatState
 					{
 						vocals.loadEmbedded(Paths.voices(PlayState.SONG.song));
 						vocals.play();
-						vocals.persist = true;
 						vocals.looped = true;
 						vocals.volume = 0.7;
 					}
@@ -340,15 +342,6 @@ class FreeplayState extends MusicBeatState
 			persistentUpdate = false;
 			final songLowercase:String = Paths.formatToSongPath(songs[curSelected].songName);
 			final poop:String = Highscore.formatSong(songLowercase, curDifficulty);
-			/*#if MODS_ALLOWED
-			if(!sys.FileSystem.exists(Paths.modsJson(songLowercase + '/' + poop)) && !sys.FileSystem.exists(Paths.json(songLowercase + '/' + poop))) {
-			#else
-			if(!OpenFlAssets.exists(Paths.json(songLowercase + '/' + poop))) {
-			#end
-				poop = songLowercase;
-				curDifficulty = 1;
-				trace('Couldnt find file');
-			}*/
 			trace(poop);
 
 			try
@@ -357,28 +350,29 @@ class FreeplayState extends MusicBeatState
 				PlayState.isStoryMode = false;
 				PlayState.storyDifficulty = curDifficulty;
 
-				trace('CURRENT WEEK: ' + WeekData.getWeekFileName());
+				trace("CURRENT WEEK: " + WeekData.getWeekFileName());
 				if (colorTween != null)
 					colorTween.cancel();
+				
+				LoadingState.prepareToSong();
+				LoadingState.loadAndSwitchState(new PlayState());
+				MainMenuState.pizzaTime = false;
+
+				FlxG.sound.music.stop();
+				stopVocals();
+				#if (hxdiscord_rpc && MODS_ALLOWED)
+				DiscordClient.loadModRPC();
+				#end
 			}
 			catch(e)
 			{
 				exceptionError(e);
 				return super.update(elapsed);
 			}
-			LoadingState.prepareToSong();
-			LoadingState.loadAndSwitchState(new PlayState());
-			MainMenuState.pizzaTime = false;
-
-			FlxG.sound.music.volume = 0;
-			stopVocals();
-			#if (hxdiscord_rpc && MODS_ALLOWED)
-			DiscordClient.loadModRPC();
-			#end
 		}
 		else if (controls.RESET)
 		{
-			persistentUpdate = false;
+			// persistentUpdate = false;
 			openSubState(new ResetScoreSubState(songs[curSelected].songName, curDifficulty, songs[curSelected].songCharacter));
 			FlxG.sound.play(Paths.sound('scrollMenu'));
 		}
@@ -388,30 +382,33 @@ class FreeplayState extends MusicBeatState
 
 	override function sectionHit()
 	{
-		//trace('$curSection SECTION!! [cur bpm: ${Conductor.bpm}]');
-		if (vocals.playing && FlxG.sound.music.time - vocals.time > 20 && FlxG.sound.music.time <= vocals.length)
+		super.sectionHit();
+		if (vocals == null)
+			return;
+
+		final diff = Math.abs(FlxG.sound.music.time - vocals.time);
+		if (vocals.playing && diff > 20 && FlxG.sound.music.time <= vocals.length)
 		{
-			trace('[song: ${songs[curSelected].songName} | section: $curSection] syncing vocals!! (${FlxG.sound.music.time - vocals.time} MS apart!!)');
+			trace("[song: " + PlayState.SONG.song + ' | section: $curSection] syncing vocals!! ($diff MS apart!!)');
 			vocals.time = FlxG.sound.music.time;
 		}
-
-		super.sectionHit();
 	}
 
 	public static function stopVocals()
 	{
-		vocals.stop();
+		if (vocals != null)
+			vocals.stop();
 	}
 
 	function exceptionError(e:haxe.Exception)
 	{
 		trace('ERROR! $e');
-		final errorStr:String = e.message.startsWith('[file_contents,assets/data/') ? 'Missing file: ${e.message.substring(27, e.message.length-1)}' : e.message;
+		final errorStr:String = e.message.startsWith("[file_contents,assets/data/") ? "Missing file: " + e.message.substring(27, e.message.length-1) : e.message;
 		missingText.text = 'ERROR WHILE LOADING CHART:\n$errorStr';
 		missingText.screenCenter(Y);
 		missingText.visible = true;
 		missingTextBG.visible = true;
-		FlxG.sound.play(Paths.sound('cancelMenu'));
+		FlxG.sound.play(Paths.sound("cancelMenu"));
 	}
 
 	function changeDiff(change:Int = 0)
@@ -453,7 +450,7 @@ class FreeplayState extends MusicBeatState
 
 		// propertly centering camera
 		FlxG.camera.targetOffset.x = FlxG.width * 0.5 + curSelected * 20 - (daIcon.x + daIcon.width * 0.5);
-		FlxG.camera.follow(daIcon, NO_DEAD_ZONE, 0.0);
+		FlxG.camera.target = daIcon;
 		
 		Mods.currentModDirectory = songs[curSelected].folder;
 		PlayState.storyWeek = songs[curSelected].week;

@@ -181,9 +181,12 @@ class CoolUtil
 	}
 
 	// fixup some shit
-	inline public static function updateStateCheck(state:flixel.FlxState):Bool
+	@:allow(backend.MusicBeatState)
+	@:allow(backend.MusicBeatUIState)
+	@:allow(backend.MusicBeatSubstate)
+	extern inline static function __update__state__check(__state:flixel.FlxState):Bool
 	{
-		return (state.persistentUpdate || (state.subState == null && !Main.transition.active));
+		return (__state.persistentUpdate || (__state.subState == null && !Main.transition.active));
 	}
 
 	/**

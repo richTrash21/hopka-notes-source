@@ -14,7 +14,7 @@ class MusicBeatUIState extends flixel.addons.ui.FlxUIState implements IMusicBeat
 	var curDecStep:Float = 0;
 	var curDecBeat:Float = 0;
 
-	public var controls(get, never):Controls;
+	public final controls = Controls.instance;
 
 	public function new() { super(); }
 
@@ -39,7 +39,7 @@ class MusicBeatUIState extends flixel.addons.ui.FlxUIState implements IMusicBeat
 
 	override function tryUpdate(elapsed:Float)
 	{
-		if (CoolUtil.updateStateCheck(this))
+		if (CoolUtil.__update__state__check(this))
 			update(elapsed);
 
 		if (_requestSubStateReset)

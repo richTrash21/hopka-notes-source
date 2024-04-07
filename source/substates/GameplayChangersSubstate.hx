@@ -24,11 +24,8 @@ class GameplayChangersSubstate extends MusicBeatSubstate
 
 	public function new()
 	{
-		super();
-		final bg:FlxSprite = new FlxSprite().makeGraphic(FlxG.width, FlxG.height, 0x99000000);
-		bg.active = false;
-		bg.scrollFactor.set();
-		add(bg);
+		super(0);
+		FlxTween.num(0, 0.6, 0.2, (a) -> { bgColor.alphaFloat = a; if (FlxG.renderTile) bgColor = bgColor; });
 
 		// avoids lagspikes while scrolling through menus!
 		add(grpOptions	  = new FlxTypedGroup<Alphabet>());

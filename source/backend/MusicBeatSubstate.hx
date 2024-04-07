@@ -2,8 +2,6 @@ package backend;
 
 class MusicBeatSubstate extends flixel.FlxSubState implements IMusicBeatState
 {
-	// public function new() { super(); }
-
 	var curSection:Int = 0;
 	var stepsToDo:Int = 0;
 
@@ -15,7 +13,7 @@ class MusicBeatSubstate extends flixel.FlxSubState implements IMusicBeatState
 
 	var curDecStep:Float = 0;
 	var curDecBeat:Float = 0;
-	var controls(get, never):Controls;
+	final controls = Controls.instance;
 
 	override function update(elapsed:Float)
 	{
@@ -44,7 +42,7 @@ class MusicBeatSubstate extends flixel.FlxSubState implements IMusicBeatState
 
 	override function tryUpdate(elapsed:Float)
 	{
-		if (CoolUtil.updateStateCheck(this))
+		if (CoolUtil.__update__state__check(this))
 			update(elapsed);
 
 		if (_requestSubStateReset)
@@ -62,9 +60,8 @@ class MusicBeatSubstate extends flixel.FlxSubState implements IMusicBeatState
 			beatHit();
 	}
 
-	public function beatHit():Void { /* do literally nothing dumbass */ }
-	public function sectionHit():Void { /* yep, you guessed it, nothing again, dumbass */ }
-	// rich: ur mean😭
+	public function beatHit():Void {}
+	public function sectionHit():Void {}
 
 	@:noCompletion function updateSection():Void
 	{
@@ -120,10 +117,5 @@ class MusicBeatSubstate extends flixel.FlxSubState implements IMusicBeatState
 	@:noCompletion inline function getBeatsOnSection()
 	{
 		return PlayState.SONG?.notes[curSection]?.sectionBeats ?? 4;
-	}
-
-	@:noCompletion inline function get_controls():Controls
-	{
-		return Controls.instance;
 	}
 }

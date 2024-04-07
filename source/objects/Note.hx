@@ -87,7 +87,7 @@ class Note extends FlxSprite implements INote
 
 	public var sustainLength:Float = 0;
 	public var isSustainNote:Bool = false;
-	public var noteType(default, set):String = null;
+	public var noteType(default, set):String;
 
 	public var eventName:String = "";
 	public var eventLength:Int = 0;
@@ -425,28 +425,33 @@ class Note extends FlxSprite implements INote
 		}
 	}
 
-	public function clipToStrumNote(myStrum:StrumNote)
+	public function clipToStrumNote(strum:StrumNote)
 	{
-		if (isSustainNote && (mustPress || !ignoreNote) && (!mustPress || (wasGoodHit || (prevNote.wasGoodHit && !canBeHit))))
+		// if (isSustainNote && (mustPress || !ignoreNote) && (!mustPress || (wasGoodHit || (prevNote.wasGoodHit && !canBeHit))))
+		if (!isSustainNote || (!mustPress && ignoreNote) || (mustPress && (!wasGoodHit && (!prevNote.wasGoodHit || canBeHit))))
+			return;
+
+		var ry:Null<Float> = null; // clipRect.y
+		var rw:Null<Float> = null; // clipRect.width
+		var rh:Null<Float> = null; // clipRect.height
+		final center = strum.y + offsetY + swagWidth * 0.5;
+		if (strum.downScroll)
 		{
-			final center = myStrum.y + offsetY + swagWidth * 0.5;
-			if (myStrum.downScroll)
+			if (y - offset.y * scale.y + height >= center)
 			{
-				if (y - offset.y * scale.y + height >= center)
-				{
-					clipRect.width = frameWidth;
-					clipRect.height = (center - y) / scale.y;
-					clipRect.y = frameHeight - clipRect.height;
-				}
+				rw = frameWidth;
+				rh = (center - y) / scale.y;
+				ry = frameHeight - rh;
 			}
-			else if (y + offset.y * scale.y <= center)
-			{
-				clipRect.y = (center - y) / scale.y;
-				clipRect.width = width / scale.x;
-				clipRect.height = (height / scale.y) - clipRect.y;
-			}
-			clipRect = clipRect;
 		}
+		else if (y + offset.y * scale.y <= center)
+		{
+			ry = (center - y) / scale.y;
+			rw = width / scale.x;
+			rh = (height / scale.y) - ry;
+		}
+		if (!(ry == null || rw == null || rh == null))
+			clipRect = clipRect.set(0, ry, rw, rh);
 	}
 
 	@:noCompletion override function set_clipRect(rect:FlxRect):FlxRect
@@ -482,9 +487,6 @@ class Note extends FlxSprite implements INote
 			{
 				case "Hurt Note":
 					ignoreNote = mustPress;
-					// reloadNote("HURTNOTE_assets");
-					// this used to change the note texture to HURTNOTE_assets.png,
-					// but i've changed it to something more optimized with the implementation of RGBPalette:
 
 					// note colors
 					rgbShader.r = 0xFF101010;
@@ -513,7 +515,7 @@ class Note extends FlxSprite implements INote
 				case "GF Sing":
 					gfNote = true;
 			}
-			if (value != null && value.length > 1)
+			if (!value.isNullOrEmpty())
 				backend.NoteTypesConfig.applyNoteTypeData(this, value);
 			if (hitsound != "hitsound" && ClientPrefs.data.hitsoundVolume > 0)
 				Paths.sound(hitsound); // precache new sound for being idiot-proof

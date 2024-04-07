@@ -176,6 +176,7 @@ class ChartingState extends MusicBeatUIState
 	public var mouseQuant:Bool = false;
 	override function create()
 	{
+		// FlxG.camera.flashSprite.cacheAsBitmap = true;
 		persistentUpdate = true;
 		if (PlayState.SONG != null)
 			_song = PlayState.SONG;
@@ -223,9 +224,6 @@ class ChartingState extends MusicBeatUIState
 		eventIcon.antialiasing = ClientPrefs.data.antialiasing;
 		leftIcon = new HealthIcon('bf');
 		rightIcon = new HealthIcon('dad');
-		//eventIcon.scrollFactor.set(1, 1);
-		//leftIcon.scrollFactor.set(1, 1);
-		//rightIcon.scrollFactor.set(1, 1);
 
 		eventIcon.setGraphicSize(30, 30);
 		leftIcon.setGraphicSize(0, 45);
@@ -252,7 +250,7 @@ class ChartingState extends MusicBeatUIState
 		reloadGridLayer();
 		Conductor.bpm = _song.bpm;
 		Conductor.mapBPMChanges(_song);
-		if(curSec >= _song.notes.length) curSec = _song.notes.length - 1;
+		curSec = CoolUtil.boundInt(curSec, 0, _song.notes.length - 1);
 
 		bpmTxt = new FlxText(1000, 50, 0, "", 16);
 		bpmTxt.scrollFactor.set();
@@ -301,23 +299,10 @@ class ChartingState extends MusicBeatUIState
 		UI_box.y = 25;
 		UI_box.scrollFactor.set();
 
-		var tipTextArray:String = "
-		W/S or Mouse Wheel - Change Conductor's strum time
-		A/D - Go to the previous/next section
-		Left/Right - Change Snap
-		Up/Down - Change Conductor's Strum Time with Snapping
-		Left Bracket / Right Bracket - Change Song Playback Rate (SHIFT to go Faster)
-		ALT + Left Bracket / Right Bracket - Reset Song Playback Rate
-		Hold Shift to move 4x faster
-		Right click (or Hold Control and click) on an arrow to select it
-		Z/X - Zoom in/out
-		Esc - Test your chart inside Chart Editor
-		Enter - Play your chart
-		Q/E - Decrease/Increase Note Sustain Length
-		Space - Stop/Resume song";
+		var tipTextArray:String = "Press F1 for help";
 
-		var tipText:FlxText = new FlxText(UI_box.x, UI_box.y + UI_box.height - 10, 0, tipTextArray, 12);
-		tipText.setFormat(Paths.font("vcr.ttf"), 12, FlxColor.WHITE, LEFT);
+		var tipText:FlxText = new FlxText(UI_box.x, UI_box.y + UI_box.height + 10, 0, tipTextArray, 14);
+		tipText.font = Paths.font("vcr.ttf");
 		tipText.scrollFactor.set();
 		add(tipText);
 		add(UI_box);
@@ -346,12 +331,16 @@ class ChartingState extends MusicBeatUIState
 
 		updateGrid();
 		super.create();
-		lime.app.Application.current.window.onDropFile.add(LoadFromFile); // by Redar13
+		lime.app.Application.current.window.onDropFile.add(loadFromFile); // by Redar13
 	}
 
-	inline function LoadFromFile(file:String) 
+	inline function loadFromFile(file:String) 
 	{
-		var modFolder = file.split("\\");
+		/*var s = Sys.programPath();
+		s = s.substring(0, s.lastIndexOf("\\"));
+		var mod = file.substring(s.lastIndexOf(s.substr(0, 1)));
+		trace(Sys.programPath(), s, mod, mod.substring(0, mod.indexOf("\\")));*/
+		final modFolder = file.split("\\");
 		Mods.currentModDirectory = modFolder[modFolder.length-4];
 		loadJson(file, true);
 	}
@@ -1785,14 +1774,10 @@ class ChartingState extends MusicBeatUIState
 				}
 			}
 		}
-		/* https://github.com/ShadowMario/FNF-PsychEngine/pull/13549 */
-		else if (FlxG.mouse.justPressedRight)
+		else if (FlxG.mouse.justPressedRight) // https://github.com/ShadowMario/FNF-PsychEngine/pull/13549
 		{
 			if (FlxG.mouse.overlaps(curRenderedNotes))
-				curRenderedNotes.forEachAlive(function(note:Note) 
-					if (FlxG.mouse.overlaps(note))
-						selectNote(note)
-				);
+				curRenderedNotes.forEachAlive((note) -> if (FlxG.mouse.overlaps(note)) selectNote(note));
 		}
 
 		var blockInput:Bool = false;
@@ -1828,7 +1813,12 @@ class ChartingState extends MusicBeatUIState
 
 		if (!blockInput)
 		{
-			if (FlxG.keys.justPressed.ESCAPE)
+			if (FlxG.keys.justPressed.F1)
+			{
+				persistentUpdate = false;
+				openSubState(new ChartingHelpSubstate());
+			}
+			else if (FlxG.keys.justPressed.ESCAPE)
 			{
 				persistentUpdate = false;
 				FlxG.sound.music.pause();
@@ -1843,7 +1833,7 @@ class ChartingState extends MusicBeatUIState
 				playtestingOnComplete = FlxG.sound.music.onComplete;
 				openSubState(new states.editors.EditorPlayState(playbackSpeed, vocals, opponentVocals));
 			}
-			if (FlxG.keys.justPressed.ENTER)
+			else if (FlxG.keys.justPressed.ENTER)
 			{
 				persistentUpdate = false;
 				autosaveSong();
@@ -1855,14 +1845,15 @@ class ChartingState extends MusicBeatUIState
 				if (opponentVocals != null)
 					opponentVocals.stop();
 
-				//if(_song.stage == null) _song.stage = stageDropDown.selectedLabel;
 				StageData.loadDirectory(_song);
 				LoadingState.loadAndSwitchState(PlayState.new);
 			}
 
-			if(curSelectedNote != null && curSelectedNote[1] > -1) {
-				if (FlxG.keys.justPressed.E) changeNoteSustain(Conductor.stepCrochet);
-				if (FlxG.keys.justPressed.Q) changeNoteSustain(-Conductor.stepCrochet);
+			if (curSelectedNote != null && curSelectedNote[1] > -1)
+			{
+				final E = FlxG.keys.justPressed.E;
+				if (E || FlxG.keys.justPressed.Q)
+					changeNoteSustain(E ? Conductor.stepCrochet : -Conductor.stepCrochet);
 			}
 
 
@@ -1879,27 +1870,33 @@ class ChartingState extends MusicBeatUIState
 			}
 
 			// так сталин велел!!!
-			if(FlxG.keys.justPressed.H) {
-				var sec:SwagSection = _song.notes[curSec];
-				var check:Bool = !sec.mustHitSection;
-				if(check_mustHitSection != null) check_mustHitSection.checked = check;
+			if (FlxG.keys.justPressed.H)
+			{
+				final sec = _song.notes[curSec];
+				final check = !sec.mustHitSection;
+				if (check_mustHitSection != null)
+					check_mustHitSection.checked = check;
 				sec.mustHitSection = check;
 				updateGrid();
 				updateHeads();
 			}
-			if(FlxG.keys.justPressed.M) {
+			if (FlxG.keys.justPressed.M)
+			{
 				for (note in _song.notes[curSec].sectionNotes)
 					note[1] = 3 - (note[1] % 4) + (note[1] > 3 ? 4 : 0);
 				updateGrid();
 			}
 
-			if(FlxG.keys.justPressed.Z && FlxG.keys.pressed.CONTROL) undo();
+			if (FlxG.keys.justPressed.Z && FlxG.keys.pressed.CONTROL)
+				undo();
 
-			if(FlxG.keys.justPressed.Z && curZoom > 0 && !FlxG.keys.pressed.CONTROL) {
+			if (FlxG.keys.justPressed.Z && curZoom > 0 && !FlxG.keys.pressed.CONTROL)
+			{
 				--curZoom;
 				updateZoom();
 			}
-			if(FlxG.keys.justPressed.X && curZoom < zoomList.length-1) {
+			if (FlxG.keys.justPressed.X && curZoom < zoomList.length-1)
+			{
 				curZoom++;
 				updateZoom();
 			}
@@ -2208,7 +2205,7 @@ class ChartingState extends MusicBeatUIState
 			opponentVocals = null;
 		}
 		backend.NoteTypesConfig.clearNoteTypesData();
-		lime.app.Application.current.window.onDropFile.remove(LoadFromFile);
+		lime.app.Application.current.window.onDropFile.remove(loadFromFile);
 		super.destroy();
 	}
 
@@ -3138,6 +3135,47 @@ class ChartingState extends MusicBeatUIState
 	inline function getSectionBeats(?section:Null<Int> = null)
 	{
 		return _song?.notes[section ?? curSec]?.sectionBeats ?? 4; 
+	}
+}
+
+private class ChartingHelpSubstate extends FlxSubState
+{
+	inline static final HELP_TEXT = "CONTROLS
+W/S or Mouse Wheel - Change Conductor's strum time
+A/D - Go to the previous/next section
+Left/Right - Change Snap
+Up/Down - Change Conductor's Strum Time with Snapping
+Left Bracket / Right Bracket - Change Song Playback Rate (SHIFT to go Faster)
+ALT + Left Bracket / Right Bracket - Reset Song Playback Rate
+Hold Shift to move 4x faster
+Right click (or Hold Control and click) on an arrow to select it
+H - Flip \"Must hit section\" flag on\\off
+M - Mirror notes
+Z/X - Zoom in/out
+TAB - Next UI tab (Hold Shift to go to the previous tab)
+Esc - Test your chart inside Chart Editor
+Enter - Play your chart
+Q/E - Decrease/Increase Note Sustain Length
+Space - Stop/Resume song";
+
+	public function new()
+	{
+		super(0x99000000);
+		final text = new FlxText(HELP_TEXT, 14);
+		text.setBorderStyle(OUTLINE_FAST, FlxColor.BLACK, 1);
+		text.alignment = CENTER;
+		text.scrollFactor.set();
+		add(text.screenCenter());
+	}
+
+	override public function update(elapsed:Float)
+	{
+		super.update(elapsed);
+		if (Controls.instance.BACK)
+		{
+			FlxG.state.persistentUpdate = true;
+			close();
+		}
 	}
 }
 

@@ -106,6 +106,10 @@
 	<haxedef name="openflPos" />
 	<haxedef name="hscriptPos" />
 
+	<!-- HaxeUI (WIP) -->
+	<!-- <haxelib name="haxeui-core" /> -->
+	<!-- <haxelib name="haxeui-flixel" /> -->
+
 	<!-- Disable Discord IO Thread -->
 	<haxedef name="DISCORD_DISABLE_IO_THREAD" if="hxdiscord_rpc" />
 	<haxedef name="NO_PRECOMPILED_HEADERS" if="linux" />

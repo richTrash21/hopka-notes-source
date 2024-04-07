@@ -20,19 +20,9 @@ import haxe.CallStack;
 class Main extends flixel.FlxGame
 {
 	public static final initialState:flixel.util.typeLimit.NextState = states.TitleState.new;
-	/*public static final game:GameProperties =
-	{
-		width: 1280,					  	  // WINDOW width
-		height: 720,					  	  // WINDOW height
-		initialState: states.TitleState.new,  // initial game state
-		// zoom: -1.0,							  // game state bounds
-		framerate: 60,						  // default framerate
-		skipSplash: true,					  // if the default flixel splash screen should be skipped
-		startFullscreen: false				  // if the game should start at fullscreen mode
-	};*/
 
-	public static var fpsVar(default, null):FPSCounter; // (get, never)
-	public static var transition(default, null):StateTransition; // (get, never)
+	public static var fpsVar(default, null):FPSCounter;
+	public static var transition(default, null):StateTransition;
 
 	public static var volumeDownKeys:Array<FlxKey>;
 	public static var volumeUpKeys:Array<FlxKey>;
@@ -42,11 +32,7 @@ class Main extends flixel.FlxGame
 	@:noCompletion static var __log = "";
 	@:noCompletion static var __main:Main;
 
-	// @:noCompletion var __transition:StateTransition;
-	// @:noCompletion var __fps:FPSCounter;
-
 	@:noCompletion var __focusVolume = 1.0; // ignore
-	// @:noCompletion var __totalTime = 0;
 
 	public function new()
 	{
@@ -128,7 +114,6 @@ class Main extends flixel.FlxGame
 			if (FlxG.save.data.weekCompleted != null)
 				states.StoryMenuState.weekCompleted = FlxG.save.data.weekCompleted;
 	
-			// FlxG.fullscreen = FlxG.save.data.fullscreen;
 			FlxG.sound.volume = Math.fceil(FlxG.sound.volume * 10) * 0.1;
 			__focusVolume = FlxG.sound.volume;
 			#if debug
@@ -169,6 +154,7 @@ class Main extends flixel.FlxGame
 			FlxG.game.soundTray.volumeDownSound = "assets/sounds/down_volume";
 			#end
 			FlxG.signals.preStateCreate.add(LoadingState.preloadState);
+			FlxG.plugins.addPlugin(substates.PauseSubState.tweenManager);
 	
 			#if !html5
 			FlxG.mouse.useSystemCursor = true;
@@ -178,7 +164,7 @@ class Main extends flixel.FlxGame
 			DiscordClient.prepare();
 			#end
 
-			FlxTransitionableState.skipNextTransOut = /*FlxTransitionableState.skipNextTransIn =*/ true;
+			FlxTransitionableState.skipNextTransOut = true;
 		});
 
 		// bound local save so flixels default save won't initialize
@@ -204,19 +190,13 @@ class Main extends flixel.FlxGame
 		if (stage == null)
 			return;
 
-		addChild(transition = new StateTransition()); // __transition
-
+		// saves ALT + ENTER fullscreen change
+		// FlxG.stage.window.onFullscreen.add(() -> { trace("saved fullscreen " + FlxG.fullscreen); FlxG.save.flush(); });
+		addChild(transition = new StateTransition());
 		super.create(_);
-
 		#if !mobile
-		addChild(fpsVar = new FPSCounter(10, 3)).visible = ClientPrefs.data.showFPS; // __fps
+		addChild(fpsVar = new FPSCounter(10, 3)).visible = ClientPrefs.data.showFPS;
 		#end
-
-		// __totalTime = _startTime;		// get the most recent timestamp and only then replace getTimer()
-		// getTimer = () -> __totalTime;	// hope it will not completely break the game :clueless:
-										// UPD: nothing changed lmao, exept computing elapsed now less expensive (lie)
-										// will break on flash but nobody cares about flash - rich
-										// UPDD: reverted cuz im stupid yeah
 	}
 
 	override function onFocus(_)
@@ -275,19 +255,6 @@ class Main extends flixel.FlxGame
 	}
 	#end
 
-	/*@:noCompletion override function __enterFrame(deltaTime:Int)
-	{
-		// ig it will sync better like that
-		// if (_state != null && _state.active && _state.visible && _state.exists)
-		// {
-		// final t = __totalTime;
-		__totalTime += deltaTime; // not as accurate but it works ig
-		// if ((t % 1000) > (__totalTime % 1000))
-		//	trace('__enterFrame($deltaTime): ' + getTicks(), "openfl.Lib.getTimer(): " + (Lib.getTimer() - _startTime));
-		// }
-		super.__enterFrame(deltaTime);
-	}*/
-
 	@:access(openfl.display.DisplayObject.__cleanup)
 	@:noCompletion function shaderFix(_, _):Void
 	{
@@ -335,25 +302,4 @@ class Main extends flixel.FlxGame
 
 		return '$t [$p] > $s';
 	}
-
-	/*@:noCompletion inline static function get_fpsVar():FPSCounter
-	{
-		return __main.__fps;
-	}
-
-	@:noCompletion inline static function get_transition():StateTransition
-	{
-		return __main.__transition;
-	}*/
 }
-
-/*@:noCompletion @:publicFields @:structInit private class GameProperties
-{
-	var width:Int;
-	var height:Int;
-	var initialState:flixel.util.typeLimit.NextState;
-	// var zoom:Float;
-	var framerate:Int;
-	var skipSplash:Bool;
-	var startFullscreen:Bool;
-}*/

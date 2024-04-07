@@ -151,7 +151,7 @@ class ExtendedSprite extends FlxSprite
 		super.destroy();
 	}
 
-	public function playAnim(name:String, forced = false, ?reverse = false, ?startFrame = 0):Void
+	public function playAnim(name:String, forced = false, reverse = false, startFrame = 0):Void
 	{
 		// if there is no animation named "name" then just skips the whole shit
 		if (name == null || !animation.exists(name))
