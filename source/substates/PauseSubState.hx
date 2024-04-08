@@ -102,7 +102,8 @@ class PauseSubState extends MusicBeatSubstate
 		{
 			pauseMusic = FlxG.sound.load(Paths.music(musicEnabled ? Paths.formatToSongPath(ClientPrefs.data.pauseMusic) : songName), 0, true);
 			pauseMusic.play(false, FlxG.random.float(0, pauseMusic.length * 0.5));
-			pauseMusic.fadeIn(40, 0, 0.5, (_) -> pauseMusic.fadeTween = null);
+			pauseMusic.fadeTween = tweenManager.num(0, 0.5, 40, {onComplete: (_) -> pauseMusic.fadeTween = null}, (v) -> pauseMusic.volume = v);
+			// pauseMusic.fadeIn(40, 0, 0.5, (_) -> pauseMusic.fadeTween = null);
 		}
 		regenMenu();
 	}
@@ -114,7 +115,6 @@ class PauseSubState extends MusicBeatSubstate
 	{
 		cantUnpause -= elapsed;
 
-		tweenManager.update(elapsed);
 		super.update(elapsed);
 		updateSkipTextStuff();
 
@@ -230,7 +230,9 @@ class PauseSubState extends MusicBeatSubstate
 					if (pauseMusic != null)
 					{
 						FlxG.sound.playMusic(pauseMusic._sound, pauseMusic.volume);
-						FlxG.sound.music.fadeIn(0.8, pauseMusic.volume, 1);
+						// FlxG.sound.music.fadeIn(1 - pauseMusic.volume, pauseMusic.volume, 1);
+						FlxG.sound.music.fadeTween = tweenManager.num(pauseMusic.volume, 1, 1 - pauseMusic.volume,
+							{onComplete: (_) -> FlxG.sound.music.fadeTween = null}, (v) -> FlxG.sound.music.volume = v);
 						FlxG.sound.music.time = pauseMusic.time;
 						if (pauseMusic.fadeTween != null)
 							pauseMusic.fadeTween.cancel();
@@ -287,7 +289,8 @@ class PauseSubState extends MusicBeatSubstate
 		{
 			if (pauseMusic.fadeTween != null)
 				pauseMusic.fadeTween.cancel();
-			pauseMusic.fadeOut(0.1, 0, (_) -> close());
+			pauseMusic.fadeTween = tweenManager.num(pauseMusic.volume, 0, 0.1, {onComplete: (_) -> { pauseMusic.fadeTween = null; close(); }}, (v) -> pauseMusic.volume = v);
+			// pauseMusic.fadeOut(0.1, 0, (_) -> close());
 		}
 		closing = true;
 	}
