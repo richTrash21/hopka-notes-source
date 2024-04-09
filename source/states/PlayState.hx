@@ -1588,14 +1588,14 @@ class PlayState extends MusicBeatState
 		stagesFunc((stage) -> stage.closeSubState());
 		if (paused)
 		{
-			if (FlxG.sound.music != null && !startingSong)
-				resyncVocals();
-
 			FlxTween.globalManager.forEach((t) -> __set__tweeen__status(t, true));
 			FlxTimer.globalManager.forEach((t) -> __set__timer__status(t, true));
 			FlxG.sound.resume();
-
 			FlxG.timeScale = playbackRate;
+
+			if (FlxG.sound.music != null && !startingSong)
+				resyncVocals();
+
 			paused = false;
 			callOnScripts("onResume");
 			resetRPC(startTimer?.finished);
@@ -2179,7 +2179,7 @@ class PlayState extends MusicBeatState
 				}
 				catch(e)
 				{
-					HScript.hscriptTrace('ERROR ("Set Property" Event) - $e', FlxColor.RED);
+					addTextToDebug('ERROR ("Set Property" Event) - $e', FlxColor.RED);
 				}
 			
 			case "Play Sound":
@@ -3094,46 +3094,43 @@ class PlayState extends MusicBeatState
 
 	public function initHScript(file:String)
 	{
-		inline function makeError(newScript:HScript)
+		inline function makeError(newScript:HScript, errorPrefix:String, ?exception:haxe.Exception):Bool
 		{
-			newScript.destroy();
-			hscriptArray.remove(newScript);
+			// counts as error if script caught an exeption or some other exeption durring script creation process
+			if ((newScript == null || newScript.exception == null) && exception == null)
+				return false;
+
+			if (newScript != null)
+			{
+				if (exception == null)
+					exception = newScript.exception;
+
+				newScript.exception = null;
+				newScript.destroy();
+			}
+			addTextToDebug('$errorPrefix - $exception', FlxColor.RED);
+			return true;
 		}
 
+		var newScript:HScript = null;
 		try
 		{
-			final times = Date.now().getTime();
-			final newScript = new HScript(null, file);
-			hscriptArray.push(newScript);
+			var times = openfl.Lib.getTimer();
+			newScript = new HScript(file);
 
-			if (newScript.exception != null)
-			{
-				HScript.hscriptTrace("ERROR ON LOADING - " + newScript.exception.message, FlxColor.RED);
-				newScript.exception = null;
-				makeError(newScript);
+			if (makeError(newScript, "ERROR ON LOADING"))
 				return;
-			}
 
-			if (newScript.variables.exists("onCreate"))
-			{
-				final retVal:Dynamic = newScript.executeFunction("onCreate");
-				if (newScript.exception != null)
-				{
-					HScript.hscriptTrace("ERROR (onCreate) - " + newScript.exception.message, FlxColor.RED);
-					newScript.exception = null;
-					makeError(newScript);
-					return;
-				}
-			}
-			final _delay = Std.int(Date.now().getTime() - times);
-			trace('initialized hscript interp successfully: $file [' + (_delay == 0 ? "instantly" : _delay + "ms") + "]");
+			newScript.executeFunction("onCreate");
+			if (makeError(newScript, "ERROR (onCreate)"))
+				return;
+
+			hscriptArray.push(newScript);
+			times = openfl.Lib.getTimer() - times;
+			trace('initialized hscript interp successfully: $file [' + (times == 0 ? "instantly" : times + "ms") + "]");
 		}
 		catch(e)
-		{
-			HScript.hscriptTrace('ERROR - $e', FlxColor.RED);
-			if (hscriptArray.length != 0)
-				makeError(hscriptArray[hscriptArray.length - 1]);
-		}
+			makeError(newScript, "ERROR", e);
 	}
 	#end
 
@@ -3200,13 +3197,12 @@ class PlayState extends MusicBeatState
 		while (i < len)
 		{
 			final script:HScript = hscriptArray[i++];
-			if (script == null || /*!script.active ||*/ exclusions.contains(script.origin))
+			if (script == null || exclusions.contains(script.origin))
 				continue;
 
 			var callValue = script.executeFunction(funcToCall, args);
 			if (script.exception != null)
 			{
-				// script.active = false;
 				FunkinLua.luaTrace('ERROR ($funcToCall) - ' + script.exception, true, false, FlxColor.RED);
 				script.exception = null;
 				continue;
@@ -3215,15 +3211,11 @@ class PlayState extends MusicBeatState
 			if ((callValue == FunkinLua.Function_StopHScript || callValue == FunkinLua.Function_StopAll) && !excludeValues.contains(callValue) && !ignoreStops)
 			{
 				returnVal = callValue;
-				// trace(funcToCall, script.origin, callValue);
 				break;
 			}
 
 			if (callValue != null && !excludeValues.contains(callValue))
 				returnVal = callValue;
-
-			/*if ((returnVal == FunkinLua.Function_StopHScript || returnVal == FunkinLua.Function_StopAll) && !excludeValues.contains(returnVal) && !ignoreStops)
-				break;*/
 		}
 		#end
 		return returnVal;
@@ -3260,7 +3252,7 @@ class PlayState extends MusicBeatState
 		{
 			if (exclusions.contains(script.origin))
 				continue;
-			script.setVar(variable, arg);
+			script.interp.setVar(variable, arg);
 		}
 		#end
 	}

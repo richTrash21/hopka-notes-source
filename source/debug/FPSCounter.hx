@@ -1,5 +1,6 @@
 package debug;
 
+import haxe.Timer;
 import openfl.events.MouseEvent;
 import openfl.events.FocusEvent;
 
@@ -48,7 +49,7 @@ class FPSCounter extends openfl.text.TextField
 		text = "FPS: ";
 
 		times = new Array();
-		shader = new shaders.OutlineShader();
+		shader = new shaders.OutlineShader(); // for better visibility
 
 		// i think it is optimization - Redar
 		removeEventListener(FocusEvent.FOCUS_IN, this_onFocusIn);
@@ -59,17 +60,17 @@ class FPSCounter extends openfl.text.TextField
 		removeEventListener(openfl.events.KeyboardEvent.KEY_DOWN, this_onKeyDown);
 	}
 
-	@:noCompletion var deltaTimeout = 0;
-	@:noCompletion var currentTime = 0;
+	// @:noCompletion var currentTime = 0;
 	@:noCompletion var cacheCount = 0;
 
 	// Event Handlers
+	@:access(flixel.FlxGame.getTimer)
 	@:noCompletion override function __enterFrame(deltaTime:Int):Void
 	{
-		if (!visible || alpha == 0.0)
+		if (!__visible || __alpha == 0.0)
 			return;
 
-		currentTime += deltaTime;
+		final currentTime = FlxG.game.getTimer();
 		times.push(currentTime);
 		while (times[0] < currentTime - 1000)
 			times.shift();

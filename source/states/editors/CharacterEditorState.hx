@@ -1047,20 +1047,25 @@ class CharacterEditorState extends backend.MusicBeatUIState
 		if (FlxG.keys.justPressed.F12)
 			silhouettes.visible = !silhouettes.visible;
 
-		if (FlxG.keys.justPressed.F1)
-			openSubState(helpSubstate);
-		else if (FlxG.keys.justPressed.ESCAPE)
+		final F1 = FlxG.keys.justPressed.F1;
+		if (F1 || FlxG.keys.justPressed.ESCAPE)
 		{
 			persistentUpdate = false;
-			// FlxG.mouse.visible = false;
-			if (_goToPlayState)
-				MusicBeatState.switchState(PlayState.new);
-			else
+			if (F1)
+				openSubState(helpSubstate);
+			else if (FlxG.keys.justPressed.ESCAPE)
 			{
-				MusicBeatState.switchState(states.editors.MasterEditorMenu.new);
-				FlxG.sound.playMusic(Paths.music("freakyMenu"));
+				// FlxG.mouse.visible = false;
+				if (_goToPlayState)
+					MusicBeatState.switchState(PlayState.new);
+				else
+				{
+					MusicBeatState.switchState(states.editors.MasterEditorMenu.new);
+					FlxG.sound.playMusic(Paths.music("freakyMenu"));
+				}
 			}
 		}
+		
 	}
 
 	@:access(flixel.addons.ui.FlxInputText.backgroundSprite)
@@ -1339,7 +1344,10 @@ private class HelpSubstate extends flixel.FlxSubState
 	{
 		super.update(elapsed);
 		if (Controls.instance.BACK)
+		{
+			FlxG.state.persistentUpdate = true;
 			close();
+		}
 	}
 }
 #end

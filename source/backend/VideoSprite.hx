@@ -141,7 +141,6 @@ class VideoSprite extends flixel.FlxSprite
 		bitmap = new VideoHandler();
 		bitmap.onOpening.add(() -> bitmap.role = hxvlc.externs.Types.LibVLC_Media_Player_Role_T.LibVLC_Role_Game);
 		bitmap.onFormatSetup.add(() -> { loadGraphic(bitmap.bitmapData); adjustSize(); });
-		// bitmap.visible = false;
 		bitmap.alpha = 0;
 
 		FlxG.game.addChild(bitmap);

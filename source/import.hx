@@ -42,6 +42,7 @@ import flixel.group.FlxSpriteGroup;
 import flixel.group.FlxGroup.FlxTypedGroup;
 
 using flixel.util.FlxStringUtil;
+using flixel.util.FlxArrayUtil;
 using objects.ExtendedSprite;
 using StringTools;
 
