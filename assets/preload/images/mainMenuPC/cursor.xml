@@ -1,7 +1,9 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="UTF-16"?>
 <TextureAtlas imagePath="cursor.png">
-	<!-- Created with Adobe Animate version 21.0.9.42677 -->
-	<!-- http://www.adobe.com/products/animate.html -->
-	<SubTexture name="cursor0000" x="1" y="1" width="23" height="35" frameX="-6" frameY="0" frameWidth="29" frameHeight="35"/>
-	<SubTexture name="cursor0001" x="25" y="1" width="26" height="34" frameX="0" frameY="0" frameWidth="29" frameHeight="35"/>
+	<!-- Created with Adobe Flash CS6 version 12.0.0.481 -->
+	<!-- http://www.adobe.com/products/flash.html -->
+	<SubTexture name="cursor0000" x="0" y="0" width="24" height="36" frameX="-6" frameY="0" frameWidth="30" frameHeight="36"/>
+	<SubTexture name="cursor0001" x="29" y="0" width="23" height="34" frameX="-6" frameY="0" frameWidth="30" frameHeight="36"/>
+	<SubTexture name="cursor0002" x="0" y="41" width="27" height="34" frameX="0" frameY="-1" frameWidth="30" frameHeight="36"/>
+	<SubTexture name="cursor0003" x="32" y="41" width="26" height="32" frameX="0" frameY="-1" frameWidth="30" frameHeight="36"/>
 </TextureAtlas>

@@ -13,7 +13,9 @@ import flixel.util.FlxDestroyUtil;
 
 class FlxSpriteMouse extends FlxSprite
 {
+	public var pressed(default, set):Bool;
 	public var selected(default, set):Bool;
+	extern inline static final _overlapAnimPrefix = "_overlaped";
 
 	public function new(x = 0., y = 0.)
 	{
@@ -21,8 +23,10 @@ class FlxSpriteMouse extends FlxSprite
 		moves = false;
 		antialiasing = ClientPrefs.data.antialiasing;
 		frames = Paths.getSparrowAtlas("mainMenuPC/cursor");
-		animation.addByPrefix("idle",		"cursor0000", 24, true);
-		animation.addByPrefix("selected",	"cursor0001", 24, true);
+		animation.addByPrefix("idle",							"cursor0000", 0, true);
+		animation.addByPrefix("idle" + _overlapAnimPrefix,		"cursor0001", 0, true);
+		animation.addByPrefix("selected",						"cursor0002", 0, true);
+		animation.addByPrefix("selected" + _overlapAnimPrefix,	"cursor0003", 0, true);
 		animation.play("idle");
 		offset.x += 6;
 		offset.y += 0.1;
@@ -31,10 +35,8 @@ class FlxSpriteMouse extends FlxSprite
 
 	public override function update(elapsed:Float)
 	{
-		if (FlxG.mouse.justPressed)
-			scale.x = scale.y = 0.9;
-		else if (FlxG.mouse.justReleased)
-			scale.x = scale.y = 1;
+		if (FlxG.mouse.justPressed)			pressed = true;
+		else if (FlxG.mouse.justReleased)	pressed = false;
 
 		setPosition(FlxG.mouse.x, FlxG.mouse.y);
 		super.update(elapsed);
@@ -42,9 +44,26 @@ class FlxSpriteMouse extends FlxSprite
 
 	inline function set_selected(e)
 	{
-		if (e != selected)
-			animation.play((selected = e) ? "selected" : "idle");
+		if (e != selected){
+			selected = e;
+			updateAnim();
+		}
 		return e;
+	}
+
+	inline function set_pressed(e)
+	{
+		if (e != pressed){
+			pressed = e;
+			updateAnim();
+		}
+		return e;
+	}
+
+	extern inline function updateAnim() {
+		var anim = selected ? "selected" : "idle";
+		if (pressed) anim += _overlapAnimPrefix;
+		animation.play(anim);
 	}
 }
 
@@ -247,7 +266,7 @@ class DesktopSubState extends PCSubState
 		var funnyCam = new FlxCamera(0, 0, 930, 572);
 		FlxG.cameras.add(funnyCam, false);
 		funnyCam.x = 1000000; // I DON'T HAVE IDEA HOW TO HIDE, BUT ALLOW RENDERING
-		var cameraSprite = new FlxCameraSprite(funnyCam);
+		var cameraSprite = new FlxCameraSprite(35, 40, funnyCam);
 		cameraSprite.antialiasing = ClientPrefs.data.antialiasing;
 		addToScreen(cameraSprite);
 		
@@ -256,7 +275,7 @@ class DesktopSubState extends PCSubState
 		var video:VideoSprite;
 		Thread.create(()->
 		{
-			video = new VideoSprite(30, 40);
+			video = new VideoSprite();
 			video.autoScale = false;
 			video.camera = funnyCam;
 			video.bitmap.onFormatSetup.add(() ->
@@ -264,15 +283,15 @@ class DesktopSubState extends PCSubState
 				// video.loadGraphic(video.bitmap.bitmapData);
 				video.setGraphicSize(0, 572);
 				video.updateHitbox();
-				video.x = (923 - video.width) * 0.5;
+				video.x = (funnyCam.width - video.width) * 0.5;
 			});
 			video.bitmap.onEndReached.add(Thread.create.bind(() ->
 			{
-				Sys.sleep(1);
+				Sys.sleep(0.1);
 				video.load(FlxG.random.getObject(TestVideoState.videos));
 				video.play();
 			}));
-			video.load(FlxG.random.getObject(TestVideoState.videos));
+			video.load("https://cdn.discordapp.com/attachments/791373867897192459/1225821395250843739/gummy_elephant.mp4?ex=66228623&is=66101123&hm=40ec5a0ec0d439cc5e6584f8376c1ed5dd92eee5aaa08c02806a43dab3bc5852&");
 			video.play();
 			add(video);
 		});
