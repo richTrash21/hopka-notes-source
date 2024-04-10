@@ -27,10 +27,12 @@ class PauseSubState extends MusicBeatSubstate
 	var errorScreen:ErrorScreen;
 	var game = PlayState.instance;
 
-	public function new(?camera:FlxCamera)
+	public function new(camera:FlxCamera)
 	{
 		super(0);
-		this.camera = camera ?? FlxG.cameras.list[FlxG.cameras.list.length - 1];
+		this.camera = camera;
+		this.camera.revive();
+		this.camera.alpha = 1;
 		if (FlxG.renderTile)
 			_bgSprite.camera = this.camera;
 
@@ -278,19 +280,15 @@ class PauseSubState extends MusicBeatSubstate
 	public var closing:Bool = false;
 	dynamic public function exitPause():Void
 	{
-		if (closing) // doesn't need to close the thing twice
+		if (closing) // doesn't need to close the twice
 			return;
 
-		tweenManager.num(.6, 0, .1, {ease: FlxEase.quartInOut}, (a) -> { bgColor.alphaFloat = a; if (FlxG.renderTile) bgColor = bgColor; });
-		// var oldMult = 1.;
-		// tweenManager.num(1, 0, .1, {ease: FlxEase.quartInOut}, (a) -> forEachOfType(FlxSprite, (obj) -> obj.alpha = obj.alpha / oldMult * (oldMult = a)));
-		forEachOfType(FlxSprite, (obj) -> tweenManager.tween(obj, {alpha: 0}, 0.1, {ease: FlxEase.quartInOut}), true);
+		tweenManager.num(1, 0, .1, {ease: FlxEase.quartInOut, onComplete: (_) -> { close(); camera.kill(); }}, (a) -> camera.alpha = a);
 		if (pauseMusic != null)
 		{
 			if (pauseMusic.fadeTween != null)
 				pauseMusic.fadeTween.cancel();
-			pauseMusic.fadeTween = tweenManager.num(pauseMusic.volume, 0, 0.1, {onComplete: (_) -> { pauseMusic.fadeTween = null; close(); }}, (v) -> pauseMusic.volume = v);
-			// pauseMusic.fadeOut(0.1, 0, (_) -> close());
+			pauseMusic.fadeTween = tweenManager.num(pauseMusic.volume, 0, 0.1, {onComplete: (_) -> pauseMusic.fadeTween = null}, (v) -> pauseMusic.volume = v);
 		}
 		closing = true;
 	}
@@ -323,6 +321,7 @@ class PauseSubState extends MusicBeatSubstate
 		if (game.videoPlayer != null)
 			game.videoPlayer.resume();
 
+		tweenManager.clear();
 		if (pauseMusic != null)
 		{
 			FlxG.sound.destroySound(pauseMusic);

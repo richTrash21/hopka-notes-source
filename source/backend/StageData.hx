@@ -7,21 +7,31 @@ import sys.FileSystem;
 import openfl.utils.Assets;
 #end
 
-typedef StageFile = {
-	var directory:String;
-	var defaultZoom:Float;
-	var isPixelStage:Bool;
-	var stageUI:String;
+typedef StageFile =
+{
+	directory:String,
+	defaultZoom:Float,
+	isPixelStage:Bool,
+	stageUI:String,
 
-	var boyfriend:Array<Float>;
-	var girlfriend:Array<Float>;
-	var opponent:Array<Float>;
-	var hide_girlfriend:Bool;
+	boyfriend:Array<Float>,
+	girlfriend:Array<Float>,
+	opponent:Array<Float>,
+	hide_girlfriend:Bool,
 
-	var camera_boyfriend:Array<Float>;
-	var camera_opponent:Array<Float>;
-	var camera_girlfriend:Array<Float>;
-	@:optional var camera_speed:Float;
+	camera_boyfriend:Array<Float>,
+	camera_opponent:Array<Float>,
+	camera_girlfriend:Array<Float>,
+	?camera_speed:Float,
+	?preload:PreloadData
+}
+
+typedef PreloadData =
+{
+	?images_low:Array<String>,
+	?images:Array<String>,
+	?sounds:Array<String>,
+	?music:Array<String>
 }
 
 class StageData

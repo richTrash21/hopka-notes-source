@@ -274,6 +274,7 @@ class PlayState extends MusicBeatState
 	public var camHUD:GameCamera;
 	public var camGame:GameCamera;
 	public var camOther:GameCamera;
+	var camPause:GameCamera; // dont judge me! - rich
 	public var cameraSpeed(default, set):Float;
 
 	public var songScore:Int = 0;
@@ -348,17 +349,15 @@ class PlayState extends MusicBeatState
 		practiceMode = ClientPrefs.getGameplaySetting("practice");
 		cpuControlled = ClientPrefs.getGameplaySetting("botplay") /*|| ClientPrefs.getGameplaySetting("showcase")*/;
 
-		camGame = new GameCamera();
-		camHUD = new GameCamera(0, 0);
-		camOther = new GameCamera(0, 0);
+		FlxG.cameras.reset(camGame = new GameCamera());
+		FlxG.cameras.add(camHUD = new GameCamera(0, 0), false);
+		FlxG.cameras.add(camOther = new GameCamera(0, 0), false);
+		FlxG.cameras.add(camPause = new GameCamera(0, 0), false);
+		// FlxG.cameras.setDefaultDrawTarget(camGame, true);
+
+		camPause.kill(); // optimization
 		camGame.checkForTweens = camHUD.checkForTweens = true;
-
-		FlxG.cameras.reset(camGame);
-		FlxG.cameras.add(camHUD, false);
-		FlxG.cameras.add(camOther, false);
-
-		FlxG.cameras.setDefaultDrawTarget(camGame, true);
-		persistentUpdate = persistentDraw = true;
+		persistentUpdate = true;
 
 		if (SONG == null)
 			SONG = Song.loadFromJson("test", "test");
@@ -1384,32 +1383,30 @@ class PlayState extends MusicBeatState
 
 		// NEW SHIT
 		final file = Paths.json('$songName/events');
-		#if MODS_ALLOWED
-		if (FileSystem.exists(Paths.modsJson('$songName/events')) || FileSystem.exists(file))
-		#else
-		if (OpenFlAssets.exists(file))
-		#end
+		if (#if MODS_ALLOWED FileSystem.exists(Paths.modsJson('$songName/events')) || FileSystem.exists(file) #else OpenFlAssets.exists(file) #end)
 		{
-			for (event in Song.loadFromJson("events", songName).events) // Event Notes
-				for (i in 0...event[1].length)
-					makeEvent(event, i);
+			for (eventNote in Song.loadFromJson("events", songName).events) // Event Notes
+				for (i in 0...eventNote.events.length)
+					makeEvent(eventNote, i);
 		}
 
+		var oldNote:Note = null;
 		for (section in SONG.notes)
+		{
 			for (songNotes in section.sectionNotes)
 			{
-				final daStrumTime = songNotes[0];
-				final daNoteData = Std.int(songNotes[1] % 4);
-				final gottaHitNote = songNotes[1] > 3 ? !section.mustHitSection : section.mustHitSection;
-				var oldNote = unspawnNotes[unspawnNotes.length - 1];
+				final daStrumTime = songNotes.strumTime;
+				final daNoteData = songNotes.noteData % 4;
+				final gottaHitNote = songNotes.noteData > 3 ? !section.mustHitSection : section.mustHitSection;
 
 				final swagNote = new Note(daStrumTime, daNoteData, oldNote);
 				swagNote.mustPress = gottaHitNote;
-				swagNote.sustainLength = songNotes[2];
-				swagNote.gfNote = (section.gfSection && (songNotes[1]<4));
+				swagNote.sustainLength = songNotes.sustainLength;
+				swagNote.gfNote = (section.gfSection && (songNotes.noteData < 4));
 				// Backward compatibility + compatibility with Week 7 charts
-				swagNote.noteType = Std.isOfType(songNotes[3], String) ? songNotes[3] : ChartingState.noteTypeList[songNotes[3]];
+				swagNote.noteType = (songNotes.noteType is String) ? songNotes.noteType : ChartingState.noteTypeList[songNotes.noteType];
 				unspawnNotes.push(swagNote);
+				oldNote = swagNote;
 
 				final susLength = swagNote.sustainLength / Conductor.stepCrochet;
 				final floorSus = Math.floor(susLength);
@@ -1417,11 +1414,9 @@ class PlayState extends MusicBeatState
 				{
 					for (susNote in 0...floorSus+1)
 					{
-						oldNote = unspawnNotes[unspawnNotes.length-1];
-
 						final sustainNote = new Note(daStrumTime + (Conductor.stepCrochet * susNote), daNoteData, oldNote, true);
 						sustainNote.mustPress = gottaHitNote;
-						sustainNote.gfNote = (section.gfSection && (songNotes[1]<4));
+						sustainNote.gfNote = (section.gfSection && (songNotes.noteData < 4));
 						sustainNote.noteType = swagNote.noteType;
 						sustainNote.parent = swagNote;
 						unspawnNotes.push(sustainNote);
@@ -1445,6 +1440,7 @@ class PlayState extends MusicBeatState
 							// oldNote.scale.y /= playbackRate;
 							oldNote.updateHitbox();
 						}
+						oldNote = sustainNote;
 
 						if (sustainNote.mustPress) // general offset
 							sustainNote.x += FlxG.width * 0.5;
@@ -1461,11 +1457,12 @@ class PlayState extends MusicBeatState
 				if (!noteTypes.contains(swagNote.noteType))
 					noteTypes.push(swagNote.noteType);
 			}
+		}
 
-		//Event Notes
-		for (event in SONG.events)
-			for (i in 0...event[1].length)
-				makeEvent(event, i);
+		// Event Notes
+		for (eventNote in SONG.events)
+			for (i in 0...eventNote.events.length)
+				makeEvent(eventNote, i);
 
 		unspawnNotes.sort(Note.sortByTime);
 		generatedMusic = true;
@@ -1509,20 +1506,19 @@ class PlayState extends MusicBeatState
 
 		return switch (event.event)
 		{
-			// Better timing so that the kill sound matches the beat intended
+										// Better timing so that the kill sound matches the beat intended
 			case "Kill Henchmen":  280; // Plays 280ms before the actual position
 			default:			   0;
 		}
 	}
 
-	function makeEvent(event:Array<Dynamic>, i:Int)
+	function makeEvent(eventNote:EventNoteData, i:Int)
 	{
-		final eventData = event[1][i];
 		final subEvent:EventNote = {
-			strumTime:	event[0] + ClientPrefs.data.noteOffset,
-			event:		eventData[0],
-			value1:		eventData[1],
-			value2:		eventData[2]
+			strumTime:	eventNote.strumTime + ClientPrefs.data.noteOffset,
+			event:		eventNote.events[i].name,
+			value1:		eventNote.events[i].value1,
+			value2:		eventNote.events[i].value2
 		};
 		eventNotes.push(subEvent);
 		eventPushed(subEvent);
@@ -1875,7 +1871,7 @@ class PlayState extends MusicBeatState
 					note.resetAnim = 0;
 				}
 
-		openSubState(new PauseSubState(camOther));
+		openSubState(new PauseSubState(camPause));
 
 		#if hxdiscord_rpc
 		DiscordClient.changePresence(detailsPausedText, __get_RPC_state(), iconP2.char, songName);
@@ -2009,7 +2005,7 @@ class PlayState extends MusicBeatState
 				gfSpeed = Math.round(flValue1);
 
 			case "Add Camera Zoom":
-				if (ClientPrefs.data.camZooms /*&& camGame.zoom < 1.35*/)
+				if (ClientPrefs.data.camZooms) // && camGame.zoom < 1.35
 				{
 					if (flValue1 == null)
 						flValue1 = 0.015;
@@ -3015,12 +3011,12 @@ class PlayState extends MusicBeatState
 			if (generatedMusic && !endingSong && !isCameraOnForcedPos)
 				moveCameraSection(curSection);
 
-			if (camZooming /*&& camGame.zoom < 1.35*/ && ClientPrefs.data.camZooms)
+			if (camZooming && ClientPrefs.data.camZooms) // && camGame.zoom < 1.35
 			{
 				if (!camGame.tweeningZoom)
-					camGame.zoom += 0.015 * camZoomingMult;
+					camGame.zoom += 0.015 * defaultCamZoom * camZoomingMult;
 				if (!camHUD.tweeningZoom)
-					camHUD.zoom  += 0.03 * camZoomingMult;
+					camHUD.zoom  += 0.03 * defaultHUDZoom * camZoomingMult;
 			}
 
 			if (SONG.notes[curSection].changeBPM)

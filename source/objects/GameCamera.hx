@@ -36,10 +36,10 @@ class GameCamera extends FlxCamera
 	// internal values
 	@:noCompletion var _zoomSpeed = 3.2;
 
-	public function new(zoom = 0., bgAlpha = 1., updateZoom = false):Void
+	public function new(zoom = 0., bgColor = FlxColor.BLACK, updateZoom = false):Void
 	{
 		super(0, 0, 0, 0, zoom);
-		bgColor.alphaFloat = bgAlpha;
+		this.bgColor = bgColor;
 		this.updateZoom = updateZoom;
 		#if (flixel < "6.0.0")
 		followLerp = 1.0;

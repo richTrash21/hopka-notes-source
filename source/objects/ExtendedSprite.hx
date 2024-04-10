@@ -62,8 +62,8 @@ class ExtendedSprite extends FlxSprite
 		FlxArrayUtil.clearArray(__animsHelper);
 		if (sprite != null && sprite.frames != null && sprite.frames.numFrames != 0)
 		{
-			var name:String = null;
 			var prevAnim:String;
+			var name:String = null;
 			for (anim in sprite.frames.framesHash.keys())
 			{
 				prevAnim = name;
@@ -98,6 +98,7 @@ class ExtendedSprite extends FlxSprite
 	public var onEnterBounds:(sprite:FlxSprite)->Void;
 	public var onLeaveBounds:(sprite:FlxSprite)->Void;
 
+	// some drawing related stuff
 	var __drawingWithOffset = false;
 	var __drawingOffset:FlxPoint;
 	var __anim:String;
@@ -164,6 +165,12 @@ class ExtendedSprite extends FlxSprite
 	public function addAnim(name:String, ?prefix:String, ?indices:Array<Int>, frameRate = 24., looped = true, flipX = false, flipY = false, loopPoint = 0):FlxAnimation
 	{
 		final indicesEmpty = (indices == null || indices.length == 0);
+		if (prefix == null && indicesEmpty)
+		{
+			Main.warn('Can\'t add anim "$name", no prefix or indices was geven!');
+			return null;
+		}
+
 		if (prefix != null)
 		{
 			if (indicesEmpty)

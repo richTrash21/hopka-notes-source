@@ -67,7 +67,7 @@ class FunkinLua
 	public function new(scriptName:String)
 	{
 		#if LUA_ALLOWED
-		final times:Float = Date.now().getTime();
+		var times = openfl.Lib.getTimer();
 		this.scriptName = scriptName;
 		lua = LuaL.newstate();
 		LuaL.openlibs(lua);
@@ -1306,7 +1306,8 @@ class FunkinLua
 			return;
 		}
 		call("onCreate", []);
-		trace('lua file loaded succesfully: $scriptName (${Std.int(Date.now().getTime() - times)}ms)');
+		times = openfl.Lib.getTimer() - times;
+		trace('lua file loaded succesfully: $scriptName ' + " [" + (times == 0 ? "instantly" : times + "ms") + "]");
 		#end
 	}
 

@@ -178,9 +178,7 @@ class ChartingState extends MusicBeatUIState
 	{
 		// FlxG.camera.flashSprite.cacheAsBitmap = true;
 		persistentUpdate = true;
-		if (PlayState.SONG != null)
-			_song = PlayState.SONG;
-		else
+		if (PlayState.SONG == null)
 		{
 			Difficulty.resetList();
 			_song = new Song({
@@ -198,6 +196,8 @@ class ChartingState extends MusicBeatUIState
 			addSection();
 			PlayState.SONG = _song;
 		}
+		else
+			_song = PlayState.SONG;
 
 		// Paths.clearMemory();
 
@@ -334,14 +334,17 @@ class ChartingState extends MusicBeatUIState
 		lime.app.Application.current.window.onDropFile.add(loadFromFile); // by Redar13
 	}
 
+	// original by redar13
+	// safety edit by richtrash21
 	inline function loadFromFile(file:String) 
 	{
-		/*var s = Sys.programPath();
-		s = s.substring(0, s.lastIndexOf("\\"));
-		var mod = file.substring(s.lastIndexOf(s.substr(0, 1)));
-		trace(Sys.programPath(), s, mod, mod.substring(0, mod.indexOf("\\")));*/
-		final modFolder = file.split("\\");
-		Mods.currentModDirectory = modFolder[modFolder.length-4];
+		final split = file.split("\\");
+		final modFolder = split[split.length-4];
+		// unload mod directory if json was opened from "assets/" or just "mods/"
+		var root = Sys.getCwd();
+		root = root.substring(root.lastIndexOf("\\")+1, root.lastIndexOf("/"));
+		Mods.currentModDirectory = ((modFolder == "assets" || modFolder == "mods") && split[split.length-5] == root) ? null : modFolder;
+		trace("(currentModDirectory: " + Mods.currentModDirectory + ' | modFolder: $modFolder | root: $root)');
 		loadJson(file, true);
 	}
 
@@ -361,7 +364,7 @@ class ChartingState extends MusicBeatUIState
 		UI_songTitle = new UIInputTextAdvanced(10, 10, 70, _song.song, 8);
 		blockPressWhileTypingOn.push(UI_songTitle);
 
-		var check_voices = new FlxUICheckBox(10, 25, null, null, "Has voice track", 80);
+		var check_voices = new FlxUICheckBox(10, 25, null, null, "Has voice track(s)", 80);
 		check_voices.checked = _song.needsVoices;
 		check_voices.callback = function() _song.needsVoices = check_voices.checked;
 
@@ -419,20 +422,22 @@ class ChartingState extends MusicBeatUIState
 
 		optimizeJsonBox = new FlxUICheckBox(saveEvents.x, loadAutosaveBtn.y, null, null, "Optimize JSON?", 55);
 
-		var clear_events:FlxButton = new FlxButton(320, 310, 'Clear events', function()
+		var clear_events:FlxButton = new FlxButton(320, 310, 'Clear events', () ->
 			openSubState(new Prompt('This action will clear current progress.\n\nProceed?', 0, clearEvents, null,ignoreWarnings))
 		);
 		clear_events.color = FlxColor.RED;
 		clear_events.label.color = FlxColor.WHITE;
 
-		var clear_notes:FlxButton = new FlxButton(320, clear_events.y + 30, 'Clear notes', function()
+		var clear_notes:FlxButton = new FlxButton(320, clear_events.y + 30, 'Clear notes', () ->
+		{
+			openSubState(new Prompt('This action will clear current progress.\n\nProceed?', 0, () ->
 			{
-				openSubState(new Prompt('This action will clear current progress.\n\nProceed?', 0, function(){for (sec in 0..._song.notes.length)
-					_song.notes[sec].sectionNotes = [];
+				for (sec in 0..._song.notes.length)
+					while (_song.notes[sec].sectionNotes.length != 0)
+						_song.notes[sec].sectionNotes.pop();
 				updateGrid();
 			}, null,ignoreWarnings));
-
-			});
+		});
 		clear_notes.color = FlxColor.RED;
 		clear_notes.label.color = FlxColor.WHITE;
 
@@ -594,7 +599,6 @@ class ChartingState extends MusicBeatUIState
 		check_gfSection = new FlxUICheckBox(10, check_mustHitSection.y + 22, null, null, "GF section", 100);
 		check_gfSection.name = 'check_gf';
 		check_gfSection.checked = _song.notes[curSec].gfSection;
-		// _song.needsVoices = check_mustHit.checked;
 
 		check_altAnim = new FlxUICheckBox(check_gfSection.x + 120, check_gfSection.y, null, null, "Alt Animation", 100);
 		check_altAnim.checked = _song.notes[curSec].altAnim;
@@ -610,77 +614,73 @@ class ChartingState extends MusicBeatUIState
 		check_changeBPM.name = 'check_changeBPM';
 
 		stepperSectionBPM = new FlxUINumericStepper(10, check_changeBPM.y + 20, 1, Conductor.bpm, 0, 999, 1);
-		if(check_changeBPM.checked) {
-			stepperSectionBPM.value = _song.notes[curSec].bpm;
-		} else {
-			stepperSectionBPM.value = Conductor.bpm;
-		}
+		stepperSectionBPM.value = check_changeBPM.checked ? _song.notes[curSec].bpm : Conductor.bpm;
 		stepperSectionBPM.name = 'section_bpm';
 		blockPressWhileTypingOnStepper.push(stepperSectionBPM);
 
 		var check_eventsSec:FlxUICheckBox = null;
 		var check_notesSec:FlxUICheckBox = null;
-		var copyButton:FlxButton = new FlxButton(10, 190, "Copy Section", function()
+		var copyButton:FlxButton = new FlxButton(10, 190, "Copy Section", () ->
 		{
-			notesCopied = [];
+			notesCopied.clearArray();
 			sectionToCopy = curSec;
 			for (i in 0..._song.notes[curSec].sectionNotes.length)
 			{
-				var note:Array<Dynamic> = _song.notes[curSec].sectionNotes[i];
-				notesCopied.push(note);
+				notesCopied.push(_song.notes[curSec].sectionNotes[i]);
 			}
 
 			var startThing:Float = sectionStartTime();
 			var endThing:Float = sectionStartTime(1);
 			for (event in _song.events)
 			{
-				var strumTime:Float = event[0];
-				if(endThing > event[0] && event[0] >= startThing)
+				var strumTime:Float = event.strumTime;
+				if (endThing > event.strumTime && event.strumTime >= startThing)
 				{
 					var copiedEventArray:Array<Dynamic> = [];
-					for (i in 0...event[1].length)
+					for (i in 0...event.events.length)
 					{
-						var eventToPush:Array<Dynamic> = event[1][i];
-						copiedEventArray.push([eventToPush[0], eventToPush[1], eventToPush[2]]);
+						var eventToPush = event.events[i];
+						copiedEventArray.push([eventToPush.name, eventToPush.value1, eventToPush.value2]);
 					}
 					notesCopied.push([strumTime, -1, copiedEventArray]);
 				}
 			}
 		});
 
-		var pasteButton:FlxButton = new FlxButton(copyButton.x + 100, copyButton.y, "Paste Section", function()
+		var pasteButton:FlxButton = new FlxButton(copyButton.x + 100, copyButton.y, "Paste Section", () ->
 		{
-			if(notesCopied == null || notesCopied.length < 1)
+			if (notesCopied == null || notesCopied.length == 0)
 				return;
 
 			var addToTime:Float = Conductor.stepCrochet * (getSectionBeats() * 4 * (curSec - sectionToCopy));
 
 			for (note in notesCopied)
 			{
-				var copiedNote:Array<Dynamic> = [];
+				var copiedNote:NoteData;
 				var newStrumTime:Float = note[0] + addToTime;
-				if(note[1] < 0)
+				if (note[1] == -1)
 				{
-					if(check_eventsSec.checked)
+					if (!check_eventsSec.checked)
+						continue;
+
+					var copiedEventArray:Array<EventData> = [];
+					for (i in 0...note[2].length)
 					{
-						var copiedEventArray:Array<Dynamic> = [];
-						for (i in 0...note[2].length)
-						{
-							var eventToPush:Array<Dynamic> = note[2][i];
-							copiedEventArray.push([eventToPush[0], eventToPush[1], eventToPush[2]]);
-						}
-						_song.events.push([newStrumTime, copiedEventArray]);
+						var eventToPush:Array<Dynamic> = note[2][i];
+						copiedEventArray.push([eventToPush[0], eventToPush[1], eventToPush[2]]);
 					}
+					_song.events.push([newStrumTime, copiedEventArray]);
 				}
 				else
 				{
-					if(check_notesSec.checked)
-					{
-						copiedNote = [newStrumTime, note[1], note[2], note[3]];
-						if(note[4] != null) copiedNote.push(note[4]);
+					if (!check_notesSec.checked)
+						continue;
 
-						_song.notes[curSec].sectionNotes.push(copiedNote);
-					}
+					copiedNote = [newStrumTime, note[1], note[2], note[3]];
+					// if (note[4] != null)
+					//	copiedNote.push(note[4]);
+
+					_song.notes[curSec].sectionNotes.push(copiedNote);
 				}
 			}
 			updateGrid();
@@ -696,8 +696,8 @@ class ChartingState extends MusicBeatUIState
 				var startThing:Float = sectionStartTime();
 				var endThing:Float = sectionStartTime(1);
 				while(i > -1) {
-					var event:Array<Dynamic> = _song.events[i];
-					if(event != null && endThing > event[0] && event[0] >= startThing)
+					var event = _song.events[i];
+					if (event != null && endThing > event.strumTime && event.strumTime >= startThing)
 						_song.events.remove(event);
 
 					--i;
@@ -714,45 +714,48 @@ class ChartingState extends MusicBeatUIState
 		check_eventsSec = new FlxUICheckBox(check_notesSec.x + 100, check_notesSec.y, null, null, "Events", 100);
 		check_eventsSec.checked = true;
 
-		var swapSection:FlxButton = new FlxButton(10, check_notesSec.y + 40, "Swap section", function()
+		var swapSection:FlxButton = new FlxButton(10, check_notesSec.y + 40, "Swap section", () ->
 		{
 			for (i in 0..._song.notes[curSec].sectionNotes.length)
 			{
-				var note:Array<Dynamic> = _song.notes[curSec].sectionNotes[i];
-				note[1] = (note[1] + 4) % 8;
+				var note = _song.notes[curSec].sectionNotes[i];
+				note.noteData = (note.noteData + 4) % 8;
 				_song.notes[curSec].sectionNotes[i] = note;
 			}
 			updateGrid();
 		});
 
 		var stepperCopy:FlxUINumericStepper = null;
-		var copyLastButton:FlxButton = new FlxButton(10, swapSection.y + 30, "Copy last section", function()
+		var copyLastButton:FlxButton = new FlxButton(10, swapSection.y + 30, "Copy last section", () ->
 		{
 			var value:Int = Std.int(stepperCopy.value);
-			if(value == 0) return;
+			if (value == 0)
+				return;
 
 			var daSec = FlxMath.maxInt(curSec, value);
 			for (note in _song.notes[daSec - value].sectionNotes)
 			{
-				var strum = note[0] + Conductor.stepCrochet * (getSectionBeats(daSec) * 4 * value);
-
-				var copiedNote:Array<Dynamic> = [strum, note[1], note[2], note[3]];
-				_song.notes[daSec].sectionNotes.push(copiedNote);
+				_song.notes[daSec].sectionNotes.push([
+					note.strumTime + Conductor.stepCrochet * (getSectionBeats(daSec) * 4 * value),
+					note.noteData,
+					note.sustainLength,
+					note.noteType
+				]);
 			}
 
 			var startThing:Float = sectionStartTime(-value);
 			var endThing:Float = sectionStartTime(-value + 1);
 			for (event in _song.events)
 			{
-				var strumTime:Float = event[0];
-				if(endThing > event[0] && event[0] >= startThing)
+				var strumTime:Float = event.strumTime;
+				if (endThing > event.strumTime && event.strumTime >= startThing)
 				{
 					strumTime += Conductor.stepCrochet * (getSectionBeats(daSec) * 4 * value);
-					var copiedEventArray:Array<Dynamic> = [];
-					for (i in 0...event[1].length)
+					var copiedEventArray = new Array<Array<String>>();
+					for (i in 0...event.events.length)
 					{
-						var eventToPush:Array<Dynamic> = event[1][i];
-						copiedEventArray.push([eventToPush[0], eventToPush[1], eventToPush[2]]);
+						var eventToPush = event.events[i];
+						copiedEventArray.push([eventToPush.name, eventToPush.value1, eventToPush.value2]);
 					}
 					_song.events.push([strumTime, copiedEventArray]);
 				}
@@ -767,21 +770,15 @@ class ChartingState extends MusicBeatUIState
 
 		var duetButton:FlxButton = new FlxButton(10, copyLastButton.y + 45, "Duet Notes", function()
 		{
-			var duetNotes:Array<Array<Dynamic>> = [];
-			for (note in _song.notes[curSec].sectionNotes)
-			{
-				var copiedNote:Array<Dynamic> = [note[0], note[1] + (note[1] > 3 ? -4 : 4), note[2], note[3]];
-				duetNotes.push(copiedNote);
-			}
-			for (note in duetNotes) _song.notes[curSec].sectionNotes.push(note);
+			var duetNotes:Array<NoteData> = [
+				for (note in _song.notes[curSec].sectionNotes)
+					[note.strumTime, note.noteData + (note.noteData > 3 ? -4 : 4), note.sustainLength, note.noteType]
+			];
+			for (note in duetNotes)
+				_song.notes[curSec].sectionNotes.push(note);
 			updateGrid();
 		});
-		var mirrorButton:FlxButton = new FlxButton(duetButton.x + 100, duetButton.y, "Mirror Notes", function()
-		{
-			for (note in _song.notes[curSec].sectionNotes)
-				note[1] = 3 - (note[1] % 4) + (note[1] > 3 ? 4 : 0);
-			updateGrid();
-		});
+		var mirrorButton:FlxButton = new FlxButton(duetButton.x + 100, duetButton.y, "Mirror Notes", ()->__mirror__notes());
 
 		tab_group_section.add(new FlxText(stepperBeats.x, stepperBeats.y - 15, 0, 'Beats per Section:'));
 		tab_group_section.add(stepperBeats);
@@ -950,7 +947,7 @@ class ChartingState extends MusicBeatUIState
 			{
 				if(curSelectedNote[1].length < 2)
 				{
-					_song.events.remove(curSelectedNote);
+					_song.events.remove(cast curSelectedNote);
 					curSelectedNote = null;
 				}
 				else
@@ -1882,9 +1879,7 @@ class ChartingState extends MusicBeatUIState
 			}
 			if (FlxG.keys.justPressed.M)
 			{
-				for (note in _song.notes[curSec].sectionNotes)
-					note[1] = 3 - (note[1] % 4) + (note[1] > 3 ? 4 : 0);
-				updateGrid();
+				__mirror__notes();
 			}
 
 			if (FlxG.keys.justPressed.Z && FlxG.keys.pressed.CONTROL)
@@ -2178,6 +2173,13 @@ class ChartingState extends MusicBeatUIState
 		}
 		lastConductorPos = Conductor.songPosition;
 		super.update(elapsed);
+	}
+
+	extern inline function __mirror__notes()
+	{
+		for (note in _song.notes[curSec].sectionNotes)
+			note.noteData = 3 - (note.noteData % 4) + (note.noteData > 3 ? 4 : 0);
+		updateGrid();
 	}
 
 	function updateZoom()
@@ -2675,8 +2677,10 @@ class ChartingState extends MusicBeatUIState
 
 		// CURRENT SECTION
 		final beats:Float = getSectionBeats();
-		for (i in _song.notes[curSec].sectionNotes)
+		var i:Array<Dynamic>;
+		for (n in _song.notes[curSec].sectionNotes)
 		{
+			i = n;
 			final note:Note = setupNoteData(i, false);
 			curRenderedNotes.add(note);
 			if (note.sustainLength > 0)
@@ -2703,8 +2707,9 @@ class ChartingState extends MusicBeatUIState
 		// CURRENT EVENTS
 		final startThing:Float = sectionStartTime();
 		final endThing:Float = sectionStartTime(1);
-		for (i in _song.events)
+		for (n in _song.events)
 		{
+			i = n;
 			if(endThing > i[0] && i[0] >= startThing)
 			{
 				final note:Note = setupNoteData(i, false);
@@ -2741,8 +2746,9 @@ class ChartingState extends MusicBeatUIState
 		// NEXT EVENTS
 		final startThing:Float = sectionStartTime(1);
 		final endThing:Float = sectionStartTime(2);
-		for (i in _song.events)
+		for (n in _song.events)
 		{
+			i = n;
 			if(endThing > i[0] && i[0] >= startThing)
 			{
 				final note:Note = setupNoteData(i, true);
@@ -2823,7 +2829,7 @@ class ChartingState extends MusicBeatUIState
 			mustHitSection: true,
 			gfSection: false,
 			sectionNotes: [],
-			typeOfSection: 0,
+			// typeOfSection: 0,
 			altAnim: false
 		}));
 	}
@@ -2835,8 +2841,10 @@ class ChartingState extends MusicBeatUIState
 		if(noteDataToCheck > -1)
 		{
 			if(note.mustPress != _song.notes[curSec].mustHitSection) noteDataToCheck += 4;
-			for (i in _song.notes[curSec].sectionNotes)
+			var i:Array<Dynamic>;
+			for (n in _song.notes[curSec].sectionNotes)
 			{
+				i = n;
 				if (i != curSelectedNote && i.length > 2 && i[0] == note.strumTime && i[1] == noteDataToCheck)
 				{
 					curSelectedNote = i;

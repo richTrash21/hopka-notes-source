@@ -47,23 +47,25 @@ class LoadingState extends FlxState
 			return;
 
 		state.alive = state.exists = false; // bypass killMembers()
-		startThreads();
 		prepareToSong();
 		__preloadSong = false;
+		startThreads();
 		while (true)
 		{
 			if (checkLoaded())
+			{
+				imagesToPrepare.clearArray();
+				soundsToPrepare.clearArray();
+				musicToPrepare.clearArray();
+				songsToPrepare.clearArray();
+				state.alive = state.exists = true;
+				__preloadPending = false;
 				break;
+			}
 
 			// wait 0.01 sec until next loop...
 			Sys.sleep(.01);
 		}
-		imagesToPrepare.clearArray();
-		soundsToPrepare.clearArray();
-		musicToPrepare.clearArray();
-		songsToPrepare.clearArray();
-		state.alive = state.exists = true;
-		__preloadPending = false;
 	}
 
 	inline static public function loadAndSwitchState(target:NextState, stopMusic = false, intrusive = false)
@@ -120,7 +122,6 @@ class LoadingState extends FlxState
 
 	public static function prepareToSong()
 	{
-		trace("preloading song pending: " + __preloadSong);
 		if (!__preloadSong)
 		{
 			__preloadSong = true;
@@ -128,31 +129,29 @@ class LoadingState extends FlxState
 		}
 
 		final folder = Paths.formatToSongPath(PlayState.SONG.song);
-		/*try
+		try
 		{
-			var json:Dynamic;
-			var path = Paths.json('$folder/preload');
+			var json:PreloadData = null;
+			var path:String;
 			#if MODS_ALLOWED
-			var moddyFile:String = Paths.modsJson('$folder/preload');
-			json = Json.parse(File.getContent(FileSystem.exists(moddyFile) ? moddyFile : path));
-			#else
-			json = Json.parse(Assets.getText(path));
+			path = Paths.modsJson('$folder/preload');
+			if (!FileSystem.exists(path))
 			#end
+				path = Paths.json('$folder/preload');
 
+			json = cast Json.parse(#if MODS_ALLOWED File.getContent(path) #else Assets.getText(path) #end);
 			if (json != null)
-				prepare((!ClientPrefs.data.lowQuality || json.images_low) ? json.images : json.images_low, json.sounds, json.music);
+				prepare(ClientPrefs.data.lowQuality ? json.images_low : json.images, json.sounds, json.music);
 		}
 		catch(e)
-		{
-			trace(e);
-		}*/
+			trace('$folder/preload.json error! $e');
 
-		if (PlayState.SONG.stage == null || PlayState.SONG.stage.length == 0)
+		if (PlayState.SONG.stage.isNullOrEmpty())
 			PlayState.SONG.stage = StageData.vanillaSongStage(folder);
 
 		final stageData = StageData.getStageFile(PlayState.SONG.stage);
-		// if (stageData != null && stageData.preload != null)
-		//	prepare((!ClientPrefs.data.lowQuality || stageData.preload.images_low) ? stageData.preload.images : stageData.preload.images_low, stageData.preload.sounds, stageData.preload.music);
+		if (stageData != null && stageData.preload != null)
+			prepare(ClientPrefs.data.lowQuality ? stageData.preload.images_low : stageData.preload.images, stageData.preload.sounds, stageData.preload.music);
 
 		pushSong('$folder/Inst');
 		final prefixVocals = PlayState.SONG.needsVoices ? '$folder/Voices' : null;
@@ -171,7 +170,7 @@ class LoadingState extends FlxState
 		__preloadSong = false;
 	}
 
-	inline static function pushSong(song:String)
+	extern inline static function pushSong(song:String)
 	{
 		if (!songsToPrepare.contains(song))
 			songsToPrepare.push(song);
@@ -195,9 +194,6 @@ class LoadingState extends FlxState
 		nullCheck(soundsToPrepare);
 		nullCheck(musicToPrepare);
 		nullCheck(songsToPrepare);
-		/*for (arr in [imagesToPrepare, soundsToPrepare, musicToPrepare, songsToPrepare])
-			while (arr.contains(null))
-				arr.remove(null);*/
 	}
 
 	static function clearInvalidFrom(arr:Array<String>, prefix:String, ext:String, type:AssetType, ?library:String)
@@ -329,8 +325,8 @@ class LoadingState extends FlxState
 			imagesToPrepare.push(character.image);
 			if (prefixVocals != null)
 			{
-				pushSong(prefixVocals + "-Opponent");
-				pushSong(prefixVocals + "-Player");
+				pushSong('$prefixVocals-Opponent');
+				pushSong('$prefixVocals-Player');
 				pushSong(prefixVocals);
 				if (char == PlayState.SONG.player1)
 					dontPreloadDefaultVoices = true;

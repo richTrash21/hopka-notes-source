@@ -437,12 +437,11 @@ class FreeplayState extends MusicBeatState
 		curSelected = FlxMath.wrap(curSelected + change, 0, songs.length-1);
 			
 		final newColor:Int = songs[curSelected].color;
-		if(newColor != intendedColor) {
-			if(colorTween != null) colorTween.cancel();
-			intendedColor = newColor;
-			colorTween = FlxTween.color(bg, 1, bg.color, intendedColor, {
-				onComplete: function(twn:FlxTween) colorTween = null
-			});
+		if (newColor != intendedColor)
+		{
+			if (colorTween != null)
+				colorTween.cancel();
+			colorTween = FlxTween.color(bg, 1, bg.color, intendedColor = newColor, {onComplete: (_) -> colorTween = null});
 		}
 
 		final daIcon = iconArray[curSelected];

@@ -28,13 +28,10 @@ class Character extends objects.ExtendedSprite
 			#if MODS_ALLOWED
 			path = Paths.modFolders(characterPath);
 			if (!FileSystem.exists(path))
-				path = Paths.getSharedPath(characterPath);
-	
-			if (!FileSystem.exists(path))
-			#else
-			path = Paths.getSharedPath(characterPath);
-			if (!Assets.exists(path))
 			#end
+				path = Paths.getSharedPath(characterPath);
+
+			if (#if MODS_ALLOWED !FileSystem.exists(path) #else !Assets.exists(path) #end)
 				path = Paths.getSharedPath('characters/$DEFAULT_CHARACTER.json'); // If a character couldn't be found, change him to BF just to prevent a crash
 	
 			final json:CharacterFile = cast haxe.Json.parse(#if MODS_ALLOWED sys.io.File.getContent(path) #else Assets.getText(path) #end);
@@ -84,7 +81,6 @@ class Character extends objects.ExtendedSprite
 	var firstSetup = true;
 	var settingCharacterUp = true;
 	var curDance = -1;
-	var oldLoopAnims:Array<String>;
 
 	// DEPRECATED!!!!!
 	public var positionArray(get, set):Array<Float>;
@@ -215,11 +211,6 @@ class Character extends objects.ExtendedSprite
 			specialAnim = false;
 			dance();
 		}
-		/*else if (animation.curAnim.name.endsWith("miss") && animation.curAnim.finished)
-		{
-			dance();
-			animation.finish();
-		}*/
 
 		if (animation.curAnim.name.startsWith("sing"))
 			holdTimer += elapsed;
@@ -236,7 +227,7 @@ class Character extends objects.ExtendedSprite
 			holdTimer -= maxTimer;
 		}
 
-		if (animation.curAnim.finished && oldLoopAnims != null && oldLoopAnims.contains(animation.curAnim.name))
+		if (animation.curAnim.finished && animation.exists(animation.curAnim.name + "-loop"))
 			playAnim(animation.curAnim.name + "-loop");
 
 		super.update(elapsed);
@@ -268,7 +259,6 @@ class Character extends objects.ExtendedSprite
 	override public function destroy()
 	{
 		animationsArray = null;
-		oldLoopAnims = null;
 		camFollowOffset = FlxDestroyUtil.destroy(camFollowOffset);
 		camFollow = FlxDestroyUtil.destroy(camFollow);
 		cameraOffset = FlxDestroyUtil.put(cameraOffset);
@@ -359,15 +349,6 @@ class Character extends objects.ExtendedSprite
 
 		if (!hasMissAnimations && animAnim.startsWith("sing") && animAnim.contains("miss"))
 			hasMissAnimations = true;
-
-		if (animAnim.endsWith("-loop"))
-		{
-			final a = animAnim.substr(0, animAnim.length-5);
-			if (oldLoopAnims == null)
-				oldLoopAnims = new Array();
-			if (!oldLoopAnims.contains(a))
-				oldLoopAnims.push(a);
-		}
 	}
 
 	@:noCompletion extern inline function __calc__hold__timer():Float

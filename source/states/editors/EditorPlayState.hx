@@ -309,36 +309,40 @@ class EditorPlayState extends MusicBeatSubstate
 		add(notes);
 
 		// NEW SHIT
+		var oldNote:Note = null;
 		for (section in PlayState.SONG.notes)
 		{
 			for (songNotes in section.sectionNotes)
 			{
-				var daStrumTime:Float = songNotes[0];
-				if(daStrumTime < startPos) continue;
+				var daStrumTime:Float = songNotes.strumTime;
+				if (daStrumTime < startPos)
+					continue;
 
-				var daNoteData:Int = Std.int(songNotes[1] % 4);
-				var gottaHitNote:Bool = songNotes[1] > 3 ? !section.mustHitSection : section.mustHitSection;
-				var oldNote:Note = unspawnNotes.length > 0 ? unspawnNotes[Std.int(unspawnNotes.length - 1)] : null;
+				var daNoteData:Int = songNotes.noteData % 4;
+				var gottaHitNote:Bool = songNotes.noteData > 3 ? !section.mustHitSection : section.mustHitSection;
 
 				var swagNote:Note = new Note(daStrumTime, daNoteData, oldNote, this);
 				swagNote.mustPress = gottaHitNote;
-				swagNote.sustainLength = songNotes[2];
-				swagNote.gfNote = (section.gfSection && (songNotes[1]<4));
-				swagNote.noteType = !Std.isOfType(songNotes[3], String) ? ChartingState.noteTypeList[songNotes[3]] : songNotes[3]; //Backward compatibility + compatibility with Week 7 charts
+				swagNote.sustainLength = songNotes.sustainLength;
+				swagNote.gfNote = (section.gfSection && (songNotes.noteData < 4));
+				// Backward compatibility + compatibility with Week 7 charts
+				swagNote.noteType = (songNotes.noteType is String) ? songNotes.noteType : ChartingState.noteTypeList[songNotes.noteType];
 				swagNote.scrollFactor.set();
 
 				var susLength:Float = swagNote.sustainLength / Conductor.stepCrochet;
 				unspawnNotes.push(swagNote);
+				oldNote = swagNote;
 
 				var floorSus:Int = Math.floor(susLength);
-				if(floorSus > 0) {
+				if (floorSus > 0)
+				{
 					for (susNote in 0...floorSus+1)
 					{
 						oldNote = unspawnNotes[Std.int(unspawnNotes.length - 1)];
 
 						var sustainNote:Note = new Note(daStrumTime + (Conductor.stepCrochet * susNote), daNoteData, oldNote, true, this);
 						sustainNote.mustPress = gottaHitNote;
-						sustainNote.gfNote = (section.gfSection && (songNotes[1]<4));
+						sustainNote.gfNote = (section.gfSection && (songNotes.noteData < 4));
 						sustainNote.noteType = swagNote.noteType;
 						sustainNote.scrollFactor.set();
 						swagNote.tail.push(sustainNote);
@@ -346,24 +350,30 @@ class EditorPlayState extends MusicBeatSubstate
 						unspawnNotes.push(sustainNote);
 						
 						sustainNote.correctionOffset = swagNote.height * .5;
-						if(!PlayState.isPixelStage)
+						if (!PlayState.isPixelStage)
 						{
-							if(oldNote.isSustainNote)
+							if (oldNote.isSustainNote)
 							{
 								oldNote.scale.y *= Note.SUSTAIN_SIZE / oldNote.frameHeight / playbackRate;
 								oldNote.updateHitbox();
 							}
 
-							if(ClientPrefs.data.downScroll) sustainNote.correctionOffset = 0;
+							if (ClientPrefs.data.downScroll)
+								sustainNote.correctionOffset = 0;
 						}
+						oldNote = sustainNote;
 
-						if (sustainNote.mustPress)				sustainNote.x += FlxG.width * 0.5; // general offset
-						else if (ClientPrefs.data.middleScroll)	sustainNote.x += daNoteData > 1 ? FlxG.width * 0.5 + 335 : 310;
+						if (sustainNote.mustPress)
+							sustainNote.x += FlxG.width * 0.5; // general offset
+						else if (ClientPrefs.data.middleScroll)
+							sustainNote.x += daNoteData > 1 ? FlxG.width * 0.5 + 335 : 310;
 					}
 				}
 
-				if (swagNote.mustPress)					swagNote.x += FlxG.width * 0.5; // general offset
-				else if (ClientPrefs.data.middleScroll)	swagNote.x += daNoteData > 1 ? FlxG.width * 0.5 + 335 : 310;
+				if (swagNote.mustPress)
+					swagNote.x += FlxG.width * 0.5; // general offset
+				else if (ClientPrefs.data.middleScroll)
+					swagNote.x += daNoteData > 1 ? FlxG.width * 0.5 + 335 : 310;
 			}
 		}
 
