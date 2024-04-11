@@ -19,6 +19,83 @@ import haxe.CallStack;
 
 class Main extends flixel.FlxGame
 {
+
+	#if FLX_DEBUG inline #end public static function warn(data:Dynamic, ?pos:haxe.PosInfos)
+	{
+		#if FLX_DEBUG
+		FlxG.log.warn(data);
+		#else
+		final s = Std.string(data);
+		if (!__warns.contains(s))
+		{
+			__warns.push(s);
+			haxe.Log.trace('[WARN] $s', pos);
+		}
+		#end
+	}
+
+	// based on haxe.Log.formatOutput()
+	@:noCompletion static function formatOutput(v:Dynamic, pos:haxe.PosInfos):String
+	{
+		final t = "<" + Date.now().toString().substr(11) + ">";
+		var s = Std.string(v);
+		if (pos == null)
+			return '$t > $s';
+
+		var p = pos.fileName + ":" + pos.lineNumber;
+		if (pos.methodName != null && pos.methodName.length != 0)
+		{
+			p += " - ";
+			if (pos.className != null && pos.className.length != 0)
+				p += pos.className + ".";
+			p += pos.methodName + "()";
+		}
+
+		if (pos.customParams != null)
+			for (_v in pos.customParams)
+				s += ", " + Std.string(_v);
+
+		return '$t [$p] > $s';
+	}
+
+	// Code was entirely made by sqirra-rng for their fnf engine named "Izzy Engine", big props to them!!!
+	// very cool person for real they don't get enough credit for their work
+	// by sqirra-rng
+	#if CRASH_HANDLER
+	static function onCrash(e:UncaughtErrorEvent):Void
+	{
+		final path = "./crash/CrashLog_" + Date.now().toString().replace(" ", "_").replace(":", "'") + ".txt";
+		var errMsg = "";
+
+		for (stackItem in CallStack.exceptionStack(true))
+			switch (stackItem)
+			{
+				case FilePos(s, file, line, column):
+					errMsg += '$file (line $line)\n';
+				default:
+					Sys.println(stackItem);
+			}
+
+		final devMsg = #if RELESE_BUILD_FR "i messed up, whoops" #else "you done goofed" #end + " (richTrash21)";
+		errMsg += "\nUncaught Error: " + e.error + " (Code: " + e.errorID + ")" + '\n\ntl;dr - $devMsg';
+		// "\nPlease report this error to the GitHub page: https://github.com/ShadowMario/FNF-PsychEngine\n\n> Crash Handler written by: sqirra-rng";
+
+		if (!FileSystem.exists("./crash/"))
+			FileSystem.createDirectory("./crash/");
+		sys.io.File.saveContent(path, '$errMsg\n\nFull session log:\n$__log');
+
+		final savedIn = "Crash dump saved in " + haxe.io.Path.normalize(path);
+		Sys.println(errMsg);
+		Sys.println(savedIn);
+
+		Application.current.window.alert('$errMsg\n$savedIn', "Uncaught Error!");
+		#if hxdiscord_rpc
+		DiscordClient.shutdown();
+		#end
+		Sys.exit(1);
+	}
+	#end
+
 	public static final initialState:flixel.util.typeLimit.NextState = states.TitleState.new;
 
 	public static var fpsVar(default, null):FPSCounter;
@@ -28,10 +105,11 @@ class Main extends flixel.FlxGame
 	public static var volumeUpKeys:Array<FlxKey>;
 	public static var muteKeys:Array<FlxKey>;
 
+	#if !FLX_DEBUG
 	@:noCompletion static var __warns = new Array<String>();
+	#end
 	@:noCompletion static var __log = "";
 	@:noCompletion static var __main:Main;
-
 	@:noCompletion var __focusVolume = 1.0; // ignore
 
 	public function new()
@@ -204,16 +282,6 @@ class Main extends flixel.FlxGame
 		#end
 	}
 
-	override function updateInput()
-	{
-		super.updateInput();
-		if (FlxG.keys.justPressed.F4)
-		{
-			fpsVar.debug = FlxG.save.data.debugInfo = !FlxG.save.data.debugInfo;
-			FlxG.save.flush();
-		}
-	}
-
 	override function onFocus(_)
 	{
 		if (!FlxG.autoPause && ClientPrefs.data.lostFocusDeafen && !FlxG.sound.muted)
@@ -232,44 +300,6 @@ class Main extends flixel.FlxGame
 		super.onFocusLost(event);
 	}
 
-	// Code was entirely made by sqirra-rng for their fnf engine named "Izzy Engine", big props to them!!!
-	// very cool person for real they don't get enough credit for their work
-	// by sqirra-rng
-	#if CRASH_HANDLER
-	static function onCrash(e:UncaughtErrorEvent):Void
-	{
-		final path = "./crash/CrashLog_" + Date.now().toString().replace(" ", "_").replace(":", "'") + ".txt";
-		var errMsg = "";
-
-		for (stackItem in CallStack.exceptionStack(true))
-			switch (stackItem)
-			{
-				case FilePos(s, file, line, column):
-					errMsg += '$file (line $line)\n';
-				default:
-					Sys.println(stackItem);
-			}
-
-		final devMsg = #if RELESE_BUILD_FR "i messed up, whoops" #else "you done goofed" #end + " (richTrash21)";
-		errMsg += "\nUncaught Error: " + e.error + " (Code: " + e.errorID + ")" + '\n\ntl;dr - $devMsg';
-		// "\nPlease report this error to the GitHub page: https://github.com/ShadowMario/FNF-PsychEngine\n\n> Crash Handler written by: sqirra-rng";
-
-		if (!FileSystem.exists("./crash/"))
-			FileSystem.createDirectory("./crash/");
-		sys.io.File.saveContent(path, '$errMsg\n\nFull session log:\n$__log');
-
-		final savedIn = "Crash dump saved in " + haxe.io.Path.normalize(path);
-		Sys.println(errMsg);
-		Sys.println(savedIn);
-
-		Application.current.window.alert('$errMsg\n$savedIn', "Uncaught Error!");
-		#if hxdiscord_rpc
-		DiscordClient.shutdown();
-		#end
-		Sys.exit(1);
-	}
-	#end
-
 	@:access(openfl.display.DisplayObject.__cleanup)
 	@:noCompletion function shaderFix(_, _):Void
 	{
@@ -278,43 +308,5 @@ class Main extends flixel.FlxGame
 				cam.flashSprite.__cleanup();
 
 		this.__cleanup();
-	}
-
-	#if FLX_DEBUG inline #end public static function warn(data:Dynamic, ?pos:haxe.PosInfos)
-	{
-		#if FLX_DEBUG
-		FlxG.log.warn(data);
-		#else
-		final s = Std.string(data);
-		if (!__warns.contains(s))
-		{
-			__warns.push(s);
-			haxe.Log.trace('[WARN] $s', pos);
-		}
-		#end
-	}
-
-	// based on haxe.Log.formatOutput()
-	@:noCompletion static function formatOutput(v:Dynamic, pos:haxe.PosInfos):String
-	{
-		final t = "<" + Date.now().toString().substr(11) + ">";
-		var s = Std.string(v);
-		if (pos == null)
-			return '$t > $s';
-
-		var p = pos.fileName + ":" + pos.lineNumber;
-		if (pos.methodName != null && pos.methodName.length != 0)
-		{
-			p += " - ";
-			if (pos.className != null && pos.className.length != 0)
-				p += pos.className + ".";
-			p += pos.methodName + "()";
-		}
-
-		if (pos.customParams != null)
-			for (_v in pos.customParams)
-				s += ", " + Std.string(_v);
-
-		return '$t [$p] > $s';
 	}
 }

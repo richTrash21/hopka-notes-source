@@ -76,7 +76,7 @@ class LoadingState extends FlxState
 	static function checkLoaded():Bool
 	{
 		for (key => bitmap in requestedBitmaps)
-			trace(((bitmap == null || Paths.cacheBitmap(key, bitmap) == null) ? "failed to cache" : "finished preloading") + ' image $key');
+			trace((Paths.cacheBitmap(key, bitmap) == null ? "failed to cache" : "finished preloading") + ' image $key');
 
 		requestedBitmaps.clear();
 		return (loaded == loadMax);
@@ -246,53 +246,40 @@ class LoadingState extends FlxState
 			Thread.create(() ->
 			{
 				mutex.acquire();
-				try
+				var file:String;
+				var bitmap:BitmapData = null;
+				#if MODS_ALLOWED
+				file = Paths.modsImages(image);
+				if (Paths.hasGraphic(file))
 				{
-					var file:String;
-					var bitmap:BitmapData = null;
-					#if MODS_ALLOWED
-					file = Paths.modsImages(image);
+					mutex.release();
+					loaded++;
+					return;
+				}
+				else if (FileSystem.exists(file))
+					bitmap = BitmapData.fromFile(file);
+				else
+				{
+				#end
+					file = Paths.getPath('images/$image.png', IMAGE);
 					if (Paths.hasGraphic(file))
 					{
 						mutex.release();
 						loaded++;
 						return;
 					}
-					else if (FileSystem.exists(file))
-						bitmap = BitmapData.fromFile(file);
-					else
-					#end
-					{
-						file = Paths.getPath('images/$image.png', IMAGE);
-						if (Paths.hasGraphic(file))
-						{
-							mutex.release();
-							loaded++;
-							return;
-						}
-						else if (OpenFlAssets.exists(file, IMAGE))
-							bitmap = OpenFlAssets.getBitmapData(file);
-						else
-						{
-							trace('no such image $image exists');
-							mutex.release();
-							loaded++;
-							return;
-						}
-					}
-					mutex.release();
-
-					if (bitmap == null)
-						trace('oh no the image is null NOOOO ($image)');
-					else
-						requestedBitmaps.set(file, bitmap);
+					else if (OpenFlAssets.exists(file, IMAGE))
+						bitmap = OpenFlAssets.getBitmapData(file);
+				#if MODS_ALLOWED
 				}
-				catch(e)
-				{
-					mutex.release();
-					trace('ERROR! fail on preloading image $image\n$e');
-				}
+				#end
+				mutex.release();
 				loaded++;
+
+				if (bitmap == null)
+					trace('Image with key "$image" could not be found!');
+				else
+					requestedBitmaps.set(file, bitmap);
 			});
 	}
 

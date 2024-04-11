@@ -33,7 +33,7 @@ class GameOverSubstate extends MusicBeatSubstate
 	public static var instance(default, null):GameOverSubstate;
 	public static var game(default, null):PlayState;
 
-	static final __midpoint = FlxPoint.get();
+	static final __point = FlxPoint.get();
 
 	public static function resetVariables(_song:backend.Song)
 	{
@@ -81,8 +81,8 @@ class GameOverSubstate extends MusicBeatSubstate
 		add(boyfriend);
 		boyfriend.playAnim("firstDeath");
 
-		boyfriend.getGraphicMidpoint(__midpoint);
-		boyfriend.camFollow.setPosition(__midpoint.x, __midpoint.y);
+		boyfriend.getGraphicMidpoint(__point);
+		boyfriend.camFollow.setPosition(__point.x, __point.y);
 		realCamera.target = (camFollow = boyfriend.camFollow);
 		realCamera.scroll.set();
 	}

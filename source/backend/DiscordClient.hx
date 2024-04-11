@@ -1,13 +1,17 @@
 package backend;
 
+import cpp.ConstCharStar;
 #if hxdiscord_rpc
+import cpp.RawConstPointer;
+
 import hxdiscord_rpc.Discord;
 import hxdiscord_rpc.Types;
+import cpp.Function;
 
 class DiscordClient
 {
 	@:noCompletion inline static final _defaultID = "1141827456693711011";
-	@:noCompletion static final presence = DiscordRichPresence.create();
+	public static final presence = new Presence();
 
 	public static var clientID(default, set) = _defaultID;
 	public static var isInitialized = false;
@@ -18,15 +22,6 @@ class DiscordClient
 		"blue", "clickbait", "false", "gothic", "hodgepodge", "lipped-letters", "red-cut", "poezda", // done
 		"streamer-fright", "casement", "real-huggies", "birthday", // placeholders
 	];
-
-	public static var state(get, set):String;
-	public static var details(get, set):String;
-	public static var smallImageKey(get, set):String;
-	public static var largeImageKey(get, set):String;
-	public static var largeImageText(get, set):String;
-
-	public static var startTimestamp(get, set):Int;
-	public static var endTimestamp(get, set):Int;
 
 	public static function check()
 	{
@@ -57,7 +52,7 @@ class DiscordClient
 		isInitialized = false;
 	}
 	
-	static function onReady(request:cpp.RawConstPointer<DiscordUser>):Void
+	static function onReady(request:RawConstPointer<DiscordUser>):Void
 	{
 		// final discriminator = cast (request[0].discriminator, String);
 		var str = "Connected to User - " + cast (request[0].username, String); // New Discord IDs/Discriminator system
@@ -68,12 +63,12 @@ class DiscordClient
 		changePresence();
 	}
 
-	inline static function onError(errorCode:Int, message:cpp.ConstCharStar):Void
+	inline static function onError(errorCode:Int, message:ConstCharStar):Void
 	{
 		trace('Error [$errorCode]: ' + cast (message, String));
 	}
 
-	inline static function onDisconnected(errorCode:Int, message:cpp.ConstCharStar):Void
+	inline static function onDisconnected(errorCode:Int, message:ConstCharStar):Void
 	{
 		trace('Disconnected [$errorCode]: ' + cast (message, String));
 	}
@@ -81,9 +76,9 @@ class DiscordClient
 	public static function initialize()
 	{
 		final discordHandlers		 = DiscordEventHandlers.create();
-		discordHandlers.ready		 = cpp.Function.fromStaticFunction(onReady);
-		discordHandlers.disconnected = cpp.Function.fromStaticFunction(onDisconnected);
-		discordHandlers.errored		 = cpp.Function.fromStaticFunction(onError);
+		discordHandlers.ready		 = Function.fromStaticFunction(onReady);
+		discordHandlers.disconnected = Function.fromStaticFunction(onDisconnected);
+		discordHandlers.errored		 = Function.fromStaticFunction(onError);
 		Discord.Initialize(clientID, cpp.RawPointer.addressOf(discordHandlers), 1, null);
 
 		if (!isInitialized)
@@ -116,7 +111,7 @@ class DiscordClient
 		presence.details		= details;
 		presence.smallImageKey	= smallImageKey;
 		presence.largeImageKey	= VALID_ICONS.contains(largeImageKey) ? largeImageKey : DEFAULT_ICON;
-		presence.largeImageText	= null; // "Engine Version: " + states.MainMenuState.psychEngineVersion
+		presence.largeImageText	= null;
 
 		// Obtained times are in milliseconds so they are divided so Discord can use it
 		presence.startTimestamp	= startTimestamp == null ? 0 : Std.int(startTimestamp * 0.001);
@@ -127,7 +122,7 @@ class DiscordClient
 
 	inline public static function updatePresence()
 	{
-		Discord.UpdatePresence(cpp.RawConstPointer.addressOf(presence));
+		presence.updatePresence();
 	}
 	
 	inline public static function resetClientID()
@@ -166,75 +161,116 @@ class DiscordClient
 		}
 		return newID;
 	}
+}
 
-	@:noCompletion inline static function get_state():String
+@:noCompletion private final class Presence
+{
+	public var state(get, set):String;
+	public var details(get, set):String;
+	public var smallImageKey(get, set):String;
+	public var largeImageKey(get, set):String;
+	public var largeImageText(get, set):String;
+
+	public var startTimestamp(get, set):Int;
+	public var endTimestamp(get, set):Int;
+	public var address(get, never):PresenceAddress;
+
+	@:noCompletion final presence =  DiscordRichPresence.create();
+	@:allow(backend.DiscordClient) function new () {}
+
+	public function updatePresence()
+	{
+		Discord.UpdatePresence(address);
+	}
+
+	public function toString():String
+	{
+		return FlxStringUtil.getDebugString([
+			LabelValuePair.weak("state", state),
+			LabelValuePair.weak("details", details),
+			LabelValuePair.weak("smallImageKey", smallImageKey),
+			LabelValuePair.weak("largeImageKey", largeImageKey),
+			LabelValuePair.weak("largeImageText", largeImageText),
+			LabelValuePair.weak("startTimestamp", startTimestamp),
+			LabelValuePair.weak("endTimestamp", endTimestamp)
+		]);
+	}
+
+	@:noCompletion inline function get_state():String
 	{
 		return presence.state;
 	}
 
-	@:noCompletion inline static function set_state(value:String):String
+	@:noCompletion inline function set_state(value:String):String
 	{
 		return presence.state = value;
 	}
 
-	@:noCompletion inline static function get_details():String
+	@:noCompletion inline function get_details():String
 	{
 		return presence.details;
 	}
 
-	@:noCompletion inline static function set_details(value:String):String
+	@:noCompletion inline function set_details(value:String):String
 	{
 		return presence.details = value;
 	}
 
-	@:noCompletion inline static function get_smallImageKey():String
+	@:noCompletion inline function get_smallImageKey():String
 	{
 		return presence.smallImageKey;
 	}
 
-	@:noCompletion inline static function set_smallImageKey(value:String):String
+	@:noCompletion inline function set_smallImageKey(value:String):String
 	{
 		return presence.smallImageKey = value;
 	}
 
-	@:noCompletion inline static function get_largeImageKey():String
+	@:noCompletion inline function get_largeImageKey():String
 	{
 		return presence.largeImageKey;
 	}
 	
-	@:noCompletion inline static function set_largeImageKey(value:String):String
+	@:noCompletion inline function set_largeImageKey(value:String):String
 	{
 		return presence.largeImageKey = value;
 	}
 
-	@:noCompletion inline static function get_largeImageText():String
+	@:noCompletion inline function get_largeImageText():String
 	{
 		return presence.largeImageText;
 	}
 
-	@:noCompletion inline static function set_largeImageText(value:String):String
+	@:noCompletion inline function set_largeImageText(value:String):String
 	{
 		return presence.largeImageText = value;
 	}
 
-	@:noCompletion inline static function get_startTimestamp():Int
+	@:noCompletion inline function get_startTimestamp():Int
 	{
 		return presence.startTimestamp;
 	}
 
-	@:noCompletion inline static function set_startTimestamp(value:Int):Int
+	@:noCompletion inline function set_startTimestamp(value:Int):Int
 	{
 		return presence.startTimestamp = value;
 	}
 
-	@:noCompletion inline static function get_endTimestamp():Int
+	@:noCompletion inline function get_endTimestamp():Int
 	{
 		return presence.endTimestamp;
 	}
 
-	@:noCompletion inline static function set_endTimestamp(value:Int):Int
+	@:noCompletion inline function set_endTimestamp(value:Int):Int
 	{
 		return presence.endTimestamp = value;
 	}
+
+	@:noCompletion inline function get_address():PresenceAddress
+	{
+		return RawConstPointer.addressOf(presence);
+	}
 }
+
+typedef PresenceAddress = RawConstPointer<DiscordRichPresence>;
 #end

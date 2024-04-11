@@ -40,6 +40,7 @@ class Paths
 		'assets/music/freakyMenu.$SOUND_EXT',
 		'assets/music/breakfast.$SOUND_EXT',
 		'assets/music/tea-time.$SOUND_EXT',
+		"assets/images/alphabet.png"
 	];
 
 	public static final PNG_REGEX = ~/^.+\.png$/i;
@@ -279,19 +280,21 @@ class Paths
 		}
 		#end
 
-		if (bitmap != null)
+		final graphic = cacheBitmap(file, bitmap, allowGPU);
+		if (graphic == null)
+		{
+			// pos info from https://github.com/ShadowMario/FNF-PsychEngine/pull/13679
+			var t = 'Image with key "$key" could not be found';
+			if (library != null)
+				t += ' in the library "$library"';
+			Main.warn('$t!', pos);
+		}
+		else
 		{
 			currentTrackedAssets.push(file);
 			tryPush(localTrackedAssets, file);
-			return cacheBitmap(file, bitmap, allowGPU);
 		}
-
-		// pos info from https://github.com/ShadowMario/FNF-PsychEngine/pull/13679
-		var t = 'Image with key "$key" could not be found';
-		if (library != null)
-			t += ' in the library "$library"';
-		Main.warn('$t!', pos);
-		return null;
+		return graphic;
 	}
 
 	// new psych
@@ -300,36 +303,20 @@ class Paths
 	public static function cacheBitmap(file:String, ?bitmap:BitmapData, allowGPU = true):FlxGraphic
 	{
 		if (bitmap == null)
-		{
-			#if MODS_ALLOWED
-			if (FileSystem.exists(file))
-				bitmap = BitmapData.fromFile(file);
-			else
-			#end
-			if (OpenFlAssets.exists(file, IMAGE))
-				bitmap = OpenFlAssets.getBitmapData(file);
+			return null;
 
-			if (bitmap == null)
-				return null;
-		}
-
-		if (allowGPU && ClientPrefs.data.cacheOnGPU && bitmap.image != null)
+		if (allowGPU && ClientPrefs.data.cacheOnGPU && bitmap.image != null && bitmap.__texture == null)
 		{
 			bitmap.lock();
-			if (bitmap.__texture == null)
-			{
-				bitmap.image.premultiplied = true;
-				bitmap.getTexture(FlxG.stage.context3D);
-			}
 			bitmap.getSurface();
 			bitmap.disposeImage();
-			bitmap.image.data = null;
-			bitmap.image = null;
+			bitmap.getTexture(FlxG.stage.context3D);
+			bitmap.unlock();
 		}
-		final graph = FlxGraphic.fromBitmapData(bitmap, false, file);
-		graph.persist = true;
-		graph.destroyOnNoUse = false;
-		return graph;
+		final graphic = FlxGraphic.fromBitmapData(bitmap, false, file);
+		graphic.destroyOnNoUse = false;
+		graphic.persist = true;
+		return graphic;
 	}
 
 	// use internal asset system only when asset is String and path is not absolete

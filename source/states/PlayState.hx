@@ -170,6 +170,7 @@ class PlayState extends MusicBeatState
 
 	static var prevCamFollow:CameraTarget;
 	static final spawnTime = 2000.;
+	static final __point = FlxPoint.get(); // helper
 
 	// event variables
 	public var isCameraOnForcedPos(default, set):Bool = false;
@@ -353,7 +354,6 @@ class PlayState extends MusicBeatState
 		FlxG.cameras.add(camHUD = new GameCamera(0, 0), false);
 		FlxG.cameras.add(camOther = new GameCamera(0, 0), false);
 		FlxG.cameras.add(camPause = new GameCamera(0, 0), false);
-		// FlxG.cameras.setDefaultDrawTarget(camGame, true);
 
 		camPause.kill(); // optimization
 		camGame.checkForTweens = camHUD.checkForTweens = true;
@@ -378,7 +378,7 @@ class PlayState extends MusicBeatState
 			SONG.stage = StageData.vanillaSongStage(songName);
 		curStage = SONG.stage;
 
-		final stageData = StageData.getStageFile(curStage) ?? StageData.dummy(); //Stage couldn't be found, create a dummy stage for preventing a crash
+		final stageData = StageData.getStageFile(curStage) ?? StageData.dummy(); // Stage couldn't be found, create a dummy stage for preventing a crash
 
 		defaultCamZoom = stageData.defaultZoom;
 
@@ -415,7 +415,6 @@ class PlayState extends MusicBeatState
 				bfCamOffset.x = stageData.camera_boyfriend[0];
 				bfCamOffset.y = stageData.camera_boyfriend[1];
 			}
-			// bfCamOffset.set(stageData.camera_boyfriend[0], stageData.camera_boyfriend[1]);
 		}
 
 		if (stageData.camera_opponent != null)
@@ -425,7 +424,6 @@ class PlayState extends MusicBeatState
 				dadCamOffset.x = stageData.camera_opponent[0];
 				dadCamOffset.y = stageData.camera_opponent[1];
 			}
-			// dadCamOffset.set(stageData.camera_opponent[0], stageData.camera_opponent[1]);
 		}
 
 		if (stageData.camera_girlfriend != null)
@@ -435,11 +433,7 @@ class PlayState extends MusicBeatState
 				gfCamOffset.x = stageData.camera_girlfriend[0];
 				gfCamOffset.y = stageData.camera_girlfriend[1];
 			}
-			// gfCamOffset.set(stageData.camera_girlfriend[0], stageData.camera_girlfriend[1]);
 		}
-
-		// NEVERMIND
-		// gfGroup.scrollFactor.set(0.95, 0.95); // fixed gf paralax lmao
 
 		switch (curStage) // lol
 		{
@@ -482,38 +476,30 @@ class PlayState extends MusicBeatState
 		#if LUA_ALLOWED		startLuasNamed('stages/$curStage.lua'); #end
 		#if HSCRIPT_ALLOWED	startHScriptsNamed('stages/$curStage.hx'); #end
 
+		if (SONG.gfVersion.isNullOrEmpty())
+			SONG.gfVersion = "gf"; // Fix for the Chart Editor
+
 		if (!stageData.hide_girlfriend)
 		{
-			if (SONG.gfVersion.isNullOrEmpty())
-				SONG.gfVersion = "gf"; // Fix for the Chart Editor
-
-			gf = new Character(SONG.gfVersion);
-			startCharacterPos(gf);
-			gfGroup.add(gf);
-			startCharacterScripts(gf.curCharacter);
-			// charList.push(gf);
+			gfGroup.add(gf = new Character(SONG.gfVersion));
+			startCharacterScripts(SONG.gfVersion);
 		}
 
-		dad = new Character(SONG.player2);
-		startCharacterPos(dad, true);
+		startCharacterPos(dad = new Character(SONG.player2), true);
 		dadGroup.add(dad);
-		startCharacterScripts(dad.curCharacter);
-		// charList.push(dad);
+		startCharacterScripts(SONG.player2);
 
-		boyfriend = new Character(SONG.player1, true);
-		startCharacterPos(boyfriend);
-		boyfriendGroup.add(boyfriend);
-		startCharacterScripts(boyfriend.curCharacter);
-		// charList.push(boyfriend);
+		boyfriendGroup.add(boyfriend = new Character(SONG.player1, true));
+		startCharacterScripts(SONG.player1);
 
 		// trigger set_x
-		bfCamOffset.x = bfCamOffset.x; // bfCamOffset._setXCallback(bfCamOffset);
-		dadCamOffset.x = dadCamOffset.x; // dadCamOffset._setXCallback(dadCamOffset);
-		gfCamOffset.x = gfCamOffset.x; // gfCamOffset._setXCallback(gfCamOffset);
+		bfCamOffset.x = bfCamOffset.x;
+		dadCamOffset.x = dadCamOffset.x;
+		gfCamOffset.x = gfCamOffset.x;
 
-		final camPos = FlxPoint.get(gfCamOffset.x, gfCamOffset.y);
+		__point.set(gfCamOffset.x, gfCamOffset.y);
 		if (gf != null)
-			camPos.addPoint(gf.getGraphicMidpoint(FlxPoint.weak()).addPoint(gf.cameraOffset));
+			__point.addPoint(gf.getGraphicMidpoint(FlxPoint.weak()).addPoint(gf.cameraOffset));
 
 		if (dad.curCharacter.startsWith("gf"))
 		{
@@ -569,11 +555,10 @@ class PlayState extends MusicBeatState
 		opponentStrums = new FlxTypedGroup<StrumNote>();
 		playerStrums = new FlxTypedGroup<StrumNote>();
 
-		generateSong(SONG.song);
+		generateSong();
 
-		add(_camFollow = prevCamFollow ?? new CameraTarget(camPos.x, camPos.y));
+		add(_camFollow = prevCamFollow ?? new CameraTarget(__point.x, __point.y));
 		prevCamFollow = null;
-		camPos.put();
 
 		camGame.follow(_camFollow, LOCKON, camGame.followLerp);
 		camGame.zoom = defaultCamZoom;
@@ -636,7 +621,6 @@ class PlayState extends MusicBeatState
 		videoPlayer.bitmap.onOpening.add(playVideo, true); // only when sprite was just created
 		videoPlayer.bitmap.onDisplay.add(playVideo); // let graphic change first and then revive the sprite
 		videoPlayer.bitmap.onEncounteredError.add(videoError);
-		// insert(members.indexOf(subtitles), videoPlayer);
 		add(videoPlayer);
 		#end
 		
@@ -691,9 +675,7 @@ class PlayState extends MusicBeatState
 		else if (ClientPrefs.data.pauseMusic != "None")
 			Paths.music(Paths.formatToSongPath(ClientPrefs.data.pauseMusic));
 
-		Paths.image("alphabet");
 		resetRPC();
-
 		FlxG.stage.addEventListener(KeyboardEvent.KEY_DOWN, onKeyPress);
 		FlxG.stage.addEventListener(KeyboardEvent.KEY_UP, onKeyRelease);
 		callOnScripts("onCreatePost");
@@ -757,48 +739,10 @@ class PlayState extends MusicBeatState
 
 		final char = new Character(0, 0, newCharacter, type == 0);
 		map.set(newCharacter, char);
-		// group.add(char);
 		startCharacterPos(char, type == 1);
 		char.precache();
 		char.kill();
-		// char.active = false;
 		startCharacterScripts(char.curCharacter);
-
-		/*switch (type)
-		{
-			case 0:
-				if (!boyfriendMap.exists(newCharacter))
-				{
-					final newBoyfriend = new Character(0, 0, newCharacter, true);
-					boyfriendMap.set(newCharacter, newBoyfriend);
-					boyfriendGroup.add(newBoyfriend);
-					startCharacterPos(newBoyfriend);
-					newBoyfriend.alpha = 0.00001;
-					startCharacterScripts(newBoyfriend.curCharacter);
-				}
-
-			case 1:
-				if (!dadMap.exists(newCharacter))
-				{
-					final newDad = new Character(0, 0, newCharacter);
-					dadMap.set(newCharacter, newDad);
-					dadGroup.add(newDad);
-					startCharacterPos(newDad, true);
-					newDad.alpha = 0.00001;
-					startCharacterScripts(newDad.curCharacter);
-				}
-
-			case 2:
-				if (gf != null && !gfMap.exists(newCharacter))
-				{
-					final newGf = new Character(0, 0, newCharacter);
-					gfMap.set(newCharacter, newGf);
-					gfGroup.add(newGf);
-					startCharacterPos(newGf);
-					newGf.alpha = 0.00001;
-					startCharacterScripts(newGf.curCharacter);
-				}
-		}*/
 	}
  
 	@:allow(substates.GameOverSubstate)
@@ -884,7 +828,6 @@ class PlayState extends MusicBeatState
 			char.setPosition(GF_POS.x + char.position.x, GF_POS.y + char.position.y);
 			char.danceEveryNumBeats = 2;
 		}
-		// char.addPosition(char.position.x, char.position.y);
 	}
 
 	#if VIDEOS_ALLOWED
@@ -1347,7 +1290,7 @@ class PlayState extends MusicBeatState
 
 	var noteTypes = new Array<String>();
 	var eventsPushed = new Array<String>();
-	function generateSong(dataPath:String):Void
+	function generateSong():Void
 	{
 		songSpeedType = ClientPrefs.getGameplaySetting("scrolltype");
 		songSpeed = switch (songSpeedType)
@@ -1594,7 +1537,7 @@ class PlayState extends MusicBeatState
 
 			paused = false;
 			callOnScripts("onResume");
-			resetRPC(startTimer?.finished);
+			resetRPC(startTimer == null || startTimer.finished);
 		}
 		super.closeSubState();
 	}
@@ -1938,9 +1881,8 @@ class PlayState extends MusicBeatState
 		for (timer in modchartTimers)
 			timer.active = true;
 		#end*/
-		final screenPos = boyfriend.getScreenPosition();
-		openSubState(new GameOverSubstate(screenPos.x - boyfriend.position.x, screenPos.y - boyfriend.position.y));
-		screenPos.put();
+		boyfriend.getScreenPosition(__point);
+		openSubState(new GameOverSubstate(__point.x - boyfriend.position.x, __point.y - boyfriend.position.y));
 
 		#if hxdiscord_rpc
 		// Game Over doesn't get his own variable because it's only used here
@@ -2346,8 +2288,7 @@ class PlayState extends MusicBeatState
 				trace("LOADING NEXT SONG - " + Paths.formatToSongPath(storyPlaylist[0]) + difficulty);
 
 				FlxTransitionableState.skipNextTransIn = FlxTransitionableState.skipNextTransOut = true;
-				prevCamFollow = camFollow;
-				remove(prevCamFollow);
+				remove(prevCamFollow = camFollow);
 
 				SONG = Song.loadFromJson(storyPlaylist[0] + difficulty, storyPlaylist[0]);
 				FlxG.sound.music.stop();

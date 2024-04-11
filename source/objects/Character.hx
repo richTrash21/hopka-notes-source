@@ -125,15 +125,11 @@ class Character extends objects.ExtendedSprite
 
 		// load spritesheet
 		imageFile = json.image;
-		var useAtlas:Bool;
 		#if MODS_ALLOWED
 		final modAnimToFind = Paths.modFolders('images/$imageFile/Animation.json');
-		final animToFind = Paths.getPath('images/$imageFile/Animation.json', TEXT);
-		useAtlas = (FileSystem.exists(modAnimToFind) || FileSystem.exists(animToFind) || Assets.exists(animToFind));
-		#else
-		useAtlas = Assets.exists(Paths.getPath('images/$imageFile/Animation.json', TEXT));
 		#end
-
+		final animToFind = Paths.getPath('images/$imageFile/Animation.json', TEXT);
+		final useAtlas = (#if MODS_ALLOWED FileSystem.exists(modAnimToFind) || FileSystem.exists(animToFind) #else Assets.exists(animToFind) #end);
 		frames = useAtlas ? animateatlas.AtlasFrameMaker.construct(imageFile) : Paths.getAtlas(imageFile, gpu);
 
 		// scale sprite

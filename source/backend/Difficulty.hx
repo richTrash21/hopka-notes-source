@@ -23,26 +23,22 @@ class Difficulty
 			week = WeekData.getCurrentWeek();
 
 		final diffStr = week.difficulties;
-		if (diffStr?.length > 0)
+		if (diffStr.isNullOrEmpty())
+			resetList();
+		else
 		{
 			final diffs = diffStr.trim().split(",");
-			var i = diffs.length - 1;
-			while (i > 0)
+			var i = diffs.length;
+			while (--i > 0)
 			{
-				if (diffs[i] != null)
-				{
-					diffs[i] = diffs[i].trim();
-					if (diffs[i].length == 0)
-						diffs.remove(diffs[i]);
-				}
-				--i;
+				diffs[i] = diffs[i].trim();
+				if (diffs[i].length == 0)
+					diffs.remove(diffs[i]);
 			}
 
-			if (diffs.length > 0 && diffs[0].length > 0)
+			if (diffs.length != 0 && diffs[0].length != 0)
 				list = diffs;
 		}
-		else
-			resetList();
 	}
 
 	inline public static function resetList()

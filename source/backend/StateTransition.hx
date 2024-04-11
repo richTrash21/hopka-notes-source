@@ -20,7 +20,9 @@ class StateTransition extends openfl.display.Bitmap
 	// singleton yaaaaaaayy
 	@:allow(Main) function new()
 	{
-		super(flixel.util.FlxGradient.createGradientBitmapData(1, FlxG.height * 2, colors), null, true);
+		final gradient = flixel.util.FlxGradient.createGradientBitmapData(1, FlxG.height * 2, colors);
+		gradient.disposeImage();
+		super(gradient, null);
 		visible = false;
 
 		FlxG.signals.preUpdate.add(update);
@@ -37,6 +39,7 @@ class StateTransition extends openfl.display.Bitmap
 
 		active = true;
 		visible = true;
+		smoothing = ClientPrefs.data.antialiasing;
 		prepare(isTransIn);
 		y = _startPos; // to avoid visual bugs
 	}

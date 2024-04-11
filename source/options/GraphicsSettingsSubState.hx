@@ -36,7 +36,7 @@ class GraphicsSettingsSubState extends BaseOptionsMenu
 		// Changing change is only needed if you want to make a special interaction after it changes the value
 		option.change = () ->
 			for (_leState in [this, _parentState])
-				_leState.forEachOfType(FlxSprite, (sprite) -> sprite.antialiasing = ClientPrefs.data.antialiasing, true);
+				_leState.forEachOfType(FlxSprite, (s) -> if (!(s is FlxText)) s.antialiasing = ClientPrefs.data.antialiasing, true);
 		addOption(option);
 		antialiasingOption = optionsArray.length-1;
 
@@ -46,11 +46,12 @@ class GraphicsSettingsSubState extends BaseOptionsMenu
 			"bool"
 		));
 
-		addOption(new Option("GPU Caching",
-			"If checked, allows the GPU to be used for caching textures, decreasing RAM usage.\nDon't turn this on if you have a shitty Graphics Card.",
-			"cacheOnGPU",
-			"bool"
-		));
+		if (FlxG.stage.context3D != null)
+			addOption(new Option("GPU Caching",
+				"If checked, allows the GPU to be used for caching textures, decreasing RAM usage.\nDon't turn this on if you have a shitty Graphics Card.",
+				"cacheOnGPU",
+				"bool"
+			));
 
 		#if !html5 //Apparently other framerates isn't correctly supported on Browser? Probably it has some V-Sync shit enabled by default, idk
 		option = new Option("V-Sync",

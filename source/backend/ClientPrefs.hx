@@ -92,8 +92,8 @@ import flixel.input.gamepad.FlxGamepadInputID;
 
 class ClientPrefs
 {
-	public static var data:SaveVariables = {};
-	public static var defaultData:SaveVariables = {};
+	public static final data:SaveVariables = {};
+	public static final defaultData:SaveVariables = {};
 
 	inline public static final MIN_FPS = 60;
 	inline public static final MAX_FPS = 360;
@@ -180,7 +180,13 @@ class ClientPrefs
 	public static function saveSettings()
 	{
 		for (key in SaveVariables.__fields)
-			Reflect.setField(FlxG.save.data, key, Reflect.field(data, key));
+		{
+			// ensuring that gpu caching won't be available if your pc can't handle it
+			if (key == "cacheOnGPU")
+				FlxG.save.data.cacheOnGPU = FlxG.stage.context3D == null ? false : data.cacheOnGPU;
+			else
+				Reflect.setField(FlxG.save.data, key, Reflect.field(data, key));
+		}
 
 		#if ACHIEVEMENTS_ALLOWED
 		Achievements.save();
@@ -196,9 +202,16 @@ class ClientPrefs
 
 	public static function loadPrefs()
 	{
-		for (key in SaveVariables.__fields)
-			if (key != "gameplaySettings" && Reflect.hasField(FlxG.save.data, key))
-				Reflect.setField(data, key, Reflect.field(FlxG.save.data, key));
+		if (!FlxG.save.isEmpty())
+			for (key in SaveVariables.__fields)
+				if (Reflect.hasField(FlxG.save.data, key))
+				{
+					// don't allow gpu caching on weak systems!
+					if (key == "cacheOnGPU" && FlxG.stage.context3D != null)
+						data.cacheOnGPU = FlxG.save.data.cacheOnGPU;
+					else if (key != "gameplaySettings")
+						Reflect.setField(data, key, Reflect.field(FlxG.save.data, key));
+				}
 
 		if (FlxG.save.data.gameplaySettings != null)
 		{
@@ -217,15 +230,10 @@ class ClientPrefs
 		{
 			inline function loadKeys<K, V>(saveTo:Map<K, V>, saveFrom:Map<K, V>):Map<K, V>
 			{
-				if (saveFrom == null)
-					return null;
-
-				// if (saveTo == null)
-				//	return [for (control => keys in saveFrom) control => keys];
-
-				for (control => keys in saveFrom)
-					if (saveTo.exists(control))
-						saveTo.set(control, keys);
+				if (saveFrom != null)
+					for (control => keys in saveFrom)
+						if (saveTo.exists(control))
+							saveTo.set(control, keys);
 
 				return saveTo;
 			}

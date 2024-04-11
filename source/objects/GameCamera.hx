@@ -52,7 +52,7 @@ class GameCamera extends FlxCamera
 		if (checkForTweens)
 		{
 			// once per half of current framerate (hope it won't backfire tho)
-			final delay = 1 / (Main.fpsVar.currentFPS * .5);
+			final delay = 1 / (FlxG.updateFramerate * .5);
 			if ((__tweenTimer += elapsed) > delay)
 			{
 				__tweenTimer -= delay;
