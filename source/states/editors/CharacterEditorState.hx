@@ -599,7 +599,7 @@ class CharacterEditorState extends backend.MusicBeatUIState
 		imageInputText = new UIInputTextAdvanced(15, 30, 200, character.imageFile, 8);
 		var reloadImage = new FlxButton(imageInputText.x + 210, imageInputText.y - 3, "Reload Image", () ->
 		{
-			var lastAnim = character.animation.curAnim.name;
+			var lastAnim = character.animation.curAnim?.name;
 			character.imageFile = imageInputText.text;
 			reloadCharacterImage();
 			if (character.animation.curAnim != null)

@@ -119,10 +119,6 @@ class VideoSprite extends flixel.FlxSprite
 
 	public var autoScale = true;
 	public var volume = 1.0;
-
-	#if FLX_SOUND_SYSTEM
-	@:noCompletion var __volume = FlxG.sound.volume;
-	#end
  
 	/**
 	 * Creates a `FlxVideoSprite` at a specified position.
@@ -133,10 +129,8 @@ class VideoSprite extends flixel.FlxSprite
 	public function new(x = 0, y = 0):Void
 	{
 		super(x, y);
-
 		makeGraphic(1, 1, FlxColor.TRANSPARENT);
-		@:bypassAccessor
-		antialiasing = ClientPrefs.data.antialiasing;
+		@:bypassAccessor antialiasing = ClientPrefs.data.antialiasing;
 
 		bitmap = new VideoHandler();
 		bitmap.onOpening.add(() -> bitmap.role = hxvlc.externs.Types.LibVLC_Media_Player_Role_T.LibVLC_Role_Game);
@@ -271,13 +265,7 @@ class VideoSprite extends flixel.FlxSprite
 
 	extern inline function updateVolume():Void
 	{
-		var mute:Bool;
-		#if FLX_SOUND_SYSTEM
-		mute = (FlxG.sound.muted || FlxG.sound.volume == 0.0 || volume == 0.0);
-		#else
-		mute = (volume == 0.0);
-		#end
-	
+		final mute = (#if FLX_SOUND_SYSTEM FlxG.sound.muted || FlxG.sound.volume == 0.0 || #end volume == 0.0);
 		final curVolume = mute ? 0 : Math.floor(#if FLX_SOUND_SYSTEM FlxG.sound.volume * #end volume * 100 + 40);
 		if (bitmap.volume != curVolume)
 			bitmap.volume = curVolume;

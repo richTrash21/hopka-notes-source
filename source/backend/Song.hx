@@ -129,8 +129,8 @@ typedef SwagSong =
 
 	public var arrowSkin:String;
 	public var splashSkin:String;
-	public var disableNoteRGB:Bool;
-	public var swapNotes:Bool; // for quickly swapping bf and dad notes
+	public var disableNoteRGB:Null<Bool>;
+	public var swapNotes:Null<Bool>; // for quickly swapping bf and dad notes
 
 	public function new(SONG:SwagSong)
 	{
@@ -159,6 +159,18 @@ typedef SwagSong =
 				Reflect.deleteField(SONG, field);
 			}
 		}
+	}
+
+	public function toString():String
+	{
+		return FlxStringUtil.getDebugString([
+			LabelValuePair.weak("song", song),
+			LabelValuePair.weak("bpm", bpm),
+			LabelValuePair.weak("needsVoices", needsVoices),
+			LabelValuePair.weak("sections", notes.length),
+			LabelValuePair.weak("events", events.length),
+			LabelValuePair.weak("speed", speed)
+		]);
 	}
 }
 

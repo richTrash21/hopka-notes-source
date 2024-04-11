@@ -48,7 +48,7 @@ class Mods
 
 	/*inline*/ public static function pushGlobalMods() // prob a better way to do this but idc
 	{
-		globalMods = [];
+		globalMods.clearArray();
 		for (mod in parseList().enabled)
 		{
 			final pack = getPack(mod);
@@ -60,7 +60,7 @@ class Mods
 
 	/*inline*/ public static function getModDirectories():Array<String>
 	{
-		final list:Array<String> = [];
+		final list = new Array<String>();
 		#if MODS_ALLOWED
 		final modsFolder:String = Paths.mods();
 		if (FileSystem.exists(modsFolder))
@@ -107,7 +107,7 @@ class Mods
 
 	/*inline*/ public static function directoriesWithFile(path:String, fileToFind:String, mods:Bool = true)
 	{
-		final foldersToCheck:Array<String> = [];
+		final foldersToCheck = new Array<String>();
 		#if sys
 		if (FileSystem.exists(path + fileToFind))
 		#end
@@ -131,8 +131,7 @@ class Mods
 				foldersToCheck.push(folder);
 
 			// And lastly, the loaded mod's folder
-			if (currentModDirectory != null && currentModDirectory.length != 0
-				&& !globalMods.contains(currentModDirectory)) // IGNORES CURRENT MOD IF IT'S LOADED AS GLOBAL I WANT TO KYS
+			if (!currentModDirectory.isNullOrEmpty() && !globalMods.contains(currentModDirectory)) // IGNORES CURRENT MOD IF IT'S LOADED AS GLOBAL I WANT TO KYS
 			{
 				folder = Paths.mods('$currentModDirectory/$fileToFind');
 				if (FileSystem.exists(folder))

@@ -140,7 +140,7 @@ class VisualsUISubState extends BaseOptionsMenu
 		
 		#if !mobile
 		option = new Option("FPS Counter",
-			"If unchecked, hides FPS Counter.",
+			"If unchecked, hides FPS Counter." #if !RELESE_BUILD_FR + "\nNOTE: Press F4 to reveal debug info! - rich :3c" #end,
 			"showFPS",
 			"bool");
 		option.change = () -> Main.fpsVar.visible = ClientPrefs.data.showFPS;
@@ -161,14 +161,6 @@ class VisualsUISubState extends BaseOptionsMenu
 				FlxG.sound.playMusic(Paths.music(Paths.formatToSongPath(ClientPrefs.data.pauseMusic)));
 		};
 		addOption(option);
-		
-		#if CHECK_FOR_UPDATES
-		addOption(new Option("Check for Updates",
-			"On Release builds, turn this on to check for updates when you start the game.",
-			"checkForUpdates",
-			"bool"
-		));
-		#end
 
 		#if hxdiscord_rpc
 		addOption(new Option("Discord Rich Presence",

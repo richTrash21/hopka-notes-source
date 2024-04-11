@@ -174,7 +174,7 @@ class Main extends flixel.FlxGame
 		#if (html5 || switch)
 		framerate = 60;
 		#else
-		framerate = (!FlxG.save.isEmpty() && FlxG.save.data.framerate != null) ? FlxG.save.data.framerate : Application.current.window.displayMode.refreshRate;
+		framerate = (FlxG.save.data.framerate == null) ? Application.current.window.displayMode.refreshRate : FlxG.save.data.framerate;
 		framerate = CoolUtil.boundInt(framerate, ClientPrefs.MIN_FPS, ClientPrefs.MAX_FPS);
 		#end
 
@@ -195,8 +195,23 @@ class Main extends flixel.FlxGame
 		addChild(transition = new StateTransition());
 		super.create(_);
 		#if !mobile
-		addChild(fpsVar = new FPSCounter(10, 3)).visible = ClientPrefs.data.showFPS;
+		addChild(fpsVar = new FPSCounter(10, 3));
+		fpsVar.visible = ClientPrefs.data.showFPS;
+		if (FlxG.save.data.debugInfo == null)
+			FlxG.save.data.debugInfo = false;
+		fpsVar.debug = FlxG.save.data.debugInfo;
+		fpsVar.commit = stage.application.meta.get("build");
 		#end
+	}
+
+	override function updateInput()
+	{
+		super.updateInput();
+		if (FlxG.keys.justPressed.F4)
+		{
+			fpsVar.debug = FlxG.save.data.debugInfo = !FlxG.save.data.debugInfo;
+			FlxG.save.flush();
+		}
 	}
 
 	override function onFocus(_)
@@ -236,7 +251,7 @@ class Main extends flixel.FlxGame
 			}
 
 		final devMsg = #if RELESE_BUILD_FR "i messed up, whoops" #else "you done goofed" #end + " (richTrash21)";
-		errMsg += "\nUncaught Error: " + e.error + '\n\ntl;dr - $devMsg';
+		errMsg += "\nUncaught Error: " + e.error + " (Code: " + e.errorID + ")" + '\n\ntl;dr - $devMsg';
 		// "\nPlease report this error to the GitHub page: https://github.com/ShadowMario/FNF-PsychEngine\n\n> Crash Handler written by: sqirra-rng";
 
 		if (!FileSystem.exists("./crash/"))

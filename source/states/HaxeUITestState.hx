@@ -1,5 +1,6 @@
 package states;
 
+#if haxeui_flixel
 import haxe.ui.Toolkit;
 
 class HaxeUITestState extends flixel.FlxState
@@ -16,3 +17,4 @@ class HaxeUITestState extends flixel.FlxState
 			MusicBeatState.switchState(MainMenuState.new);
 	}
 }
+#end

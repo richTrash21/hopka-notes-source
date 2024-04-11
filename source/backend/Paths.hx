@@ -46,7 +46,7 @@ class Paths
 	public static final LUA_REGEX = ~/^.+\.lua$/i;
 	public static final HX_REGEX  = ~/^.+\.hx$/i;
 
-	public static var currentLevel(default, set):String;
+	public static var currentLevel(default, set):String = "default";
 	// define the locally tracked assets
 	public static final localTrackedAssets = new Array<String>();   // all assets
 	public static final currentTrackedAssets = new Array<String>(); // graphics

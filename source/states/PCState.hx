@@ -86,7 +86,7 @@ class PCState extends MusicBeatState
 		return obj;
 	}
 
-	static function createSprite(x = 0., y = 0., ?scrollFactor:FlxPoint, ?data:EitherType<FlxGraphicAsset, FlxFramesCollection>, ?autoAddAnims = true)
+	static function createSprite(x = 0., y = 0., ?scrollFactor:FlxPoint, ?data:EitherType<FlxGraphicAsset, FlxFramesCollection>, autoAddAnims = true)
 	{
 		final isAnimated = (data is FlxFramesCollection);
 		final spr = new FlxSprite(x, y, isAnimated ? null : data);

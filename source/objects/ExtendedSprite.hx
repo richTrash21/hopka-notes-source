@@ -9,8 +9,6 @@ import flixel.math.FlxRect;
 **/
 class ExtendedSprite extends FlxSprite
 {
-	static final __animsHelper = new Array<String>();
-
 	/**
 		Checks if object is in the rectangles bounds.
 
@@ -56,31 +54,28 @@ class ExtendedSprite extends FlxSprite
 		return sprite;
 	}
 
-	// by redar
-	public static function autoAnimations<T:FlxSprite>(sprite:T, animIndex = -1):T
+	// by redar13
+	inline public static function autoAnimations<T:FlxSprite>(sprite:T, animIndex = -1):T
 	{
-		FlxArrayUtil.clearArray(__animsHelper);
-		if (sprite != null && sprite.frames != null && sprite.frames.numFrames != 0)
+		if (sprite == null || sprite.frames == null || sprite.frames.numFrames == 0)
+			trace("No animations found, damn... :(");
+		else
 		{
-			var prevAnim:String;
+			var i = -1;
 			var name:String = null;
 			for (anim in sprite.frames.framesHash.keys())
 			{
-				prevAnim = name;
 				name = anim.substr(0, anim.length - 4);
-				if (name != prevAnim) // !__animsHelper.contains(name)
+				if (!sprite.animation.exists(name))
 				{
-					__animsHelper.push(name);
 					sprite.animation.addByPrefix(name, name, 24, true);
+					if (++i == animIndex)
+						sprite.animation.play(name);
 				}
 			}
-
-			if (animIndex > -1)
-				sprite.animation.play(__animsHelper[FlxMath.minInt(animIndex, __animsHelper.length)]);
+			final a = sprite.animation.getNameList();
+			trace(i, a.length, a);
 		}
-		else
-			trace("No animations found, damn... :(");
-
 		return sprite;
 	}
 
@@ -337,62 +332,3 @@ class ExtendedSprite extends FlxSprite
 		return y + height;
 	}
 }
-
-/*@:transitive
-@:multiType(@:followWithAbstracts K)
-abstract OffsetMap(Map<String, FlxPoint>) from Map<String, FlxPoint> to Map<String, FlxPoint>
-{
-	public function new();
-
-	inline public function set(k:String, x:Float = 0, y:Float = 0):FlxPoint
-	{
-		this.set(k, FlxPoint.get(x, y));
-		return this.get(k);
-	}
-
-	@:arrayAccess inline public function get(k:String):FlxPoint
-	{
-		return this.get(k);
-	}
-
-	inline public function exists(k:String):Bool
-	{
-		return this.exists(k);
-	}
-
-	inline public function remove(k:String):Bool
-	{
-		if (this.exists(k))
-			this.get(k).put();
-
-		return this.remove(k);
-	}
-
-	inline public function keys():Iterator<String>
-	{
-		return this.keys();
-	}
-
-	inline public function iterator():Iterator<FlxPoint>
-	{
-		return this.iterator();
-	}
-
-	inline public function copy():OffsetMap
-	{
-		return cast [for (k => v in this) k => v.clone()];
-	}
-
-	inline public function toString():String
-	{
-		return this.toString();
-	}
-
-	inline public function clear():Void
-	{
-		for (v in this.iterator())
-			v.put();
-
-		this.clear();
-	}
-}*/

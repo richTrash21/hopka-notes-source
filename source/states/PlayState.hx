@@ -2714,7 +2714,7 @@ class PlayState extends MusicBeatState
 			final animToPlay:String = singAnimations[direction] + 'miss$suffix';
 			char.playAnim(animToPlay, true);
 			
-			if (char != gf && combo > 5 && gf?.animOffsets.exists("sad"))
+			if (char != gf && combo > 5 && gf != null && gf.animation.exists("sad"))
 			{
 				gf.playAnim("sad");
 				gf.specialAnim = true;
@@ -2728,7 +2728,7 @@ class PlayState extends MusicBeatState
 	{
 		camZooming = true;
 
-		if (note.noteType == "Hey!" && dad.animOffsets.exists("hey"))
+		if (note.noteType == "Hey!" && dad.animation.exists("hey"))
 		{
 			dad.playAnim("hey", true);
 			dad.specialAnim = true;

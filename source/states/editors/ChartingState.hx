@@ -1,7 +1,7 @@
 package states.editors;
 
-import flixel.FlxSubState;
 #if !RELESE_BUILD_FR
+import flixel.FlxSubState;
 import flixel.util.FlxStringUtil;
 import flash.geom.Rectangle;
 import haxe.Json;

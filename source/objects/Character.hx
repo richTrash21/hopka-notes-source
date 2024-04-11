@@ -54,7 +54,7 @@ class Character extends objects.ExtendedSprite
 	public var stunned:Bool;
 	public var singDuration:Float; // Multiplier of how long a character holds the sing pose
 	public var idleSuffix(default, set):String;
-	public var danceIdle:Bool; // Character use "danceLeft" and "danceRight" instead of "idle"
+	public var danceIdle:Bool; // Character use "dance" instead of "idle"
 	public var maxDance(default, null):Int;
 	public var skipDance:Bool;
 
@@ -66,7 +66,7 @@ class Character extends objects.ExtendedSprite
 	public var position = FlxPoint.get();
 
 	public var danceEveryNumBeats:Int = 2;
-	public var danced:Bool = false;
+	public var danced:Bool;
 
 	// Used on Character Editor
 	var imageFile:String;
@@ -195,16 +195,14 @@ class Character extends objects.ExtendedSprite
 			return;
 		}
 
-		if (heyTimer > 0)
+		if (heyTimer > 0.0)
 		{
 			if ((heyTimer -= elapsed * FlxG.animationTimeScale) <= 0.0)
-			{
 				if (specialAnim && animation.curAnim.name == "hey" || animation.curAnim.name == "cheer")
 				{
 					specialAnim = false;
 					dance();
 				}
-			}
 		}
 		else if (specialAnim && animation.curAnim.finished)
 		{
@@ -283,9 +281,23 @@ class Character extends objects.ExtendedSprite
 		{
 			a = "dance";
 			if (maxDance == -1)
-				a += (danced = !danced) ? "Right" : "Left";
+			{
+				if (danced = !danced)
+				{
+					a += "Right";
+					curDance = 1;
+				}
+				else
+				{
+					a += "Left";
+					curDance = 0;
+				}
+			}
 			else
+			{
 				a += (curDance = ++curDance % maxDance);
+				danced = FlxMath.isOdd(curDance);
+			}
 		}
 		playAnim(a + idleSuffix, force);
 	}
