@@ -109,12 +109,10 @@ class Main extends flixel.FlxGame
 	@:noCompletion static var __warns = new Array<String>();
 	#end
 	@:noCompletion static var __log = "";
-	@:noCompletion static var __main:Main;
 	@:noCompletion var __focusVolume = 1.0; // ignore
 
 	public function new()
 	{
-		__main = this;
 		// cool ass log by me yeah
 		haxe.Log.trace = (v:Dynamic, ?pos:haxe.PosInfos) ->
 		{
@@ -131,7 +129,7 @@ class Main extends flixel.FlxGame
 			throw new haxe.exceptions.NotImplementedException()
 			#end
 		}
-			
+
 		#if CRASH_HANDLER
 		Lib.current.loaderInfo.uncaughtErrorEvents.addEventListener(UncaughtErrorEvent.UNCAUGHT_ERROR, onCrash);
 		#end
@@ -188,10 +186,10 @@ class Main extends flixel.FlxGame
 			Achievements.load();
 			#end
 			backend.Highscore.load();
-	
+
 			if (FlxG.save.data.weekCompleted != null)
 				states.StoryMenuState.weekCompleted = FlxG.save.data.weekCompleted;
-	
+
 			FlxG.sound.volume = Math.fceil(FlxG.sound.volume * 10) * 0.1;
 			__focusVolume = FlxG.sound.volume;
 			#if debug
@@ -223,21 +221,14 @@ class Main extends flixel.FlxGame
 				}
 				FlxG.log.warn('"$n" is not an FlxState class!');
 			});
-	
-			// это рофлс
-			FlxG.game.soundTray.volumeUpSound = "assets/sounds/metal";
-			FlxG.game.soundTray.volumeDownSound = "assets/sounds/lego";
-			#else
-			FlxG.game.soundTray.volumeUpSound = "assets/sounds/up_volume";
-			FlxG.game.soundTray.volumeDownSound = "assets/sounds/down_volume";
 			#end
 			FlxG.signals.preStateCreate.add(LoadingState.preloadState);
 			FlxG.plugins.addPlugin(substates.PauseSubState.tweenManager);
-	
+
 			#if !html5
 			FlxG.mouse.useSystemCursor = true;
 			#end
-	
+
 			#if hxdiscord_rpc
 			DiscordClient.prepare();
 			#end
@@ -247,6 +238,8 @@ class Main extends flixel.FlxGame
 
 		// bound local save so flixels default save won't initialize
 		FlxG.save.bind("funkin", CoolUtil.getSavePath());
+		if (FlxG.save.data.debugInfo == null)
+			FlxG.save.data.debugInfo = false;
 
 		var framerate:Int;
 		#if (html5 || switch)
@@ -258,6 +251,7 @@ class Main extends flixel.FlxGame
 
 		focusLostFramerate = 60;
 		super(Init, framerate, framerate, true, FlxG.save.data.fullscreen);
+		_customSoundTray = objects.ui.CustomSoundTray;
 
 		ClientPrefs.loadDefaultKeys();
 		ClientPrefs.loadPrefs();
@@ -268,17 +262,14 @@ class Main extends flixel.FlxGame
 		if (stage == null)
 			return;
 
-		// saves ALT + ENTER fullscreen change
-		// FlxG.stage.window.onFullscreen.add(() -> { trace("saved fullscreen " + FlxG.fullscreen); FlxG.save.flush(); });
+		fpsVar = new FPSCounter(10, 3);
+		fpsVar.visible = ClientPrefs.data.showFPS;
+		fpsVar.commit = stage.application.meta.get("build");
+		fpsVar.debug = FlxG.save.data.debugInfo;
 		addChild(transition = new StateTransition());
 		super.create(_);
 		#if !mobile
-		addChild(fpsVar = new FPSCounter(10, 3));
-		fpsVar.visible = ClientPrefs.data.showFPS;
-		if (FlxG.save.data.debugInfo == null)
-			FlxG.save.data.debugInfo = false;
-		fpsVar.debug = FlxG.save.data.debugInfo;
-		fpsVar.commit = stage.application.meta.get("build");
+		addChild(fpsVar);
 		#end
 	}
 
@@ -295,7 +286,7 @@ class Main extends flixel.FlxGame
 		if (!FlxG.autoPause && ClientPrefs.data.lostFocusDeafen && !FlxG.sound.muted)
 		{
 			__focusVolume = Math.ffloor(FlxG.sound.volume * 10.0) * 0.1;
-			FlxG.sound.volume = FlxG.sound.volume * 0.5; // Math.ffloor(FlxG.sound.volume * 5.0) * 0.1;
+			FlxG.sound.volume = FlxG.sound.volume * 0.5;
 		}
 		super.onFocusLost(event);
 	}

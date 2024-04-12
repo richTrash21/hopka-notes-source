@@ -19,6 +19,9 @@ import flixel.FlxState;
 **/
 class FPSCounter extends openfl.text.TextField
 {
+	@:noCompletion extern inline static final HIGH_FPS = 0xFFFFFF;
+	@:noCompletion extern inline static final LOW_FPS = 0xFF0000;
+
 	/**
 		The current frame rate, expressed using frames-per-second
 	**/
@@ -36,7 +39,7 @@ class FPSCounter extends openfl.text.TextField
 	public var memoryMegasGPU(get, never):Int;
 
 	#if !RELESE_BUILD_FR
-	public var debug:Bool = false;
+	public var debug:Bool = #if debug true #else false #end;
 
 	@:noCompletion var __prevTime = 0;
 	@:noCompletion var __timeElapsed:String;
@@ -74,22 +77,20 @@ class FPSCounter extends openfl.text.TextField
 		removeEventListener(MouseEvent.MOUSE_WHEEL, this_onMouseWheel);
 		removeEventListener(MouseEvent.DOUBLE_CLICK, this_onDoubleClick);
 		removeEventListener(KeyboardEvent.KEY_DOWN, this_onKeyDown);
-		FlxG.stage.addEventListener(KeyboardEvent.KEY_DOWN, this_onKeyDown);
+		FlxG.stage.addEventListener(KeyboardEvent.KEY_DOWN, (e) ->
+		{
+			if (e.keyCode == flixel.input.keyboard.FlxKey.F4)
+			{
+				debug = FlxG.save.data.debugInfo = !FlxG.save.data.debugInfo;
+				FlxG.save.flush();
+			}
+		});
 
 		FlxG.signals.preUpdate.add(update);
 		#if !RELESE_BUILD_FR
 		FlxG.signals.preStateCreate.add((s) -> __stateClass = __get__state__class(s));
 		#end
 		__timeElapsed = __get__time__elapsed(0);
-	}
-
-	@:noCompletion override function this_onKeyDown(event:KeyboardEvent):Void
-	{
-		if (event.keyCode == flixel.input.keyboard.FlxKey.F4)
-		{
-			debug = FlxG.save.data.debugInfo = !FlxG.save.data.debugInfo;
-			FlxG.save.flush();
-		}
 	}
 
 	// Event Handlers
@@ -123,11 +124,11 @@ class FPSCounter extends openfl.text.TextField
 
 		var text = 'FPS: $currentFPS';
 		var formatData = __textFormatList[0];
-		formatData.format.color = switch (Std.int(currentFPS * 0.05)) // / 20
+		formatData.format.color = switch (Std.int(currentFPS * 0.05))
 		{
-			case 0:		0xFF0000; // < 20 fps
-			case 1, 2:	FlxColor.interpolate(0xFF0000, 0xFFFFFF, (currentFPS - 20) * 0.025); // 20 - 59 fps
-			default:	0xFFFFFF; // 60+ fps
+			case 0:		LOW_FPS; // < 20 fps
+			case 1, 2:	FlxColor.interpolate(LOW_FPS, HIGH_FPS, (currentFPS - 20) * 0.025); // 20 - 59 fps
+			default:	HIGH_FPS; // 60+ fps
 		}
 		formatData.end = text.length;
 
@@ -137,7 +138,7 @@ class FPSCounter extends openfl.text.TextField
 		
 		if (ClientPrefs.data.cacheOnGPU)
 		{
-			// fun fact: it doesn't work on my pc, cuz it doesn't have gl "NVX_gpu_memory_info" extension! - rich
+			// fun fact: it doesn't work! - rich
 			final gpuMem = memoryMegasGPU;
 			if (gpuMem != 0)
 				text += "\nGPU Memory: " + FlxStringUtil.formatBytes(gpuMem);
@@ -194,18 +195,17 @@ class FPSCounter extends openfl.text.TextField
 			text += "\nTweens: " + FlxTween.globalManager._tweens.length;
 			text += "\nTimers: " + FlxTimer.globalManager._timers.length;
 
-			text += '\n\nTime Elapsed: $__timeElapsed';
+			text += "\n";
+			if (DiscordClient.user != null)
+				text += "\nDiscord User: " + DiscordClient.user;
+			text += '\nTime Elapsed: $__timeElapsed';
 			text += '\nCommit #$commit';
 			__prevTime = currentTime;
 		}
 		#end
 		this.text = text;
 		for (data in __textFormatList)
-		{
-			// if (__textEngine.textFormatRanges.indexOf(data) == -1)
-			//	__textEngine.textFormatRanges.push(data);
 			setTextFormat(data.format, data.start, data.end);
-		}
 	}
 
 	@:noCompletion extern inline static function __get__time__elapsed(__time:Float):String
@@ -228,8 +228,7 @@ class FPSCounter extends openfl.text.TextField
 
 	@:noCompletion extern inline static function __get__substate__info(__substate:FlxState):String
 	{
-		var __str = __get__state__class(__substate);
-		__substate = __substate.subState;
+		var __str = "";
 		while (__substate != null)
 		{
 			__str += __get__state__class(__substate);
@@ -242,11 +241,12 @@ class FPSCounter extends openfl.text.TextField
 
 	@:noCompletion inline function get_memoryMegas():Int
 	{
-		return cast (openfl.system.System.totalMemory, UInt);
+		final mem = openfl.system.System.totalMemory;
+		return #if cpp cast (mem, UInt) #else mem #end;
 	}
 
 	@:noCompletion inline function get_memoryMegasGPU():Int
 	{
-		return FlxG.stage.context3D.totalGPUMemory;
+		return FlxG.stage.context3D == null ? 0 : FlxG.stage.context3D.totalGPUMemory;
 	}
 }

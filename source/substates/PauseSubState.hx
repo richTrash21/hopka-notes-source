@@ -149,7 +149,9 @@ class PauseSubState extends MusicBeatSubstate
 				}
 		}
 
-		if (controls.ACCEPT && (cantUnpause <= 0 || !controls.controllerMode))
+		if (controls.BACK)
+			exitPause();
+		else if (controls.ACCEPT && (cantUnpause <= 0 || !controls.controllerMode))
 		{
 			if (menuItems == difficultyChoices)
 			{
@@ -164,7 +166,7 @@ class PauseSubState extends MusicBeatSubstate
 						PlayState.changedDifficulty = true;
 						PlayState.chartingMode = false;
 						return;
-					}					
+					}
 				}
 				catch(e)
 				{

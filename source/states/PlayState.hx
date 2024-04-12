@@ -1038,10 +1038,8 @@ class PlayState extends MusicBeatState
 
 			if (startOnTime > 0 || skipCountdown)
 			{
-				var time:Float;
-				if (skipCountdown)
-					time = 0.0;
-				else
+				var time = 0.0;
+				if (startOnTime > 0)
 				{
 					clearNotesBefore(startOnTime);
 					time = startOnTime - 350.0;
@@ -1076,18 +1074,21 @@ class PlayState extends MusicBeatState
 						tick = TWO;
 
 					case 2:
+						countdownReady = null;
 						countdownSet = createCountdownSprite(uiPrefix + 'set$uiSuffix', antialias);
 						countSound = FlxG.sound.play(Paths.sound('intro1$introSoundsSuffix'), 0.6);
 						tick = ONE;
 
 					case 3:
+						countdownSet = null;
 						countdownGo = createCountdownSprite(uiPrefix + 'go$uiSuffix', antialias);
 						countSound = FlxG.sound.play(Paths.sound('introGo$introSoundsSuffix'), 0.6);
 						tick = GO;
 
 					case 4:
-						tick = START;
+						countdownGo = null;
 						startTimer = null;
+						tick = START;
 				}
 				#if FLX_PITCH
 				if (countSound != null)
@@ -1160,7 +1161,7 @@ class PlayState extends MusicBeatState
 			tryDance(char, reference, char == gf);
 	}
 
-	public function tryDance(character:Character, reference:Int, ?gfCheck:Bool)
+	public function tryDance(character:Character, reference:Int, gfCheck = false)
 	{
 		if (character == null || character.stunned || character.animation.curAnim == null || character.animation.curAnim.name.startsWith("sing")
 			|| reference % (gfCheck ? Math.round(gfSpeed * character.danceEveryNumBeats) : character.danceEveryNumBeats) != 0)
@@ -1514,8 +1515,8 @@ class PlayState extends MusicBeatState
 		stagesFunc((stage) -> stage.openSubState(subState));
 		if (paused)
 		{
-			FlxTween.globalManager.forEach((t) -> __set__tweeen__status(t, false));
-			FlxTimer.globalManager.forEach((t) -> __set__timer__status(t, false));
+			FlxTween.globalManager.forEach((t) -> __set__tweeen__status(t, false)); // active = false;
+			FlxTimer.globalManager.forEach((t) -> __set__timer__status(t, false)); // active = false;
 			FlxG.sound.pause();
 			FlxG.timeScale = 1.0;
 		}
@@ -1527,8 +1528,8 @@ class PlayState extends MusicBeatState
 		stagesFunc((stage) -> stage.closeSubState());
 		if (paused)
 		{
-			FlxTween.globalManager.forEach((t) -> __set__tweeen__status(t, true));
-			FlxTimer.globalManager.forEach((t) -> __set__timer__status(t, true));
+			FlxTween.globalManager.forEach((t) -> __set__tweeen__status(t, true)); // active = true;
+			FlxTimer.globalManager.forEach((t) -> __set__timer__status(t, true)); // active = true;
 			FlxG.sound.resume();
 			FlxG.timeScale = playbackRate;
 

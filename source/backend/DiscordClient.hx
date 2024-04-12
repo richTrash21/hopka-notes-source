@@ -1,12 +1,13 @@
 package backend;
 
-import cpp.ConstCharStar;
 #if hxdiscord_rpc
 import cpp.RawConstPointer;
+import cpp.ConstCharStar;
+import cpp.Function;
 
 import hxdiscord_rpc.Discord;
 import hxdiscord_rpc.Types;
-import cpp.Function;
+import sys.thread.Thread;
 
 class DiscordClient
 {
@@ -14,7 +15,9 @@ class DiscordClient
 	public static final presence = new Presence();
 
 	public static var clientID(default, set) = _defaultID;
-	public static var isInitialized = false;
+	public static var isInitialized(default, null) = false;
+	public static var user(default, null):String;
+	static var thread:Thread;
 
 	// I HAVE TO ADD EVERY SINGLE FUCKING ICON INTO THIS BY MYSELF, FUCKING HELL
 	inline static final DEFAULT_ICON = "icon";
@@ -48,14 +51,16 @@ class DiscordClient
 
 	public static function shutdown()
 	{
+		user = null;
 		Discord.Shutdown();
 		isInitialized = false;
 	}
 	
 	static function onReady(request:RawConstPointer<DiscordUser>):Void
 	{
+		user = cast (request[0].username, String);
 		// final discriminator = cast (request[0].discriminator, String);
-		var str = "Connected to User - " + cast (request[0].username, String); // New Discord IDs/Discriminator system
+		var str = 'Connected to User - $user'; // New Discord IDs/Discriminator system
 		// if (discriminator != "0")
 		//	str += '#$discriminator'; // Old discriminators
 
@@ -84,21 +89,22 @@ class DiscordClient
 		if (!isInitialized)
 			trace("Discord Client initialized");
 
-		sys.thread.Thread.create(() ->
-		{
-			final localID = clientID;
-			while (localID == clientID)
-			{
-				#if DISCORD_DISABLE_IO_THREAD
-				Discord.UpdateConnection();
-				#end
-				Discord.RunCallbacks();
-
-				// Wait a second until the next loop...
-				Sys.sleep(1);
-			}
-		});
 		isInitialized = true;
+		if (thread == null)
+			thread = Thread.create(() ->
+				while (true)
+				{
+					if (isInitialized)
+					{
+						#if DISCORD_DISABLE_IO_THREAD
+						Discord.UpdateConnection();
+						#end
+						Discord.RunCallbacks();
+					}
+
+					// Wait a second until the next loop...
+					Sys.sleep(1);
+				});
 	}
 
 	public static function changePresence(details = "In the Menus", ?state:String, ?smallImageKey:String, hasStartTimestamp = false, ?endTimestamp:Float, ?largeImageKey:String)
@@ -176,7 +182,7 @@ class DiscordClient
 	public var address(get, never):PresenceAddress;
 
 	@:noCompletion final presence =  DiscordRichPresence.create();
-	@:allow(backend.DiscordClient) function new () {}
+	@:allow(backend.DiscordClient) @:keep function new () {}
 
 	public function updatePresence()
 	{
