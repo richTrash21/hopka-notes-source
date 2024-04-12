@@ -54,8 +54,8 @@ class GraphicsSettingsSubState extends BaseOptionsMenu
 			));
 
 		#if !html5 //Apparently other framerates isn't correctly supported on Browser? Probably it has some V-Sync shit enabled by default, idk
-		option = new Option("V-Sync",
-			"[!] EXPERIMENTAL [!]\n\nNot really a V-Sync, but something similar.",
+		option = new Option("Fixed Speed",
+			"If checked the game will run ot fixed speed, depending on the framerate cap.",
 			"fixedTimestep",
 			"bool");
 		option.change = () -> FlxG.fixedTimestep = ClientPrefs.data.fixedTimestep;

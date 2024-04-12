@@ -19,7 +19,7 @@ typedef LuaTweenOptions = {
 	ease:EaseFunction
 }
 
-typedef LuaColor = haxe.extern.EitherType<Float, String>;
+typedef LuaColor = haxe.extern.EitherType<String, Float>;
 
 class LuaUtils
 {
@@ -290,7 +290,7 @@ class LuaUtils
 	// resolves old string color input and new number color input (why does lua passes every number as float it's so annoyinggg)
 	extern inline public static function resolveColor(color:LuaColor):FlxColor
 	{
-		return color is String ? CoolUtil.colorFromString(color) : Std.int(color);
+		return color is Float ? Std.int(color) : CoolUtil.colorFromString(color);
 	}
 
 	inline public static function keyJustPressed(key:String):Bool

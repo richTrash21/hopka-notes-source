@@ -31,10 +31,9 @@ class GameCamera extends FlxCamera
 		Okay, this should help optimize it a bit ig.
 	**/
 	public var checkForTweens(default, set):Bool = false;
-	@:noCompletion var __tweenTimer = 0.; // okay i actually optimized it???? (kinda)
 
-	// internal values
-	@:noCompletion var _zoomSpeed = 3.2;
+	// okay i actually optimized it???? (kinda)
+	@:noCompletion var __tweenTimer = 0.;
 
 	public function new(zoom = 0., bgColor = FlxColor.BLACK, updateZoom = false):Void
 	{
@@ -62,10 +61,7 @@ class GameCamera extends FlxCamera
 		}
 
 		if (updateZoom && !tweeningZoom && zoom != targetZoom)
-		{
-			final factor = Math.exp(-elapsed * _zoomSpeed * zoomDecay);
-			zoom = (factor < 1) ? FlxMath.lerp(targetZoom, zoom, factor) : targetZoom;
-		}
+			zoom = CoolUtil.lerpElapsed(zoom, targetZoom, 0.055 * zoomDecay);
 
 		// implementing flixel's 6.0.0 camera changes early
 		#if (flixel < "6.0.0")
@@ -179,14 +175,14 @@ class GameCamera extends FlxCamera
 
 	function _updateLerp(elapsed:Float)
 	{
-		// Adjust lerp based on the current frame rate so lerp is less framerate dependant
-		final adjustedLerp = 1.0 - Math.pow(1.0 - followLerp, elapsed * 60);
-		if (adjustedLerp >= 1)
+		if (followLerp == 1)
 		{
 			scroll.copyFrom(_scrollTarget); // no easing
 		}
 		else
 		{
+			// Adjust lerp based on the current frame rate so lerp is less framerate dependant
+			final adjustedLerp = 1.0 - Math.pow(1.0 - followLerp, elapsed * 60);
 			scroll.x += (_scrollTarget.x - scroll.x) * adjustedLerp;
 			scroll.y += (_scrollTarget.y - scroll.y) * adjustedLerp;
 		}

@@ -393,9 +393,9 @@ class LoadingState extends FlxState
 		if (curPercent != intendedPercent)
 		{
 			curPercent = if (Math.abs(curPercent - intendedPercent) < 0.001)
-							intendedPercent;
+							 intendedPercent;
 						 else
-							FlxMath.lerp(intendedPercent, curPercent, Math.exp(-elapsed * 15));
+							 CoolUtil.lerpElapsed(curPercent, intendedPercent, 0.25);
 
 			bar.scale.x = barWidth * curPercent;
 			bar.updateHitbox();

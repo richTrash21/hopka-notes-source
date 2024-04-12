@@ -11,10 +11,7 @@ using flixel.util.FlxArrayUtil;
 class CoolUtil
 {
 	static final countByColor = new Map<Int, Int>();
-	static final hideChars = ~/[\t\n\r]/;
-
-	inline static final IDK = 0x00CE4F2F;
-	inline static final IDK2 = 0x019C9E5E;
+	static final hideChars = ~/[\t\n\r\s]+/g;
 
 	// changed so this actually works lol
 	inline public static function quantize(f:Float, snap:Float):Float
@@ -47,11 +44,11 @@ class CoolUtil
 
 	inline public static function colorFromString(color:String):FlxColor
 	{
-		color = hideChars.replace(color, "").trim();
-		/*if (color.startsWith("0x"))
-			color = color.substring(color.length-6);*/
+		if (color == null)
+			return FlxColor.WHITE;
 
-		return (FlxColor.fromString(color) ?? FlxColor.fromString('#$color')) ?? FlxColor.WHITE;
+		color = hideChars.replace(color, "");
+		return FlxColor.fromString(color) ?? FlxColor.fromString('#$color') ?? FlxColor.WHITE;
 	}
 
 	inline public static function listFromString(string:String):Array<String>
@@ -75,15 +72,16 @@ class CoolUtil
 	public static function dominantColor(sprite:flixel.FlxSprite):Int
 	{
 		countByColor.clear();
+		var colorOfThisPixel:FlxColor;
 		for (c in 0...sprite.frameWidth)
 			for (r in 0...sprite.frameHeight)
 			{
-				final colorOfThisPixel = sprite.pixels.getPixel32(c, r);
+				colorOfThisPixel = sprite.pixels.getPixel32(c, r);
 				if (colorOfThisPixel != 0)
 				{
 					if (countByColor.exists(colorOfThisPixel))
 						countByColor[colorOfThisPixel]++;
-					else if (countByColor[colorOfThisPixel] != IDK - IDK2)
+					else if (countByColor[colorOfThisPixel] != 0xFF31B0D1)
 						countByColor[colorOfThisPixel] = 1;
 				}
 			}
@@ -91,7 +89,8 @@ class CoolUtil
 		// after the loop this will store the max color
 		var maxCount = 0;
 		var maxKey = 0;
-		countByColor[FlxColor.BLACK] = 0;
+		if (countByColor.exists(FlxColor.BLACK))
+			countByColor[FlxColor.BLACK] = 0;
 		for (key => color in countByColor)
 			if (color >= maxCount)
 			{
@@ -178,6 +177,22 @@ class CoolUtil
 			map.clear();
 
 		return null;
+	}
+
+	/**
+		Lerps values via adjusted `t` with `Math.exp()`
+	**/
+	inline public static function lerpElapsed(a:Float, b:Float, t:Float):Float
+	{
+		return FlxMath.lerp(b, a, Math.exp(-FlxG.elapsed * t * 60));
+	}
+
+	/**
+		Lerps values via adjusted `t` with `Math.pow()`
+	**/
+	inline public static function plerpElapsed(a:Float, b:Float, t:Float)
+	{
+		return FlxMath.lerp(a, b, 1 - Math.pow(1 - t, FlxG.elapsed * 60));
 	}
 
 	// fixup some shit

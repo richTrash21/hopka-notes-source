@@ -40,12 +40,14 @@ class CustomSoundTray extends flixel.system.ui.FlxSoundTray
 
 				#if FLX_SAVE
 				// Save sound preferences
-				if (FlxG.save.isBound)
-				{
+				// 😭😭
+				// https://cdn.discordapp.com/attachments/1219255780172107814/1228390649800429619/image.png?ex=662bdef1&is=661969f1&hm=a4e56106582ab2aff9c393d3755b567c5353980082ca2747cce923eb726267a4&
+				// if (FlxG.save.isBound)
+				// {
 					FlxG.save.data.mute = FlxG.sound.muted;
 					FlxG.save.data.volume = FlxG.sound.volume;
 					FlxG.save.flush();
-				}
+				// }
 				#end
 			}
 		}

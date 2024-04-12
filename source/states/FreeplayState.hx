@@ -232,12 +232,12 @@ class FreeplayState extends MusicBeatState
 		lerpScore = if (Math.abs(lerpScore - intendedScore) <= 10)
 						intendedScore;
 					else
-						Math.floor(FlxMath.lerp(intendedScore, lerpScore, Math.exp(-elapsed * 24)));
+						Math.floor(CoolUtil.lerpElapsed(lerpScore, intendedScore, 0.4));
 
 		lerpRating = if (Math.abs(lerpRating - intendedRating) <= 0.01)
-						intendedRating;
+						 intendedRating;
 					 else
-						FlxMath.lerp(intendedRating, lerpRating, Math.exp(-elapsed * 12));
+						 CoolUtil.lerpElapsed(lerpRating, intendedRating, 0.2);
 
 		final ratingSplit:Array<String> = Std.string(CoolUtil.floorDecimal(lerpRating * 100, 2)).split(".");
 		if(ratingSplit.length < 2) // No decimals, add an empty space

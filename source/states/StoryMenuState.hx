@@ -178,7 +178,7 @@ class StoryMenuState extends MusicBeatState
 		lerpScore = if (Math.abs(intendedScore - lerpScore) < 10)
 						intendedScore;
 					else
-						Math.floor(FlxMath.lerp(intendedScore, lerpScore, Math.exp(-elapsed * 30)));
+						Math.floor(CoolUtil.lerpElapsed(lerpScore, intendedScore, 0.5));
 
 		scoreText.text = "WEEK SCORE:" + lerpScore;
 

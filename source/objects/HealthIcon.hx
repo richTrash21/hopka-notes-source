@@ -51,8 +51,6 @@ class HealthIcon extends ExtendedSprite
 	public var lerpScale = false;
 	public var lerpSpeed = 1.0;
 
-	var _speed = 9.0;
-
 	public function new(char = "bf", isPlayer = false, allowGPU = true, ?useCache = true)
 	{
 		super();
@@ -64,8 +62,7 @@ class HealthIcon extends ExtendedSprite
 	{
 		if (lerpScale && scale.x != baseScale)
 		{
-			final factor = Math.exp(-elapsed * _speed * lerpSpeed);
-			setScale(factor < 1 ? FlxMath.lerp(baseScale, scale.x, factor) : baseScale);
+			setScale(CoolUtil.lerpElapsed(scale.x, baseScale, 0.15 * lerpSpeed));
 			updateHitbox();
 		}
 

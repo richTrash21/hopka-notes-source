@@ -50,6 +50,7 @@ class FPSCounter extends openfl.text.TextField
 	@:noCompletion var times:Array<Int>;
 	@:noCompletion var cacheCount = 0;
 	@:noCompletion var memPeak = 0;
+	@:noCompletion var gpuPeak = 0;
 
 	@:noCompletion var __textFormatList:Array<TextFormatRange>;
 
@@ -118,10 +119,6 @@ class FPSCounter extends openfl.text.TextField
 		if (!__visible || __alpha == 0.0)
 			return;
 
-		final curMem = memoryMegas;
-		if (curMem > memPeak)
-			memPeak = curMem;
-
 		var text = 'FPS: $currentFPS';
 		var formatData = __textFormatList[0];
 		formatData.format.color = switch (Std.int(currentFPS * 0.05))
@@ -132,6 +129,10 @@ class FPSCounter extends openfl.text.TextField
 		}
 		formatData.end = text.length;
 
+		final curMem = memoryMegas;
+		if (curMem > memPeak)
+			memPeak = curMem;
+
 		text += "\nMemory: " + FlxStringUtil.formatBytes(curMem);
 		if (debug)
 			text += " [Peak: " + FlxStringUtil.formatBytes(memPeak) + "]";
@@ -140,8 +141,15 @@ class FPSCounter extends openfl.text.TextField
 		{
 			// fun fact: it doesn't work! - rich
 			final gpuMem = memoryMegasGPU;
+			if (gpuMem > gpuPeak)
+				gpuPeak = gpuMem;
+
 			if (gpuMem != 0)
+			{
 				text += "\nGPU Memory: " + FlxStringUtil.formatBytes(gpuMem);
+				if (debug)
+					text += " [Peak: " + FlxStringUtil.formatBytes(gpuPeak) + "]";
+			}
 		}
 		#if !RELESE_BUILD_FR
 		if (debug)
@@ -195,7 +203,9 @@ class FPSCounter extends openfl.text.TextField
 			text += "\nTweens: " + FlxTween.globalManager._tweens.length;
 			text += "\nTimers: " + FlxTimer.globalManager._timers.length;
 
-			text += "\n";
+			text += "\n\nVolume: " + FlxG.sound.volume;
+			if (FlxG.sound.muted)
+				text += " [muted]";
 			if (DiscordClient.user != null)
 				text += "\nDiscord User: " + DiscordClient.user;
 			text += '\nTime Elapsed: $__timeElapsed';

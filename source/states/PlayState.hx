@@ -2421,12 +2421,16 @@ class PlayState extends MusicBeatState
 			rating.x = __popup__placement - 40 + ClientPrefs.data.comboOffset[0];
 			rating.screenCenter(Y).y -= 60 + ClientPrefs.data.comboOffset[1];
 			rating.setAngleVelocity(-rating.velocity.x, rating.velocity.x);
-			rating.setScale(scaleMult);
-			rating.updateHitbox();
 			scoreGroup.add(rating);
 
-			rating.fadeTime = Conductor.crochet * 0.001;
-			rating.fadeSpeed = 5;
+			if (rating.scale.x != numScale)
+			{
+				rating.setScale(scaleMult);
+				rating.updateHitbox();
+			}
+
+			rating.fadeTime = Conductor.crochet * FlxG.random.float(0.0009, 0.0011);
+			rating.fadeSpeed = FlxG.random.float(4.5, 5.5);
 			rating.order = scoreGroup.ID++;
 		}
 
@@ -2441,15 +2445,18 @@ class PlayState extends MusicBeatState
 				numScore.loadGraphic(Paths.image(uiPrefix + 'num$v' + uiSuffix));
 				numScore.x = __popup__placement + (45 * i) - 90 + ClientPrefs.data.comboOffset[2];
 				numScore.screenCenter(Y).y += 80 - ClientPrefs.data.comboOffset[3];
-
-				numScore.setScale(numScale);
-				numScore.updateHitbox();
-				numScore.offset.add(FlxG.random.float(-1, 1), FlxG.random.float(-1, 1));
 				numScore.angularVelocity = -numScore.velocity.x;
 				scoreGroup.add(numScore);
 
-				numScore.fadeTime = Conductor.crochet * 0.001;
-				numScore.fadeSpeed = 5;
+				if (numScore.scale.x != numScale)
+				{
+					numScore.setScale(numScale);
+					numScore.updateHitbox();
+					numScore.offset.add(FlxG.random.float(-1, 1), FlxG.random.float(-1, 1));
+				}
+
+				numScore.fadeTime = Conductor.crochet * FlxG.random.float(0.0009, 0.0011);
+				numScore.fadeSpeed = FlxG.random.float(4.5, 5.5);
 				numScore.order = scoreGroup.ID++;
 			}
 		}

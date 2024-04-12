@@ -1300,14 +1300,14 @@ class FunkinLua
 				return;
 			}
 		}
-		catch(e:Dynamic)
+		catch(e)
 		{
 			trace(e);
 			return;
 		}
 		call("onCreate", []);
 		times = openfl.Lib.getTimer() - times;
-		trace('lua file loaded succesfully: $scriptName ' + " [" + (times == 0 ? "instantly" : times + "ms") + "]");
+		trace('lua file loaded succesfully: $scriptName [' + (times == 0 ? "instantly" : times + "ms") + "]");
 		#end
 	}
 

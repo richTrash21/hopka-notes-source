@@ -170,15 +170,14 @@ class CreditsState extends MusicBeatState
 		{
 			if (!item.bold)
 			{
-				var lerpVal:Float = Math.exp(-elapsed * 12); // FlxMath.bound(elapsed * 12, 0, 1)
 				if (item.targetY == 0)
 				{
 					final lastX = item.x;
 					item.screenCenter(X);
-					item.x = FlxMath.lerp(item.x - 70, lastX, lerpVal);
+					item.x = CoolUtil.lerpElapsed(lastX, item.x - 70, 0.2);
 				}
 				else
-					item.x = FlxMath.lerp(200 + -40 * Math.abs(item.targetY), item.x, lerpVal);
+					item.x = CoolUtil.lerpElapsed(item.x, 200 + -40 * Math.abs(item.targetY), 0.2);
 			}
 		}
 		super.update(elapsed);

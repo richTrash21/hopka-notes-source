@@ -196,7 +196,7 @@ class VisualsUISubState extends BaseOptionsMenu
 	{
 		super.update(elapsed);
 		if (noteOptionID != -1 && notes.y != notesY)
-			notes.y = FlxMath.lerp(notesY, notes.y, Math.exp(-elapsed * 18.6));
+			notes.y = CoolUtil.lerpElapsed(notes.y, notesY, 0.31);
 	}
 
 	override function destroy()

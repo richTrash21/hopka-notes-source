@@ -121,50 +121,57 @@ class HScript extends flixel.FlxBasic
 		hscript.interp.setVar("close", hscript.kill);
 
 		// classes from SScript (rip)
-		hscript.interp.setVar("Date",			Date);
-		hscript.interp.setVar("DateTools",		DateTools);
-		hscript.interp.setVar("Math",			Math);
-		hscript.interp.setVar("Reflect",		Reflect);
-		hscript.interp.setVar("Std",			Std);
-		hscript.interp.setVar("HScript",		HScript);
-		hscript.interp.setVar("StringTools",	StringTools);
-		hscript.interp.setVar("Type",			Type);
+		hscript.interp.setVar("Date",		  Date);
+		hscript.interp.setVar("DateTools",	  DateTools);
+		hscript.interp.setVar("Math",		  Math);
+		hscript.interp.setVar("Reflect",	  Reflect);
+		hscript.interp.setVar("Std",		  Std);
+		hscript.interp.setVar("HScript",	  HScript);
+		hscript.interp.setVar("StringTools",  StringTools);
+		hscript.interp.setVar("Type",		  Type);
 		#if sys
-		hscript.interp.setVar("File",			sys.io.File);
-		hscript.interp.setVar("FileSystem",		sys.FileSystem);
-		hscript.interp.setVar("Sys",			Sys);
+		hscript.interp.setVar("File",		  sys.io.File);
+		hscript.interp.setVar("FileSystem",	  sys.FileSystem);
+		hscript.interp.setVar("Sys",		  Sys);
 		#end
-		hscript.interp.setVar("Assets",			openfl.Assets);
+		hscript.interp.setVar("Assets",		  openfl.Assets);
 
 		// Some very commonly used classes
-		hscript.interp.setVar("FlxG",				flixel.FlxG);
-		hscript.interp.setVar("FlxSprite",			flixel.FlxSprite);
-		hscript.interp.setVar("FlxCamera",			flixel.FlxCamera);
-		hscript.interp.setVar("FlxTimer",			flixel.util.FlxTimer);
-		hscript.interp.setVar("FlxTween",			flixel.tweens.FlxTween);
-		hscript.interp.setVar("FlxEase",			flixel.tweens.FlxEase);
-		hscript.interp.setVar("FlxColor",			Type.resolveClass("flixel.util.FlxColor_HSC")); // LMAOOOOOOOO - rich
-		hscript.interp.setVar("FlxPoint",			Type.resolveClass("flixel.math.FlxPoint_HSC")); // LMAOOOOOOOO - rich (again)
-		hscript.interp.setVar("PlayState",			PlayState);
-		hscript.interp.setVar("Paths",				Paths);
-		hscript.interp.setVar("Conductor",			Conductor);
-		hscript.interp.setVar("ClientPrefs",		ClientPrefs);
-		hscript.interp.setVar("ExtendedSprite",		objects.ExtendedSprite);
-		hscript.interp.setVar("Character",			objects.Character);
-		hscript.interp.setVar("Alphabet",			Alphabet);
-		hscript.interp.setVar("Note",				objects.Note);
-		hscript.interp.setVar("CustomSubstate",		CustomSubstate);
-		hscript.interp.setVar("Countdown",			backend.BaseStage.Countdown);
+		hscript.interp.setVar("FlxG",			   flixel.FlxG);
+		hscript.interp.setVar("FlxSprite",		   flixel.FlxSprite);
+		hscript.interp.setVar("FlxCamera",		   flixel.FlxCamera);
+		hscript.interp.setVar("FlxTimer",		   flixel.util.FlxTimer);
+		hscript.interp.setVar("FlxTween",		   flixel.tweens.FlxTween);
+		hscript.interp.setVar("FlxEase",		   flixel.tweens.FlxEase);
+		hscript.interp.setVar("FlxColor",		   Type.resolveClass("flixel.util.FlxColor_HSC")); // LMAOOOOOOOO - rich
+		hscript.interp.setVar("FlxPoint",		   Type.resolveClass("flixel.math.FlxPoint_HSC")); // LMAOOOOOOOO - rich (again)
+		hscript.interp.setVar("PlayState",		   PlayState);
+		hscript.interp.setVar("Paths",			   Paths);
+		hscript.interp.setVar("Conductor",		   Conductor);
+		hscript.interp.setVar("ClientPrefs",	   ClientPrefs);
+		hscript.interp.setVar("ExtendedSprite",	   objects.ExtendedSprite);
+		hscript.interp.setVar("Character",		   objects.Character);
+		hscript.interp.setVar("Alphabet",		   Alphabet);
+		hscript.interp.setVar("Note",			   objects.Note);
+		hscript.interp.setVar("CustomSubstate",	   CustomSubstate);
+		hscript.interp.setVar("Countdown",		   backend.BaseStage.Countdown);
 		#if (!flash && sys)
-		hscript.interp.setVar("FlxRuntimeShader",	flixel.addons.display.FlxRuntimeShader);
+		hscript.interp.setVar("FlxRuntimeShader",  flixel.addons.display.FlxRuntimeShader);
 		#end
-		hscript.interp.setVar("ShaderFilter",		openfl.filters.ShaderFilter);
+		hscript.interp.setVar("ShaderFilter",	   openfl.filters.ShaderFilter);
 
 		// Functions & Variables
-		hscript.interp.setVar("setVar",	 			game.variables.set);
-		hscript.interp.setVar("getVar",	 			game.variables.get);
-		hscript.interp.setVar("removeVar",			game.variables.remove);
-		hscript.interp.setVar("debugPrint",			(t:String, ?c:FlxColor) -> game.addTextToDebug(t, c, hscript.interp.posInfos()));
+		hscript.interp.setVar("setVar",		 game.variables.set);
+		hscript.interp.setVar("getVar",		 game.variables.get);
+		hscript.interp.setVar("removeVar",	 game.variables.remove);
+		hscript.interp.setVar("debugPrint",	 Reflect.makeVarArgs((a) ->
+		{
+			var c:Null<FlxColor> = null;
+			if (a.length > 1 && a[a.length-1] is Int)
+				c = a.pop();
+
+			game.addTextToDebug(a.join(", "), c, hscript.interp.posInfos());
+		}));
 
 		// For adding your own callbacks
 

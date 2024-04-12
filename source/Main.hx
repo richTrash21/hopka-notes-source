@@ -130,6 +130,9 @@ class Main extends flixel.FlxGame
 			#end
 		}
 
+		#if (VIDEOS_ALLOWED && hxvlc)
+		hxvlc.util.Handle.initAsync((s) -> trace(s ? "LibVLC initialized successfully!" : "Error on initializing LibVLC!"));
+		#end
 		#if CRASH_HANDLER
 		Lib.current.loaderInfo.uncaughtErrorEvents.addEventListener(UncaughtErrorEvent.UNCAUGHT_ERROR, onCrash);
 		#end

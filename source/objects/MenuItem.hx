@@ -72,7 +72,7 @@ class StoryMenuItem extends MenuItem
 		super.update(elapsed);
 		final __targetY = (targetY * 120) + 480;
 		if (y != __targetY)
-			y = FlxMath.lerp(__targetY, y, Math.exp(-elapsed * 10.2)); // Math.min(elapsed * 10.2, 1)
+			y = CoolUtil.lerpElapsed(y, __targetY, 0.17);
 	}
 }
 

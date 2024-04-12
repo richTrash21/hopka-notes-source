@@ -429,7 +429,7 @@ class ModsMenuState extends MusicBeatState
 			var intendedPos:Float = (i - curSelected) * 225 + 200;
 			if (i > curSelected)
 				intendedPos += 225;
-			mod.alphabet.y = elapsed == -1 ? intendedPos : FlxMath.lerp(intendedPos, mod.alphabet.y, Math.exp(-elapsed * 12));
+			mod.alphabet.y = elapsed == -1 ? intendedPos : CoolUtil.lerpElapsed(mod.alphabet.y, intendedPos, 0.2);
 
 			if (i == curSelected)
 			{

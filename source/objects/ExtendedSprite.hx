@@ -73,8 +73,8 @@ class ExtendedSprite extends FlxSprite
 						sprite.animation.play(name);
 				}
 			}
-			final a = sprite.animation.getNameList();
-			trace(i, a.length, a);
+			// final a = sprite.animation.getNameList();
+			// trace(i, a.length, a);
 		}
 		return sprite;
 	}

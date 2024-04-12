@@ -125,10 +125,10 @@ class AchievementPopup extends openfl.display.Sprite
 	function onResize(width:Int, height:Int)
 	{
 		final mult = height / FlxG.height;
-		scaleX = scaleY = mult;
-		x = (mult / lastScale) * x;
-		y = (mult / lastScale) * y;
-		lastScale = mult;
+		final ratio = mult / lastScale;
+		x = ratio * x;
+		y = ratio * y;
+		lastScale = scaleX = scaleY = mult;
 	}
 
 	public function destroy()
