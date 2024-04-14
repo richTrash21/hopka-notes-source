@@ -109,8 +109,9 @@ class Main extends flixel.FlxGame
 	@:noCompletion static var __warns = new Array<String>();
 	#end
 	@:noCompletion static var __log = "";
-	@:noCompletion var __focusVolume = 1.0; // ignore
 
+	@:access(flixel.FlxG.cameras)
+	@:access(flixel.system.frontEnds.CameraFrontEnd)
 	public function new()
 	{
 		// cool ass log by me yeah
@@ -136,6 +137,20 @@ class Main extends flixel.FlxGame
 		#if CRASH_HANDLER
 		Lib.current.loaderInfo.uncaughtErrorEvents.addEventListener(UncaughtErrorEvent.UNCAUGHT_ERROR, onCrash);
 		#end
+
+		// destroy original frontend
+		FlxG.cameras.list = null;
+		FlxG.cameras.defaults = null;
+		FlxG.cameras._cameraRect = null;
+		FlxG.cameras.cameraAdded.destroy();
+		FlxG.cameras.cameraRemoved.destroy();
+		FlxG.cameras.cameraResized.destroy();
+		FlxG.cameras.cameraAdded = null;
+		FlxG.cameras.cameraRemoved = null;
+		FlxG.cameras.cameraResized = null;
+
+		// add custom
+		FlxG.cameras = new backend.flixel.CustomCameraFrontEnd();
 
 		// sexy subtitle markups
 		for (name => color in FlxColor.colorLookup)
@@ -172,7 +187,7 @@ class Main extends flixel.FlxGame
 		});
 
 		// im sorry but some mods are annoying with this
-		FlxG.signals.preStateSwitch.add(() -> FlxG.cameras.bgColor = FlxColor.BLACK);
+		// FlxG.signals.preStateSwitch.add(() -> FlxG.cameras.bgColor = FlxColor.BLACK);
 
 		// propper game initialization
 		FlxG.signals.preGameStart.addOnce(() ->
@@ -193,8 +208,6 @@ class Main extends flixel.FlxGame
 			if (FlxG.save.data.weekCompleted != null)
 				states.StoryMenuState.weekCompleted = FlxG.save.data.weekCompleted;
 
-			FlxG.sound.volume = Math.fceil(FlxG.sound.volume * 10) * 0.1;
-			__focusVolume = FlxG.sound.volume;
 			#if debug
 			FlxG.console.registerClass(Main);
 			FlxG.console.registerClass(Paths);
@@ -279,7 +292,7 @@ class Main extends flixel.FlxGame
 	override function onFocus(_)
 	{
 		if (!FlxG.autoPause && ClientPrefs.data.lostFocusDeafen && !FlxG.sound.muted)
-			FlxG.sound.volume = __focusVolume;
+			FlxG.sound.volume *= 2;
 
 		super.onFocus(_);
 	}
@@ -287,10 +300,8 @@ class Main extends flixel.FlxGame
 	override function onFocusLost(event:openfl.events.Event)
 	{
 		if (!FlxG.autoPause && ClientPrefs.data.lostFocusDeafen && !FlxG.sound.muted)
-		{
-			__focusVolume = Math.ffloor(FlxG.sound.volume * 10.0) * 0.1;
-			FlxG.sound.volume = FlxG.sound.volume * 0.5;
-		}
+			FlxG.sound.volume *= 0.5;
+
 		super.onFocusLost(event);
 	}
 

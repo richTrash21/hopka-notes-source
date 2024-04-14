@@ -124,13 +124,13 @@ class Alphabet extends FlxTypedSpriteGroup<AlphaCharacter>
 			{
 				final __targetX = (targetY * distancePerItem.x) + startPosition.x;
 				if (x != __targetX)
-					x = CoolUtil.lerpElapsed(x, __targetX, 0.16);
+					x = CoolUtil.lerpElapsed(x, __targetX, 0.16, elapsed);
 			}
 			if (changeY)
 			{
 				final __targetY = (targetY * 1.3 * distancePerItem.y) + startPosition.y;
 				if (y != __targetY)
-					y = CoolUtil.lerpElapsed(y, __targetY, 0.16);
+					y = CoolUtil.lerpElapsed(y, __targetY, 0.16, elapsed);
 			}
 		}
 		super.update(elapsed);

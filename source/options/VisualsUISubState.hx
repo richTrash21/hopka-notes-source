@@ -196,7 +196,7 @@ class VisualsUISubState extends BaseOptionsMenu
 	{
 		super.update(elapsed);
 		if (noteOptionID != -1 && notes.y != notesY)
-			notes.y = CoolUtil.lerpElapsed(notes.y, notesY, 0.31);
+			notes.y = CoolUtil.lerpElapsed(notes.y, notesY, 0.31, elapsed);
 	}
 
 	override function destroy()

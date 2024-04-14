@@ -33,12 +33,12 @@ class MainMenuState extends MusicBeatState
 
 	override function create()
 	{
-		#if (flixel < "6.0.0")
+		persistentUpdate = true;
+
 		// ну привет редар :) - rich
-		final normalCamera = new objects.GameCamera(true);
+		final normalCamera = cast (FlxG.camera, objects.GameCamera);
+		normalCamera.updateZoom = true;
 		normalCamera.zoomDecay = 2.375;
-		FlxG.cameras.reset(normalCamera);
-		#end
 
 		if (doiseTrans)
 		{
@@ -59,10 +59,6 @@ class MainMenuState extends MusicBeatState
 		DiscordClient.changePresence("In the Menus", null);
 		#end
 
-		// transIn = FlxTransitionableState.defaultTransIn;
-		// transOut = FlxTransitionableState.defaultTransOut;
-		persistentUpdate = true;
-
 		final yScroll = Math.max(0.2 - (0.05 * (optionShit.length - 4)), 0.1);
 		final bg = new FlxSprite(Paths.image("menuBG"));
 		bg.antialiasing = ClientPrefs.data.antialiasing;
@@ -82,13 +78,12 @@ class MainMenuState extends MusicBeatState
 		add(magenta.screenCenter());
 
 		final grid = new flixel.addons.display.FlxBackdrop(flixel.addons.display.FlxGridOverlay.createGrid(1, 1, 2, 2, true, 0x33FFFFFF, 0x0));
-		grid.scale.scale(80);
 		grid.scrollFactor.set(0, yScroll);
 		grid.velocity.set(40, 40);
+		grid.scale.scale(80);
 		add(grid);
-		
-		menuItems = new FlxTypedGroup<FlxSprite>();
-		add(menuItems);
+
+		add(menuItems = new FlxTypedGroup());
 
 		final itemScrollY = optionShit.length < 6 ? 0 : (optionShit.length - 4) * 0.135;
 		final offset = (optionShit.length > 4 ? 108 : 22 * optionShit.length) - (Math.max(optionShit.length, 4) - 4) * 80;
@@ -107,23 +102,11 @@ class MainMenuState extends MusicBeatState
 			menuItem.scrollFactor.set(0, itemScrollY);
 		}
 
-		final psychVersion = new FlxText(12, FlxG.height - 44, 0, "Commit #" + FlxG.stage.application.meta.get("build"), 16);
-		psychVersion.active = false;
-		psychVersion.scrollFactor.set();
-		psychVersion.font = Paths.font("vcr.ttf");
-		add(psychVersion.setBorderStyle(OUTLINE_FAST, FlxColor.BLACK));
-
-		/*final fnfVersion = new FlxText(12, FlxG.height - 44, 0, "Friday Night Funkin v" + FlxG.stage.application.meta.get("version"), 16);
-		fnfVersion.active = false;
-		fnfVersion.scrollFactor.set();
-		fnfVersion.font = Paths.font("vcr.ttf");
-		add(fnfVersion.setBorderStyle(OUTLINE_FAST, FlxColor.BLACK));*/
-
-		final doiseTrap = new FlxText(12, FlxG.height - 24, 0, "NOTE: Press F1 for the funny!" , 16);
-		doiseTrap.active = false;
-		doiseTrap.scrollFactor.set();
-		doiseTrap.font = Paths.font("vcr.ttf");
-		add(doiseTrap.setBorderStyle(OUTLINE_FAST, FlxColor.BLACK));
+		final versionText = new FlxText(12, FlxG.height - 38, 0, "Commit #" + FlxG.stage.application.meta.get("build") + "\nNOTE: Press F1 for the funny!", 16);
+		versionText.font = Paths.font("vcr.ttf");
+		versionText.scrollFactor.set();
+		versionText.active = false;
+		add(versionText.setBorderStyle(OUTLINE_FAST, FlxColor.BLACK));
 
 		changeItem();
 
@@ -137,9 +120,6 @@ class MainMenuState extends MusicBeatState
 		backend.Achievements.reloadList();
 		#end
 		#end
-
-		// TABULATION TEST
-		// add(new Alphabet(10, 40, "TABULATION TEST\n\tTEST\n\t\tTEST\n\t\tTE\tST\nT\tE\tS\tT\n\tUR\t\tMOM\n\t>:3", true));
 
 		#if desktop
 		__clearTxt = new FlxText("MEMORY CLEARED!", 24);

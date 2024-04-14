@@ -72,7 +72,7 @@ class StoryMenuItem extends MenuItem
 		super.update(elapsed);
 		final __targetY = (targetY * 120) + 480;
 		if (y != __targetY)
-			y = CoolUtil.lerpElapsed(y, __targetY, 0.17);
+			y = CoolUtil.lerpElapsed(y, __targetY, 0.17, elapsed);
 	}
 }
 

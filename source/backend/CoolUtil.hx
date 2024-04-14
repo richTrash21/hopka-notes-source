@@ -27,9 +27,8 @@ class CoolUtil
 	inline public static function coolTextFile(path:String):Array<String>
 	{
 		var daList:String = null;
-	
 		#if (sys && MODS_ALLOWED)
-		final colonIndex = path.indexOf(":"); // prevent "shared:", "preload:" and other library names on file path
+		final colonIndex = path.indexOf(":"); // prevent library names on file path
 		if (colonIndex != -1)
 			path = path.substring(colonIndex+1);
 		if (sys.FileSystem.exists(path))
@@ -182,18 +181,18 @@ class CoolUtil
 	/**
 		Lerps values via adjusted `t` with `Math.exp()`
 	**/
-	inline public static function lerpElapsed(a:Float, b:Float, t:Float):Float
+	inline public static function lerpElapsed(a:Float, b:Float, t:Float, e:Float):Float
 	{
-		return FlxMath.lerp(b, a, Math.exp(-FlxG.elapsed * t * 60));
+		return FlxMath.lerp(b, a, Math.exp(-e * t * 60));
 	}
 
 	/**
 		Lerps values via adjusted `t` with `Math.pow()`
 	**/
-	inline public static function plerpElapsed(a:Float, b:Float, t:Float)
+	/* inline public static function plerpElapsed(a:Float, b:Float, t:Float, e:Float):Float
 	{
-		return FlxMath.lerp(a, b, 1 - Math.pow(1 - t, FlxG.elapsed * 60));
-	}
+		return FlxMath.lerp(b, a, Math.pow(1 - t, e * 60));
+	}*/
 
 	// fixup some shit
 	@:allow(backend.MusicBeatState)

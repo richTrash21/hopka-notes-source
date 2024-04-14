@@ -46,10 +46,6 @@ class FreeplayState extends MusicBeatState
 	{
 		// Paths.clearStoredMemory();
 		// Paths.clearUnusedMemory();
-
-		#if (flixel < "6.0.0")
-		FlxG.cameras.reset(new objects.GameCamera());
-		#end
 		
 		persistentUpdate = true;
 		PlayState.isStoryMode = false;
@@ -232,12 +228,12 @@ class FreeplayState extends MusicBeatState
 		lerpScore = if (Math.abs(lerpScore - intendedScore) <= 10)
 						intendedScore;
 					else
-						Math.floor(CoolUtil.lerpElapsed(lerpScore, intendedScore, 0.4));
+						Math.floor(CoolUtil.lerpElapsed(lerpScore, intendedScore, 0.4, elapsed));
 
 		lerpRating = if (Math.abs(lerpRating - intendedRating) <= 0.01)
 						 intendedRating;
 					 else
-						 CoolUtil.lerpElapsed(lerpRating, intendedRating, 0.2);
+						 CoolUtil.lerpElapsed(lerpRating, intendedRating, 0.2, elapsed);
 
 		final ratingSplit:Array<String> = Std.string(CoolUtil.floorDecimal(lerpRating * 100, 2)).split(".");
 		if(ratingSplit.length < 2) // No decimals, add an empty space

@@ -628,32 +628,32 @@ class FunkinLua
 		set("addScore", (value:Int = 0) ->
 		{
 			game.songScore += value;
-			game.RecalculateRating();
+			game.recalculateRating();
 		});
 		set("addMisses", (value:Int = 0) ->
 		{
 			game.songMisses += value;
-			game.RecalculateRating();
+			game.recalculateRating();
 		});
 		set("addHits", (value:Int = 0) ->
 		{
 			game.songHits += value;
-			game.RecalculateRating();
+			game.recalculateRating();
 		});
 		set("setScore", (value:Int = 0) ->
 		{
 			game.songScore = value;
-			game.RecalculateRating();
+			game.recalculateRating();
 		});
 		set("setMisses", (value:Int = 0) ->
 		{
 			game.songMisses = value;
-			game.RecalculateRating();
+			game.recalculateRating();
 		});
 		set("setHits", (value:Int = 0) ->
 		{
 			game.songHits = value;
-			game.RecalculateRating();
+			game.recalculateRating();
 		});
 
 		set("getScore",  () -> game.songScore);

@@ -17,6 +17,7 @@ class CustomSoundTray extends flixel.system.ui.FlxSoundTray
 	}
 
 	/** This function updates the soundtray object. **/
+	@:access(flixel.FlxGame._lostFocus)
 	override public function update(MS:Float):Void
 	{
 		final elapsed = MS * 0.001;
@@ -45,7 +46,7 @@ class CustomSoundTray extends flixel.system.ui.FlxSoundTray
 				// if (FlxG.save.isBound)
 				// {
 					FlxG.save.data.mute = FlxG.sound.muted;
-					FlxG.save.data.volume = FlxG.sound.volume;
+					FlxG.save.data.volume = (ClientPrefs.data.lostFocusDeafen && FlxG.game._lostFocus) ? FlxG.sound.volume * 2 : FlxG.sound.volume;
 					FlxG.save.flush();
 				// }
 				#end
@@ -67,7 +68,7 @@ class CustomSoundTray extends flixel.system.ui.FlxSoundTray
 				final beep = FlxG.sound.load(sound);
 				beep.onComplete = () -> __sound__on__complete(beep);
 				#if FLX_PITCH
-				beep.pitch = FlxMath.lerp(0.9, 1.1, FlxG.sound.volume);
+				beep.pitch = 0.9 + 0.3 * FlxG.sound.volume;
 				#end
 				beep.play();
 

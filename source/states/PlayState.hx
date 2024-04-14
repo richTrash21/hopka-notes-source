@@ -350,7 +350,7 @@ class PlayState extends MusicBeatState
 		practiceMode = ClientPrefs.getGameplaySetting("practice");
 		cpuControlled = ClientPrefs.getGameplaySetting("botplay") /*|| ClientPrefs.getGameplaySetting("showcase")*/;
 
-		FlxG.cameras.reset(camGame = new GameCamera());
+		camGame = cast FlxG.camera;
 		FlxG.cameras.add(camHUD = new GameCamera(0, 0), false);
 		FlxG.cameras.add(camOther = new GameCamera(0, 0), false);
 		FlxG.cameras.add(camPause = new GameCamera(0, 0), false);
@@ -601,13 +601,11 @@ class PlayState extends MusicBeatState
 		scoreTxt.visible = !ClientPrefs.data.hideHud;
 		add(scoreTxt);
 
-		botplayTxt = new FlxText(0, timeBar.y + 55, FlxG.width - 1120, "PUSSY", 32);
-		botplayTxt.setFormat(Paths.font("vcr.ttf"), 32, FlxColor.WHITE, CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
-		botplayTxt.borderSize = 1.25;
-		botplayTxt.visible = cpuControlled;
-		add(botplayTxt.screenCenter(X));
-		if (ClientPrefs.data.downScroll)
-			botplayTxt.y = timeBar.y - 78;
+		botplayTxt = new FlxText(0, timeBar.y + (ClientPrefs.data.downScroll ? -78 : 55), FlxG.width - 1120, "PUSSY", 32);
+		botplayTxt.setBorderStyle(FlxTextBorderStyle.OUTLINE, FlxColor.BLACK, 1.25);
+		botplayTxt.font = (Paths.font("vcr.ttf"));
+		botplayTxt.alignment = CENTER;
+		add(botplayTxt.screenCenter(X)).visible = cpuControlled;
 
 		subtitles = new Subtitles();
 		subtitles.camera = camOther;
@@ -660,7 +658,7 @@ class PlayState extends MusicBeatState
 			for (file in FileSystem.readDirectory(folder))
 				scriptHelper(file, folder);
 		#end
-		RecalculateRating();
+		recalculateRating();
 
 		// PRECACHING MISS SOUNDS BECAUSE I THINK THEY CAN LAG PEOPLE AND FUCK THEM UP IDK HOW HAXE WORKS
 		if (ClientPrefs.data.hitsoundVolume != 0)
@@ -1031,9 +1029,8 @@ class PlayState extends MusicBeatState
 				}
 			}
 
-			startedCountdown = true;
 			Conductor.songPosition = -Conductor.crochet * 5;
-			setOnScripts("startedCountdown", true);
+			setOnLuas("startedCountdown", startedCountdown = true); // setOnScripts
 			callOnScripts("onCountdownStarted");
 
 			if (startOnTime > 0 || skipCountdown)
@@ -1285,7 +1282,7 @@ class PlayState extends MusicBeatState
 		// Updating Discord Rich Presence (with Time Left)
 		DiscordClient.changePresence(detailsText, __get_RPC_state(), iconP2.char, true, songLength, songName);
 		#end
-		setOnScripts("songLength", songLength);
+		setOnLuas("songLength", songLength); // setOnScripts
 		callOnScripts("onSongStart");
 	}
 
@@ -1372,7 +1369,6 @@ class PlayState extends MusicBeatState
 							if (oldNote.isSustainNote)
 							{
 								oldNote.scale.y *= Note.SUSTAIN_SIZE / oldNote.frameHeight;
-								// oldNote.scale.y /= playbackRate;
 								oldNote.updateHitbox();
 							}
 
@@ -1380,12 +1376,9 @@ class PlayState extends MusicBeatState
 								sustainNote.correctionOffset = 0;
 						}
 						else if (oldNote.isSustainNote)
-						{
-							// oldNote.scale.y /= playbackRate;
 							oldNote.updateHitbox();
-						}
-						oldNote = sustainNote;
 
+						oldNote = sustainNote;
 						if (sustainNote.mustPress) // general offset
 							sustainNote.x += FlxG.width * 0.5;
 						else if (ClientPrefs.data.middleScroll)
@@ -1431,9 +1424,9 @@ class PlayState extends MusicBeatState
 			case "Change Character":
 				addCharacterToList(event.value2, switch (event.value1.toLowerCase().trim())
 				{
-					case "gf" | "girlfriend": 2;
-					case "dad" | "opponent":  1;
-					default:				  Std.parseInt(event.value1) ?? 0;
+					case "gf" | "girlfriend" | "2":	 2;
+					case "dad" | "opponent" | "1":	 1;
+					default:						 0;
 				});
 			
 			case "Play Sound":
@@ -1627,10 +1620,10 @@ class PlayState extends MusicBeatState
 
 		super.update(elapsed);
 
-		setOnScripts("curDecStep", curDecStep);
-		setOnScripts("curDecBeat", curDecBeat);
+		setOnLuas("curDecStep", curDecStep); // setOnScripts
+		setOnLuas("curDecBeat", curDecBeat); // setOnScripts
 
-		if (botplayTxt?.visible)
+		if (botplayTxt.visible)
 		{
 			botplaySine += 180 * elapsed;
 			botplayTxt.alpha = 1 - Math.sin((Math.PI * botplaySine) * 0.005555555555555556); // / 180
@@ -2397,7 +2390,7 @@ class PlayState extends MusicBeatState
 			{
 				songHits++;
 				totalPlayed++;
-				RecalculateRating(false);
+				recalculateRating(false);
 			}
 		}
 
@@ -2419,15 +2412,12 @@ class PlayState extends MusicBeatState
 			final rating = scoreGroup.recycle(PopupSprite, __ratingFactory, true);
 			rating.loadGraphic(Paths.image(uiPrefix + daRating.image + uiSuffix));
 			rating.x = __popup__placement - 40 + ClientPrefs.data.comboOffset[0];
-			rating.screenCenter(Y).y -= 60 + ClientPrefs.data.comboOffset[1];
 			rating.setAngleVelocity(-rating.velocity.x, rating.velocity.x);
 			scoreGroup.add(rating);
 
-			if (rating.scale.x != numScale)
-			{
-				rating.setScale(scaleMult);
-				rating.updateHitbox();
-			}
+			rating.setScale(scaleMult);
+			rating.updateHitbox();
+			rating.screenCenter(Y).y -= 60 + ClientPrefs.data.comboOffset[1];
 
 			rating.fadeTime = Conductor.crochet * FlxG.random.float(0.0009, 0.0011);
 			rating.fadeSpeed = FlxG.random.float(4.5, 5.5);
@@ -2444,16 +2434,13 @@ class PlayState extends MusicBeatState
 				final numScore = scoreGroup.recycle(PopupScore, __numScoreFactory, true);
 				numScore.loadGraphic(Paths.image(uiPrefix + 'num$v' + uiSuffix));
 				numScore.x = __popup__placement + (45 * i) - 90 + ClientPrefs.data.comboOffset[2];
-				numScore.screenCenter(Y).y += 80 - ClientPrefs.data.comboOffset[3];
 				numScore.angularVelocity = -numScore.velocity.x;
 				scoreGroup.add(numScore);
 
-				if (numScore.scale.x != numScale)
-				{
-					numScore.setScale(numScale);
-					numScore.updateHitbox();
-					numScore.offset.add(FlxG.random.float(-1, 1), FlxG.random.float(-1, 1));
-				}
+				numScore.setScale(numScale);
+				numScore.updateHitbox();
+				numScore.offset.add(FlxG.random.float(-1, 1), FlxG.random.float(-1, 1));
+				numScore.screenCenter(Y).y += 80 - ClientPrefs.data.comboOffset[3];
 
 				numScore.fadeTime = Conductor.crochet * FlxG.random.float(0.0009, 0.0011);
 				numScore.fadeSpeed = FlxG.random.float(4.5, 5.5);
@@ -2649,7 +2636,7 @@ class PlayState extends MusicBeatState
 		if (!endingSong)
 			songMisses++;
 		totalPlayed++;
-		RecalculateRating(true);
+		recalculateRating(true);
 
 		if (doDeathCheck(instakillOnMiss))
 			return;
@@ -2908,7 +2895,7 @@ class PlayState extends MusicBeatState
 		#if debug
 		FlxG.watch.addQuick("stepShit", curStep);
 		#end
-		setOnScripts("curStep", curStep);
+		setOnLuas("curStep", curStep); // setOnScripts
 		callOnScripts("onStepHit");
 	}
 
@@ -2940,7 +2927,7 @@ class PlayState extends MusicBeatState
 		#if debug
 		FlxG.watch.addQuick("beatShit", curBeat);
 		#end
-		setOnScripts("curBeat", curBeat);
+		setOnLuas("curBeat", curBeat); // setOnScripts
 		callOnScripts("onBeatHit");
 	}
 
@@ -2984,7 +2971,7 @@ class PlayState extends MusicBeatState
 		#if debug
 		FlxG.watch.addQuick("secShit", curSection);
 		#end
-		setOnScripts("curSection", curSection);
+		setOnLuas("curSection", curSection); // setOnScripts
 		callOnScripts("onSectionHit");
 	}
 
@@ -3216,12 +3203,12 @@ class PlayState extends MusicBeatState
 	public var ratingPercent:Float;
 	public var ratingFC:String;
 
-	public function RecalculateRating(badHit:Bool = false)
+	public function recalculateRating(badHit:Bool = false)
 	{
 		setOnScripts("score", songScore);
 		setOnScripts("misses", songMisses);
 		setOnScripts("hits", songHits);
-		setOnScripts("combo", combo);
+		setOnLuas("combo", combo); // setOnScripts
 
 		final ret:Dynamic = callOnScripts("onRecalculateRating", null, true);
 		if (ret != FunkinLua.Function_Stop)
@@ -3248,8 +3235,15 @@ class PlayState extends MusicBeatState
 		}
 		updateScore(badHit); // score will only update after rating is calculated, if it's a badHit, it shouldn't bounce -Ghost
 		setOnScripts("rating", ratingPercent);
-		setOnScripts("ratingName", ratingName);
-		setOnScripts("ratingFC", ratingFC);
+		setOnLuas("ratingName", ratingName); // setOnScripts
+		setOnLuas("ratingFC", ratingFC); // setOnScripts
+	}
+
+	// i just got annoyed of this function name being uppedcased - rich
+	@:noCompletion inline function RecalculateRating(badHit = false)
+	{
+		Main.warn("DEPRECATED!! Use \"recalculateRating\" instead of this!");
+		recalculateRating(badHit);
 	}
 
 	#if ACHIEVEMENTS_ALLOWED
@@ -3467,6 +3461,11 @@ class PlayState extends MusicBeatState
 
 	@:noCompletion inline function set_iconBoping(bool:Bool):Bool
 	{
+		if (!bool)
+		{
+			iconP1.setScale(iconP1.baseScale);
+			iconP2.setScale(iconP2.baseScale);
+		}
 		return iconP2.lerpScale = iconP1.lerpScale = iconBoping = bool;
 	}
 
@@ -3564,7 +3563,7 @@ class PlayState extends MusicBeatState
 		if (!changedDifficulty && value)
 			changedDifficulty = true;
 
-		setOnScripts("botPlay", value);
+		setOnLuas("botPlay", value); // setOnScripts
 		return cpuControlled = value;
 	}
 
@@ -3606,7 +3605,7 @@ class PlayState extends MusicBeatState
 		}
 		FlxG.timeScale = playbackRate = value;
 		Conductor.safeZoneOffset = (ClientPrefs.data.safeFrames * 0.016666666666666666) * 1000 * value; // / 60
-		setOnScripts("playbackRate", playbackRate);
+		setOnLuas("playbackRate", playbackRate); // setOnScripts
 		#else
 		playbackRate = 1.0; // ensuring -Crow
 		#end

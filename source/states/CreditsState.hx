@@ -174,10 +174,10 @@ class CreditsState extends MusicBeatState
 				{
 					final lastX = item.x;
 					item.screenCenter(X);
-					item.x = CoolUtil.lerpElapsed(lastX, item.x - 70, 0.2);
+					item.x = CoolUtil.lerpElapsed(lastX, item.x - 70, 0.2, elapsed);
 				}
 				else
-					item.x = CoolUtil.lerpElapsed(item.x, 200 + -40 * Math.abs(item.targetY), 0.2);
+					item.x = CoolUtil.lerpElapsed(item.x, 200 + -40 * Math.abs(item.targetY), 0.2, elapsed);
 			}
 		}
 		super.update(elapsed);

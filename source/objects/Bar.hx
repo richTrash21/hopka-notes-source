@@ -62,7 +62,7 @@ class Bar extends FlxSpriteGroup
 	{
 		_value = FlxMath.bound(valueFunction(), bounds.min, bounds.max);
 		final percentValue = FlxMath.remapToRange(_value, bounds.min, bounds.max, 0, 100);
-		percent = (smooth && percent != percentValue) ? CoolUtil.lerpElapsed(percent, percentValue, 0.42) : percentValue;
+		percent = (smooth && percent != percentValue) ? CoolUtil.lerpElapsed(percent, percentValue, 0.42, elapsed) : percentValue;
 		// rightBar.setPosition(bg.x, bg.y);
 		// leftBar.setPosition(bg.x, bg.y);
 		super.update(elapsed);
@@ -106,7 +106,7 @@ class Bar extends FlxSpriteGroup
 
 	public function updateBar()
 	{
-		final leftSize = FlxMath.lerp(0, barWidth, (leftToRight ? percent * 0.01 : 1 - percent * 0.01));
+		final leftSize = barWidth * (leftToRight ? percent * 0.01 : 1 - percent * 0.01);
 
 		final scaleX = Math.abs(scale.x);
 		final scaleY = Math.abs(scale.y);
@@ -134,20 +134,11 @@ class Bar extends FlxSpriteGroup
 	public function regenerateClips()
 	{
 		leftBar.setBarSize(bg.width, bg.height);
-		// leftBar.setGraphicSize(bg.width, bg.height);
 		leftBar.updateHitbox();
-		// leftBar.clipRect = leftBar.clipRect.setSize(bg.width, bg.height);
 
 		rightBar.setBarSize(bg.width, bg.height);
-		// rightBar.setGraphicSize(bg.width, bg.height);
 		rightBar.updateHitbox();
-		// rightBar.clipRect = rightBar.clipRect.setSize(bg.width, bg.height);
 		updateBar();
-	}
-
-	@:noCompletion inline function get_barCenter():Float
-	{
-		return centerPoint.x;
 	}
 
 	@:noCompletion inline function set_percent(value:Float)
@@ -183,6 +174,11 @@ class Bar extends FlxSpriteGroup
 		return value;
 	}
 
+	@:noCompletion inline function get_barCenter():Float
+	{
+		return centerPoint.x;
+	}
+
 	@:noCompletion override inline function set_x(value:Float):Float // for dynamic center point update
 	{
 		centerPoint.x += value - x;
@@ -208,14 +204,12 @@ class BarSprite extends FlxSprite
 {
 	inline static var __graphicKey = "__bar_sprite_graphic";
 
-	public var barWidth(get, set):Float;
-	public var barHeight(get, set):Float;
-
-	@:noCompletion var __scale = FlxPoint.get();
-	@:noCompletion var __originalScale = FlxPoint.get();
+	public var barWidth:Float;
+	public var barHeight:Float;
 
 	@:noCompletion var __fakeScale = false;
 	@:noCompletion var __drawingFakeScale = false;
+	@:noCompletion var __originalScale = FlxPoint.get();
 
 	public function new(width = 300., height = 10., color = FlxColor.WHITE, ?graphic:FlxGraphicAsset)
 	{
@@ -229,9 +223,10 @@ class BarSprite extends FlxSprite
 		clipRect = FlxRect.get(0, 0, width, height);
 	}
 
-	public function setBarSize(width:Float, height:Float):Void
+	inline public function setBarSize(width:Float, height:Float):Void
 	{
-		__scale.set(width, height);
+		barWidth = width;
+		barHeight = height;
 	}
 
 	// scale sprite if it's graphic is 1x1 and upate hitbox afterwards 
@@ -241,7 +236,7 @@ class BarSprite extends FlxSprite
 			return super.updateHitbox();
 
 		__originalScale.copyFrom(scale);
-		scale.scalePoint(__scale);
+		scale.scale(barWidth, barHeight);
 		super.updateHitbox();
 		scale.copyFrom(__originalScale);
 	}
@@ -250,7 +245,6 @@ class BarSprite extends FlxSprite
 	{
 		clipRect = FlxDestroyUtil.put(clipRect);
 		super.destroy();
-		__scale = FlxDestroyUtil.put(__scale);
 		__originalScale = FlxDestroyUtil.put(__originalScale);
 	}
 
@@ -261,43 +255,43 @@ class BarSprite extends FlxSprite
 
 		__drawingFakeScale = true;
 		__originalScale.copyFrom(scale);
-		scale.scalePoint(__scale);
+		scale.scale(barWidth, barHeight);
 		super.drawComplex(camera);
 		scale.copyFrom(__originalScale);
 		__drawingFakeScale = false;
 	}
 
-	override function transformWorldToPixelsSimple(worldPoint:FlxPoint, ?result:FlxPoint):FlxPoint
+	override public function getScreenBounds(?newRect:FlxRect, ?camera:FlxCamera):FlxRect
 	{
-		if (__drawingFakeScale)
-			return super.transformWorldToPixelsSimple(worldPoint, result);
+		if (!__fakeScale || __drawingFakeScale)
+			return super.getScreenBounds(newRect, camera);
 
 		__originalScale.copyFrom(scale);
-		scale.scalePoint(__scale);
-		final ret = super.transformWorldToPixelsSimple(worldPoint, result);
+		scale.scale(barWidth, barHeight);
+		final ret = super.getScreenBounds(newRect, camera);
 		scale.copyFrom(__originalScale);
 		return ret;
 	}
 
-	override public function transformWorldToPixels(worldPoint:FlxPoint, ?camera:FlxCamera, ?result:FlxPoint):FlxPoint
+	override function transformWorldToPixelsSimple(worldPoint:FlxPoint, ?result:FlxPoint):FlxPoint
 	{
-		if (__drawingFakeScale)
-			return super.transformWorldToPixels(worldPoint, camera, result);
+		if (!__fakeScale) // || __drawingFakeScale
+			return super.transformWorldToPixelsSimple(worldPoint, result);
 
 		__originalScale.copyFrom(scale);
-		scale.scalePoint(__scale);
-		final ret = super.transformWorldToPixels(worldPoint, camera, result);
+		scale.scale(barWidth, barHeight);
+		final ret = super.transformWorldToPixelsSimple(worldPoint, result);
 		scale.copyFrom(__originalScale);
 		return ret;
 	}
 
 	override function transformScreenToPixels(screenPoint:FlxPoint, ?camera:FlxCamera, ?result:FlxPoint):FlxPoint
 	{
-		if (__drawingFakeScale)
+		if (!__fakeScale) // || __drawingFakeScale
 			return super.transformScreenToPixels(screenPoint, camera, result);
 
 		__originalScale.copyFrom(scale);
-		scale.scalePoint(__scale);
+		scale.scale(barWidth, barHeight);
 		final ret = super.transformScreenToPixels(screenPoint, camera, result);
 		scale.copyFrom(__originalScale);
 		return ret;
@@ -318,8 +312,8 @@ class BarSprite extends FlxSprite
 			var scaleY = scale.y;
 			if (__fakeScale)
 			{
-				scaleX *= __scale.x;
-				scaleY *= __scale.y;
+				scaleX *= barWidth;
+				scaleY *= barHeight;
 			}
 
 			if ((scaleX = Math.max(FlxPoint.EPSILON, Math.abs(scaleX))) != 1)
@@ -338,35 +332,5 @@ class BarSprite extends FlxSprite
 			frame = frames.frames[animation.frameIndex];
 
 		return rect;
-	}
-
-	@:noCompletion override inline function set_width(value:Float):Float
-	{
-		return width = value;
-	}
-
-	@:noCompletion override inline function set_height(value:Float):Float
-	{
-		return height = value;
-	}
-
-	@:noCompletion inline function get_barWidth():Float
-	{
-		return __scale.x;
-	}
-
-	@:noCompletion inline function set_barWidth(value:Float):Float
-	{
-		return __scale.x = value;
-	}
-
-	@:noCompletion inline function get_barHeight():Float
-	{
-		return __scale.x;
-	}
-
-	@:noCompletion inline function set_barHeight(value:Float):Float
-	{
-		return __scale.x = value;
 	}
 }

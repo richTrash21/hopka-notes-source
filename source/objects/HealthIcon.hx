@@ -62,7 +62,7 @@ class HealthIcon extends ExtendedSprite
 	{
 		if (lerpScale && scale.x != baseScale)
 		{
-			setScale(CoolUtil.lerpElapsed(scale.x, baseScale, 0.15 * lerpSpeed));
+			setScale(CoolUtil.lerpElapsed(scale.x, baseScale, 0.15 * lerpSpeed, elapsed));
 			updateHitbox();
 		}
 

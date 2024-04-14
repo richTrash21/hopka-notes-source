@@ -45,6 +45,7 @@ class GameCamera extends FlxCamera
 		#end
 	}
 
+	@:access(flixel.tweens.FlxTweenManager._tweens)
 	@:access(flixel.tweens.FlxTweenManager.forEachTweensOf)
 	override public function update(elapsed:Float):Void
 	{
@@ -56,12 +57,14 @@ class GameCamera extends FlxCamera
 			{
 				__tweenTimer -= delay;
 				tweeningZoom = false;
-				FlxTween.globalManager.forEachTweensOf(this, ["zoom"], (_) -> tweeningZoom = true);
+				// only when necessary
+				if (FlxTween.globalManager._tweens.length != 0)
+					FlxTween.globalManager.forEachTweensOf(this, ["zoom"], (_) -> tweeningZoom = true);
 			}
 		}
 
 		if (updateZoom && !tweeningZoom && zoom != targetZoom)
-			zoom = CoolUtil.lerpElapsed(zoom, targetZoom, 0.055 * zoomDecay);
+			zoom = CoolUtil.lerpElapsed(zoom, targetZoom, 0.055 * zoomDecay, elapsed);
 
 		// implementing flixel's 6.0.0 camera changes early
 		#if (flixel < "6.0.0")
@@ -69,7 +72,7 @@ class GameCamera extends FlxCamera
 		if (target != null)
 		{
 			updateFollow();
-			_updateLerp(elapsed);
+			updateLerp(elapsed);
 		}
 
 		updateScroll();
@@ -85,7 +88,28 @@ class GameCamera extends FlxCamera
 		#end
 	}
 
-	@:noCompletion function set_checkForTweens(bool:Bool):Bool
+	// small optimisation from my pr (https://github.com/HaxeFlixel/flixel/pull/3106)
+	#if (flixel < "6.0.0") extern inline #else override #end function updateLerp(elapsed:Float)
+	{
+		final boundLerp = FlxMath.bound(followLerp, 0.0, 1.0);
+		if (boundLerp == 0.0)
+			return;
+
+		if (boundLerp == 1.0)
+		{
+			scroll.copyFrom(_scrollTarget); // no easing
+		}
+		else
+		{
+			// Adjust lerp based on the current frame rate so lerp is less framerate dependant
+			final adjustedLerp = 1.0 - Math.pow(1.0 - boundLerp, elapsed * 60);
+
+			scroll.x += (_scrollTarget.x - scroll.x) * adjustedLerp;
+			scroll.y += (_scrollTarget.y - scroll.y) * adjustedLerp;
+		}
+	}
+
+	@:noCompletion inline function set_checkForTweens(bool:Bool):Bool
 	{
 		if (!bool)
 			tweeningZoom = false;
@@ -172,21 +196,6 @@ class GameCamera extends FlxCamera
 			}
 		}
 	}
-
-	function _updateLerp(elapsed:Float)
-	{
-		if (followLerp == 1)
-		{
-			scroll.copyFrom(_scrollTarget); // no easing
-		}
-		else
-		{
-			// Adjust lerp based on the current frame rate so lerp is less framerate dependant
-			final adjustedLerp = 1.0 - Math.pow(1.0 - followLerp, elapsed * 60);
-			scroll.x += (_scrollTarget.x - scroll.x) * adjustedLerp;
-			scroll.y += (_scrollTarget.y - scroll.y) * adjustedLerp;
-		}
-	}
 	
 	/**
 	 * Tells this camera object what `FlxObject` to track.
@@ -240,7 +249,7 @@ class GameCamera extends FlxCamera
 
 	@:noCompletion override inline function set_followLerp(value:Float):Float
 	{
-		return followLerp = FlxMath.bound(value, 0, 1);
+		return followLerp = value;
 	}
 	#end
 }
