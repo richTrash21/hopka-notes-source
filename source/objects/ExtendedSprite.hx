@@ -62,7 +62,7 @@ class ExtendedSprite extends FlxSprite
 		else
 		{
 			var i = -1;
-			var name:String = null;
+			var name:String;
 			for (anim in sprite.frames.framesHash.keys())
 			{
 				name = anim.substr(0, anim.length - 4);
@@ -73,20 +73,15 @@ class ExtendedSprite extends FlxSprite
 						sprite.animation.play(name);
 				}
 			}
-			// final a = sprite.animation.getNameList();
-			// trace(i, a.length, a);
 		}
 		return sprite;
 	}
 
 	public var onGraphicLoaded:()->Void;
-	public var animOffsets:Map<String, FlxPoint> = [];
+	public var animOffsets:Map<String, FlxPoint> = new Map();
 
 	public var deltaX(default, null):Float;
 	public var deltaY(default, null):Float;
-
-	public var RIGHT(get, never):Float;
-	public var BOTTOM(get, never):Float;
 
 	public var inBounds(default, null):Bool;
 	public var boundBox(default, set):FlxRect;
@@ -98,7 +93,7 @@ class ExtendedSprite extends FlxSprite
 	var __drawingOffset:FlxPoint;
 	var __anim:String;
 
-	public function new(?x = 0., ?y = 0., ?simpleGraphic:flixel.system.FlxAssets.FlxGraphicAsset, ?antialiasing = true):Void
+	public function new(x = 0., y = 0., ?simpleGraphic:flixel.system.FlxAssets.FlxGraphicAsset, antialiasing = true):Void
 	{
 		super(x, y, Paths.resolveGraphicAsset(simpleGraphic));
 		this.antialiasing = ClientPrefs.data.antialiasing && antialiasing;
@@ -117,7 +112,7 @@ class ExtendedSprite extends FlxSprite
 
 		super.update(elapsed);
 		if (boundBox == null || !moves)
-			return; // no bound box/movement flag - skip whole shit
+			return; // no bound box/movement flag - skip
 	
 		final lastInBounds = inBounds;
 		inBounds = objectInRect(this, boundBox);
@@ -132,11 +127,12 @@ class ExtendedSprite extends FlxSprite
 
 	override public function destroy():Void
 	{
-		for (anim => offset in animOffsets)
-		{
-			offset.put();
-			animOffsets.remove(anim);
-		}
+		if (animOffsets != null)
+			for (anim => offset in animOffsets)
+			{
+				offset.put();
+				animOffsets.remove(anim);
+			}
 
 		animOffsets = null;
 		boundBox = flixel.util.FlxDestroyUtil.put(boundBox);
@@ -223,33 +219,33 @@ class ExtendedSprite extends FlxSprite
 		return offset.set(-0.5 * (width - frameWidth), -0.5 * (height - frameHeight));
 	}
 
-	inline public function addOffset(name:String, x:Float, y:Float):FlxPoint
+	public function addOffset(name:String, x:Float, y:Float):FlxPoint
 	{
 		if (animOffsets.exists(name))
-			return animOffsets.get(name).set(x, y);
+			return animOffsets[name].set(x, y);
 
 		final point = FlxPoint.get(x, y);
-		animOffsets.set(name, point);
+		animOffsets[name] = point;
 		return point;
 	}
 
 	@:noCompletion override function drawSimple(camera:FlxCamera):Void
 	{
 		__drawingWithOffset = true;
-		__update__drawing__offset();	// get current animation's offsets
-		__add__drawing__offset();		// add them to the current one's
-		super.drawSimple(camera);		// draw sprite
-		__remove__drawing__offset();	// revert
+		__update__drawing__offset();  // get current animation's offsets
+		__add__drawing__offset();	  // add them to the current one's
+		super.drawSimple(camera);	  // draw sprite
+		__remove__drawing__offset();  // revert
 		__drawingWithOffset = false;
 	}
 
 	@:noCompletion override function drawComplex(camera:FlxCamera):Void
 	{
 		__drawingWithOffset = true;
-		__update__drawing__offset();	// get current animation's offsets
-		__add__drawing__offset();		// add them to the current one's
-		super.drawComplex(camera);		// draw sprite
-		__remove__drawing__offset();	// revert
+		__update__drawing__offset();  // get current animation's offsets
+		__add__drawing__offset();	  // add them to the current one's
+		super.drawComplex(camera);	  // draw sprite
+		__remove__drawing__offset();  // revert
 		__drawingWithOffset = false;
 	}
 
@@ -299,7 +295,7 @@ class ExtendedSprite extends FlxSprite
 		else if (__anim != animation.curAnim.name)
 		{
 			__anim = animation.curAnim.name;
-			__drawingOffset = animOffsets.get(__anim);
+			__drawingOffset = animOffsets[__anim];
 		}
 	}
 
@@ -320,15 +316,5 @@ class ExtendedSprite extends FlxSprite
 		if (rect != null)
 			inBounds = objectInRect(this, rect);
 		return boundBox = rect;
-	}
-
-	@:noCompletion inline function get_RIGHT():Float
-	{
-		return x + width;
-	}
-
-	@:noCompletion inline function get_BOTTOM():Float
-	{
-		return y + height;
 	}
 }

@@ -45,9 +45,6 @@ class HealthIcon extends ExtendedSprite
 	public var char(default, null):String;
 
 	public var sprTracker:FlxSprite;
-	public var copyX= true;
-	public var copyY= true;
-
 	public var lerpScale = false;
 	public var lerpSpeed = 1.0;
 

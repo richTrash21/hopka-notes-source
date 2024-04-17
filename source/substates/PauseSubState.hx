@@ -317,7 +317,6 @@ class PauseSubState extends MusicBeatSubstate
 		MusicBeatState.resetState();
 	}
 
-	@:access(flixel.system.frontEnds.SoundFrontEnd.destroySound)
 	override function destroy()
 	{
 		if (game.videoPlayer != null)
@@ -326,7 +325,11 @@ class PauseSubState extends MusicBeatSubstate
 		tweenManager.clear();
 		if (pauseMusic != null)
 		{
-			FlxG.sound.destroySound(pauseMusic);
+			#if (flixel < "5.7.0")
+			@:privateAccess FlxG.sound.destroySound(pauseMusic);
+			#else
+			pauseMusic.destroy();
+			#end
 			pauseMusic = null;
 		}
 		errorScreen = FlxDestroyUtil.destroy(errorScreen);

@@ -233,7 +233,6 @@ class MainMenuState extends MusicBeatState
 
 				final curMem = Main.fpsVar.memoryMegas;
 				Paths.clearUnusedMemory();
-				cpp.vm.Gc.run(true);
 				final memDelta = FlxMath.maxInt(curMem - Main.fpsVar.memoryMegas, 0);
 				trace("cleared garbage lmao [" + (memDelta == 0 ? "actually not" : flixel.util.FlxStringUtil.formatBytes(memDelta)) + "]");
 			}

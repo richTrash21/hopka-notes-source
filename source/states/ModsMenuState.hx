@@ -49,8 +49,7 @@ class ModsMenuState extends MusicBeatState
 
 	override function create()
 	{
-		Paths.clearStoredMemory();
-		Paths.clearUnusedMemory();
+		Paths.clearStoredMemory(true);
 		WeekData.setDirectoryFromWeek();
 
 		#if hxdiscord_rpc

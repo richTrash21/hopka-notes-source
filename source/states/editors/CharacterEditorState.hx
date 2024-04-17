@@ -1,5 +1,7 @@
 package states.editors;
 
+import openfl.display.BitmapData;
+import objects.GameCamera;
 import flixel.input.mouse.FlxMouseEvent;
 #if !RELESE_BUILD_FR
 import flixel.math.FlxPoint;
@@ -17,6 +19,13 @@ import objects.Character;
 import objects.Bar;
 
 import sys.FileSystem;
+
+#if FLX_DEBUG
+typedef CrossGraphic = flixel.system.debug.interaction.tools.Pointer.GraphicCursorCross;
+#else
+@:bitmap("assets/preload/images/editors/cursorCross.png")
+class CrossGraphic extends BitmapData {}
+#end
 
 class CharacterEditorState extends backend.MusicBeatUIState
 {
@@ -47,7 +56,6 @@ class CharacterEditorState extends backend.MusicBeatUIState
 	var animsTxt:FlxText;
 	var curAnim = 0;
 
-	var camEditor:FlxCamera;
 	var camHUD:FlxCamera;
 
 	var UI_box:FlxUITabMenu;
@@ -67,21 +75,11 @@ class CharacterEditorState extends backend.MusicBeatUIState
 		HealthIcon.jsonCache.clear();
 		Character.jsonCache.clear();
 		if (ClientPrefs.data.cacheOnGPU)
-		{
-			Paths.clearUnusedMemory();
-			Paths.clearStoredMemory();
-		}
+			Paths.clearStoredMemory(true);
 
 		persistentUpdate = true;
 		FlxG.sound.playMusic(Paths.music(Paths.formatToSongPath(substates.PauseSubState.songName ?? ClientPrefs.data.pauseMusic)), 0.4);
-
-		camEditor = new FlxCamera();
-		camHUD = new FlxCamera();
-		camHUD.bgColor.alpha = 0;
-
-		FlxG.cameras.reset(camEditor);
-		FlxG.cameras.add(camHUD, false);
-		FlxG.cameras.setDefaultDrawTarget(camEditor, true);
+		FlxG.cameras.add(camHUD = new FlxCamera(), false).bgColor = 0;
 
 		var lastLoaded = Paths.currentLevel;
 		Paths.currentLevel = "week1";
@@ -125,9 +123,10 @@ class CharacterEditorState extends backend.MusicBeatUIState
 		// addCharacter();
 		character = new Character(0, 0, _char, !predictCharacterIsNotPlayer(_char), true, false);
 		character.debugMode = true;
+		character.camera = FlxG.camera;
 		add(character);
 
-		cameraFollowPointer = new FlxSprite(flixel.graphics.FlxGraphic.fromClass(flixel.system.debug.interaction.tools.Pointer.GraphicCursorCross));
+		cameraFollowPointer = new FlxSprite(flixel.graphics.FlxGraphic.fromClass(CrossGraphic));
 		cameraFollowPointer.setGraphicSize(40, 40);
 		cameraFollowPointer.updateHitbox();
 		add(cameraFollowPointer);
@@ -179,7 +178,6 @@ class CharacterEditorState extends backend.MusicBeatUIState
 		add(frameAdvanceText.screenCenter(X));
 
 		// FlxG.mouse.visible = true;
-		FlxG.camera.zoom = 1;
 		makeUIMenu();
 
 		updateCharacterPositions();
@@ -188,8 +186,8 @@ class CharacterEditorState extends backend.MusicBeatUIState
 		updateHealthBar();
 		character.animation.finish();
 
-		if (ClientPrefs.data.cacheOnGPU)
-			Paths.clearUnusedMemory();
+		// if (ClientPrefs.data.cacheOnGPU)
+		//	Paths.clearUnusedMemory();
 
 		super.create();
 		destroySubStates = false;
@@ -1100,10 +1098,7 @@ class CharacterEditorState extends backend.MusicBeatUIState
 		cameraFollowPointer.setPosition(__point.x, __point.y);
 
 		if (snap)
-		{
-			cameraFollowPointer.getMidpoint(__point).subtract(FlxG.width * 0.5, FlxG.height * 0.5);
-			FlxG.camera.scroll.copyFrom(__point);
-		}
+			FlxG.camera.scroll.copyFrom(cameraFollowPointer.getMidpoint(__point).subtract(FlxG.width * 0.5, FlxG.height * 0.5));
 	}
 
 	inline function updateHealthBar()

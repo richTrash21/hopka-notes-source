@@ -30,11 +30,7 @@ class Paths
 	// had to change it to "subs" since vlc loads subtitles by itself and i cant disable it!
 	public static final SUB_EXT = "subs"; // "srt";
 
-	inline public static function excludeAsset(key:String)
-	{
-		if (!dumpExclusions.contains(key))
-			dumpExclusions.push(key);
-	}
+	public static var currentLevel(default, set):String = "default";
 
 	public static var dumpExclusions = [
 		'assets/music/freakyMenu.$SOUND_EXT',
@@ -47,9 +43,8 @@ class Paths
 	public static final LUA_REGEX = ~/^.+\.lua$/i;
 	public static final HX_REGEX  = ~/^.+\.hx$/i;
 
-	public static var currentLevel(default, set):String = "default";
 	// define the locally tracked assets
-	public static final localTrackedAssets = new Array<String>();   // all assets
+	public static final localTrackedAssets   = new Array<String>(); // all assets
 	public static final currentTrackedAssets = new Array<String>(); // graphics
 	public static final currentTrackedSounds = new Array<String>(); // sounds
 
@@ -59,25 +54,18 @@ class Paths
 	// haya I love you for the base cache dump I took to the max
 	public static function clearUnusedMemory()
 	{
-		clearNullItems(currentTrackedAssets);
+		__clear__null__items(currentTrackedAssets);
 
 		// clear non local assets in the tracked assets list
-		var obj:FlxGraphic;
 		for (key in currentTrackedAssets)
 		{
 			// if it is not currently contained within the used local assets
 			if (localTrackedAssets.contains(key) || dumpExclusions.contains(key) || key.endsWith('.$SOUND_EXT'))
 				continue;
 
-			obj = FlxG.bitmap.get(key);
-			if (obj == null /*|| obj.useCount != 0*/)
-				continue;
-
 			// remove the key from all cache maps
-			OpenFlAssets.cache.removeBitmapData(key);
-			FlxG.bitmap._cache.remove(key);
 			currentTrackedAssets.remove(key);
-			destroyGraphic(obj); // and get rid of the object
+			FlxG.bitmap.remove(FlxG.bitmap.get(key));
 		}
 
 		// run the garbage collector for good measure lmfao
@@ -87,18 +75,16 @@ class Paths
 	public static function clearStoredMemory(cleanUnused = false)
 	{
 		// clear anything not in the tracked assets list
-		for (key => obj in FlxG.bitmap._cache)
+		for (key in FlxG.bitmap._cache.keys())
 		{
-			if (currentTrackedAssets.contains(key) || obj == null /*|| obj.useCount != 0*/)
+			if (currentTrackedAssets.contains(key))
 				continue;
 
-			localTrackedAssets.remove(key);
-			OpenFlAssets.cache.removeBitmapData(key);
-			FlxG.bitmap._cache.remove(key);
-			destroyGraphic(obj);
+			// localTrackedAssets.remove(key);
+			FlxG.bitmap.remove(FlxG.bitmap.get(key));
 		}
 
-		clearNullItems(currentTrackedSounds);
+		__clear__null__items(currentTrackedSounds);
 
 		// clear all sounds that are cached
 		for (key in currentTrackedSounds)
@@ -106,25 +92,19 @@ class Paths
 			if (localTrackedAssets.contains(key) || dumpExclusions.contains(key))
 				continue;
 
-			OpenFlAssets.cache.removeSound(key);
 			currentTrackedSounds.remove(key);
+			OpenFlAssets.cache.removeSound(key);
 		}
 		// flags everything to be cleared out next unused memory clear
 		FlxArrayUtil.clearArray(localTrackedAssets);
 		#if !html5
 		OpenFlAssets.cache.clear("songs");
 		#end
-		openfl.system.System.gc();
-
+		// run gc once
 		if (cleanUnused)
 			clearUnusedMemory();
-	}
-
-	inline static function destroyGraphic(obj:FlxGraphic)
-	{
-		obj.persist = false; // make sure the garbage collector actually clears it up
-		obj.destroyOnNoUse = true;
-		obj.destroy();
+		else
+			openfl.system.System.gc();
 	}
 
 	public static function getPath(file:String, type:AssetType = TEXT, ?library:String, modsAllowed = false):String
@@ -158,10 +138,7 @@ class Paths
 
 	inline static function getLibraryPathForce(file:String, library:String, ?level:String):String
 	{
-		if (level == null)
-			level = library;
-
-		return '$library:assets/$level/$file';
+		return '$library:assets/${level ?? library}/$file';
 	}
 
 	// getting rid of shared AND preload hehe (preload will still exist in source code cuz its contents will anyway go to the "assets" folder lmao)
@@ -260,7 +237,7 @@ class Paths
 		file = modsImages(key);
 		if (hasGraphic(file))
 		{
-			tryPush(localTrackedAssets, file);
+			__try__push(localTrackedAssets, file);
 			return FlxG.bitmap.get(file);
 		}
 		else if (FileSystem.exists(file))
@@ -271,7 +248,7 @@ class Paths
 			file = getPath('images/$key.png', IMAGE, library);
 			if (hasGraphic(file))
 			{
-				tryPush(localTrackedAssets, file);
+				__try__push(localTrackedAssets, file);
 				return FlxG.bitmap.get(file);
 			}
 			else if (OpenFlAssets.exists(file, IMAGE))
@@ -292,7 +269,7 @@ class Paths
 		else
 		{
 			currentTrackedAssets.push(file);
-			tryPush(localTrackedAssets, file);
+			__try__push(localTrackedAssets, file);
 		}
 		return graphic;
 	}
@@ -483,7 +460,7 @@ class Paths
 
 			if (sound != null)
 			{
-				tryPush(localTrackedAssets, file);
+				__try__push(localTrackedAssets, file);
 				return sound;
 			}
 			#end
@@ -506,7 +483,7 @@ class Paths
 				#end
 				currentTrackedSounds.push(file);
 			}
-			tryPush(localTrackedAssets, file);
+			__try__push(localTrackedAssets, file);
 			return sound;
 		}
 		catch(e) // FUCKING OPENFL - richTrash21
@@ -587,16 +564,21 @@ class Paths
 	}
 	#end
 
-	@:noCompletion extern inline static function clearNullItems<T>(array:Array<T>)
+	inline public static function excludeAsset(key:String):Int
 	{
-		while (array.contains(null))
-			array.remove(null);
+		return __try__push(dumpExclusions, key);
 	}
 
-	@:noCompletion extern inline static function tryPush<T>(array:Array<T>, item:T):Int
+	@:noCompletion extern inline static function __clear__null__items<T>(__array:Array<T>)
 	{
-		final id = array.indexOf(item);
-		return id == -1 ? array.push(item) : id;
+		while (__array.contains(null))
+			__array.remove(null);
+	}
+
+	@:noCompletion extern inline static function __try__push<T>(__array:Array<T>, __item:T):Int
+	{
+		final __id = __array.indexOf(__item);
+		return __id == -1 ? __array.push(__item) : __id;
 	}
 
 	@:noCompletion inline static function set_currentLevel(level:String):String

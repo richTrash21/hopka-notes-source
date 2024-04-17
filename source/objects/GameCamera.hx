@@ -1,6 +1,7 @@
 package objects;
 
 #if (flixel < "6.0.0")
+import flixel.util.FlxDestroyUtil;
 import flixel.math.FlxRect;
 import flixel.FlxObject;
 #end
@@ -86,27 +87,6 @@ class GameCamera extends FlxCamera
 		#else
 		super.update();
 		#end
-	}
-
-	// small optimisation from my pr (https://github.com/HaxeFlixel/flixel/pull/3106)
-	#if (flixel < "6.0.0") extern inline #else override #end function updateLerp(elapsed:Float)
-	{
-		final boundLerp = FlxMath.bound(followLerp, 0.0, 1.0);
-		if (boundLerp == 0.0)
-			return;
-
-		if (boundLerp == 1.0)
-		{
-			scroll.copyFrom(_scrollTarget); // no easing
-		}
-		else
-		{
-			// Adjust lerp based on the current frame rate so lerp is less framerate dependant
-			final adjustedLerp = 1.0 - Math.pow(1.0 - boundLerp, elapsed * 60);
-
-			scroll.x += (_scrollTarget.x - scroll.x) * adjustedLerp;
-			scroll.y += (_scrollTarget.y - scroll.y) * adjustedLerp;
-		}
 	}
 
 	@:noCompletion inline function set_checkForTweens(bool:Bool):Bool
@@ -208,13 +188,12 @@ class GameCamera extends FlxCamera
 	 */
 	override public function follow(target:FlxObject, ?style:FlxCameraFollowStyle, ?lerp:Float):Void
 	{
-		this.style = style ?? LOCKON;
 		this.target = target;
 		followLerp = lerp ?? 1.0;
-		var helper:Float;
-		_lastTargetPosition = null;
+		_lastTargetPosition = FlxDestroyUtil.put(_lastTargetPosition);
+		deadzone = FlxDestroyUtil.put(deadzone);
 
-		switch (style)
+		switch (this.style = style ?? LOCKON)
 		{
 			case LOCKON:
 				var w = 0.0;
@@ -232,11 +211,11 @@ class GameCamera extends FlxCamera
 				deadzone = FlxRect.get((width - w) * 0.5, (height - h) * 0.5 - h * 0.25, w, h);
 
 			case TOPDOWN:
-				helper = Math.max(width, height) * 0.25;
+				final helper = Math.max(width, height) * 0.25;
 				deadzone = FlxRect.get((width - helper) * 0.5, (height - helper) * 0.5, helper, helper);
 
 			case TOPDOWN_TIGHT:
-				helper = Math.max(width, height) * 0.125; // / 8
+				final helper = Math.max(width, height) * 0.125; // / 8
 				deadzone = FlxRect.get((width - helper) * 0.5, (height - helper) * 0.5, helper, helper);
 
 			case SCREEN_BY_SCREEN:
@@ -244,6 +223,25 @@ class GameCamera extends FlxCamera
 
 			case NO_DEAD_ZONE:
 				deadzone = null;
+		}
+	}
+
+	// small optimisation from my pr (https://github.com/HaxeFlixel/flixel/pull/3106)
+	// UPD: approved?? kinda???? geo tweaked code a bit so that means that it'll merge????????
+	// UPDD: MERGED!!!!!!!!!!! (https://github.com/HaxeFlixel/flixel/commit/1b6d3fd404bfca439ece1ef9a38ec7970564c1c7)
+	extern inline function updateLerp(elapsed:Float)
+	{
+		if (followLerp >= 1.0)
+		{
+			scroll.copyFrom(_scrollTarget); // no easing
+		}
+		else if (followLerp > 0.0)
+		{
+			// Adjust lerp based on the current frame rate so lerp is less framerate dependant
+			final adjustedLerp = 1.0 - Math.pow(1.0 - followLerp, elapsed * 60);
+
+			scroll.x += (_scrollTarget.x - scroll.x) * adjustedLerp;
+			scroll.y += (_scrollTarget.y - scroll.y) * adjustedLerp;
 		}
 	}
 

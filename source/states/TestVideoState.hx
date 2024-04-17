@@ -33,7 +33,8 @@ class TestVideoState extends flixel.FlxState
 		"https://cdn.discordapp.com/attachments/1041755661630976052/1227380655936114761/video_2024-04-10_02-12-22.mp4?ex=66283250&is=6615bd50&hm=fd657c8d6c21b9f6f21a769d82407d85cf7922c099ea530768a253d607098798&",
 		"https://cdn.discordapp.com/attachments/1041755661630976052/1228303592302055474/y2mate.is_-__pick_up_that_can___no_f_ck_off_-DAv1SSX3xLg-144pp-1712918995.mp4?ex=662b8ddd&is=661918dd&hm=26e666ba22d631587fc0de5399e9911c7752c8eb51f6ce111c6bcb7b9ecc2dc9&",
 		"https://cdn.discordapp.com/attachments/1219255780172107814/1228367472814456912/CctzRhXRaGog2swg.mp4?ex=662bc95b&is=6619545b&hm=c397e435b9dddcf8a4767780d03b0011d0ee9c4dd42c96693d15e74c72514556&",
-		"https://cdn.discordapp.com/attachments/1041755661630976052/1228396210180587590/4355.mp4?ex=662be41f&is=66196f1f&hm=6127070fcc55bd11359b706819c18d549a37163c5f2ff9cde252275e92d8777a&"
+		"https://cdn.discordapp.com/attachments/1041755661630976052/1228396210180587590/4355.mp4?ex=662be41f&is=66196f1f&hm=6127070fcc55bd11359b706819c18d549a37163c5f2ff9cde252275e92d8777a&",
+		"https://cdn.discordapp.com/attachments/1041755661630976052/1229918758101975211/baldi.mp4?ex=66316e1a&is=661ef91a&hm=72e69c15bdb96b0c3b1be03fcd834926440582ce3cb1640fa0403ce81e0952ba&"
 	];
 	var video:VideoSprite;
 
@@ -53,7 +54,7 @@ class TestVideoState extends flixel.FlxState
 			final status = video.load(FlxG.random.getObject(videos));
 			trace('video loaded: $status');
 			video.play();
-			loading.kill();
+			// loading.kill();
 		});
 	}
 

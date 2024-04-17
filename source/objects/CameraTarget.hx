@@ -12,7 +12,7 @@ class CameraTarget extends FlxObject
 	// where this object was created?
 	@:noCompletion var _source:String;
 
-	public function new(?x:Float, ?y:Float, ?pos:haxe.PosInfos)
+	public function new(x = 0.0, y = 0.0, ?pos:haxe.PosInfos)
 	{
 		super(x, y #if FLX_DEBUG , 1, 1 #end);
 		allowCollisions = NONE;
@@ -34,6 +34,12 @@ class CameraTarget extends FlxObject
 
 	override public function destroy():Void
 	{
+		#if (flixel >= "5.7.0")
+		if (container != null)
+			container.remove(this);
+
+		container = null;
+		#end
 		exists = false;
 		_cameras = null;
 		last = FlxDestroyUtil.put(last);

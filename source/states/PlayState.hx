@@ -179,10 +179,6 @@ class PlayState extends MusicBeatState
 	public var dadMap		= new Map<String, Character>();
 	public var gfMap		= new Map<String, Character>();
 	public var variables	= new Map<String, Dynamic>();
-	
-	#if HSCRIPT_ALLOWED
-	public var hscriptArray = new Array<HScript>();
-	#end
 
 	#if LUA_ALLOWED
 	public var modchartTweens  = new Map<String, FlxTween>();
@@ -314,10 +310,14 @@ class PlayState extends MusicBeatState
 	var boyfriendIdleTime = 0.0;
 	var boyfriendIdled = false;
 	#end
+	
+	#if HSCRIPT_ALLOWED
+	public var hscriptArray = new Array<HScript>();
+	#end
 
 	// Lua shit
-	public var luaArray = new Array<FunkinLua>();
 	#if LUA_ALLOWED
+	public var luaArray = new Array<FunkinLua>();
 	var luaDebugGroup:FlxTypedSpriteGroup<DebugLuaText>;
 	#end
 
