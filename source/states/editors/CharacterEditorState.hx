@@ -23,6 +23,7 @@ import sys.FileSystem;
 #if FLX_DEBUG
 typedef CrossGraphic = flixel.system.debug.interaction.tools.Pointer.GraphicCursorCross;
 #else
+// flixel 5.7.x fix
 @:bitmap("assets/preload/images/editors/cursorCross.png")
 class CrossGraphic extends BitmapData {}
 #end
