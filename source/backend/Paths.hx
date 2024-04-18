@@ -77,7 +77,7 @@ class Paths
 		// clear anything not in the tracked assets list
 		for (key in FlxG.bitmap._cache.keys())
 		{
-			if (currentTrackedAssets.contains(key))
+			if (currentTrackedAssets.contains(key) || dumpExclusions.contains(key))
 				continue;
 
 			// localTrackedAssets.remove(key);
@@ -275,7 +275,6 @@ class Paths
 	}
 
 	// new psych
-	@:access(openfl.display.BitmapData.image)
 	@:access(openfl.display.BitmapData.__texture)
 	public static function cacheBitmap(file:String, ?bitmap:BitmapData, allowGPU = true):FlxGraphic
 	{
@@ -388,14 +387,9 @@ class Paths
 	{
 		try
 		{
-			var xml:String;
-			var graphic:FlxGraphic;
-			#if MODS_ALLOWED
-			graphic = image(key, allowGPU, pos);
-			if (graphic == null)
-			#end
-				graphic = image(key, library, allowGPU, pos);
+			final graphic = #if MODS_ALLOWED image(key, allowGPU, pos) ?? #end image(key, library, allowGPU, pos);
 
+			var xml:String;
 			#if MODS_ALLOWED
 			xml = modsXml(key);
 			if (FileSystem.exists(xml))
@@ -405,7 +399,6 @@ class Paths
 				xml = getPath('images/$key.xml', library);
 
 			return FlxAtlasFrames.fromSparrow(graphic, xml);
-			
 		}
 		catch(e)
 		{
@@ -417,14 +410,9 @@ class Paths
 
 	/*inline*/ static public function getPackerAtlas(key:String, ?library:String = null, ?allowGPU:Bool = true, ?pos:PosInfos):FlxAtlasFrames
 	{
-		var txt:String;
-		var graphic:FlxGraphic;
-		#if MODS_ALLOWED
-		graphic = image(key, allowGPU, pos);
-		if (graphic == null)
-		#end
-			graphic = image(key, library, allowGPU, pos);
+		final graphic = #if MODS_ALLOWED image(key, allowGPU, pos) ?? #end image(key, library, allowGPU, pos);
 
+		var txt:String;
 		#if MODS_ALLOWED
 		txt = modsTxt(key);
 		if (FileSystem.exists(txt))

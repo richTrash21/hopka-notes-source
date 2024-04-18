@@ -45,5 +45,6 @@ using flixel.util.FlxStringUtil;
 using flixel.util.FlxArrayUtil;
 using objects.ExtendedSprite;
 using StringTools;
+using Std;
 
 #end

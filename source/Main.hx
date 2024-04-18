@@ -287,6 +287,8 @@ class Main extends flixel.FlxGame
 		#if !mobile
 		addChild(fpsVar);
 		#end
+
+		Paths.dumpExclusions.push(FlxG.bitmap.findKeyForBitmap(FlxG.bitmap.whitePixel.parent.bitmap));
 	}
 
 	override function onFocus(_)

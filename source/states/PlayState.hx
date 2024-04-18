@@ -221,9 +221,8 @@ class PlayState extends MusicBeatState
 	public var unspawnNotes = new Array<Note>();
 	public var eventNotes = new Array<EventNote>();
 
-	var _camTarget:String = "dad";
 	var _camFollow:CameraTarget; // tracker for actual camFollow, used when isCameraOnForcedPos = true
-	public var camFollow(get, never):CameraTarget; // alias for char_field.camFollow
+	public var camFollow(get, null):CameraTarget; // alias for char_field.camFollow
 
 	public var strumLineNotes:FlxTypedGroup<StrumNote>;
 	public var opponentStrums:FlxTypedGroup<StrumNote>;
@@ -563,7 +562,7 @@ class PlayState extends MusicBeatState
 		camGame.follow(_camFollow, LOCKON, camGame.followLerp);
 		camGame.zoom = defaultCamZoom;
 		camGame.snapToTarget();
-		camHUD.visible = !ClientPrefs.getGameplaySetting("showcase");
+		// camHUD.visible = !ClientPrefs.getGameplaySetting("showcase");
 		moveCameraSection();
 
 		healthBar = new Bar(0, FlxG.height * (ClientPrefs.data.downScroll ? 0.11 : 0.89), "healthBar", () -> health, 0, 2);
@@ -1941,7 +1940,7 @@ class PlayState extends MusicBeatState
 				gfSpeed = Math.round(flValue1);
 
 			case "Add Camera Zoom":
-				if (ClientPrefs.data.camZooms) // && camGame.zoom < 1.35
+				if (ClientPrefs.data.camZooms)
 				{
 					if (flValue1 == null)
 						flValue1 = 0.015;
@@ -2130,46 +2129,19 @@ class PlayState extends MusicBeatState
 		if (SONG.notes[(sec = FlxMath.maxInt(sec ?? curSection, 0))] == null)
 			return;
 
-		final char = (gf != null && SONG.notes[sec].gfSection ? "gf" : (SONG.notes[sec].mustHitSection ? "boyfriend" : "dad"));
-		moveCamera(char);
+		moveCamera(gf != null && SONG.notes[sec].gfSection ? "gf" : (SONG.notes[sec].mustHitSection ? "boyfriend" : "dad"));
 	}
 
 	public function moveCamera(char:String):Bool
 	{
-		_camTarget = char.toLowerCase().trim();
-		// if (!isCameraOnForcedPos)
-		//	setCharCamOffset(_camTarget);
-		camGame.target = camFollow;
-		callOnScripts("onMoveCamera", [_camTarget]);
-		return _camTarget == "dad" || _camTarget == "opponent"; // for lua
-	}
-
-	/*dynamic public function setCharCamOffset(char:String)
-	{
-		switch (char)
+		camGame.target = camFollow = switch (char = char.toLowerCase().trim())
 		{
-			case "dad" | "opponent":
-				dad.camFollowOffset.copyFrom(dadCamOffset).add(150, -100);
-				dad.updateCamFollow();
-
-			case "gf" | "girlfriend":
-				gf.camFollowOffset.copyFrom(gfCamOffset);
-				gf.updateCamFollow();
-
-			default:
-				boyfriend.camFollowOffset.copyFrom(bfCamOffset).subtract(100, 100);
-				boyfriend.updateCamFollow();
+			case "dad" | "opponent":	dad.camFollow;
+			case "gf" | "girlfriend":	gf.camFollow;
+			default:					boyfriend.camFollow;
 		}
-	}*/
-
-	dynamic public function getCharCamFollow(char:String):CameraTarget
-	{
-		return switch (char)
-			{
-				case "dad" | "opponent":	dad.camFollow;
-				case "gf" | "girlfriend":	gf.camFollow;
-				default:					boyfriend.camFollow;
-			}
+		callOnScripts("onMoveCamera", [char]);
+		return camFollow == dad.camFollow; // for lua
 	}
 
 	public function finishSong(?ignoreNoteOffset = false):Void
@@ -2282,7 +2254,7 @@ class PlayState extends MusicBeatState
 				trace("LOADING NEXT SONG - " + Paths.formatToSongPath(storyPlaylist[0]) + difficulty);
 
 				FlxTransitionableState.skipNextTransIn = FlxTransitionableState.skipNextTransOut = true;
-				remove(prevCamFollow = camFollow);
+				remove(prevCamFollow = _camFollow);
 
 				SONG = Song.loadFromJson(storyPlaylist[0] + difficulty, storyPlaylist[0]);
 				FlxG.sound.music.stop();
@@ -2934,9 +2906,8 @@ class PlayState extends MusicBeatState
 	// new psych input by crowplexus
 	public function playerDance(force = false):Void
 	{
-		final anim = boyfriend.animation.curAnim;
-		if (anim != null && boyfriend.holdTimer > Conductor.stepCrochet * (0.0011 #if FLX_PITCH / FlxG.sound.music.pitch #end) * boyfriend.singDuration
-			&& anim.name.startsWith("sing") && !anim.name.endsWith("miss"))
+		if (boyfriend.animation.curAnim != null && boyfriend.holdTimer > boyfriend.__calc__hold__timer() && boyfriend.animation.curAnim.name.startsWith("sing")
+			&& !boyfriend.animation.curAnim.name.endsWith("miss"))
 			boyfriend.dance(force);
 	}
 
@@ -2947,7 +2918,7 @@ class PlayState extends MusicBeatState
 			if (generatedMusic && !endingSong && !isCameraOnForcedPos)
 				moveCameraSection(curSection);
 
-			if (camZooming && ClientPrefs.data.camZooms) // && camGame.zoom < 1.35
+			if (camZooming && ClientPrefs.data.camZooms)
 			{
 				if (!camGame.tweeningZoom)
 					camGame.zoom += 0.015 * defaultCamZoom * camZoomingMult;
@@ -3392,9 +3363,9 @@ class PlayState extends MusicBeatState
 
 	@:noCompletion inline public function set_isCameraOnForcedPos(force:Bool):Bool
 	{
-		if (force) // actual follow object!! :O
-			camGame.target = _camFollow;
-		return isCameraOnForcedPos = force;
+		isCameraOnForcedPos = force;
+		camGame.target = camFollow;
+		return force;
 	}
 
 	@:noCompletion inline function get_BF_X():Float   return BF_POS.x;
@@ -3418,7 +3389,7 @@ class PlayState extends MusicBeatState
 
 	@:noCompletion inline public function get_camFollow():CameraTarget
 	{
-		return isCameraOnForcedPos ? _camFollow : getCharCamFollow(_camTarget);
+		return isCameraOnForcedPos ? _camFollow : camFollow;
 	}
 
 	@:noCompletion inline function set_camZoomingDecay(decay:Float):Float

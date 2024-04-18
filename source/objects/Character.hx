@@ -359,9 +359,10 @@ class Character extends objects.ExtendedSprite
 			hasMissAnimations = true;
 	}
 
+	@:allow(states.PlayState)
 	@:noCompletion extern inline function __calc__hold__timer():Float
 	{
-		return Conductor.stepCrochet * (0.0011 #if FLX_PITCH / (FlxG.sound.music == null ? 1 : FlxG.sound.music.pitch) #end) * singDuration;
+		return Conductor.stepCrochet * (#if FLX_PITCH FlxG.sound.music != null ? 0.0011 / FlxG.sound.music.pitch : #end 0.0011) * singDuration;
 	}
 
 	@:noCompletion function set_idleSuffix(value:String):String

@@ -1,10 +1,10 @@
 package debug;
 
-import openfl.text._internal.TextFormatRange;
 import openfl.events.KeyboardEvent;
 import openfl.events.FocusEvent;
 import openfl.events.MouseEvent;
 import openfl.text.TextFormat;
+import openfl.text.StyleSheet;
 
 import flixel.util.FlxStringUtil;
 import flixel.FlxState;
@@ -21,6 +21,37 @@ class FPSCounter extends openfl.text.TextField
 {
 	@:noCompletion extern inline static final HIGH_FPS = 0xFFFFFF;
 	@:noCompletion extern inline static final LOW_FPS = 0xFF0000;
+
+	@:noCompletion extern inline static function __get__time__elapsed(__time:Float):String
+	{
+		var __str = "";
+		if (__time > 86400) // like fr wth are you doing here for over a day
+			__str += "(go touch some grass you moron) " + Std.int(__time * 0.000011574074074074073) + "d "; // / 86400
+		if (__time > 3600)
+			__str += Std.int(__time % 86400 * 0.0002777777777777778) + "h "; // / 3600
+		if (__time > 60)
+			__str += Std.int(__time % 3600 * 0.016666666666666666) + "m "; // / 60
+
+		return __str + Std.int(__time % 60) + "s";
+	}
+
+	@:noCompletion extern inline static function __get__state__class(__state:FlxState):String
+	{
+		return Type.getClassName(Type.getClass(__state));
+	}
+
+	@:noCompletion extern inline static function __get__substate__info(__substate:FlxState):String
+	{
+		var __str = "";
+		while (__substate != null)
+		{
+			__str += __get__state__class(__substate);
+			__substate = __substate.subState;
+			if (__substate != null)
+				__str += " -> ";
+		}
+		return __str;
+	}
 
 	/**
 		The current frame rate, expressed using frames-per-second
@@ -39,7 +70,7 @@ class FPSCounter extends openfl.text.TextField
 	public var memoryMegasGPU(get, never):Int;
 
 	#if !RELESE_BUILD_FR
-	public var debug:Bool = #if debug true #else false #end;
+	public var debug = #if debug true #else false #end;
 
 	@:noCompletion var __prevTime = 0;
 	@:noCompletion var __timeElapsed:String;
@@ -47,12 +78,10 @@ class FPSCounter extends openfl.text.TextField
 	#end
 
 	@:allow(Main) @:noCompletion var commit:String;
-	@:noCompletion var times:Array<Int>;
+	@:noCompletion var times = new Array<Int>();
 	@:noCompletion var cacheCount = 0;
 	@:noCompletion var memPeak = 0;
 	@:noCompletion var gpuPeak = 0;
-
-	@:noCompletion var __textFormatList:Array<TextFormatRange>;
 
 	public function new(x = 10.0, y = 10.0):Void
 	{
@@ -62,14 +91,14 @@ class FPSCounter extends openfl.text.TextField
 
 		selectable = mouseEnabled = false;
 		defaultTextFormat = new TextFormat("_sans", 12, 0xFFFFFF, true);
-		__textFormatList = [
-			new TextFormatRange(new TextFormat(), 4, 4) // fps color format
-		];
 		multiline = true;
 		autoSize = LEFT;
+		// for better visibility
+		shader = new shaders.OutlineShader();
 
-		times = new Array();
-		shader = new shaders.OutlineShader(); // for better visibility
+		styleSheet = new StyleSheet();
+		styleSheet.setStyle("fps-text", {fontSize: __textFormat.size + 1, letterSpacing: 1, color: LOW_FPS.hex(6)});
+		styleSheet.setStyle("mem-text", {fontSize: __textFormat.size + 1, letterSpacing: 1});
 
 		// i think it is optimization - Redar
 		removeEventListener(FocusEvent.FOCUS_IN, this_onFocusIn);
@@ -79,13 +108,12 @@ class FPSCounter extends openfl.text.TextField
 		removeEventListener(MouseEvent.DOUBLE_CLICK, this_onDoubleClick);
 		removeEventListener(KeyboardEvent.KEY_DOWN, this_onKeyDown);
 		FlxG.stage.addEventListener(KeyboardEvent.KEY_DOWN, (e) ->
-		{
 			if (e.keyCode == flixel.input.keyboard.FlxKey.F4)
 			{
 				debug = FlxG.save.data.debugInfo = !FlxG.save.data.debugInfo;
 				FlxG.save.flush();
 			}
-		});
+		);
 
 		FlxG.signals.preUpdate.add(update);
 		#if !RELESE_BUILD_FR
@@ -119,23 +147,22 @@ class FPSCounter extends openfl.text.TextField
 		if (!__visible || __alpha == 0.0)
 			return;
 
-		var text = 'FPS: $currentFPS';
-		var formatData = __textFormatList[0];
-		formatData.format.color = switch (Std.int(currentFPS * 0.05))
+		var text = 'FPS:<fps-text> $currentFPS</fps-text>';
+		styleSheet.getStyle("fps-text").color = (switch (Std.int(currentFPS * 0.05))
 		{
-			case 0:		LOW_FPS; // < 20 fps
+			case 0:		LOW_FPS; // 0 - 20 fps
 			case 1, 2:	FlxColor.interpolate(LOW_FPS, HIGH_FPS, (currentFPS - 20) * 0.025); // 20 - 59 fps
 			default:	HIGH_FPS; // 60+ fps
-		}
-		formatData.end = text.length;
+		}).hex(8);
 
 		final curMem = memoryMegas;
 		if (curMem > memPeak)
 			memPeak = curMem;
 
-		text += "\nMemory: " + FlxStringUtil.formatBytes(curMem);
+		text += "\nMemory:<mem-text> " + FlxStringUtil.formatBytes(curMem);
 		if (debug)
-			text += " [Peak: " + FlxStringUtil.formatBytes(memPeak) + "]";
+			text += " || " + FlxStringUtil.formatBytes(memPeak);
+		text += "</mem-text>";
 		
 		if (ClientPrefs.data.cacheOnGPU)
 		{
@@ -146,22 +173,25 @@ class FPSCounter extends openfl.text.TextField
 
 			if (gpuMem != 0)
 			{
-				text += "\nGPU Memory: " + FlxStringUtil.formatBytes(gpuMem);
+				text += "\nGPU Memory:<mem-text> " + FlxStringUtil.formatBytes(gpuMem);
 				if (debug)
-					text += " [Peak: " + FlxStringUtil.formatBytes(gpuPeak) + "]";
+					text += " || " + FlxStringUtil.formatBytes(gpuPeak);
+				text += "</mem-text>";
 			}
 		}
 		#if !RELESE_BUILD_FR
 		if (debug)
 		{
+			var tmp:String;
 			text += "\n";
+
 			// upate time info once a second
 			final currentTime = times[times.length-1];
 			if (__prevTime % 1000 > currentTime % 1000)
 				__timeElapsed = __get__time__elapsed(currentTime * 0.001);
 
-			var tmp = "";
 			#if MODS_ALLOWED
+			tmp = "";
 			if (!Mods.currentModDirectory.isNullOrEmpty())
 				tmp += "Current: " + Mods.currentModDirectory;
 			if (Mods.getGlobalMods().length != 0)
@@ -214,39 +244,6 @@ class FPSCounter extends openfl.text.TextField
 		}
 		#end
 		this.text = text;
-		for (data in __textFormatList)
-			setTextFormat(data.format, data.start, data.end);
-	}
-
-	@:noCompletion extern inline static function __get__time__elapsed(__time:Float):String
-	{
-		var __str = "";
-		if (__time > 86400) // like fr wth are you doing here for over a day
-			__str += "(go touch some grass you moron) " + Std.int(__time * 0.000011574074074074073) + "d "; // / 86400
-		if (__time > 3600)
-			__str += Std.int(__time % 86400 * 0.0002777777777777778) + "h "; // / 3600
-		if (__time > 60)
-			__str += Std.int(__time % 3600 * 0.016666666666666666) + "m "; // / 60
-
-		return __str + Std.int(__time % 60) + "s";
-	}
-
-	@:noCompletion extern inline static function __get__state__class(__state:FlxState):String
-	{
-		return Type.getClassName(Type.getClass(__state));
-	}
-
-	@:noCompletion extern inline static function __get__substate__info(__substate:FlxState):String
-	{
-		var __str = "";
-		while (__substate != null)
-		{
-			__str += __get__state__class(__substate);
-			__substate = __substate.subState;
-			if (__substate != null)
-				__str += " -> ";
-		}
-		return __str;
 	}
 
 	@:noCompletion inline function get_memoryMegas():Int
