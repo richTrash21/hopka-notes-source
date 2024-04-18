@@ -1,7 +1,5 @@
 package states.editors;
 
-import openfl.display.BitmapData;
-import objects.GameCamera;
 import flixel.input.mouse.FlxMouseEvent;
 #if !RELESE_BUILD_FR
 import flixel.math.FlxPoint;
@@ -20,12 +18,12 @@ import objects.Bar;
 
 import sys.FileSystem;
 
-#if FLX_DEBUG
-typedef CrossGraphic = flixel.system.debug.interaction.tools.Pointer.GraphicCursorCross;
+#if (FLX_DEBUG || flixel < version("5.7.0"))
+typedef PointerGraphic = flixel.system.debug.interaction.tools.Pointer.GraphicCursorCross;
 #else
 // flixel 5.7.x fix
-@:bitmap("assets/preload/images/editors/cursorCross.png")
-class CrossGraphic extends BitmapData {}
+@:bitmap("assets/images/debugger/cursorCross.png")
+class PointerGraphic extends openfl.display.BitmapData {}
 #end
 
 class CharacterEditorState extends backend.MusicBeatUIState
@@ -127,7 +125,7 @@ class CharacterEditorState extends backend.MusicBeatUIState
 		character.camera = FlxG.camera;
 		add(character);
 
-		cameraFollowPointer = new FlxSprite(flixel.graphics.FlxGraphic.fromClass(CrossGraphic));
+		cameraFollowPointer = new FlxSprite(flixel.graphics.FlxGraphic.fromClass(PointerGraphic));
 		cameraFollowPointer.setGraphicSize(40, 40);
 		cameraFollowPointer.updateHitbox();
 		add(cameraFollowPointer);

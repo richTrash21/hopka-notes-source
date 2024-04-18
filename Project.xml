@@ -147,6 +147,9 @@
 	
 	<!-- Show debug traces for hxCodec -->
 	<!-- <haxedef name="HXC_DEBUG_TRACE" if="debug" /> -->
+
+	<!-- Remove redundant object health system -->
+	<haxedef name="FLX_NO_HEALTH" />
 	
 	<!--Disable the Flixel core debugger. Automatically gets set whenever you compile in release mode!-->
 	<haxedef name="FLX_NO_DEBUG" unless="debug" />
