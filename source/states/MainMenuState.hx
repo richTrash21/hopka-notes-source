@@ -180,7 +180,7 @@ class MainMenuState extends MusicBeatState
 					if (curOption.name == "options")
 					{
 						OptionsState.onPlayState = false;
-						if (PlayState.SONG != null)
+						if (PlayState.SONG.song != null)
 							PlayState.SONG.arrowSkin = PlayState.SONG.splashSkin = null;
 					}
 					menuItems.forEach((spr) ->

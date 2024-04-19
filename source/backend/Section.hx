@@ -14,33 +14,62 @@ typedef SwagSection =
 	var altAnim:Bool;
 }
 
+@:allow(backend.Song)
 /*@:structInit*/ class Section
 {
-	@:allow(backend.Song)
 	static final validFields = Type.getInstanceFields(Section);
 	static final ignoreList = ["typeOfSection", "lengthInSteps"]; // deleted fields (they were useless lmaooo)
+	// simple pool system
+	static final __pool = new Array<Section>();
+	// @:noCompletion static var instanceCount = 0;
 
 	public var sectionNotes:Array<NoteData>;
-	public var sectionBeats:Float = 4;
+	public var sectionBeats:Float;
 	public var gfSection:Bool;
-	public var mustHitSection:Bool = true;
-	public var bpm:Float = 100;
+	public var mustHitSection:Bool;
+	public var bpm:Float;
 	public var changeBPM:Bool;
 	public var altAnim:Bool;
 
-	public function new(section:SwagSection)
+	public function new(?data:SwagSection)
 	{
-		for (field in Reflect.fields(section))
-		{
-			if (validFields.contains(field))
-				Reflect.setField(this, field, Reflect.field(section, field));
-			else
+		// trace("new Section instance was created! [" + ++instanceCount + "]");
+		load(data);
+	}
+
+	public function load(data:SwagSection):Section
+	{
+		reset();
+		if (data != null)
+			for (field in Reflect.fields(data))
 			{
-				if (!ignoreList.contains(field))
-					trace('WARNING!! This section have invalid field "$field"');
-				Reflect.deleteField(section, field);
+				if (validFields.contains(field))
+					Reflect.setField(this, field, Reflect.field(data, field));
+				else
+				{
+					if (!ignoreList.contains(field))
+						trace('WARNING!! This section have invalid field "$field"');
+					Reflect.deleteField(data, field);
+				}
 			}
-		}
+
+		return this;
+	}
+
+	public function reset():Section
+	{
+		if (sectionNotes != null)
+			while (sectionNotes.length != 0)
+				sectionNotes.pop();
+		sectionNotes = null;
+
+		sectionBeats = 4;
+		gfSection = false;
+		mustHitSection = true;
+		bpm = 100;
+		changeBPM = false;
+		altAnim = false;
+		return this;
 	}
 }
 

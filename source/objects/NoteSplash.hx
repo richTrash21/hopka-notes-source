@@ -83,9 +83,9 @@ class NoteSplash extends FlxSprite implements ISortable
 		aliveTime = 0;
 
 		final songSkin = PlayState.SONG.splashSkin;
-		final texture = if (note?.noteSplashData.texture != null)
+		final texture = if (!note?.noteSplashData.texture.isNullOrEmpty())
 							note.noteSplashData.texture;
-						else if (songSkin?.length > 0)
+						else if (!songSkin.isNullOrEmpty())
 							songSkin;
 						else
 							defaultNoteSplash + getSplashSkinPostfix();
@@ -95,7 +95,7 @@ class NoteSplash extends FlxSprite implements ISortable
 		final config = _textureLoaded == texture ? precacheConfig(_configLoaded) : loadAnims(texture);
 
 		var tempShader:RGBPalette = null;
-		if ((note == null || note.noteSplashData.useRGBShader) && (PlayState.SONG == null || !PlayState.SONG.disableNoteRGB))
+		if ((note == null || note.noteSplashData.useRGBShader) && (PlayState.SONG.song == null || !PlayState.SONG.disableNoteRGB))
 		{
 			// If Note RGB is enabled:
 			if (#if (haxe > "4.2.5") !note?.noteSplashData.useGlobalShader #else note != null && !note.noteSplashData.useGlobalShader #end)

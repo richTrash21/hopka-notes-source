@@ -73,7 +73,7 @@ class MusicBeatState extends FlxState implements IMusicBeatState
 			if (curStep > 0)
 				stepHit();
 
-			if (PlayState.SONG != null)
+			if (PlayState.SONG.song != null)
 			{
 				if (oldStep < curStep) 
 					updateSection();

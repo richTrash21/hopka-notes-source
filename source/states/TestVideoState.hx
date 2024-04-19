@@ -56,11 +56,9 @@ class TestVideoState extends flixel.FlxState
 	@:noCompletion static function get_videos():Array<String>
 	{
 		if (videos == null)
-		{
-			videos = FileSystem.readDirectory("assets/videos");
-			for (i => video in videos)
+			for (i => video in videos = FileSystem.readDirectory("assets/videos"))
 				videos[i] = 'assets/videos/$video';
-		}
+
 		return videos;
 	}
 }

@@ -311,7 +311,7 @@ class FreeplayState extends MusicBeatState
 					stopVocals();
 					Mods.currentModDirectory = songs[curSelected].folder;
 					final poop:String = Highscore.formatSong(songs[curSelected].songName.toLowerCase(), curDifficulty);
-					PlayState.SONG = Song.loadFromJson(poop, songs[curSelected].songName.toLowerCase());
+					Song.loadFromJson(poop, songs[curSelected].songName.toLowerCase(), PlayState.SONG);
 
 					Conductor.bpm = PlayState.SONG.bpm;
 					FlxG.sound.playMusic(Paths.inst(PlayState.SONG.song), 0.7);
@@ -342,7 +342,7 @@ class FreeplayState extends MusicBeatState
 
 			try
 			{
-				PlayState.SONG = Song.loadFromJson(poop, songLowercase);
+				Song.loadFromJson(poop, songLowercase, PlayState.SONG);
 				PlayState.isStoryMode = false;
 				PlayState.storyDifficulty = curDifficulty;
 

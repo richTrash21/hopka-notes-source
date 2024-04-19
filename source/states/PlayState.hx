@@ -105,7 +105,7 @@ class PlayState extends MusicBeatState
 	// how big to stretch the pixel art assets
 	public static var daPixelZoom:Float = 6.0;
 
-	public static var SONG:Song;
+	public static final SONG = new Song();
 	public static var storyWeek:Int = 0;
 	public static var isStoryMode:Bool = false;
 	public static var storyPlaylist = new Array<String>();
@@ -358,8 +358,8 @@ class PlayState extends MusicBeatState
 		camGame.checkForTweens = camHUD.checkForTweens = true;
 		persistentUpdate = true;
 
-		if (SONG == null)
-			SONG = Song.loadFromJson("test", "test");
+		if (SONG.song == null)
+			Song.loadFromJson("test", "test", SONG);
 
 		Conductor.mapBPMChanges(SONG);
 		Conductor.bpm = SONG.bpm;
@@ -1325,9 +1325,11 @@ class PlayState extends MusicBeatState
 		final file = Paths.json('$songName/events');
 		if (#if MODS_ALLOWED FileSystem.exists(Paths.modsJson('$songName/events')) || FileSystem.exists(file) #else OpenFlAssets.exists(file) #end)
 		{
-			for (eventNote in Song.loadFromJson("events", songName).events) // Event Notes
+			final __events = Song.loadFromJson("events", songName);
+			for (eventNote in __events.events) // Event Notes
 				for (i in 0...eventNote.events.length)
 					makeEvent(eventNote, i);
+			Song.__pool.push(__events);
 		}
 
 		var oldNote:Note = null;
@@ -1758,7 +1760,7 @@ class PlayState extends MusicBeatState
 			}
 			if (FlxG.keys.justPressed.TWO) // Go 10 seconds into the future :O
 			{
-				setSongTime(Conductor.songPosition + (FlxG.keys.pressed.SHIFT ? 20000 : 10000) * playbackRate);
+				setSongTime(Conductor.songPosition + (FlxG.keys.pressed.SHIFT ? 20000 : 10000)); // * playbackRate
 				clearNotesBefore(Conductor.songPosition);
 				if (Conductor.songPosition > FlxG.sound.music.length)
 					finishSong();
@@ -1773,8 +1775,8 @@ class PlayState extends MusicBeatState
 			FlxG.resetState();
 		#end
 
-		setOnScripts("cameraX", camFollow.x); // camGame.scroll.x - (camGame.width * 0.5)
-		setOnScripts("cameraY", camFollow.y); // camGame.scroll.y - (camGame.height * 0.5)
+		setOnScripts("cameraX", camGame.scroll.x + (camGame.width * 0.5));
+		setOnScripts("cameraY", camGame.scroll.y + (camGame.height * 0.5));
 		callOnScripts("onUpdatePost", [elapsed]);
 	}
 
@@ -2134,17 +2136,23 @@ class PlayState extends MusicBeatState
 
 	public function moveCamera(char:String):Bool
 	{
-		camGame.target = camFollow = switch (char = char.toLowerCase().trim())
+		camFollow = camFollowFromChar(char = char.toLowerCase().trim());
+		camGame.target = camFollow; // trigger get_camFollow
+		callOnScripts("onMoveCamera", [char]);
+		return char == "dad" || char == "opponent"; // for lua
+	}
+
+	dynamic public function camFollowFromChar(char:String):CameraTarget
+	{
+		return switch (char)
 		{
 			case "dad" | "opponent":	dad.camFollow;
 			case "gf" | "girlfriend":	gf.camFollow;
 			default:					boyfriend.camFollow;
 		}
-		callOnScripts("onMoveCamera", [char]);
-		return camFollow == dad.camFollow; // for lua
 	}
 
-	public function finishSong(?ignoreNoteOffset = false):Void
+	public function finishSong(ignoreNoteOffset = false):Void
 	{
 		updateTime = false;
 		FlxG.sound.music.volume = 0;
@@ -2256,7 +2264,7 @@ class PlayState extends MusicBeatState
 				FlxTransitionableState.skipNextTransIn = FlxTransitionableState.skipNextTransOut = true;
 				remove(prevCamFollow = _camFollow);
 
-				SONG = Song.loadFromJson(storyPlaylist[0] + difficulty, storyPlaylist[0]);
+				Song.loadFromJson(storyPlaylist[0] + difficulty, storyPlaylist[0], SONG);
 				FlxG.sound.music.stop();
 
 				cancelMusicFadeTween();
@@ -2654,7 +2662,7 @@ class PlayState extends MusicBeatState
 		if (SONG.needsVoices && vocals != null && opponentVocals == null)
 			vocals.volume = 1;
 
-		strumPlayAnim(true, note.noteData, Conductor.stepCrochet * 1.25 * 0.001 / playbackRate);
+		strumPlayAnim(true, note.noteData, Conductor.stepCrochet * 0.00125 / playbackRate);
 		note.hitByOpponent = true;
 
 		final result:Dynamic = callOnLuas("opponentNoteHit", [notes.members.indexOf(note), note.noteData, note.noteType, note.isSustainNote]);
@@ -3063,7 +3071,7 @@ class PlayState extends MusicBeatState
 		var i = 0;
 		while (i < len)
 		{
-			final script:FunkinLua = luaArray[i++];
+			final script = luaArray[i++];
 			if (script == null || exclusions.contains(script.scriptName))
 				continue;
 
@@ -3099,7 +3107,7 @@ class PlayState extends MusicBeatState
 		var i = 0;
 		while (i < len)
 		{
-			final script:HScript = hscriptArray[i++];
+			final script = hscriptArray[i++];
 			if (script == null || exclusions.contains(script.origin))
 				continue;
 

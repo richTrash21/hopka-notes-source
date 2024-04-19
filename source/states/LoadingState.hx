@@ -156,7 +156,7 @@ class LoadingState extends FlxState
 		pushSong('$folder/Inst');
 		final prefixVocals = PlayState.SONG.needsVoices ? '$folder/Voices' : null;
 		if (PlayState.SONG.gfVersion == null)
-			PlayState.SONG.gfVersion = "gf";
+			PlayState.SONG.gfVersion = "gf"; // Fix for the Chart Editor
 
 		dontPreloadDefaultVoices = false;
 		preloadCharacter(PlayState.SONG.player1, prefixVocals);

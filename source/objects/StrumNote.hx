@@ -19,7 +19,7 @@ class StrumNote extends FlxSprite
 	{
 		rgbShader = new RGBShaderReference(this, Note.initializeGlobalRGBShader(leData));
 		rgbShader.enabled = false;
-		if (PlayState.SONG?.disableNoteRGB)
+		if (PlayState.SONG.disableNoteRGB)
 			useRGBShader = false;
 		
 		final arr = (PlayState.isPixelStage ? ClientPrefs.data.arrowRGBPixel : ClientPrefs.data.arrowRGB)[leData % 4];
@@ -38,9 +38,7 @@ class StrumNote extends FlxSprite
 		this.noteData = leData;
 		super(x, y);
 
-		var skin = (PlayState.SONG?.arrowSkin != null && PlayState.SONG.arrowSkin.length > 1)
-			? PlayState.SONG.arrowSkin
-			: Note.defaultNoteSkin;
+		var skin = PlayState.SONG.arrowSkin.isNullOrEmpty() ? Note.defaultNoteSkin : PlayState.SONG.arrowSkin;
 
 		final customSkin:String = skin + Note.getNoteSkinPostfix();
 		if (Paths.fileExists('images/$customSkin.png', IMAGE))

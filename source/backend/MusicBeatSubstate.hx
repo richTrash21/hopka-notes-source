@@ -28,7 +28,7 @@ class MusicBeatSubstate extends flixel.FlxSubState implements IMusicBeatState
 		{
 			if (curStep > 0)
 				stepHit();
-			if (PlayState.SONG != null)
+			if (PlayState.SONG.song != null)
 			{
 				if (oldStep < curStep)
 					updateSection()

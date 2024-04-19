@@ -449,7 +449,7 @@ class FunkinLua
 			if (difficultyNum == -1)
 				difficultyNum = PlayState.storyDifficulty;
 
-			PlayState.SONG = Song.loadFromJson(Highscore.formatSong(name, difficultyNum), name);
+			Song.loadFromJson(Highscore.formatSong(name, difficultyNum), name, PlayState.SONG);
 			PlayState.storyDifficulty = difficultyNum;
 			game.persistentUpdate = false;
 			LoadingState.loadAndSwitchState(new PlayState());

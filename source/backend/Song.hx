@@ -30,13 +30,16 @@ typedef SwagSong =
 	@:optional var swapNotes:Bool;
 }
 
+@:allow(states.PlayState)
+@:allow(states.editors.ChartingState)
 /*@:structInit*/ class Song
 {
-	// IDFK WHAT THESE ARE BUT APARENTLY THEY WERE IN VS FORDICK'S CHARTS LMAO
-	// public static final invalidFields = ["player3", "validScore", "isHey", "cutsceneType", "isSpooky", "isMoody", "uiType", "sectionLengths"];
 	static final validFields = Type.getInstanceFields(Song);
+	// simple pool system
+	static final __pool = new Array<Song>();
+	// @:noCompletion static var instanceCount = 0;
 
-	public static function loadFromJson(jsonInput:String, ?folder:String):Song
+	public static function loadFromJson(jsonInput:String, ?folder:String, ?song:Song):Song
 	{
 		var rawJson:String = null;
 		
@@ -54,10 +57,15 @@ typedef SwagSong =
 			rawJson = #if sys File.getContent(rawJson) #else lime.utils.Assets.getText(rawJson) #end;
 		}
 
-		final songJson = new Song(onLoadJson(parseJSONshit(rawJson)));
+		final data = onLoadJson(parseJSONshit(rawJson));
+		if (song == null)
+			song = __pool.length == 0 ? new Song(data) : __pool.pop().load(data);
+		else
+			song.load(data);
+
 		if (jsonInput != "events")
-			StageData.loadDirectory(songJson);
-		return songJson;
+			StageData.loadDirectory(song);
+		return song;
 	}
 
 	inline public static function parseJSONshit(rawJson:String):SwagSong
@@ -65,6 +73,7 @@ typedef SwagSong =
 		return cast haxe.Json.parse(rawJson).song;
 	}
 
+	@:allow(states.editors.ChartingState)
 	static function onLoadJson(songJson:Dynamic):SwagSong // Convert old charts to newest format
 	{
 		if (songJson.gfVersion == null)
@@ -113,52 +122,100 @@ typedef SwagSong =
 	public var song:String;
 	public var notes:Array<Section>;
 	public var events:Array<EventNoteData>;
-	public var bpm:Float = 100;
-	public var needsVoices:Bool = true;
-	public var speed:Float = 1;
+	public var bpm:Float;
+	public var needsVoices:Bool;
+	public var speed:Float;
 
-	public var player1:String = "bf";
-	public var player2:String = "dad";
-	public var gfVersion:String = "gf";
-	public var stage:String = "stage";
+	public var player1:String;
+	public var player2:String;
+	public var gfVersion:String;
+	public var stage:String;
 
-	public var gameOverChar:String;
-	public var gameOverSound:String;
-	public var gameOverLoop:String;
-	public var gameOverEnd:String;
+	public var gameOverChar:Null<String>;
+	public var gameOverSound:Null<String>;
+	public var gameOverLoop:Null<String>;
+	public var gameOverEnd:Null<String>;
 
-	public var arrowSkin:String;
-	public var splashSkin:String;
+	public var arrowSkin:Null<String>;
+	public var splashSkin:Null<String>;
 	public var disableNoteRGB:Null<Bool>;
 	public var swapNotes:Null<Bool>; // for quickly swapping bf and dad notes
 
-	public function new(SONG:SwagSong)
+	public function new(?data:SwagSong)
 	{
-		for (field in Reflect.fields(SONG))
-		{
-			if (field == "notes")
-				notes = [for (section in SONG.notes) new Section(section)];
-			else if (validFields.contains(field))
+		// trace("new Song instance was created! [" + ++instanceCount + "]");
+		load(data);
+	}
+
+	public function load(data:SwagSong):Song
+	{
+		reset();
+		if (data != null)
+			for (field in Reflect.fields(data))
 			{
-				Reflect.setField(this, field, Reflect.field(SONG, field));
-				// clear some original psych chart editor bullshit
-				if (field == "events")
+				if (field == "notes")
 				{
-					var a:Array<Dynamic>;
-					for (eventNote in events)
+					notes = [for (section in data.notes) Section.__pool.length == 0 ? new Section(section) : Section.__pool.pop().load(section)];
+				}
+				else if (validFields.contains(field))
+				{
+					Reflect.setField(this, field, Reflect.field(data, field));
+					// clear some original psych chart editor bullshit
+					if (field == "events")
 					{
-						a = eventNote;
-						while (a.length > 2)
-							a.pop();
+						var a:Array<Dynamic>;
+						for (eventNote in events)
+						{
+							a = eventNote;
+							while (a.length > 2)
+								a.pop();
+						}
 					}
 				}
+				else
+				{
+					trace('WARNING!! This chart have invalid field "$field"');
+					Reflect.deleteField(data, field);
+				}
 			}
-			else
-			{
-				trace('WARNING!! This chart have invalid field "$field"');
-				Reflect.deleteField(SONG, field);
-			}
-		}
+
+		return this;
+	}
+
+	public function reset():Song
+	{
+		song = null;
+
+		if (notes != null)
+			while (notes.length != 0)
+				Section.__pool.push(notes.pop());
+		notes = null;
+
+		if (events != null)
+			while (events.length != 0)
+				events.pop();
+		events = null;
+
+		bpm = 100;
+		needsVoices = true;
+		speed = 1;
+
+		player1 = "bf";
+		player2 = "dad";
+		gfVersion = "gf";
+		stage = "stage";
+
+		gameOverChar = null;
+		gameOverSound = null;
+		gameOverLoop = null;
+		gameOverEnd = null;
+
+		arrowSkin = null;
+		splashSkin = null;
+		disableNoteRGB = null;
+		swapNotes = null;
+
+		return this;
 	}
 
 	public function toString():String

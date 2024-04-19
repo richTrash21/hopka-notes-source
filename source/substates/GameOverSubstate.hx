@@ -35,15 +35,15 @@ class GameOverSubstate extends MusicBeatSubstate
 
 	static final __point = FlxPoint.get();
 
-	public static function resetVariables(_song:backend.Song)
+	public static function resetVariables(song:backend.Song)
 	{
-		if (_song == null)
+		if (song == null)
 			return;
 
-		characterName  = _song.gameOverChar.isNullOrEmpty()  ? DEFAULT_CHAR  : _song.gameOverChar;
-		deathSoundName = _song.gameOverSound.isNullOrEmpty() ? DEFAULT_SOUND : _song.gameOverSound;
-		loopSoundName  = _song.gameOverLoop.isNullOrEmpty()  ? DEFAULT_LOOP  : _song.gameOverLoop;
-		endSoundName   = _song.gameOverEnd.isNullOrEmpty()   ? DEFAULT_END   : _song.gameOverEnd;
+		characterName  = song.gameOverChar.isNullOrEmpty()  ? DEFAULT_CHAR  : song.gameOverChar;
+		deathSoundName = song.gameOverSound.isNullOrEmpty() ? DEFAULT_SOUND : song.gameOverSound;
+		loopSoundName  = song.gameOverLoop.isNullOrEmpty()  ? DEFAULT_LOOP  : song.gameOverLoop;
+		endSoundName   = song.gameOverEnd.isNullOrEmpty()   ? DEFAULT_END   : song.gameOverEnd;
 
 		if (!PlayState.instance.boyfriendMap.exists('GameOverSubstate__$characterName'))
 		{

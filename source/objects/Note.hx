@@ -108,7 +108,7 @@ class Note extends FlxSprite implements INote
 		texture: null,
 		antialiasing: !PlayState.isPixelStage,
 		useGlobalShader: false,
-		useRGBShader: PlayState.SONG == null ? true : !PlayState.SONG?.disableNoteRGB,
+		useRGBShader: PlayState.SONG.song == null ? true : !PlayState.SONG.disableNoteRGB,
 		r: -1,
 		g: -1,
 		b: -1,
@@ -191,7 +191,7 @@ class Note extends FlxSprite implements INote
 		{
 			texture = "";
 			rgbShader = new RGBShaderReference(this, initializeGlobalRGBShader(noteData));
-			if (PlayState.SONG != null && PlayState.SONG.disableNoteRGB)
+			if (PlayState.SONG.song != null && PlayState.SONG.disableNoteRGB)
 				rgbShader.enabled = false;
 
 			x += swagWidth * (noteData);
@@ -264,12 +264,8 @@ class Note extends FlxSprite implements INote
 			postfix = "";
 
 		var skin = texture + postfix;
-		if (texture.length < 1)
-		{
-			skin = PlayState.SONG?.arrowSkin;
-			if (skin == null || skin.length < 1)
-				skin = defaultNoteSkin + postfix;
-		}
+		if (texture.length == 0)
+			skin = PlayState.SONG.arrowSkin.isNullOrEmpty() ? defaultNoteSkin + postfix :  PlayState.SONG.arrowSkin;
 
 		var skinPostfix = getNoteSkinPostfix();
 		final animName = animation.curAnim?.name;

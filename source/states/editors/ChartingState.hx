@@ -140,10 +140,7 @@ class ChartingState extends MusicBeatUIState
 	**/
 	var curSelectedNote:Array<Dynamic> = null;
 
-	var playbackSpeed(default, set):Float = 1;
-
-	function set_playbackSpeed(value:Float):Float
-		return playbackSpeed = FlxMath.bound(value, 0.5, 3);
+	var playbackSpeed:Float = 1;
 
 	var vocals:FlxSound;
 	var opponentVocals:FlxSound;
@@ -178,10 +175,10 @@ class ChartingState extends MusicBeatUIState
 	{
 		// FlxG.camera.flashSprite.cacheAsBitmap = true;
 		persistentUpdate = true;
-		if (PlayState.SONG == null)
+		if (PlayState.SONG.song == null)
 		{
 			Difficulty.resetList();
-			_song = new Song({
+			_song = PlayState.SONG.load({
 				song: 'Test',
 				notes: [],
 				events: [],
@@ -194,7 +191,6 @@ class ChartingState extends MusicBeatUIState
 				stage: 'stage'
 			});
 			addSection();
-			PlayState.SONG = _song;
 		}
 		else
 			_song = PlayState.SONG;
@@ -362,9 +358,10 @@ class ChartingState extends MusicBeatUIState
 	function addSongUI():Void
 	{
 		UI_songTitle = new UIInputTextAdvanced(10, 10, 70, _song.song, 8);
+		UI_songTitle.callback = (t, a) -> _song.song = t;
 		blockPressWhileTypingOn.push(UI_songTitle);
 
-		var check_voices = new FlxUICheckBox(10, 25, null, null, "Has voice track(s)", 80);
+		var check_voices = new FlxUICheckBox(10, 25, null, null, "Has voice\ntrack(s)", 80);
 		check_voices.checked = _song.needsVoices;
 		check_voices.callback = function() _song.needsVoices = check_voices.checked;
 
@@ -397,7 +394,7 @@ class ChartingState extends MusicBeatUIState
 
 		var loadAutosaveBtn:FlxButton = new FlxButton(reloadSongJson.x, reloadSongJson.y + 30, 'Load Autosave', function()
 		{
-			PlayState.SONG = new Song(Song.parseJSONshit(FlxG.save.data.autosave));
+			PlayState.SONG.load(Song.parseJSONshit(FlxG.save.data.autosave));
 			MusicBeatState.resetState();
 		});
 
@@ -414,6 +411,7 @@ class ChartingState extends MusicBeatUIState
 				clearEvents();
 				final events = Song.loadFromJson('events', songName);
 				_song.events = _song.events.concat(events.events);
+				Song.__pool.push(events);
 				changeSection(curSec);
 			}
 		});
@@ -1668,7 +1666,7 @@ class ChartingState extends MusicBeatUIState
 		{
 			switch (sender)
 			{
-				case 'playbackSpeed': playbackSpeed = #if FLX_PITCH Std.int(sliderRate.value) #else 1.0 #end;
+				case 'playbackSpeed': playbackSpeed = FlxMath.bound(#if FLX_PITCH Std.int(sliderRate.value) #else 1.0 #end, 0.5, 3);
 			}
 		}
 	}
@@ -1709,7 +1707,7 @@ class ChartingState extends MusicBeatUIState
 			changeSection();
 		}
 		Conductor.songPosition = FlxG.sound.music.time;
-		_song.song = UI_songTitle.text;
+		// _song.song = UI_songTitle.text;
 
 		strumLineUpdateY();
 		for (i in 0...8) strumLineNotes.members[i].y = strumLine.y;
@@ -1835,7 +1833,7 @@ class ChartingState extends MusicBeatUIState
 				persistentUpdate = false;
 				autosaveSong();
 				// FlxG.mouse.visible = false;
-				PlayState.SONG = _song;
+				// PlayState.SONG = _song;
 				FlxG.sound.music.stop();
 				if (vocals != null)
 					vocals.stop();
@@ -3004,20 +3002,31 @@ class ChartingState extends MusicBeatUIState
 
 	var missingText:FlxText;
 	var missingTextTimer:FlxTimer;
-	function loadJson(song:String, ?altLoad:Bool = false):Void{
-		//shitty null fix, i fucking hate it when this happens
-		//make it look sexier if possible
-		try {
-			if(altLoad) {
-				var rawJson = #if sys File.getContent(song).trim() #else lime.utils.Assets.getText(song).trim() #end;
-				while (!rawJson.endsWith("}")) rawJson = rawJson.substr(0, rawJson.length - 1);
-				PlayState.SONG = new Song(Song.parseJSONshit(rawJson));
-			} else {
-				final diff:String = Difficulty.getString();
-				PlayState.SONG = Song.loadFromJson(song.toLowerCase() + ((diff != null && diff != Difficulty.getDefault()) ? "-" + diff : ""), song.toLowerCase());
+	function loadJson(song:String, altLoad = false):Void
+	{
+		// shitty null fix, i fucking hate it when this happens
+		// make it look sexier if possible
+		try
+		{
+			if (altLoad)
+			{
+				var rawJson = StringTools.trim(#if sys File.getContent(song) #else lime.utils.Assets.getText(song) #end);
+				// while (!rawJson.endsWith("}"))
+				//	rawJson = rawJson.substr(0, rawJson.length - 1);
+				PlayState.SONG.load(Song.onLoadJson(Song.parseJSONshit(rawJson)));
+			}
+			else
+			{
+				final diff = Difficulty.getString();
+				var name = song.toLowerCase();
+				if (diff != null && diff != Difficulty.getDefault())
+					name += '-$diff';
+				Song.loadFromJson(name, song.toLowerCase(), PlayState.SONG);
 			}
 			MusicBeatState.resetState();
-		} catch(e) {
+		}
+		catch (e)
+		{
 			trace('ERROR! $e');
 
 			var errorStr:String = e.toString();
