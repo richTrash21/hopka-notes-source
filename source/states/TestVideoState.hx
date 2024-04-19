@@ -1,6 +1,5 @@
 package states;
 
-import sys.FileSystem;
 import flixel.addons.transition.FlxTransitionableState;
 import backend.VideoSprite;
 
@@ -56,7 +55,7 @@ class TestVideoState extends flixel.FlxState
 	@:noCompletion static function get_videos():Array<String>
 	{
 		if (videos == null)
-			for (i => video in videos = FileSystem.readDirectory("assets/videos"))
+			for (i => video in videos = sys.FileSystem.readDirectory("assets/videos"))
 				videos[i] = 'assets/videos/$video';
 
 		return videos;
