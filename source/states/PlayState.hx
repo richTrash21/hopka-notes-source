@@ -339,7 +339,7 @@ class PlayState extends MusicBeatState
 		PauseSubState.songName = null; // Reset to default
 		playbackRate = ClientPrefs.getGameplaySetting("songspeed");
 
-		if (FlxG.sound.music != null)
+		if (FlxG.sound.music != null || FlxG.sound.music.playing)
 			FlxG.sound.music.stop();
 
 		// Gameplay settings
@@ -1237,7 +1237,7 @@ class PlayState extends MusicBeatState
 
 		FlxG.sound.playMusic(inst, 1, false);
 		#if FLX_PITCH FlxG.sound.music.pitch = playbackRate; #end
-		FlxG.sound.music.onComplete = finishSong.bind();
+		FlxG.sound.music.onComplete = finishSong.bind(false);
 		if (SONG.needsVoices)
 		{
 			if (vocals != null)
@@ -1649,9 +1649,9 @@ class PlayState extends MusicBeatState
 		if (!(endingSong || inCutscene))
 		{
 			if (controls.justPressed("debug_1"))
-				openChartEditor();
-			if (controls.justPressed("debug_2"))
-				openCharacterEditor();
+				openChartEditor(true);
+			else if (controls.justPressed("debug_2"))
+				openCharacterEditor(true);
 		}
 		#end
 
@@ -1775,8 +1775,8 @@ class PlayState extends MusicBeatState
 			FlxG.resetState();
 		#end
 
-		setOnScripts("cameraX", camGame.scroll.x + (camGame.width * 0.5));
-		setOnScripts("cameraY", camGame.scroll.y + (camGame.height * 0.5));
+		setOnScripts("cameraX", camGame.scroll.x + camGame.width * 0.5);
+		setOnScripts("cameraY", camGame.scroll.y + camGame.height * 0.5);
 		callOnScripts("onUpdatePost", [elapsed]);
 	}
 
@@ -1817,12 +1817,14 @@ class PlayState extends MusicBeatState
 	}
 
 	#if !RELESE_BUILD_FR
-	function openChartEditor()
+	function openChartEditor(stopMusic = false)
 	{
+		if (stopMusic)
+			__stop__song();
+
 		persistentUpdate = false;
 		paused = true;
 		cancelMusicFadeTween();
-		chartingMode = true;
 
 		#if hxdiscord_rpc
 		DiscordClient.changePresence("Chart Editor", null, null, true);
@@ -1832,8 +1834,11 @@ class PlayState extends MusicBeatState
 		MusicBeatState.switchState(ChartingState.new);
 	}
 	
-	function openCharacterEditor()
+	function openCharacterEditor(stopMusic = false)
 	{
+		if (stopMusic)
+			__stop__song();
+
 		persistentUpdate = false;
 		paused = true;
 		cancelMusicFadeTween();
@@ -1844,7 +1849,7 @@ class PlayState extends MusicBeatState
 	}
 	#end
 
-	public var isDead:Bool = false; //Don't mess with this on Lua!!!
+	public var isDead:Bool = false; // Don't mess with this on Lua!!!
 	function doDeathCheck(skipHealthCheck = false):Bool
 	{
 		if ((!skipHealthCheck && health > healthBar.bounds.min || practiceMode) || isDead)
@@ -1860,22 +1865,8 @@ class PlayState extends MusicBeatState
 		@:bypassAccessor
 		paused = true;
 
-		FlxG.sound.music.stop();
-		if (SONG.needsVoices)
-		{
-			if (vocals != null)
-				vocals.stop();
-			if (opponentVocals != null)
-				opponentVocals.stop();
-		}
-
+		__stop__song();
 		persistentUpdate = persistentDraw = false;
-		/*#if LUA_ALLOWED
-		for (tween in modchartTweens)
-			tween.active = true;
-		for (timer in modchartTimers)
-			timer.active = true;
-		#end*/
 		boyfriend.getScreenPosition(__point);
 		openSubState(new GameOverSubstate(__point.x - boyfriend.position.x, __point.y - boyfriend.position.y));
 
@@ -2265,7 +2256,7 @@ class PlayState extends MusicBeatState
 				remove(prevCamFollow = _camFollow);
 
 				Song.loadFromJson(storyPlaylist[0] + difficulty, storyPlaylist[0], SONG);
-				FlxG.sound.music.stop();
+				__stop__song();
 
 				cancelMusicFadeTween();
 				LoadingState.prepareToSong();
@@ -3065,28 +3056,28 @@ class PlayState extends MusicBeatState
 		if (excludeValues == null)	excludeValues = [FunkinLua.Function_Continue];
 
 		var len = luaArray.length;
-		if (len == 0)
-			return returnVal;
-
-		var i = 0;
-		while (i < len)
+		if (len != 0)
 		{
-			final script = luaArray[i++];
-			if (script == null || exclusions.contains(script.scriptName))
-				continue;
-
-			final myValue:Dynamic = script.call(funcToCall, args);
-			if ((myValue == FunkinLua.Function_StopLua || myValue == FunkinLua.Function_StopAll) && !excludeValues.contains(myValue) && !ignoreStops)
+			var i = -1;
+			while (++i < len)
 			{
-				returnVal = myValue;
-				break;
-			}
-			
-			if (myValue != null && !excludeValues.contains(myValue))
-				returnVal = myValue;
+				final script = luaArray[i];
+				if (script == null || exclusions.contains(script.scriptName))
+					continue;
 
-			if (script.closed)
-				len--;
+				final myValue:Dynamic = script.call(funcToCall, args);
+				if ((myValue == FunkinLua.Function_StopLua || myValue == FunkinLua.Function_StopAll) && !excludeValues.contains(myValue) && !ignoreStops)
+				{
+					returnVal = myValue;
+					break;
+				}
+				
+				if (myValue != null && !excludeValues.contains(myValue))
+					returnVal = myValue;
+
+				if (script.closed)
+					len--;
+			}
 		}
 		#end
 		return returnVal;
@@ -3101,32 +3092,32 @@ class PlayState extends MusicBeatState
 		if (excludeValues == null)	excludeValues = [FunkinLua.Function_Continue];
 
 		final len = hscriptArray.length;
-		if (len == 0)
-			return returnVal;
-
-		var i = 0;
-		while (i < len)
+		if (len != 0)
 		{
-			final script = hscriptArray[i++];
-			if (script == null || exclusions.contains(script.origin))
-				continue;
-
-			var callValue = script.executeFunction(funcToCall, args);
-			if (script.exception != null)
+			var i = 0;
+			while (i < len)
 			{
-				FunkinLua.luaTrace('ERROR ($funcToCall) - ' + script.exception, true, false, FlxColor.RED);
-				script.exception = null;
-				continue;
-			}
+				final script = hscriptArray[i++];
+				if (script == null || exclusions.contains(script.origin))
+					continue;
 
-			if ((callValue == FunkinLua.Function_StopHScript || callValue == FunkinLua.Function_StopAll) && !excludeValues.contains(callValue) && !ignoreStops)
-			{
-				returnVal = callValue;
-				break;
-			}
+				var callValue = script.executeFunction(funcToCall, args);
+				if (script.exception != null)
+				{
+					FunkinLua.luaTrace('ERROR ($funcToCall) - ' + script.exception, true, false, FlxColor.RED);
+					script.exception = null;
+					continue;
+				}
 
-			if (callValue != null && !excludeValues.contains(callValue))
-				returnVal = callValue;
+				if ((callValue == FunkinLua.Function_StopHScript || callValue == FunkinLua.Function_StopAll) && !excludeValues.contains(callValue) && !ignoreStops)
+				{
+					returnVal = callValue;
+					break;
+				}
+
+				if (callValue != null && !excludeValues.contains(callValue))
+					returnVal = callValue;
+			}
 		}
 		#end
 		return returnVal;
@@ -3356,6 +3347,18 @@ class PlayState extends MusicBeatState
 	@:noCompletion extern inline static function __sound__delayed(__sound:FlxSound, __time:Float, __delay:Float):Bool
 	{
 		return __sound == null ? false : (Math.abs(__sound.time - __time) > __delay);
+	}
+
+	@:noCompletion extern inline function __stop__song()
+	{
+		FlxG.sound.music.stop();
+		if (SONG.needsVoices)
+		{
+			if (vocals != null)
+				vocals.stop();
+			if (opponentVocals != null)
+				opponentVocals.stop();
+		}
 	}
 
 	// DEPRECATED!!!

@@ -65,6 +65,29 @@ class ChartingState extends MusicBeatUIState
 		'GF Sing',
 		'No Animation'
 	];
+
+	public static var GRID_SIZE = 40;
+	static var CAM_OFFSET = 360;
+
+	public static var vortex = false;
+	public static var quantizations = [4, 8, 12, 16, 20, 24, 32, 48, 64, 96, 192];
+	public static var quantization:Int = 16;
+	public static var curQuant = 3;
+
+	@:allow(debug.FPSCounter)
+	static var _song:Song;
+	static var _queuedSong:Song;
+	static var zoomList = [0.25, 0.5, 1, 2, 3, 4, 6, 8, 12, 16, 24];
+
+	public static var goToPlayState:Bool = false;
+	/**
+	 * Array of notes showing when each section STARTS in STEPS
+	 * Usually rounded up??
+	 */
+	public static var curSec = 0;
+	public static var lastSection = 0;
+	static var lastSong = "";
+
 	public var ignoreWarnings = false;
 	var curNoteTypes:Array<String> = [];
 	var undos = [];
@@ -91,21 +114,9 @@ class ChartingState extends MusicBeatUIState
 	];
 
 	var _file:FileReference;
-
 	var UI_box:FlxUITabMenu;
-
-	public static var goToPlayState:Bool = false;
-	/**
-	 * Array of notes showing when each section STARTS in STEPS
-	 * Usually rounded up??
-	 */
-	public static var curSec:Int = 0;
-	public static var lastSection:Int = 0;
-	private static var lastSong:String = '';
-
 	var bpmTxt:FlxText;
 
-	var camPos:FlxObject;
 	var strumLine:FlxSprite;
 	var quant:AttachedSprite;
 	var strumLineNotes:FlxTypedGroup<StrumNote>;
@@ -114,10 +125,6 @@ class ChartingState extends MusicBeatUIState
 	var bullshitUI:FlxGroup;
 
 	var highlight:FlxSprite;
-
-	public static var GRID_SIZE:Int = 40;
-	var CAM_OFFSET:Int = 360;
-
 	var dummyArrow:FlxSprite;
 
 	var curRenderedSustains:FlxTypedGroup<FlxSprite>;
@@ -134,7 +141,6 @@ class ChartingState extends MusicBeatUIState
 	var curEventSelected:Int = 0;
 	var curUndoIndex = 0;
 	var curRedoIndex = 0;
-	var _song:Song;
 	/*
 	 * WILL BE THE CURRENT / LAST PLACED NOTE
 	**/
@@ -153,32 +159,30 @@ class ChartingState extends MusicBeatUIState
 	var currentSongName:String;
 
 	var zoomTxt:FlxText;
-
-	var zoomList:Array<Float> = [0.25, 0.5, 1, 2, 3, 4, 6, 8, 12, 16, 24];
 	var curZoom:Int = 2;
 
-	private var blockPressWhileTypingOn:Array<UIInputTextAdvanced> = [];
-	private var blockPressWhileTypingOnStepper:Array<FlxUINumericStepper> = [];
-	private var blockPressWhileScrolling:Array<DropDownAdvanced> = [];
+	var blockPressWhileTypingOn:Array<UIInputTextAdvanced> = [];
+	var blockPressWhileTypingOnStepper:Array<FlxUINumericStepper> = [];
+	var blockPressWhileScrolling:Array<DropDownAdvanced> = [];
 
 	var waveformSprite:FlxSprite;
 	var gridLayer:FlxTypedGroup<FlxSprite>;
 
-	public static var quantization:Int = 16;
-	public static var curQuant = 3;
-
-	public var quantizations:Array<Int> = [4, 8, 12, 16, 20, 24, 32, 48, 64, 96, 192];
-
-	public static var vortex:Bool = false;
 	public var mouseQuant:Bool = false;
 	override function create()
 	{
-		// FlxG.camera.flashSprite.cacheAsBitmap = true;
+		Song.cache.clear();
+		Song.exceptions.clear();
 		persistentUpdate = true;
-		if (PlayState.SONG.song == null)
+		PlayState.chartingMode = true;
+
+		if (_song == null)
+			_song = new Song();
+
+		if (PlayState.SONG.song == null && _queuedSong?.song == null)
 		{
 			Difficulty.resetList();
-			_song = PlayState.SONG.load({
+			_song.load({
 				song: 'Test',
 				notes: [],
 				events: [],
@@ -193,9 +197,11 @@ class ChartingState extends MusicBeatUIState
 			addSection();
 		}
 		else
-			_song = PlayState.SONG;
+			_song.copyFrom(_queuedSong?.song == null ? PlayState.SONG : _queuedSong);
 
 		// Paths.clearMemory();
+		if (_queuedSong != null)
+			_queuedSong.reset();
 
 		#if hxdiscord_rpc
 		// Updating Discord Rich Presence
@@ -204,17 +210,15 @@ class ChartingState extends MusicBeatUIState
 
 		vortex = FlxG.save.data.chart_vortex;
 		ignoreWarnings = FlxG.save.data.ignoreWarnings;
-		var bg:FlxSprite = new FlxSprite(0, 0, Paths.image('menuDesat'));
+
+		final bg = new FlxSprite(Paths.image('menuDesat'));
 		bg.antialiasing = ClientPrefs.data.antialiasing;
 		bg.scrollFactor.set();
 		bg.color = 0xFF222222;
 		add(bg);
 
-		gridLayer = new FlxTypedGroup<FlxSprite>();
-		add(gridLayer);
-
-		waveformSprite = new FlxSprite(GRID_SIZE, 0).makeGraphic(1, 1, 0x00FFFFFF);
-		add(waveformSprite);
+		add(gridLayer = new FlxTypedGroup<FlxSprite>());
+		add(waveformSprite = new FlxSprite(GRID_SIZE, 0).makeGraphic(1, 1, 0x00FFFFFF));
 
 		var eventIcon:FlxSprite = new FlxSprite(-GRID_SIZE - 5, -90, Paths.image('eventArrow'));
 		eventIcon.antialiasing = ClientPrefs.data.antialiasing;
@@ -274,9 +278,6 @@ class ChartingState extends MusicBeatUIState
 		}
 		add(strumLineNotes);
 
-		camPos = new FlxObject(0, 0, 1, 1);
-		camPos.setPosition(strumLine.x + CAM_OFFSET, strumLine.y);
-
 		dummyArrow = new FlxSprite().makeGraphic(GRID_SIZE, GRID_SIZE);
 		dummyArrow.antialiasing = ClientPrefs.data.antialiasing;
 		add(dummyArrow);
@@ -327,6 +328,8 @@ class ChartingState extends MusicBeatUIState
 
 		updateGrid();
 		super.create();
+
+		FlxG.camera.scroll.x = strumLine.x + CAM_OFFSET - FlxG.camera.width * 0.5;
 		lime.app.Application.current.window.onDropFile.add(loadFromFile); // by Redar13
 	}
 
@@ -394,7 +397,7 @@ class ChartingState extends MusicBeatUIState
 
 		var loadAutosaveBtn:FlxButton = new FlxButton(reloadSongJson.x, reloadSongJson.y + 30, 'Load Autosave', function()
 		{
-			PlayState.SONG.load(Song.parseJSONshit(FlxG.save.data.autosave));
+			_song.load(Song.parseJSONshit(FlxG.save.data.autosave));
 			MusicBeatState.resetState();
 		});
 
@@ -409,7 +412,7 @@ class ChartingState extends MusicBeatUIState
 			#end
 			{
 				clearEvents();
-				final events = Song.loadFromJson('events', songName);
+				final events = Song.loadFromJson('events', songName, false);
 				_song.events = _song.events.concat(events.events);
 				Song.__pool.push(events);
 				changeSection(curSec);
@@ -571,8 +574,6 @@ class ChartingState extends MusicBeatUIState
 		tab_group_song.add(stageDropDown);
 
 		UI_box.addGroup(tab_group_song);
-
-		FlxG.camera.follow(camPos);
 	}
 
 	var stepperBeats:FlxUINumericStepper;
@@ -1713,7 +1714,6 @@ class ChartingState extends MusicBeatUIState
 		for (i in 0...8) strumLineNotes.members[i].y = strumLine.y;
 
 		//FlxG.mouse.visible = true;//cause reasons. trust me
-		camPos.y = strumLine.y;
 		if(!disableAutoScrolling.checked) {
 			if (Math.ceil(strumLine.y) >= gridBG.height)
 			{
@@ -1823,6 +1823,7 @@ class ChartingState extends MusicBeatUIState
 					opponentVocals.pause();
 
 				autosaveSong();
+				PlayState.SONG.copyFrom(_song);
 				playtesting = true;
 				playtestingTime = Conductor.songPosition;
 				playtestingOnComplete = FlxG.sound.music.onComplete;
@@ -1833,7 +1834,7 @@ class ChartingState extends MusicBeatUIState
 				persistentUpdate = false;
 				autosaveSong();
 				// FlxG.mouse.visible = false;
-				// PlayState.SONG = _song;
+				PlayState.SONG.copyFrom(_song);
 				FlxG.sound.music.stop();
 				if (vocals != null)
 					vocals.stop();
@@ -2083,7 +2084,6 @@ class ChartingState extends MusicBeatUIState
 		}
 		Conductor.songPosition = FlxG.sound.music.time;
 		strumLineUpdateY();
-		camPos.y = strumLine.y;
 		for (i in 0...8)
 		{
 			strumLineNotes.members[i].y = strumLine.y;
@@ -2275,9 +2275,10 @@ class ChartingState extends MusicBeatUIState
 		(sectionStartTime(1) > FlxG.sound.music.length) ? lastSecBeatsNext = 0 : getSectionBeats(curSec + 1);
 	}
 
-	inline function strumLineUpdateY()
+	extern inline function strumLineUpdateY()
 	{
 		strumLine.y = getYfromStrum((Conductor.songPosition - sectionStartTime()) / zoomList[curZoom] % (Conductor.stepCrochet * 16)) / (getSectionBeats() * .25);
+		FlxG.camera.scroll.y = strumLine.y - FlxG.camera.height * 0.5;
 	}
 
 	var waveformPrinted:Bool = true;
@@ -3008,12 +3009,11 @@ class ChartingState extends MusicBeatUIState
 		// make it look sexier if possible
 		try
 		{
+			if (_queuedSong == null)
+				_queuedSong = new Song();
 			if (altLoad)
 			{
-				var rawJson = StringTools.trim(#if sys File.getContent(song) #else lime.utils.Assets.getText(song) #end);
-				// while (!rawJson.endsWith("}"))
-				//	rawJson = rawJson.substr(0, rawJson.length - 1);
-				PlayState.SONG.load(Song.onLoadJson(Song.parseJSONshit(rawJson)));
+				_queuedSong.load(Song.onLoadJson(Song.parseJSONshit(StringTools.trim(#if sys File.getContent(song) #else lime.utils.Assets.getText(song) #end))));
 			}
 			else
 			{
@@ -3021,7 +3021,7 @@ class ChartingState extends MusicBeatUIState
 				var name = song.toLowerCase();
 				if (diff != null && diff != Difficulty.getDefault())
 					name += '-$diff';
-				Song.loadFromJson(name, song.toLowerCase(), PlayState.SONG);
+				Song.loadFromJson(name, song.toLowerCase(), _queuedSong, false);
 			}
 			MusicBeatState.resetState();
 		}

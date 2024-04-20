@@ -32,32 +32,70 @@ typedef SwagSong =
 
 @:allow(states.PlayState)
 @:allow(states.editors.ChartingState)
-/*@:structInit*/ class Song
+class Song
 {
 	static final validFields = Type.getInstanceFields(Song);
 	// simple pool system
 	static final __pool = new Array<Song>();
 	// @:noCompletion static var instanceCount = 0;
+	static final cache = new Map<String, SwagSong>();
+	static final exceptions = new Map<String, haxe.Exception>();
 
-	public static function loadFromJson(jsonInput:String, ?folder:String, ?song:Song):Song
+	public static function loadFromJson(jsonInput:String, ?folder:String, ?song:Song, useCache = true):Song
 	{
-		var rawJson:String = null;
-		
 		final formattedFolder = Paths.formatToSongPath(folder);
 		final formattedSong = Paths.formatToSongPath(jsonInput);
+		var data:SwagSong;
+		var path:String;
+
 		#if MODS_ALLOWED
-		final moddyFile = Paths.modsJson('$formattedFolder/$formattedSong');
-		if (sys.FileSystem.exists(moddyFile))
-			rawJson = File.getContent(moddyFile);
+		path = Paths.modsJson('$formattedFolder/$formattedSong');
+		if (exceptions.exists(path))
+			throw exceptions.get(path);
+		else if (useCache && cache.exists(path))
+			data = cache.get(path);
+		else if (sys.FileSystem.exists(path))
+		{
+			try
+			{
+				data = onLoadJson(parseJSONshit(File.getContent(path)));
+				if (useCache)
+					cache.set(path, data);
+			}
+			catch(e)
+			{
+				if (!exceptions.exists(path))
+					exceptions.set(path, e);
+				throw e;
+			}
+		}
+		else
+		{
+		#end
+			path = Paths.json('$formattedFolder/$formattedSong');
+			if (exceptions.exists(path))
+				throw exceptions.get(path);
+			else if (useCache && cache.exists(path))
+				data = cache.get(path);
+			else
+			{
+				try
+				{
+					data = onLoadJson(parseJSONshit(#if sys File.getContent(path) #else lime.utils.Assets.getText(path) #end));
+					if (useCache)
+						cache.set(path, data);
+				}
+				catch(e)
+				{
+					if (!exceptions.exists(path))
+						exceptions.set(path, e);
+					throw e;
+				}
+			}
+		#if MODS_ALLOWED
+		}
 		#end
 
-		if (rawJson == null)
-		{
-			rawJson = Paths.json('$formattedFolder/$formattedSong');
-			rawJson = #if sys File.getContent(rawJson) #else lime.utils.Assets.getText(rawJson) #end;
-		}
-
-		final data = onLoadJson(parseJSONshit(rawJson));
 		if (song == null)
 			song = __pool.length == 0 ? new Song(data) : __pool.pop().load(data);
 		else
@@ -155,7 +193,7 @@ typedef SwagSong =
 			{
 				if (field == "notes")
 				{
-					notes = [for (section in data.notes) Section.__pool.length == 0 ? new Section(section) : Section.__pool.pop().load(section)];
+					notes = [for (section in data.notes) Section.get(section)];
 				}
 				else if (validFields.contains(field))
 				{
@@ -187,18 +225,34 @@ typedef SwagSong =
 		song = null;
 
 		if (notes != null)
+		{
 			while (notes.length != 0)
 				Section.__pool.push(notes.pop());
-		notes = null;
+			notes = null;
+		}
 
-		if (events != null)
+		/*if (events != null)
+		{
+			var tmp1:EventNoteData;
+			var tmp2:Array<Dynamic>;
 			while (events.length != 0)
-				events.pop();
+			{
+				tmp1 = events.pop();
+				if (tmp1.events != null)
+					while (tmp1.events.length != 0)
+					{
+						tmp2 = tmp1.events.pop();
+						if (tmp2 != null)
+							while (tmp2.length != 0)
+								tmp2.pop();
+					}
+			}
+		}*/
 		events = null;
 
-		bpm = 100;
 		needsVoices = true;
-		speed = 1;
+		speed = 1.0;
+		bpm = 100.0;
 
 		player1 = "bf";
 		player2 = "dad";
@@ -214,6 +268,91 @@ typedef SwagSong =
 		splashSkin = null;
 		disableNoteRGB = null;
 		swapNotes = null;
+
+		return this;
+	}
+
+	/**
+		NOTE: `DO NOT` use this with chart loaded through cached data!!!!
+	**/
+	public function copyFrom(data:Song):Song
+	{
+		song = data.song;
+
+		if (notes == null)
+		{
+			notes = [for (section in data.notes) Section.get().copyFrom(section)];
+		}
+		else
+		{
+			while (notes.length > data.notes.length)
+				Section.__pool.push(notes.pop());
+
+			for (i => section in data.notes)
+				(notes[i] ?? (notes[i] = Section.get())).copyFrom(section);
+		}
+
+		if (events == null)
+		{
+			events = [for (eventData in data.events) eventData.copy()];
+		}
+		else
+		{
+			var tmp1:EventNoteData;
+			var tmp2:Array<String>;
+			while (events.length > data.events.length)
+			{
+				tmp1 = events.pop();
+				while (tmp1.events.length != 0)
+				{
+					tmp2 = tmp1.events.pop();
+					while (tmp2.length != 0)
+						tmp2.pop();
+				}
+			}
+
+			for (i => eventData in data.events)
+			{
+				tmp1 = events[i];
+				if (tmp1 == null)
+					events[i] = eventData.copy();
+				else
+				{
+					tmp1.strumTime = eventData.strumTime;
+					for (i => event in eventData.events)
+					{
+						tmp2 = tmp1.events[i];
+						if (tmp2 == null)
+							tmp1.events[i] = event.copy();
+						else
+						{
+							tmp2[0] = event.name;
+							tmp2[1] = event.value1;
+							tmp2[2] = event.value2;
+						}
+					}
+				}
+			}
+		}
+
+		bpm = data.bpm;
+		needsVoices = data.needsVoices;
+		speed = data.speed;
+
+		player1 = data.player1;
+		player2 = data.player2;
+		gfVersion = data.gfVersion;
+		stage = data.stage;
+
+		gameOverChar = data.gameOverChar;
+		gameOverSound = data.gameOverSound;
+		gameOverLoop = data.gameOverLoop;
+		gameOverEnd = data.gameOverEnd;
+
+		arrowSkin = data.arrowSkin;
+		splashSkin = data.splashSkin;
+		disableNoteRGB = data.disableNoteRGB;
+		swapNotes = data.swapNotes;
 
 		return this;
 	}
@@ -236,6 +375,16 @@ abstract EventNoteData(Array<EitherType<Float, Array<EventData>>>) from Array<Ei
 	public var strumTime(get, set):Float;
 	public var events(get, set):Array<EventData>;
 
+	@:arrayAccess inline public function get(i:Int):EitherType<Float, Array<EventData>>
+	{
+		return this[i];
+	}
+
+	inline public function copy():EventNoteData
+	{
+		return [strumTime, [for (e in events) e.copy()]];
+	}
+
 	@:noCompletion inline function get_strumTime():Float		   return this[0];
 	@:noCompletion inline function get_events():Array<EventData>   return this[1];
 	@:noCompletion inline function set_strumTime(v):Float		   return this[0] = v;
@@ -247,6 +396,16 @@ abstract EventData(Array<String>) from Array<String> to Array<String>
 	public var name(get, set):String;
 	public var value1(get, set):String;
 	public var value2(get, set):String;
+
+	@:arrayAccess inline public function get(i:Int):String
+	{
+		return this[i];
+	}
+
+	inline public function copy():EventData
+	{
+		return this.copy();
+	}
 
 	@:noCompletion inline function get_name():String	 return this[0];
 	@:noCompletion inline function get_value1():String	 return this[1];

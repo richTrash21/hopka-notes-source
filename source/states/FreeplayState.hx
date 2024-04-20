@@ -160,11 +160,11 @@ class FreeplayState extends MusicBeatState
 		txtBG.scrollFactor.set();
 
 		#if PRELOAD_ALL
-		final leText:String = "Press SPACE to listen to the Song / Press CTRL to open the Gameplay Changers Menu / Press RESET to Reset your Score and Accuracy.";
-		final size:Int = 16;
+		final leText = "Press SPACE to listen to the Song / Press CTRL to open the Gameplay Changers Menu / Press RESET to Reset your Score and Accuracy.";
+		final size = 16;
 		#else
-		final leText:String = "Press CTRL to open the Gameplay Changers Menu / Press RESET to Reset your Score and Accuracy.";
-		final size:Int = 18;
+		final leText = "Press CTRL to open the Gameplay Changers Menu / Press RESET to Reset your Score and Accuracy.";
+		final size = 18;
 		#end
 		final text:FlxText = new FlxText(0, penis + 4, FlxG.width, leText, size);
 		text.setFormat(Paths.font("vcr.ttf"), size, FlxColor.WHITE, RIGHT);
@@ -212,7 +212,7 @@ class FreeplayState extends MusicBeatState
 
 	inline function weekIsLocked(name:String):Bool
 	{
-		final leWeek:WeekData = WeekData.weeksLoaded.get(name);
+		final leWeek = WeekData.weeksLoaded.get(name);
 		return (!leWeek.startUnlocked && leWeek.weekBefore.length > 0 && (!StoryMenuState.weekCompleted.exists(leWeek.weekBefore) || !StoryMenuState.weekCompleted.get(leWeek.weekBefore)));
 	}
 
@@ -235,11 +235,11 @@ class FreeplayState extends MusicBeatState
 					 else
 						 CoolUtil.lerpElapsed(lerpRating, intendedRating, 0.2, elapsed);
 
-		final ratingSplit:Array<String> = Std.string(CoolUtil.floorDecimal(lerpRating * 100, 2)).split(".");
-		if(ratingSplit.length < 2) // No decimals, add an empty space
+		final ratingSplit = Std.string(CoolUtil.floorDecimal(lerpRating * 100, 2)).split(".");
+		if (ratingSplit.length < 2) // No decimals, add an empty space
 			ratingSplit.push("");
 		
-		while(ratingSplit[1].length < 2) // Less than 2 decimals in it, add decimals then
+		while (ratingSplit[1].length < 2) // Less than 2 decimals in it, add decimals then
 			ratingSplit[1] += "0";
 
 		scoreText.text = 'PERSONAL BEST: $lerpScore (' + ratingSplit.join(".") + "%)";
@@ -248,22 +248,24 @@ class FreeplayState extends MusicBeatState
 		if (subState != null)
 			return super.update(elapsed);
 
-		final shiftMult:Int = FlxG.keys.pressed.SHIFT ? 3 : 1;
+		final shiftMult = FlxG.keys.pressed.SHIFT ? 3 : 1;
 		if (songs.length > 1)
 		{
 			if (FlxG.keys.justPressed.HOME || FlxG.keys.justPressed.END || controls.UI_UP_P || controls.UI_DOWN_P)
 			{ 
-				if (FlxG.keys.justPressed.HOME)		 curSelected = 0;
-				else if (FlxG.keys.justPressed.END)	 curSelected = songs.length - 1;
+				if (FlxG.keys.justPressed.HOME)
+					curSelected = 0;
+				else if (FlxG.keys.justPressed.END)	
+					curSelected = songs.length - 1;
 				changeSelection(controls.UI_UP_P ? -shiftMult : controls.UI_DOWN_P ? shiftMult : 0);
 				holdTime = 0;	
 			}
 
 			if (controls.UI_DOWN || controls.UI_UP)
 			{
-				final checkLastHold:Int = Math.floor((holdTime - 0.5) * 10);
+				final checkLastHold = Math.floor((holdTime - 0.5) * 10);
 				holdTime += elapsed;
-				final checkNewHold:Int = Math.floor((holdTime - 0.5) * 10);
+				final checkNewHold = Math.floor((holdTime - 0.5) * 10);
 
 				if (holdTime > 0.5 && checkNewHold - checkLastHold > 0)
 					changeSelection((checkNewHold - checkLastHold) * (controls.UI_UP ? -shiftMult : shiftMult));
@@ -290,7 +292,8 @@ class FreeplayState extends MusicBeatState
 		if (controls.BACK)
 		{
 			persistentUpdate = false;
-			if(colorTween != null) colorTween.cancel();
+			if (colorTween != null)
+				colorTween.cancel();
 			FlxG.sound.play(Paths.sound('cancelMenu'));
 			MusicBeatState.switchState(MainMenuState.new);
 		}
@@ -304,14 +307,14 @@ class FreeplayState extends MusicBeatState
 		{
 			if (instPlaying != curSelected)
 			{
+				Mods.currentModDirectory = songs[curSelected].folder;
+				final poop = Paths.formatToSongPath(songs[curSelected].songName);
 				try
 				{
 					#if PRELOAD_ALL
+					Song.loadFromJson(Highscore.formatSong(poop, curDifficulty), poop, PlayState.SONG);
 					FlxG.sound.music.volume = 0;
 					stopVocals();
-					Mods.currentModDirectory = songs[curSelected].folder;
-					final poop:String = Highscore.formatSong(songs[curSelected].songName.toLowerCase(), curDifficulty);
-					Song.loadFromJson(poop, songs[curSelected].songName.toLowerCase(), PlayState.SONG);
 
 					Conductor.bpm = PlayState.SONG.bpm;
 					FlxG.sound.playMusic(Paths.inst(PlayState.SONG.song), 0.7);
@@ -336,8 +339,8 @@ class FreeplayState extends MusicBeatState
 		else if (controls.ACCEPT)
 		{
 			persistentUpdate = false;
-			final songLowercase:String = Paths.formatToSongPath(songs[curSelected].songName);
-			final poop:String = Highscore.formatSong(songLowercase, curDifficulty);
+			final songLowercase = Paths.formatToSongPath(songs[curSelected].songName);
+			final poop = Highscore.formatSong(songLowercase, curDifficulty);
 			trace(poop);
 
 			try
@@ -398,8 +401,8 @@ class FreeplayState extends MusicBeatState
 
 	function exceptionError(e:haxe.Exception)
 	{
-		trace('ERROR! $e');
-		final errorStr:String = e.message.startsWith("[file_contents,assets/data/") ? "Missing file: " + e.message.substring(27, e.message.length-1) : e.message;
+		trace('ERROR! $e' + e.stack);
+		final errorStr = e.message.startsWith("[file_contents,assets/data/") ? "Missing file: " + e.message.substring(27, e.message.length-1) : e.message;
 		missingText.text = 'ERROR WHILE LOADING CHART:\n$errorStr';
 		missingText.screenCenter(Y);
 		missingText.visible = true;
@@ -407,7 +410,7 @@ class FreeplayState extends MusicBeatState
 		FlxG.sound.play(Paths.sound("cancelMenu"));
 	}
 
-	function changeDiff(change:Int = 0)
+	function changeDiff(change = 0)
 	{
 		curDifficulty = FlxMath.wrap(curDifficulty + change, 0, Difficulty.list.length-1);
 

@@ -19,11 +19,12 @@ class TestVideoState extends flixel.FlxState
 
 		sys.thread.Thread.create(() ->
 		{
-			video = new VideoSprite();
+			final vid = FlxG.random.getObject(videos);
+			trace('video loaded: $vid');
+
+			add(video = new VideoSprite());
 			video.bitmap.onEndReached.add(() -> exit(), true);
-			add(video);
-			final status = video.load(FlxG.random.getObject(videos));
-			trace('video loaded: $status');
+			video.load(vid);
 			video.play();
 			// loading.kill();
 		});

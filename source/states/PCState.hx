@@ -291,7 +291,7 @@ class DesktopSubState extends PCSubState
 				video.load(FlxG.random.getObject(TestVideoState.videos));
 				video.play();
 			}));
-			video.load("https://cdn.discordapp.com/attachments/791373867897192459/1225821395250843739/gummy_elephant.mp4?ex=66228623&is=66101123&hm=40ec5a0ec0d439cc5e6584f8376c1ed5dd92eee5aaa08c02806a43dab3bc5852&");
+			video.load(FlxG.random.getObject(TestVideoState.videos));
 			video.play();
 			add(video);
 		});

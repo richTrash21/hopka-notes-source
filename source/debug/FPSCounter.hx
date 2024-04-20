@@ -215,11 +215,12 @@ class FPSCounter extends openfl.text.TextField
 				text += ': $tmp';
 			}
 
-			final onPlayState = text.contains("PlayState") || text.contains("ChartingState");
+			final charting = text.contains("ChartingState");
+			final onPlayState = text.contains("PlayState") || charting;
 			tmp = "Position: " + FlxStringUtil.formatTime(Conductor.songPosition * 0.001);
 			if (onPlayState)
 			{
-				var t = "Song: " + PlayState.SONG.song.toLowerCase();
+				var t = "Song: " + (charting ? states.editors.ChartingState._song.song : PlayState.SONG.song.toLowerCase());
 				final d = Difficulty.getString().toLowerCase();
 				if (d != Difficulty.defaultDifficulty.toLowerCase())
 					t += ' [$d]';
