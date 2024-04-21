@@ -43,12 +43,12 @@ class Difficulty
 
 	inline public static function resetList()
 	{
-		list = defaultList.copy();
+		__copy__helper(list, defaultList);
 	}
 
 	inline public static function copyFrom(diffs:Array<String>)
 	{
-		list = diffs.copy();
+		__copy__helper(list, diffs);
 	}
 
 	inline public static function getString(?num:Int):String
@@ -59,5 +59,14 @@ class Difficulty
 	inline public static function getDefault():String
 	{
 		return defaultDifficulty;
+	}
+
+	extern inline static function __copy__helper(__to:Array<String>, __from:Array<String>)
+	{
+		while (__to.length > __from.length)
+			__to.pop();
+
+		for (__i => __item in __from)
+			__to[__i] = __item;
 	}
 }

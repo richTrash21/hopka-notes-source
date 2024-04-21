@@ -74,7 +74,7 @@ class ChartingState extends MusicBeatUIState
 	public static var quantization:Int = 16;
 	public static var curQuant = 3;
 
-	@:allow(debug.FPSCounter)
+	@:allow(debug.DebugInfo)
 	static var _song:Song;
 	static var _queuedSong:Song;
 	static var zoomList = [0.25, 0.5, 1, 2, 3, 4, 6, 8, 12, 16, 24];

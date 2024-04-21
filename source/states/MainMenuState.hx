@@ -68,7 +68,7 @@ class MainMenuState extends MusicBeatState
 		bg.active = false;
 		add(bg.screenCenter());
 
-		magenta = new FlxSprite(0, 0, Paths.image("menuDesat"));
+		magenta = new FlxSprite(Paths.image("menuDesat"));
 		magenta.antialiasing = ClientPrefs.data.antialiasing;
 		magenta.scrollFactor.set(0, yScroll);
 		magenta.setGraphicSize(magenta.width * 1.175);

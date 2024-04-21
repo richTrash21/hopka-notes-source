@@ -8,7 +8,7 @@ import flixel.input.keyboard.FlxKey;
 
 import backend.StateTransition;
 import backend.Subtitles;
-import debug.FPSCounter;
+import debug.DebugOverlay;
 
 // crash handler stuff
 #if CRASH_HANDLER
@@ -98,7 +98,7 @@ class Main extends flixel.FlxGame
 
 	public static final initialState:flixel.util.typeLimit.NextState = states.TitleState.new;
 
-	public static var fpsVar(default, null):FPSCounter;
+	public static var fpsVar(default, null):DebugOverlay;
 	public static var transition(default, null):StateTransition;
 
 	public static var volumeDownKeys:Array<FlxKey>;
@@ -278,9 +278,8 @@ class Main extends flixel.FlxGame
 		if (stage == null)
 			return;
 
-		fpsVar = new FPSCounter(10, 3);
+		fpsVar = new DebugOverlay();
 		fpsVar.visible = ClientPrefs.data.showFPS;
-		fpsVar.commit = stage.application.meta.get("build");
 		fpsVar.debug = FlxG.save.data.debugInfo;
 		addChild(transition = new StateTransition());
 		super.create(_);

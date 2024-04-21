@@ -166,7 +166,7 @@ class InputFormatter
 		}
 	}
 
-	inline static function __keyToString(key:String):String
+	extern inline static function __keyToString(key:String):String
 	{
 		return	if (key == null)
 					"---";
