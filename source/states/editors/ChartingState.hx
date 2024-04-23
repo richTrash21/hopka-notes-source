@@ -398,7 +398,7 @@ class ChartingState extends MusicBeatUIState
 		var loadAutosaveBtn:FlxButton = new FlxButton(reloadSongJson.x, reloadSongJson.y + 30, 'Load Autosave', function()
 		{
 			_song.load(Song.parseJSONshit(FlxG.save.data.autosave));
-			MusicBeatState.resetState();
+			FlxG.resetState();
 		});
 
 		var loadEventJson:FlxButton = new FlxButton(loadAutosaveBtn.x, loadAutosaveBtn.y + 30, 'Load Events', function()
@@ -1859,7 +1859,7 @@ class ChartingState extends MusicBeatUIState
 				// Protect against lost data when quickly leaving the chart editor.
 				autosaveSong();
 				PlayState.chartingMode = false;
-				MusicBeatState.switchState(states.editors.MasterEditorMenu.new);
+				FlxG.switchState(states.editors.MasterEditorMenu.new);
 				FlxG.sound.playMusic(Paths.music('freakyMenu'));
 				// FlxG.mouse.visible = false;
 				return;
@@ -3023,7 +3023,7 @@ class ChartingState extends MusicBeatUIState
 					name += '-$diff';
 				Song.loadFromJson(name, song.toLowerCase(), _queuedSong, false);
 			}
-			MusicBeatState.resetState();
+			FlxG.resetState();
 		}
 		catch (e)
 		{
@@ -3149,7 +3149,21 @@ class ChartingState extends MusicBeatUIState
 		FlxG.log.error("Problem saving Level data");
 	}
 
-	inline function getSectionBeats(?section:Null<Int> = null)
+	@:noCompletion function updateBeat():Void
+	{
+		curBeat = Math.floor(curStep * .25);
+		curDecBeat = curDecStep * .25;
+	}
+
+	@:noCompletion function updateCurStep():Void
+	{
+		final lastChange = Conductor.getBPMFromSeconds(Conductor.songPosition);
+		final shit = ((Conductor.songPosition - ClientPrefs.data.noteOffset) - lastChange.songTime) / lastChange.stepCrochet;
+		curDecStep = lastChange.stepTime + shit;
+		curStep = lastChange.stepTime + Math.floor(shit);
+	}
+
+	@:noCompletion inline function getSectionBeats(?section:Null<Int> = null)
 	{
 		return _song?.notes[section ?? curSec]?.sectionBeats ?? 4; 
 	}

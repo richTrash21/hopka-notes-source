@@ -1,14 +1,14 @@
 package states;
 
-import flixel.addons.transition.FlxTransitionableState;
 import flixel.addons.display.FlxBackdrop;
 import flixel.input.keyboard.FlxKey;
+// import backend.StateTransition;
 
-class DoiseRoomLMAO extends MusicBeatState
+class DoiseRoomLMAO extends backend.BaseState
 {
 	override public function create()
 	{
-		// FlxTransitionableState.skipNextTransOut = FlxTransitionableState.skipNextTransIn = true;
+		// StateTransition.skipNextTransOut = StateTransition.skipNextTransIn = true;
 		MainMenuState.doiseTrans = true;
 		TitleState.skippedIntro = true;
 
@@ -150,8 +150,8 @@ class DoiseRoomLMAO extends MusicBeatState
 					FlxG.camera.fade(FlxColor.BLACK, 0);
 					FlxG.sound.playMusic(Paths.music("freakyMenu"));
 					Conductor.bpm = 102;
-					flixel.addons.transition.FlxTransitionableState.skipNextTransIn = true;
-					MusicBeatState.switchState(MainMenuState.new);
+					backend.StateTransition.skipNextTransIn = true;
+					FlxG.switchState(MainMenuState.new);
 					trace("ok nvmd out of that nightmare lmao");
 				}
 				else

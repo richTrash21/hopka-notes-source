@@ -141,7 +141,7 @@ class GameOverSubstate extends MusicBeatSubstate
 				PlayState.seenCutscene = PlayState.chartingMode = false;
 
 				Mods.loadTopMod();
-				MusicBeatState.switchState(PlayState.isStoryMode ? states.StoryMenuState.new : states.FreeplayState.new);
+				FlxG.switchState(PlayState.isStoryMode ? states.StoryMenuState.new : states.FreeplayState.new);
 
 				FlxG.sound.playMusic(Paths.music("freakyMenu"));
 				game.callOnScripts("onGameOverConfirm", [false]);
@@ -175,7 +175,7 @@ class GameOverSubstate extends MusicBeatSubstate
 
 		FlxG.sound.music.stop();
 		FlxG.sound.play(Paths.sound(endSoundName));
-		new FlxTimer().start(0.7, (_) -> realCamera.fade(FlxColor.BLACK, 2, false, MusicBeatState.resetState));
+		new FlxTimer().start(0.7, (_) -> realCamera.fade(FlxColor.BLACK, 2, false, FlxG.resetState));
 	}
 
 	override function destroy()

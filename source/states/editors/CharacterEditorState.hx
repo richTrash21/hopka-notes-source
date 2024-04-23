@@ -1054,10 +1054,10 @@ class CharacterEditorState extends backend.MusicBeatUIState
 			{
 				// FlxG.mouse.visible = false;
 				if (_goToPlayState)
-					MusicBeatState.switchState(PlayState.new);
+					FlxG.switchState(PlayState.new);
 				else
 				{
-					MusicBeatState.switchState(states.editors.MasterEditorMenu.new);
+					FlxG.switchState(states.editors.MasterEditorMenu.new);
 					FlxG.sound.playMusic(Paths.music("freakyMenu"));
 				}
 			}

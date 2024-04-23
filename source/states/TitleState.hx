@@ -1,6 +1,6 @@
 package states;
 
-import flixel.addons.transition.FlxTransitionableState;
+import backend.StateTransition;
 import shaders.ColorSwap;
 
 typedef TitleData = {
@@ -37,7 +37,7 @@ class TitleState extends MusicBeatState
 	override function create():Void
 	{
 		Paths.clearStoredMemory();
-		FlxTransitionableState.skipNextTransOut = true;
+		StateTransition.skipNextTransOut = true;
 		persistentUpdate = true;
 
 		super.create();
@@ -158,8 +158,8 @@ class TitleState extends MusicBeatState
 
 					new FlxTimer().start(1, (_) ->
 					{
-						FlxTransitionableState.skipNextTransIn = false;
-						MusicBeatState.switchState(MainMenuState.new);
+						StateTransition.skipNextTransIn = false;
+						FlxG.switchState(MainMenuState.new);
 					});
 				}
 			}
@@ -215,10 +215,10 @@ class TitleState extends MusicBeatState
 				}
 			}
 			while (fakeBeat != curBeat);
-	  }
-  }
+		}
+	}
 
-	function skipIntro()
+	inline function skipIntro()
 	{
 		FlxG.camera.flash(FlxColor.WHITE, 2);
 		gf.visible = logo.visible = titleText.visible = skippedIntro = true;

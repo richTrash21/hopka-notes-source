@@ -1,13 +1,5 @@
 package backend;
 
-typedef BPMChangeEvent =
-{
-	var stepTime:Int;
-	var songTime:Float;
-	var bpm:Float;
-	@:optional var stepCrochet:Float;
-}
-
 class Conductor
 {
 	public static var bpm(default, set):Float = 100;
@@ -41,9 +33,9 @@ class Conductor
 			bpm: bpm,
 			stepCrochet: stepCrochet
 		}
-		for (i in 0...Conductor.bpmChangeMap.length)
-			if (time >= Conductor.bpmChangeMap[i].songTime)
-				lastChange = Conductor.bpmChangeMap[i];
+		for (i => change in bpmChangeMap)
+			if (time >= change.songTime)
+				lastChange = change;
 
 		return lastChange;
 	}
@@ -56,9 +48,9 @@ class Conductor
 			bpm: bpm,
 			stepCrochet: stepCrochet
 		}
-		for (i in 0...Conductor.bpmChangeMap.length)
-			if (Conductor.bpmChangeMap[i].stepTime <= step)
-				lastChange = Conductor.bpmChangeMap[i];
+		for (i => change in bpmChangeMap)
+			if (change.stepTime <= step)
+				lastChange = change;
 
 		return lastChange;
 	}
@@ -137,4 +129,12 @@ class Conductor
 		stepCrochet = (crochet = calculateCrochet(newBPM)) * .25;
 		return bpm = newBPM;
 	}
+}
+
+@:publicFields @:structInit class BPMChangeEvent
+{
+	var stepTime:Int;
+	var songTime:Float;
+	var bpm:Float;
+	@:optional var stepCrochet:Float;
 }

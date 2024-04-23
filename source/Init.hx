@@ -1,13 +1,28 @@
 package;
 
-import flixel.addons.transition.FlxTransitionableState;
+import backend.StateTransition;
 import states.FlashingState;
 
 // THIS IS FOR INITIALIZING STUFF BECAUSE FLIXEL HATES INITIALIZING STUFF IN MAIN
 // GO TO MAIN FOR GLOBAL PROJECT/OPENFL STUFF
 // CODE BY Rudyrue (https://github.com/ShadowMario/FNF-PsychEngine/pull/13695)
-class Init extends flixel.FlxState
+class Init extends backend.BaseState
 {
+	static var hxPalette:Array<FlxColor> = [0x00b922, 0xffc132, 0xf5274e, 0x3641ff, 0x04cdfb];
+	static var colorTimeLen = 0.1667;
+	var colorTime = 0.0;
+	var curColor = -1;
+
+	var tween:FlxTween;
+	var sound:FlxSound;
+	var text:FlxSprite;
+	var hxLogo:FlxSprite;
+	var hxOutline:FlxSprite;
+
+	var time = 0.0;
+	var startedScene:Bool;
+	var timedEvents:Array<TimedEvent>;
+
 	override function create():Void
 	{
 		sound = FlxG.sound.load(Paths.sound("haxe_intro"));
@@ -67,24 +82,9 @@ class Init extends flixel.FlxState
 		];
 	}
 
-	static var hxPalette:Array<FlxColor> = [0x00b922, 0xffc132, 0xf5274e, 0x3641ff, 0x04cdfb];
-	static var colorTimeLen = 0.1667;
-	var colorTime = 0.0;
-	var curColor = -1;
-
-	var tween:FlxTween;
-	var sound:FlxSound;
-	var text:FlxSprite;
-	var hxLogo:FlxSprite;
-	var hxOutline:FlxSprite;
-
-	var time = 0.0;
-	var startedScene:Bool;
-	var timedEvents:Array<TimedEvent>;
-
 	override public function update(elapsed:Float)
 	{
-		if (Controls.instance.ACCEPT || Controls.instance.BACK || Controls.instance.PAUSE)
+		if (Controls.instance != null && (Controls.instance.ACCEPT || Controls.instance.BACK || Controls.instance.PAUSE))
 		{
 			super.update(elapsed);
 			return leave();
@@ -132,10 +132,9 @@ class Init extends flixel.FlxState
 	{
 		var switchTo = Main.initialState;
 		if (FlxG.save.data.flashing == null && !FlashingState.leftState)
-		{
-			FlxTransitionableState.skipNextTransIn = true;
 			switchTo = FlashingState.new;
-		}
+
+		StateTransition.skipNextTransOut = StateTransition.skipNextTransIn = true;
 		FlxG.switchState(FlxG.save.data.isDoised ? states.DoiseRoomLMAO.new : switchTo);
 	}
 }

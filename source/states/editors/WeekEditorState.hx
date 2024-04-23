@@ -9,7 +9,6 @@ import flixel.addons.ui.FlxUICheckBox;
 import flixel.addons.ui.FlxUIInputText;
 import flixel.addons.ui.FlxUINumericStepper;
 import flixel.addons.ui.FlxUITabMenu;
-import flixel.addons.transition.FlxTransitionableState;
 import flixel.ui.FlxButton;
 import openfl.net.FileReference;
 import openfl.events.Event;
@@ -31,6 +30,7 @@ import objects.MenuItem;
 import states.editors.MasterEditorMenu;
 
 import backend.MusicBeatUIState;
+import backend.StateTransition;
 
 class WeekEditorState extends MusicBeatUIState
 {
@@ -142,7 +142,7 @@ class WeekEditorState extends MusicBeatUIState
 		add(loadWeekButton.screenCenter(X));
 		loadWeekButton.x -= 120;
 		
-		final freeplayButton = new FlxButton(0, 650, "Freeplay", () -> { MusicBeatState.switchState(WeekEditorFreeplayState.new.bind(weekFile)); persistentUpdate = false; });
+		final freeplayButton = new FlxButton(0, 650, "Freeplay", () -> { FlxG.switchState(()->new WeekEditorFreeplayState(weekFile)); persistentUpdate = false; });
 		add(freeplayButton.screenCenter(X));
 	
 		final saveWeekButton:FlxButton = new FlxButton(0, 650, "Save Week", saveWeek.bind(weekFile));
@@ -434,7 +434,7 @@ class WeekEditorState extends MusicBeatUIState
 			ClientPrefs.toggleVolumeKeys(true);
 			if(FlxG.keys.justPressed.ESCAPE) {
 				persistentUpdate = false;
-				MusicBeatState.switchState(MasterEditorMenu.new);
+				FlxG.switchState(MasterEditorMenu.new);
 				FlxG.sound.playMusic(Paths.music('freakyMenu'));
 			}
 		}
@@ -640,7 +640,7 @@ class WeekEditorFreeplayState extends backend.MusicBeatUIState
 		add(loadWeekButton.screenCenter(X));
 		loadWeekButton.x -= 120;
 		
-		final storyModeButton:FlxButton = new FlxButton(0, 685, "Story Mode", () -> { MusicBeatState.switchState(WeekEditorState.new.bind(weekFile)); persistentUpdate = false; });
+		final storyModeButton:FlxButton = new FlxButton(0, 685, "Story Mode", () -> { FlxG.switchState(()->new WeekEditorState(weekFile)); persistentUpdate = false; });
 		add(storyModeButton.screenCenter(X));
 	
 		final saveWeekButton:FlxButton = new FlxButton(0, 685, "Save Week", WeekEditorState.saveWeek.bind(weekFile));
@@ -755,9 +755,8 @@ class WeekEditorFreeplayState extends backend.MusicBeatUIState
 		{
 			super.update(elapsed);
 			persistentUpdate = false;
-			FlxTransitionableState.skipNextTransIn = true;
-			FlxTransitionableState.skipNextTransOut = true;
-			MusicBeatState.switchState(WeekEditorFreeplayState.new.bind(WeekEditorState.loadedWeek));
+			StateTransition.skipNextTransIn = StateTransition.skipNextTransOut = true;
+			FlxG.switchState(WeekEditorFreeplayState.new.bind(WeekEditorState.loadedWeek));
 			WeekEditorState.loadedWeek = null;
 			return;
 		}
@@ -774,7 +773,7 @@ class WeekEditorFreeplayState extends backend.MusicBeatUIState
 			if (FlxG.keys.justPressed.ESCAPE)
 			{
 				persistentUpdate = true;
-				MusicBeatState.switchState(MasterEditorMenu.new);
+				FlxG.switchState(MasterEditorMenu.new);
 				FlxG.sound.playMusic(Paths.music('freakyMenu'));
 			}
 			if (controls.UI_UP_P) changeSelection(-1);

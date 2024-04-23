@@ -1,6 +1,6 @@
 package states;
 
-import flixel.addons.transition.FlxTransitionableState;
+import backend.StateTransition;
 
 class FlashingState extends flixel.FlxState
 {
@@ -26,7 +26,7 @@ You've been warned!";
 			final back = Controls.instance.BACK;
 			if (Controls.instance.ACCEPT || back)
 			{
-				FlxTransitionableState.skipNextTransIn = FlxTransitionableState.skipNextTransOut = leftState = true;
+				StateTransition.skipNextTransIn = StateTransition.skipNextTransOut = leftState = true;
 				if (back)
 				{
 					ClientPrefs.data.flashing = false;
@@ -46,6 +46,6 @@ You've been warned!";
 
 	@:noCompletion extern inline function __next()
 	{
-		MusicBeatState.switchState(Main.initialState);
+		FlxG.switchState(Main.initialState);
 	}
 }

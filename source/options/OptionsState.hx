@@ -11,7 +11,7 @@ class OptionsState extends MusicBeatState
 	public static var onPlayState = false;
 	public static final BG_COLOR:FlxColor = 0xFFEA71FD;
 
-	inline function openSelectedSubstate(label:String)
+	extern inline function openSelectedSubstate(label:String)
 	{
 		switch (label)
 		{
@@ -20,7 +20,7 @@ class OptionsState extends MusicBeatState
 			case "Graphics":				openSubState(new options.GraphicsSettingsSubState());
 			case "Visuals and UI":			openSubState(new options.VisualsUISubState());
 			case "Gameplay":				openSubState(new options.GameplaySettingsSubState());
-			case "Adjust Delay and Combo":	MusicBeatState.switchState(options.NoteOffsetState.new);
+			case "Adjust Delay and Combo":	FlxG.switchState(options.NoteOffsetState.new);
 		}
 	}
 
@@ -101,7 +101,7 @@ class OptionsState extends MusicBeatState
 				FlxG.sound.music.volume = 0;
 			}
 			else
-				MusicBeatState.switchState(states.MainMenuState.new);
+				FlxG.switchState(states.MainMenuState.new);
 		}
 		else if (controls.ACCEPT)
 		{

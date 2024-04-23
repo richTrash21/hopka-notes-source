@@ -1,28 +1,28 @@
 package backend;
 
-import flixel.addons.transition.FlxTransitionableState;
-import flixel.util.typeLimit.NextState;
-
 class StateTransition extends openfl.display.Bitmap
 {
 	/** TRANS RIGHTS!!!! Uniform transition time. **/
 	public static final transTime = .45;
 	static final colors = [FlxColor.BLACK, FlxColor.BLACK, FlxColor.TRANSPARENT];
 
+	public static var skipNextTransIn = false;
+	public static var skipNextTransOut = false;
+
 	public var active(default, null):Bool;
+	public var ease:EaseFunction = FlxEase.linear;
 
 	@:noCompletion var _time:Float;
 	@:noCompletion var _duration:Float;
 	@:noCompletion var _startPos:Float;
 	@:noCompletion var _targetPos:Float;
-	@:noCompletion var _nextState:NextState;
+	@:noCompletion var _onComplete:()->Void;
 
 	// singleton yaaaaaaayy
 	@:allow(Main) function new()
 	{
-		final gradient = flixel.util.FlxGradient.createGradientBitmapData(1, FlxG.height * 2, colors);
-		gradient.disposeImage();
-		super(gradient, null);
+		super(flixel.util.FlxGradient.createGradientBitmapData(1, FlxG.height * 2, colors));
+		__bitmapData.disposeImage();
 		visible = false;
 
 		FlxG.signals.preUpdate.add(update);
@@ -31,10 +31,10 @@ class StateTransition extends openfl.display.Bitmap
 		FlxG.cameras.cameraAdded.add(onCameraAdded);
 	}
 
-	public function start(?nextState:NextState, duration:Float, isTransIn:Bool)
+	public function start(?onComplete:()->Void, duration:Float, isTransIn:Bool)
 	{
 		_time = 0.0;
-		_nextState = nextState;
+		_onComplete = onComplete;
 		_duration = Math.max(duration, FlxPoint.EPSILON);
 
 		active = true;
@@ -50,7 +50,12 @@ class StateTransition extends openfl.display.Bitmap
 		{
 			_time += FlxG.elapsed;
 			if (_time < _duration) // move transition graphic
-				y = FlxMath.lerp(_startPos, _targetPos, Math.min(_time / _duration, 1.0));
+			{
+				if (ease == null)
+					ease = FlxEase.linear;
+
+				y = FlxMath.lerp(_startPos, _targetPos, ease(_time / _duration));
+			}
 			else // finish transition
 			{
 				y = _targetPos;
@@ -79,14 +84,12 @@ class StateTransition extends openfl.display.Bitmap
 	@:noCompletion function finish()
 	{
 		active = false;
-		if (_nextState == null && _startPos < 0)
-			FlxG.resetState();
+		if (_onComplete == null)
+			visible = false;
 		else
 		{
-			if (_nextState == null)
-				visible = false;
-			else
-				FlxG.switchState(_nextState);
+			_onComplete();
+			_onComplete = null;
 		}
 	}
 
@@ -98,10 +101,10 @@ class StateTransition extends openfl.display.Bitmap
 
 	@:noCompletion function onStateSwitched()
 	{
-		if (FlxTransitionableState.skipNextTransOut)
+		if (skipNextTransOut)
 		{
 			visible = false;
-			FlxTransitionableState.skipNextTransOut = false;
+			skipNextTransOut = false;
 		}
 		else
 			start(transTime * 1.1, true);

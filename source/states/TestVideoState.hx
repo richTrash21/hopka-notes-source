@@ -1,9 +1,9 @@
 package states;
 
-import flixel.addons.transition.FlxTransitionableState;
+import backend.StateTransition;
 import backend.VideoSprite;
 
-class TestVideoState extends flixel.FlxState
+class TestVideoState extends backend.BaseState
 {
 	public static var videos(get, null):Array<String>;
 
@@ -12,7 +12,7 @@ class TestVideoState extends flixel.FlxState
 	override public function create()
 	{
 		FlxG.sound.music.volume = 0;
-		FlxTransitionableState.skipNextTransOut = FlxTransitionableState.skipNextTransIn = true;
+		StateTransition.skipNextTransOut = StateTransition.skipNextTransIn = true;
 
 		final loading = new FlxText("LOADING...", 32);
 		add(loading.screenCenter());
@@ -49,7 +49,7 @@ class TestVideoState extends flixel.FlxState
 
 	@:noCompletion extern inline function exit()
 	{
-		MusicBeatState.switchState(MainMenuState.new);
+		FlxG.switchState(MainMenuState.new);
 	}
 
 	// TODO: find where to upload all this shit cuz it's taking 60+ mb fucking hell

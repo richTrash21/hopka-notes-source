@@ -13,7 +13,6 @@ class FPSCounter extends DebugTextField
 	var memoryMegas(get, never):Int;
 	var memoryMegasGPU(get, never):Int;
 
-	@:noCompletion var lastTime = 0.0;
 	@:noCompletion var memPeak = 0;
 	@:noCompletion var gpuPeak = 0;
 
@@ -22,22 +21,22 @@ class FPSCounter extends DebugTextField
 		super(x, y);
 		__textFormat.size += 1;
 
-		styleSheet = new openfl.text.StyleSheet();
-		styleSheet.setStyle("fps-text", {fontSize: __textFormat.size + 1, letterSpacing: 1, color: LOW_FPS.hex(6)});
-		styleSheet.setStyle("mem-text", {fontSize: __textFormat.size + 1, letterSpacing: 1});
+		__styleSheet = new openfl.text.StyleSheet();
+		__styleSheet.setStyle("fps-text", {fontSize: __textFormat.size + 1, letterSpacing: 1, color: LOW_FPS.hex(6)});
+		__styleSheet.setStyle("mem-text", {fontSize: __textFormat.size + 1, letterSpacing: 1});
 	}
 
 	@:access(flixel.FlxGame._elapsedMS)
 	override function flixelUpdate():Void
 	{
 		// ignores FlxG.timeScale
-		currentFPS = __calc__fps(FlxG.game._elapsedMS * 0.001);
+		currentFPS = __calc__fps(currentFPS, FlxG.game._elapsedMS * 0.001);
 
 		if (!__visible || __alpha == 0.0)
 			return;
 
 		_text = 'FPS:<fps-text> $currentFPS</fps-text>';
-		styleSheet.getStyle("fps-text").color = (switch (Std.int(currentFPS * 0.05))
+		__styleSheet.getStyle("fps-text").color = (switch (Std.int(currentFPS * 0.05))
 		{
 			case 0:		LOW_FPS; // 0 - 20 fps
 			case 1, 2:	FlxColor.interpolate(LOW_FPS, HIGH_FPS, (currentFPS - 20) * 0.025); // 20 - 59 fps
@@ -75,9 +74,9 @@ class FPSCounter extends DebugTextField
 		fps counting method from codename engine
 		https://github.com/FNF-CNE-Devs/CodenameEngine/blob/main/source/funkin/backend/system/framerate/FramerateCounter.hx
 	**/
-	extern inline function __calc__fps(__e:Float):Int
+	extern inline function __calc__fps(__cur__fps:Int, __e:Float):Int
 	{
-		return FlxMath.minInt(Math.floor(FlxMath.lerp(__e == 0.0 ? 0.0 : 1.0 / __e, currentFPS, Math.exp(-__e * 15.0))), FlxG.updateFramerate);
+		return FlxMath.minInt(Math.floor(FlxMath.lerp(__e == 0.0 ? 0.0 : 1.0 / __e, __cur__fps, Math.exp(-__e * 15.0))), FlxG.updateFramerate);
 	}
 
 	@:noCompletion inline function get_memoryMegas():Int

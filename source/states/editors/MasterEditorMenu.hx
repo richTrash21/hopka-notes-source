@@ -12,8 +12,8 @@ class MasterEditorMenu extends MusicBeatState
 {
 	static var options:Array<states.MainMenuState.MainMenuOption> = [
 		["Chart Editor",				ChartingState.new, true],
-		["Character Editor",			CharacterEditorState.new.bind(Character.DEFAULT_CHARACTER, false), true],
-		["Week Editor",					WeekEditorState.new.bind(null)],
+		["Character Editor",			()->new CharacterEditorState(Character.DEFAULT_CHARACTER, false), true],
+		["Week Editor",					()->new WeekEditorState()],
 		["Menu Character Editor",		MenuCharacterEditorState.new],
 		["Dialogue Editor",				DialogueEditorState.new, true],
 		["Dialogue Portrait Editor",	DialogueCharacterEditorState.new, true],
@@ -88,7 +88,7 @@ class MasterEditorMenu extends MusicBeatState
 		#end
 
 		if (controls.BACK)
-			MusicBeatState.switchState(MainMenuState.new);
+			FlxG.switchState(MainMenuState.new);
 
 		if (controls.ACCEPT && !selectedSomething)
 		{
@@ -97,7 +97,7 @@ class MasterEditorMenu extends MusicBeatState
 			if (curOption.preload)
 				LoadingState.loadAndSwitchState(curOption.state);
 			else
-				MusicBeatState.switchState(curOption.state);
+				FlxG.switchState(curOption.state);
 			if (curOption.name != "Mods Menu")
 				FlxG.sound.music.volume = 0;
 			#if PRELOAD_ALL

@@ -22,6 +22,7 @@ import sys.FileSystem;
 import backend.Mods;
 #end
 
+@:access(openfl.display.BitmapData.__texture)
 @:access(flixel.system.frontEnds.BitmapFrontEnd)
 class Paths
 {
@@ -65,7 +66,7 @@ class Paths
 
 			// remove the key from all cache maps
 			currentTrackedAssets.remove(key);
-			FlxG.bitmap.remove(FlxG.bitmap.get(key));
+			__destroy__graphic(FlxG.bitmap.get(key));
 		}
 
 		// run the garbage collector for good measure lmfao
@@ -81,16 +82,22 @@ class Paths
 				continue;
 
 			// localTrackedAssets.remove(key);
-			FlxG.bitmap.remove(FlxG.bitmap.get(key));
+			__destroy__graphic(FlxG.bitmap.get(key));
 		}
 
 		__clear__null__items(currentTrackedSounds);
 
 		// clear all sounds that are cached
+		var snd:Sound;
 		for (key in currentTrackedSounds)
 		{
 			if (localTrackedAssets.contains(key) || dumpExclusions.contains(key))
 				continue;
+
+			// thx redar
+			snd = OpenFlAssets.cache.getSound(key);
+			if (snd != null)
+				snd.close();
 
 			currentTrackedSounds.remove(key);
 			OpenFlAssets.cache.removeSound(key);
@@ -275,7 +282,6 @@ class Paths
 	}
 
 	// new psych
-	@:access(openfl.display.BitmapData.__texture)
 	public static function cacheBitmap(file:String, ?bitmap:BitmapData, allowGPU = true):FlxGraphic
 	{
 		if (bitmap == null)
@@ -567,6 +573,17 @@ class Paths
 	{
 		final __id = __array.indexOf(__item);
 		return __id == -1 ? __array.push(__item) : __id;
+	}
+
+	// thx redar
+	@:noCompletion extern inline static function __destroy__graphic(__graphic:FlxGraphic)
+	{
+		if (__graphic != null && __graphic.bitmap != null && __graphic.bitmap.__texture != null)
+		{
+			__graphic.bitmap.__texture.dispose();
+			__graphic.bitmap.__texture = null;
+		}
+		FlxG.bitmap.remove(__graphic);
 	}
 
 	@:noCompletion inline static function set_currentLevel(level:String):String

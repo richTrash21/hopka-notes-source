@@ -1,15 +1,17 @@
 package substates;
 
 import flixel.util.FlxDestroyUtil;
-import flixel.addons.transition.FlxTransitionableState;
 import flixel.util.FlxStringUtil;
 
+import backend.StateTransition;
 import options.OptionsState;
 
 class PauseSubState extends MusicBeatSubstate
 {
 	public static var songName:String;
-	@:allow(Main) static final tweenManager = new FlxTweenManager();
+	@:allow(Main)
+	@:allow(debug.DebugInfo)
+	static final tweenManager = new FlxTweenManager();
 
 	var grpMenuShit:FlxTypedGroup<Alphabet>;
 
@@ -104,7 +106,7 @@ class PauseSubState extends MusicBeatSubstate
 		{
 			pauseMusic = FlxG.sound.load(Paths.music(musicEnabled ? Paths.formatToSongPath(ClientPrefs.data.pauseMusic) : songName), 0, true);
 			pauseMusic.play(false, FlxG.random.float(0, pauseMusic.length * 0.5));
-			pauseMusic.fadeTween = tweenManager.num(0, 0.5, 40, {onComplete: (_) -> pauseMusic.fadeTween = null}, (v) -> pauseMusic.volume = v);
+			// pauseMusic.fadeTween = tweenManager.num(0, 0.5, 40, {onComplete: (_) -> pauseMusic.fadeTween = null}, (v) -> pauseMusic.volume = v);
 			// pauseMusic.fadeIn(40, 0, 0.5, (_) -> pauseMusic.fadeTween = null);
 		}
 		regenMenu();
@@ -116,6 +118,8 @@ class PauseSubState extends MusicBeatSubstate
 	override function update(elapsed:Float)
 	{
 		cantUnpause -= elapsed;
+		if (pauseMusic != null && pauseMusic.volume < 0.5)
+			pauseMusic.volume += 0.01 * elapsed;
 
 		super.update(elapsed);
 		updateSkipTextStuff();
@@ -161,7 +165,7 @@ class PauseSubState extends MusicBeatSubstate
 					{
 						backend.Song.loadFromJson(backend.Highscore.formatSong(PlayState.SONG.song, curSelected), PlayState.SONG.song, PlayState.SONG);
 						PlayState.storyDifficulty = curSelected;
-						MusicBeatState.resetState();
+						FlxG.resetState();
 						FlxG.sound.music.volume = 0;
 						PlayState.changedDifficulty = true;
 						PlayState.chartingMode = false;
@@ -205,6 +209,8 @@ class PauseSubState extends MusicBeatSubstate
 					if (curTime < Conductor.songPosition)
 					{
 						PlayState.startOnTime = curTime;
+						game._camFollow.setPosition(game.camGame.scroll.x + game.camGame.width * 0.5, game.camGame.scroll.y + game.camGame.height * 0.5);
+						PlayState.prevCamFollow = game._camFollow;
 						restartSong(true);
 					}
 					else
@@ -230,7 +236,7 @@ class PauseSubState extends MusicBeatSubstate
 					game.paused = true; // For lua
 					if (game.vocals != null)
 						game.vocals.volume = 0;
-					MusicBeatState.switchState(OptionsState.new);
+					FlxG.switchState(OptionsState.new);
 					if (pauseMusic != null)
 					{
 						FlxG.sound.playMusic(pauseMusic._sound, pauseMusic.volume);
@@ -238,8 +244,8 @@ class PauseSubState extends MusicBeatSubstate
 						FlxG.sound.music.fadeTween = tweenManager.num(pauseMusic.volume, 1, 1 - pauseMusic.volume,
 							{onComplete: (_) -> FlxG.sound.music.fadeTween = null}, (v) -> FlxG.sound.music.volume = v);
 						FlxG.sound.music.time = pauseMusic.time;
-						if (pauseMusic.fadeTween != null)
-							pauseMusic.fadeTween.cancel();
+						// if (pauseMusic.fadeTween != null)
+						//	pauseMusic.fadeTween.cancel();
 						pauseMusic.stop();
 					}
 					OptionsState.onPlayState = true;
@@ -247,8 +253,8 @@ class PauseSubState extends MusicBeatSubstate
 				case "Exit to menu":
 					if (pauseMusic != null)
 					{
-						if (pauseMusic.fadeTween != null)
-							pauseMusic.fadeTween.cancel();
+						// if (pauseMusic.fadeTween != null)
+						//	pauseMusic.fadeTween.cancel();
 						pauseMusic.stop();
 					}
 					#if hxdiscord_rpc
@@ -258,7 +264,7 @@ class PauseSubState extends MusicBeatSubstate
 					PlayState.deathCounter = 0;
 
 					Mods.loadTopMod();
-					MusicBeatState.switchState(PlayState.isStoryMode ? states.StoryMenuState.new : states.FreeplayState.new);
+					FlxG.switchState(PlayState.isStoryMode ? states.StoryMenuState.new : states.FreeplayState.new);
 					PlayState.cancelMusicFadeTween();
 					FlxG.sound.playMusic(Paths.music("freakyMenu"));
 					FlxG.camera.pixelPerfectRender = false;
@@ -288,8 +294,8 @@ class PauseSubState extends MusicBeatSubstate
 		tweenManager.num(1, 0, .1, {ease: FlxEase.quartInOut, onComplete: (_) -> { close(); camera.kill(); }}, (a) -> camera.alpha = a);
 		if (pauseMusic != null)
 		{
-			if (pauseMusic.fadeTween != null)
-				pauseMusic.fadeTween.cancel();
+			// if (pauseMusic.fadeTween != null)
+			//	pauseMusic.fadeTween.cancel();
 			pauseMusic.fadeTween = tweenManager.num(pauseMusic.volume, 0, 0.1, {onComplete: (_) -> pauseMusic.fadeTween = null}, (v) -> pauseMusic.volume = v);
 		}
 		closing = true;
@@ -312,9 +318,9 @@ class PauseSubState extends MusicBeatSubstate
 			PlayState.instance.vocals.volume = 0;
 
 		if (noTrans)
-			FlxTransitionableState.skipNextTransIn = FlxTransitionableState.skipNextTransOut = true;
+			StateTransition.skipNextTransIn = StateTransition.skipNextTransOut = true;
 
-		MusicBeatState.resetState();
+		FlxG.resetState();
 	}
 
 	override function destroy()

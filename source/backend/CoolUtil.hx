@@ -195,7 +195,7 @@ class CoolUtil
 	}*/
 
 	// fixup some shit
-	@:allow(backend.MusicBeatState)
+	@:allow(backend.BaseState)
 	@:allow(backend.MusicBeatUIState)
 	@:allow(backend.MusicBeatSubstate)
 	extern inline static function __update__state__check(__state:flixel.FlxState):Bool

@@ -5,12 +5,11 @@ import openfl.display.BitmapData;
 import openfl.utils.AssetType;
 import lime.utils.Assets;
 
-import flixel.addons.transition.FlxTransitionableState;
 import flixel.util.typeLimit.NextState;
 import flixel.graphics.FlxGraphic;
 import flixel.FlxState;
 
-import backend.Song;
+import backend.StateTransition;
 import backend.StageData;
 import objects.Character;
 
@@ -70,7 +69,7 @@ class LoadingState extends FlxState
 
 	inline static public function loadAndSwitchState(target:NextState, stopMusic = false, intrusive = false)
 	{
-		MusicBeatState.switchState(getNextState(target, stopMusic, intrusive));
+		FlxG.switchState(getNextState(target, stopMusic, intrusive));
 	}
 
 	static function checkLoaded():Bool
@@ -372,7 +371,7 @@ class LoadingState extends FlxState
 		add(text.setBorderStyle(OUTLINE, FlxColor.BLACK));
 
 		persistentUpdate = true;
-		FlxTransitionableState.skipNextTransOut = FlxTransitionableState.skipNextTransIn = true;
+		StateTransition.skipNextTransOut = StateTransition.skipNextTransIn = true;
 	}
 
 	override public function update(elapsed:Float)
@@ -413,7 +412,7 @@ class LoadingState extends FlxState
 		songsToPrepare.clearArray();
 
 		// FlxG.camera.visible = false;
-		MusicBeatState.switchState(target);
+		FlxG.switchState(target);
 		transitioning = true;
 		finishedLoading = true;
 	}

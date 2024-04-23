@@ -3,7 +3,7 @@ package states;
 #if haxeui_flixel
 import haxe.ui.Toolkit;
 
-class HaxeUITestState extends flixel.FlxState
+class HaxeUITestState extends backend.BaseState
 {
 	override public function create()
 	{

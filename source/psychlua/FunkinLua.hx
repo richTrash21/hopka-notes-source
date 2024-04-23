@@ -5,12 +5,12 @@ import flixel.util.FlxDestroyUtil;
 import backend.WeekData;
 import backend.Highscore;
 import backend.Song;
+import backend.StateTransition;
 
 import flixel.FlxBasic;
 import flixel.FlxObject;
 import flixel.math.FlxPoint;
 import flixel.util.FlxGradient;
-import flixel.addons.transition.FlxTransitionableState;
 
 #if sys
 import sys.FileSystem;
@@ -703,10 +703,10 @@ class FunkinLua
 		set("exitSong", (?skipTransition:Bool = false) ->
 		{
 			if (skipTransition)
-				FlxTransitionableState.skipNextTransIn = FlxTransitionableState.skipNextTransOut = true;
+				StateTransition.skipNextTransIn = StateTransition.skipNextTransOut = true;
 
 			PlayState.cancelMusicFadeTween();
-			MusicBeatState.switchState(PlayState.isStoryMode ? StoryMenuState.new : FreeplayState.new);
+			FlxG.switchState(PlayState.isStoryMode ? StoryMenuState.new : FreeplayState.new);
 			#if hxdiscord_rpc
 			DiscordClient.resetClientID();
 			#end

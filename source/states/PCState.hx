@@ -200,7 +200,7 @@ class PCState extends MusicBeatState
 		if (controls.BACK)
 		{
 			FlxG.sound.play(Paths.sound("cancelMenu"));
-			MusicBeatState.switchState(MainMenuState.new);
+			FlxG.switchState(MainMenuState.new);
 		}
 
 		super.update(elapsed);

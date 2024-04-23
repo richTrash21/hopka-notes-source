@@ -17,6 +17,6 @@ class AchievementsMenuState extends MusicBeatState
 	{
 		super.update(elapsed);
 		if (FlxG.keys.justPressed.ESCAPE)
-			MusicBeatState.switchState(MainMenuState.new);
+			FlxG.switchState(MainMenuState.new);
 	}
 }

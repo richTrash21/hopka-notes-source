@@ -17,7 +17,7 @@ class DiscordClient
 	public static var clientID(default, set) = _defaultID;
 	public static var isInitialized(default, null) = false;
 	public static var user(default, null):String;
-	static var thread:Thread;
+	@:unreflective static var __thread:Thread;
 
 	// I HAVE TO ADD EVERY SINGLE FUCKING ICON INTO THIS BY MYSELF, FUCKING HELL
 	inline static final DEFAULT_ICON = "icon";
@@ -90,8 +90,8 @@ class DiscordClient
 			trace("Discord Client initialized");
 
 		isInitialized = true;
-		if (thread == null)
-			thread = Thread.create(() ->
+		if (__thread == null)
+			__thread = Thread.create(() ->
 				while (true)
 				{
 					if (isInitialized)
@@ -169,6 +169,7 @@ class DiscordClient
 	}
 }
 
+@:allow(backend.DiscordClient)
 @:noCompletion private final class Presence
 {
 	public var state(get, set):String;
@@ -181,8 +182,12 @@ class DiscordClient
 	public var endTimestamp(get, set):Int;
 	public var address(get, never):PresenceAddress;
 
-	@:noCompletion final presence =  DiscordRichPresence.create();
-	@:allow(backend.DiscordClient) @:keep function new () {}
+	@:noCompletion var presence:DiscordRichPresence;
+	
+	function new()
+	{
+		presence = DiscordRichPresence.create();
+	}
 
 	public function updatePresence()
 	{

@@ -1,10 +1,8 @@
 package;
 
+import flixel.input.keyboard.FlxKey;
 import lime.app.Application;
 import openfl.Lib;
-
-import flixel.addons.transition.FlxTransitionableState;
-import flixel.input.keyboard.FlxKey;
 
 import backend.StateTransition;
 import backend.Subtitles;
@@ -238,7 +236,13 @@ class Main extends flixel.FlxGame
 				FlxG.log.warn('"$n" is not an FlxState class!');
 			});
 			#end
-			FlxG.signals.preStateCreate.add(LoadingState.preloadState);
+			FlxG.signals.preStateCreate.add((state) ->
+			{
+				LoadingState.preloadState(state);
+				#if MODS_ALLOWED
+				Mods.updatedOnState = false;
+				#end
+			});
 			FlxG.plugins.addPlugin(substates.PauseSubState.tweenManager);
 
 			#if !html5
@@ -249,7 +253,7 @@ class Main extends flixel.FlxGame
 			DiscordClient.prepare();
 			#end
 
-			FlxTransitionableState.skipNextTransOut = true;
+			StateTransition.skipNextTransOut = true;
 		});
 
 		// bound local save so flixels default save won't initialize

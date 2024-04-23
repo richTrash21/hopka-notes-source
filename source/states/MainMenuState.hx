@@ -1,9 +1,9 @@
 package states;
 
-import flixel.addons.transition.FlxTransitionableState;
 import flixel.util.typeLimit.NextState;
 import flixel.effects.FlxFlicker;
 
+import backend.StateTransition;
 import options.OptionsState;
 
 class MainMenuState extends MusicBeatState
@@ -162,7 +162,7 @@ class MainMenuState extends MusicBeatState
 			{
 				selectedSomethin = true;
 				FlxG.sound.play(Paths.sound("cancelMenu"));
-				MusicBeatState.switchState(TitleState.new);
+				FlxG.switchState(TitleState.new);
 			}
 
 			if (controls.ACCEPT)
@@ -191,7 +191,7 @@ class MainMenuState extends MusicBeatState
 								if (curOption.preload)
 									LoadingState.loadAndSwitchState(curOption.state);
 								else
-									MusicBeatState.switchState(curOption.state);
+									FlxG.switchState(curOption.state);
 							});
 						else
 							FlxTween.num(1, 0, 0.4, {ease: FlxEase.quadOut}, (a) -> spr.alpha = a);
@@ -203,24 +203,24 @@ class MainMenuState extends MusicBeatState
 			else if (controls.justPressed("debug_1"))
 			{
 				selectedSomethin = true;
-				MusicBeatState.switchState(states.editors.MasterEditorMenu.new);
+				FlxG.switchState(states.editors.MasterEditorMenu.new);
 			}
 			else if (FlxG.keys.justPressed.SIX) // intro testing
 			{
 				selectedSomethin = true;
-				FlxTransitionableState.skipNextTransIn = true;
-				MusicBeatState.switchState(Init.new);
+				StateTransition.skipNextTransIn = true;
+				FlxG.switchState(Init.new);
 				FlxG.sound.music.volume = 0;
 			}
 			else if (FlxG.keys.justPressed.EIGHT) // pc state testing
 			{
 				selectedSomethin = true;
-				MusicBeatState.switchState(PCState.new);
+				FlxG.switchState(PCState.new);
 			}
 			else if (FlxG.keys.justPressed.NINE) // video testing
 			{
 				selectedSomethin = true;
-				MusicBeatState.switchState(TestVideoState.new);
+				FlxG.switchState(TestVideoState.new);
 			}
 			#end
 			else if (controls.justPressed("reset")) // garbage begone!!!
@@ -249,8 +249,8 @@ class MainMenuState extends MusicBeatState
 				snd.persist = true;
 	
 				FlxG.camera.fade(FlxColor.BLACK, 0);
-				FlxTransitionableState.skipNextTransIn = FlxTransitionableState.skipNextTransOut = true;
-				new FlxTimer().start((_) -> MusicBeatState.switchState(DoiseRoomLMAO.new));
+				StateTransition.skipNextTransIn = StateTransition.skipNextTransOut = true;
+				new FlxTimer().start((_) -> FlxG.switchState(DoiseRoomLMAO.new));
 			}
 		}
 

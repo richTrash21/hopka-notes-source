@@ -1,5 +1,6 @@
 package debug;
 
+import substates.PauseSubState;
 import flixel.FlxState;
 import debug.macro.GitCommitMacro;
 
@@ -48,9 +49,9 @@ class DebugInfo extends DebugTextField
 		_text += "\nDirrectory: " + Paths.currentLevel;
 
 		_text += '\nState: $__stateClass';
-		if (FlxG.state.subState != null)
+		tmp = __get__substate__info(FlxG.state.subState);
+		if (tmp.length != 0)
 		{
-			tmp = __get__substate__info(FlxG.state.subState);
 			_text += "\nSubstate";
 			if (tmp.contains("->"))
 				_text += "s";
@@ -76,22 +77,22 @@ class DebugInfo extends DebugTextField
 			tmp += " [" + PlayState.SONG.bpm + "]";
 		_text += '\nConductor: ($tmp)';
 
-		_text += "\nTweens: " + FlxTween.globalManager._tweens.length;
+		_text += "\nTweens: " + (FlxTween.globalManager._tweens.length + PauseSubState.tweenManager._tweens.length);
 		_text += "\nTimers: " + FlxTimer.globalManager._timers.length;
 
 		_text += "\n\nVolume: " + FlxG.sound.volume;
 		if (FlxG.sound.muted)
 			_text += " [muted]";
+		_text += '\nTime Elapsed: $__timeElapsed';
 		if (DiscordClient.user != null)
 			_text += "\nDiscord User: " + DiscordClient.user;
-		_text += '\nTime Elapsed: $__timeElapsed';
-		_text += "\nCommit #" + GitCommitMacro.number + " (" + GitCommitMacro.hash + ")";
+		_text += "\nCommit " + GitCommitMacro.number + " (" + GitCommitMacro.hash + ")";
 
 		this.text = _text;
 		__prevTime = currentTime;
 	}
 
-	@:noCompletion extern inline static function __get__time__elapsed(__time:Float):String
+	@:noCompletion extern inline function __get__time__elapsed(__time:Float):String
 	{
 		var __str = "";
 		if (__time > 86400) // like fr wth are you doing here for over a day
@@ -104,12 +105,12 @@ class DebugInfo extends DebugTextField
 		return __str + Std.int(__time % 60) + "s";
 	}
 
-	@:noCompletion extern inline static function __get__state__class(__state:FlxState):String
+	@:noCompletion extern inline function __get__state__class(__state:FlxState):String
 	{
 		return Type.getClassName(Type.getClass(__state));
 	}
 
-	@:noCompletion extern inline static function __get__substate__info(__substate:FlxState):String
+	@:noCompletion extern inline function __get__substate__info(__substate:FlxState):String
 	{
 		var __str = "";
 		while (__substate != null)

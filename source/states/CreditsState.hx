@@ -161,7 +161,7 @@ class CreditsState extends MusicBeatState
 			{
 				if (colorTween != null) colorTween.cancel();
 				FlxG.sound.play(Paths.sound('cancelMenu'));
-				MusicBeatState.switchState(MainMenuState.new);
+				FlxG.switchState(MainMenuState.new);
 				quitting = true;
 			}
 		}

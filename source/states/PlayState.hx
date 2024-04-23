@@ -18,11 +18,11 @@ import backend.StageData;
 import backend.WeekData;
 import backend.Song;
 import backend.Rating;
+import backend.StateTransition;
 
 import flixel.FlxBasic;
 import flixel.FlxSubState;
 import flixel.math.FlxPoint;
-import flixel.addons.transition.FlxTransitionableState;
 import flixel.util.FlxSort;
 import flixel.util.FlxStringUtil;
 import flixel.util.FlxSave;
@@ -168,6 +168,7 @@ class PlayState extends MusicBeatState
 	static final keysArray		= ["note_left", "note_down", "note_up", "note_right"];
 	static final singAnimations	= ["singLEFT", "singDOWN", "singUP", "singRIGHT"];
 
+	@:allow(substates.PauseSubState)
 	static var prevCamFollow:CameraTarget;
 	static final spawnTime = 2000.;
 	static final __point = FlxPoint.get(); // helper
@@ -203,8 +204,6 @@ class PlayState extends MusicBeatState
 	public var dadGroup:FlxTypedSpriteGroup<Character>;
 	public var gfGroup:FlxTypedSpriteGroup<Character>;
 
-	public var curStageObj:BaseStage; // tracker for last loaded hard coded stage
-
 	public var introSoundsSuffix:String = "";
 	public var uiPrefix:String = "";
 	public var uiSuffix:String = "";
@@ -221,6 +220,7 @@ class PlayState extends MusicBeatState
 	public var unspawnNotes = new Array<Note>();
 	public var eventNotes = new Array<EventNote>();
 
+	@:allow(substates.PauseSubState)
 	var _camFollow:CameraTarget; // tracker for actual camFollow, used when isCameraOnForcedPos = true
 	public var camFollow(get, null):CameraTarget; // alias for char_field.camFollow
 
@@ -436,7 +436,7 @@ class PlayState extends MusicBeatState
 
 		switch (curStage) // lol
 		{
-			case "stage": curStageObj = new states.stages.StageWeek1(); // Week 1
+			case "stage": new states.stages.StageWeek1(); // Week 1
 		}
 
 		add(gfGroup);
@@ -449,7 +449,6 @@ class PlayState extends MusicBeatState
 		add(luaDebugGroup);
 		#end
 
-		// idfk how regex work lmao
 		#if (LUA_ALLOWED || HSCRIPT_ALLOWED)
 		inline function scriptHelper(file:String, folder:String)
 		{
@@ -556,8 +555,12 @@ class PlayState extends MusicBeatState
 
 		generateSong();
 
-		add(_camFollow = prevCamFollow ?? new CameraTarget(__point.x, __point.y));
-		prevCamFollow = null;
+		if (prevCamFollow != null)
+		{
+			__point.set(prevCamFollow.x, prevCamFollow.y);
+			prevCamFollow = null;
+		}
+		add(_camFollow = new CameraTarget(__point.x, __point.y));
 
 		camGame.follow(_camFollow, LOCKON, camGame.followLerp);
 		camGame.zoom = defaultCamZoom;
@@ -679,8 +682,6 @@ class PlayState extends MusicBeatState
 
 		cacheCountdown();
 		cachePopUpScore();
-
-		super.create();
 		Paths.clearUnusedMemory();
 
 		if (eventNotes.length == 0)
@@ -1831,7 +1832,7 @@ class PlayState extends MusicBeatState
 		DiscordClient.resetClientID();
 		#end
 		
-		MusicBeatState.switchState(ChartingState.new);
+		FlxG.switchState(ChartingState.new);
 	}
 	
 	function openCharacterEditor(stopMusic = false)
@@ -1845,7 +1846,7 @@ class PlayState extends MusicBeatState
 		#if hxdiscord_rpc
 		DiscordClient.resetClientID();
 		#end
-		MusicBeatState.switchState(CharacterEditorState.new.bind(SONG.player2, true));
+		FlxG.switchState(CharacterEditorState.new.bind(SONG.player2, true));
 	}
 	#end
 
@@ -2233,7 +2234,7 @@ class PlayState extends MusicBeatState
 				#end
 
 				cancelMusicFadeTween();
-				MusicBeatState.switchState(StoryMenuState.new);
+				FlxG.switchState(StoryMenuState.new);
 
 				if (!ClientPrefs.getGameplaySetting("practice") && !ClientPrefs.getGameplaySetting("botplay"))
 				{
@@ -2252,8 +2253,9 @@ class PlayState extends MusicBeatState
 
 				trace("LOADING NEXT SONG - " + Paths.formatToSongPath(storyPlaylist[0]) + difficulty);
 
-				FlxTransitionableState.skipNextTransIn = FlxTransitionableState.skipNextTransOut = true;
-				remove(prevCamFollow = _camFollow);
+				StateTransition.skipNextTransIn = StateTransition.skipNextTransOut = true;
+				_camFollow.setPosition(camGame.scroll.x + camGame.width * 0.5, camGame.scroll.y + camGame.height * 0.5);
+				prevCamFollow = _camFollow;
 
 				Song.loadFromJson(storyPlaylist[0] + difficulty, storyPlaylist[0], SONG);
 				__stop__song();
@@ -2272,7 +2274,7 @@ class PlayState extends MusicBeatState
 			#end
 
 			cancelMusicFadeTween();
-			MusicBeatState.switchState(FreeplayState.new);
+			FlxG.switchState(FreeplayState.new);
 			FlxG.sound.playMusic(Paths.music("freakyMenu"));
 			changedDifficulty = false;
 		}
@@ -2847,22 +2849,21 @@ class PlayState extends MusicBeatState
 		instance = null;
 	}
 
-	var lastStepHit = -1;
 	override function stepHit()
 	{
 		if (FlxG.sound.music.time >= -ClientPrefs.data.noteOffset)
 		{
 			final maxDelay = 20 * playbackRate;
 			final realTime = Conductor.songPosition - Conductor.offset;
-			if (__sound__delayed(FlxG.sound.music, realTime, maxDelay) || (SONG.needsVoices && (__sound__delayed(vocals, realTime, maxDelay) || __sound__delayed(opponentVocals, realTime, maxDelay))))
+			if (__sound__delayed(FlxG.sound.music, realTime, maxDelay)
+				|| (SONG.needsVoices && (__sound__delayed(vocals, realTime, maxDelay) || __sound__delayed(opponentVocals, realTime, maxDelay))))
 				resyncVocals();
 		}
 
 		super.stepHit();
-		if (curStep == lastStepHit)
+		if (curStep == lastStep)
 			return;
 
-		lastStepHit = curStep;
 		#if debug
 		FlxG.watch.addQuick("stepShit", curStep);
 		#end
@@ -2870,10 +2871,9 @@ class PlayState extends MusicBeatState
 		callOnScripts("onStepHit");
 	}
 
-	var lastBeatHit = -1;
 	override function beatHit()
 	{
-		if (lastBeatHit >= curBeat)
+		if (lastBeat >= curBeat)
 			return;
 
 		if (generatedMusic)
@@ -2893,7 +2893,6 @@ class PlayState extends MusicBeatState
 		tryDance(boyfriend, curBeat);
 
 		super.beatHit();
-		lastBeatHit = curBeat;
 
 		#if debug
 		FlxG.watch.addQuick("beatShit", curBeat);
