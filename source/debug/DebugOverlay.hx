@@ -1,5 +1,6 @@
 package debug;
 
+import openfl.utils.Object;
 import openfl.display.Bitmap;
 
 // kinda like in Codename Engine
@@ -28,7 +29,7 @@ class DebugOverlay extends openfl.display.Sprite
 		**BETA**
 		The current memory usage of GPU. (WARNING: this show ALL of GPU memory usage, not just for the game)
 	**/
-	public var memoryMegasGPU(get, never):Int;
+	// public var memoryMegasGPU(get, never):Int;
 
 	public var debug = #if debug true #else false #end;
 
@@ -50,14 +51,44 @@ class DebugOverlay extends openfl.display.Sprite
 			{
 				debug = FlxG.save.data.debugInfo = !FlxG.save.data.debugInfo;
 				FlxG.save.flush();
+			});
+	}
+
+	@:access(openfl.text.StyleSheet.__styles)
+	public function watch(label:String, value:Dynamic, /*?format:Object,*/ ?field:String)
+	{
+		var id = -1;
+		for (i => data in info.__extraData)
+			if (data.label == label)
+			{
+				id = i;
+				break;
 			}
-		);
+
+		if (field != null)
+			value = Reflect.getProperty.bind(value, field);
+		if (id == -1)
+			info.__extraData.push([label, value]);
+		else
+			info.__extraData[id].value = value;
+
+		// final formatName = label.toLowerCase();
+		// if (format == null && info.__styleSheet.__styles.exists(formatName))
+		//	info.__styleSheet.__styles.remove(formatName);
+		// else
+		//	info.__styleSheet.__styles.set(formatName, format);
 	}
 
 	function flixelUpdate()
 	{
 		fps.flixelUpdate();
 		info.flixelUpdate();
+	}
+
+	@:noCompletion override function __enterFrame(dt:Int)
+	{
+		fps.debug = info.visible = debug;
+		super.__enterFrame(dt);
 
 		var bgScaleX = PADDING_X * 2.0;
 		var bgScaleY = PADDING_Y * 2.0;
@@ -77,12 +108,6 @@ class DebugOverlay extends openfl.display.Sprite
 		bg.scaleY = bgScaleY;
 	}
 
-	@:noCompletion override function __enterFrame(dt:Int)
-	{
-		fps.debug = info.visible = debug;
-		super.__enterFrame(dt);
-	}
-
 	@:noCompletion inline function get_currentFPS():Int
 	{
 		return fps.currentFPS;
@@ -93,8 +118,8 @@ class DebugOverlay extends openfl.display.Sprite
 		return fps.memoryMegas;
 	}
 
-	@:noCompletion inline function get_memoryMegasGPU():Int
+	/*@:noCompletion inline function get_memoryMegasGPU():Int
 	{
 		return fps.memoryMegasGPU;
-	}
+	}*/
 }

@@ -11,8 +11,8 @@ import debug.DebugOverlay;
 // crash handler stuff
 #if CRASH_HANDLER
 import openfl.events.UncaughtErrorEvent;
-import sys.FileSystem;
 import haxe.CallStack;
+import sys.FileSystem;
 #end
 
 class Main extends flixel.FlxGame
@@ -33,7 +33,7 @@ class Main extends flixel.FlxGame
 	}
 
 	// based on haxe.Log.formatOutput()
-	@:noCompletion static function formatOutput(v:Dynamic, pos:haxe.PosInfos):String
+	@:noCompletion extern inline static function formatOutput(v:Dynamic, pos:haxe.PosInfos):String
 	{
 		final t = "<" + Date.now().toString().substr(11) + ">";
 		var s = Std.string(v);
@@ -62,21 +62,34 @@ class Main extends flixel.FlxGame
 	#if CRASH_HANDLER
 	static function onCrash(e:UncaughtErrorEvent):Void
 	{
+		function stackToString(stackItem:StackItem):String
+		{
+			return switch (stackItem)
+			{
+				case FilePos(s, file, line, column):
+					var str = '$file at ';
+					if (s != null)
+						str += stackToString(s) + " (";
+					str += 'line $line';
+					if (s != null)
+						str += ")";
+					return str;
+				case CFunction:			"a C function";
+				case Module(m):			'module $m';
+				case Method(_, meth):	'method $meth'; // is this breaking bad?
+				case LocalFunction(n):	'local function #$n';
+				default:				"<unknown>";
+			}
+		}
+
 		final path = "./crash/CrashLog_" + Date.now().toString().replace(" ", "_").replace(":", "'") + ".txt";
 		var errMsg = "";
 
 		for (stackItem in CallStack.exceptionStack(true))
-			switch (stackItem)
-			{
-				case FilePos(s, file, line, column):
-					errMsg += '$file (line $line)\n';
-				default:
-					Sys.println(stackItem);
-			}
+			errMsg += stackToString(stackItem) + "\n";
 
 		final devMsg = #if RELESE_BUILD_FR "i messed up, whoops" #else "you done goofed" #end + " (richTrash21)";
-		errMsg += "\nUncaught Error: " + e.error + " (Code: " + e.errorID + ")" + '\n\ntl;dr - $devMsg';
-		// "\nPlease report this error to the GitHub page: https://github.com/ShadowMario/FNF-PsychEngine\n\n> Crash Handler written by: sqirra-rng";
+		errMsg += "\nUncaught Error: " + e.error + /*" [Code: " + e.errorID + "]" +*/ '\n\ntl;dr - $devMsg';
 
 		if (!FileSystem.exists("./crash/"))
 			FileSystem.createDirectory("./crash/");
@@ -86,7 +99,7 @@ class Main extends flixel.FlxGame
 		Sys.println(errMsg);
 		Sys.println(savedIn);
 
-		Application.current.window.alert('$errMsg\n$savedIn', "Uncaught Error!");
+		Application.current.window.alert('$errMsg\n$savedIn', "Critical Error!");
 		#if hxdiscord_rpc
 		DiscordClient.shutdown();
 		#end
@@ -95,9 +108,8 @@ class Main extends flixel.FlxGame
 	#end
 
 	public static final initialState:flixel.util.typeLimit.NextState = states.TitleState.new;
-
-	public static var fpsVar(default, null):DebugOverlay;
 	public static var transition(default, null):StateTransition;
+	public static var fpsVar(default, null):DebugOverlay;
 
 	public static var volumeDownKeys:Array<FlxKey>;
 	public static var volumeUpKeys:Array<FlxKey>;
@@ -115,7 +127,7 @@ class Main extends flixel.FlxGame
 		// cool ass log by me yeah
 		haxe.Log.trace = (v:Dynamic, ?pos:haxe.PosInfos) ->
 		{
-			final str = Main.formatOutput(v, pos);
+			final str = formatOutput(v, pos);
 			__log += '$str\n';
 			#if js
 			if (js.Syntax.typeof(untyped console) != "undefined" && (untyped console).log != null)
@@ -183,9 +195,6 @@ class Main extends flixel.FlxGame
 			#end
 			FlxG.fixedTimestep = ClientPrefs.data.fixedTimestep;
 		});
-
-		// im sorry but some mods are annoying with this
-		// FlxG.signals.preStateSwitch.add(() -> FlxG.cameras.bgColor = FlxColor.BLACK);
 
 		// propper game initialization
 		FlxG.signals.preGameStart.addOnce(() ->
@@ -269,9 +278,9 @@ class Main extends flixel.FlxGame
 		framerate = CoolUtil.boundInt(framerate, ClientPrefs.MIN_FPS, ClientPrefs.MAX_FPS);
 		#end
 
-		focusLostFramerate = 60;
-		super(Init, framerate, framerate, true, FlxG.save.data.fullscreen);
+		super(Init.new, framerate, framerate, true, FlxG.save.data.fullscreen);
 		_customSoundTray = objects.ui.CustomSoundTray;
+		focusLostFramerate = 60;
 
 		ClientPrefs.loadDefaultKeys();
 		ClientPrefs.loadPrefs();

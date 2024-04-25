@@ -31,13 +31,11 @@ class DebugTextField extends TextField
 		this.y = y;
 
 		TextField.__defaultTextFormat = defaultFormat;
+		__styleSheet = new openfl.text.StyleSheet();
 
 		selectable = mouseEnabled = false;
 		multiline = true;
 		autoSize = LEFT;
-
-		// for better visibility
-		// shader = new shaders.OutlineShader();
 
 		// i think it is optimization - Redar
 		removeEventListener(FocusEvent.FOCUS_IN, this_onFocusIn);

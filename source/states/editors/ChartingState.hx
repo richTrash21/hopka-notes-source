@@ -1696,7 +1696,7 @@ class ChartingState extends MusicBeatUIState
 	var colorSine:Float = 0;
 	override function update(elapsed:Float)
 	{
-		curStep = recalculateSteps();
+		recalculateSteps();
 
 		if(FlxG.sound.music.time < 0) {
 			FlxG.sound.music.pause();
@@ -1834,7 +1834,6 @@ class ChartingState extends MusicBeatUIState
 				persistentUpdate = false;
 				autosaveSong();
 				// FlxG.mouse.visible = false;
-				PlayState.SONG.copyFrom(_song);
 				FlxG.sound.music.stop();
 				if (vocals != null)
 					vocals.stop();
@@ -1842,6 +1841,7 @@ class ChartingState extends MusicBeatUIState
 					opponentVocals.stop();
 
 				StageData.loadDirectory(_song);
+				PlayState.SONG.copyFrom(_song);
 				LoadingState.loadAndSwitchState(PlayState.new);
 			}
 
@@ -2109,14 +2109,28 @@ class ChartingState extends MusicBeatUIState
 			opponentVocals.pitch = playbackSpeed;
 		#end
 
+		inline function fromatFloat(f:Float):String
+		{
+			var s = FlxMath.roundDecimal(f, 2).string();
+			var dot = s.indexOf(".");
+			if (dot == -1)
+			{
+				dot = s.length;
+				s += ".";
+			}
+			while (s.substr(dot+1, 2).length < 2)
+				s += "0";
+			return s;
+		}
+
 		final curTime:Float = Conductor.songPosition * .001;
 		final maxTime:Float = FlxG.sound.music.length * .001;
 		bpmTxt.text = // fromated time yaayyy!!!
 		FlxStringUtil.formatTime(curTime, true) + " / " + FlxStringUtil.formatTime(maxTime, true) +
-		"\n[" + Std.string(FlxMath.roundDecimal(curTime, 2)) + " / " + Std.string(FlxMath.roundDecimal(maxTime, 2)) + "]\n" +
+		"\n[" + fromatFloat(curTime) + " / " + fromatFloat(maxTime) + "]\n" +
 		"\nSection: " + curSec +
-		"\nBeat: " + Std.string(curDecBeat).substring(0,4) +
-		"\nStep: " + curStep +
+		"\nBeat: " + fromatFloat(curDecBeat) +
+		"\nStep: " + fromatFloat(curDecStep) +
 		"\n\nBeat Snap: " + quantization + "th";
 
 		final playedSound:Array<Bool> = [false, false, false, false]; //Prevents ouchy GF sex sounds
@@ -2498,21 +2512,18 @@ class ChartingState extends MusicBeatUIState
 		updateGrid();
 	}
 
-	function recalculateSteps(add:Float = 0):Int
+	function recalculateSteps(add:Float = 0)
 	{
-		var lastChange:BPMChangeEvent = {
-			stepTime: 0,
-			songTime: 0,
-			bpm: 0
-		}
+		var lastChange:BPMChangeEvent = null;
 		for (i in 0...Conductor.bpmChangeMap.length)
 			if (FlxG.sound.music.time > Conductor.bpmChangeMap[i].songTime)
 				lastChange = Conductor.bpmChangeMap[i];
 
-		curStep = lastChange.stepTime + Math.floor((FlxG.sound.music.time - lastChange.songTime + add) / Conductor.stepCrochet);
+		if (lastChange == null)
+			lastChange = {stepTime: 0, songTime: 0, bpm: 0};
+		curDecStep = lastChange.stepTime + (FlxG.sound.music.time - lastChange.songTime + add) / Conductor.stepCrochet;
+		curStep = Math.floor(curDecStep);
 		updateBeat();
-
-		return curStep;
 	}
 
 	function resetSection(songBeginning:Bool = false):Void
@@ -3149,10 +3160,9 @@ class ChartingState extends MusicBeatUIState
 		FlxG.log.error("Problem saving Level data");
 	}
 
-	@:noCompletion function updateBeat():Void
+	@:noCompletion inline function updateBeat():Void
 	{
-		curBeat = Math.floor(curStep * .25);
-		curDecBeat = curDecStep * .25;
+		curBeat = Math.floor(curDecBeat = curDecStep * .25);
 	}
 
 	@:noCompletion function updateCurStep():Void

@@ -70,14 +70,14 @@ extern class MusicBeatStateHelper
 		final lastChange = Conductor.getBPMFromSeconds(Conductor.songPosition);
 		final offset = ((Conductor.songPosition - ClientPrefs.data.noteOffset) - lastChange.songTime) / lastChange.stepCrochet;
 		state.curDecStep = lastChange.stepTime + offset;
-		state.curStep = lastChange.stepTime + Math.floor(offset);
+		state.curStep = Math.floor(state.curDecStep);
 	}
 
 	inline static function updateBeat(state:IMusicBeatState):Void
 	{
 		state.lastBeat = state.curBeat;
-		state.curBeat = Math.floor(state.curStep * 0.25);
 		state.curDecBeat = state.curDecStep * 0.25;
+		state.curBeat = Math.floor(state.curDecBeat);
 	}
 
 	inline static function getBeatsOnSection(section:Int, song:Song):Float

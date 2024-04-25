@@ -330,6 +330,44 @@ class PlayState extends MusicBeatState
 	{
 		Paths.clearStoredMemory();
 
+		var SONG_WATCH = "Song";
+		if (chartingMode)
+			SONG_WATCH = '[CHARTING MODE]\n$SONG_WATCH';
+		Main.fpsVar.watch(SONG_WATCH, null);
+		Main.fpsVar.watch("Position", ()->
+		{
+			final abs = Math.abs(Conductor.songPosition);
+			var s = FlxStringUtil.formatTime(abs * 0.001, true);
+			// propertly display negative time
+			if (Conductor.songPosition < abs)
+				s = '-$s';
+			return '$s / ' + FlxStringUtil.formatTime(FlxG.sound.music.length * 0.001, true);
+		});
+		// Main.fpsVar.watch("BPM", ()->Conductor.bpm);
+		Main.fpsVar.watch("Section", ()->curSection /*+ " / " + SONG.notes.length*/);
+		Main.fpsVar.watch("Step", ()->curDecStep);
+		Main.fpsVar.watch("Beat", ()->curDecBeat);
+		#if (LUA_ALLOWED || HSCRIPT_ALLOWED)
+		Main.fpsVar.watch("Scripts", ()->
+		{
+			var s = "";
+			#if LUA_ALLOWED
+			if (luaArray.length != 0)
+				s += "lua: " + luaArray.length;
+			#end
+			#if HSCRIPT_ALLOWED
+			if (hscriptArray.length != 0)
+			{
+				if (s.length != 0)
+					s += " | ";
+				s += "hscript: " + hscriptArray.length;
+			}
+			#end
+			return s.length == 0 ? null : '($s)';
+		});
+		#end
+		Main.fpsVar.watch("Last Events", null);
+
 		startCallback = startCountdown;
 		endCallback = endSong;
 
@@ -689,6 +727,18 @@ class PlayState extends MusicBeatState
 
 		// now we can finally start the song :D
 		startCallback();
+
+		var s = SONG.song;
+		final d = Difficulty.getString();
+		if (d != Difficulty.defaultDifficulty)
+			s += ' [$d]';
+		Main.fpsVar.watch(SONG_WATCH, ()->
+		{
+			var bpm = "" + Conductor.bpm;
+			if (Conductor.bpm != SONG.bpm)
+				bpm += " [" + SONG.bpm + "]";
+			return '(name: $s | bpm: $bpm)';
+		});
 	}
 
 	public function addTextToDebug(text:Dynamic, ?color:FlxColor, ?pos:haxe.PosInfos)
@@ -1036,7 +1086,7 @@ class PlayState extends MusicBeatState
 			if (startOnTime > 0 || skipCountdown)
 			{
 				var time = 0.0;
-				if (startOnTime > 0)
+				if (!skipCountdown)
 				{
 					clearNotesBefore(startOnTime);
 					time = startOnTime - 350.0;
@@ -1309,18 +1359,17 @@ class PlayState extends MusicBeatState
 
 			if (splitP1 != null)
 			{
-				vocals = FlxG.sound.load(splitP1);
+				vocals = FlxG.sound.load(splitP1, FlxG.sound.defaultMusicGroup);
 				#if FLX_PITCH vocals.pitch = playbackRate; #end
 			}
 			if (splitP2 != null)
 			{
-				opponentVocals = FlxG.sound.load(splitP2);
+				opponentVocals = FlxG.sound.load(splitP2, FlxG.sound.defaultMusicGroup);
 				#if FLX_PITCH opponentVocals.pitch = playbackRate; #end
 			}
 		}
 
-		notes = new FlxTypedGroup<Note>();
-		add(notes);
+		add(notes = new FlxTypedGroup());
 
 		// NEW SHIT
 		final file = Paths.json('$songName/events');
@@ -1889,6 +1938,9 @@ class PlayState extends MusicBeatState
 		}
 	}
 
+	extern inline static final MAX_LAST_EVENTS = 5;
+	@:noCompletion var __lastEvents = new Array<String>();
+
 	public function triggerEvent(eventName:String, value1:String, value2:String, ?strumTime:Float)
 	{
 		var flValue1 = CoolUtil.nullifyNaN(Std.parseFloat(value1));
@@ -1896,6 +1948,8 @@ class PlayState extends MusicBeatState
 
 		if (strumTime == null)
 			strumTime = Conductor.songPosition;
+		if (Math.isNaN(strumTime))
+			strumTime = 0.0;
 
 		switch(eventName)
 		{
@@ -2115,6 +2169,11 @@ class PlayState extends MusicBeatState
 		
 		stagesFunc((stage) -> stage.eventCalled(eventName, value1, value2, flValue1, flValue2, strumTime));
 		callOnScripts("onEvent", [eventName, value1, value2, strumTime]);
+		
+		__lastEvents.unshift('($eventName | $value1 | $value2 | ' + FlxStringUtil.formatTime(strumTime * 0.001, true) + ")");
+		while (__lastEvents.length > MAX_LAST_EVENTS)
+			__lastEvents.pop();
+		Main.fpsVar.watch("Last Events", [for (e in __lastEvents) '\n  - $e'].join(""));
 	}
 
 	@:allow(backend.BaseStage)
@@ -2847,6 +2906,15 @@ class PlayState extends MusicBeatState
 		gfCamOffset = FlxDestroyUtil.destroy(gfCamOffset);
 
 		instance = null;
+		if (SONG.needsVoices)
+		{
+			if (vocals != null)
+				vocals.stop();
+			vocals = null;
+			if (opponentVocals != null)
+				opponentVocals.stop();
+			opponentVocals = null;
+		}
 	}
 
 	override function stepHit()
@@ -3482,8 +3550,7 @@ class PlayState extends MusicBeatState
 
 	@:noCompletion inline function set_inCutscene(bool:Bool):Bool
 	{
-		camGame.active = !bool;
-		return inCutscene = bool;
+		return inCutscene = camGame.paused = bool;
 	}
 
 	@:noCompletion inline function get_boyfriendCameraOffset():Array<Float>
@@ -3595,8 +3662,7 @@ class PlayState extends MusicBeatState
 
 	@:noCompletion inline function set_paused(bool:Bool):Bool
 	{
-		camGame.active = camHUD.active = !bool;
-		return paused = bool;
+		return paused = camGame.paused = camHUD.paused = bool;
 	}
 }
 

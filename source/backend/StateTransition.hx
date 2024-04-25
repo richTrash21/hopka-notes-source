@@ -85,7 +85,12 @@ class StateTransition extends openfl.display.Bitmap
 	{
 		active = false;
 		if (_onComplete == null)
+		{
 			visible = false;
+			scaleX = 1;
+			scaleY = 1;
+			y = 0;
+		}
 		else
 		{
 			_onComplete();

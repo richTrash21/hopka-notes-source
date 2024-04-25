@@ -1,11 +1,15 @@
 package debug;
 
-import substates.PauseSubState;
-import flixel.FlxState;
+import openfl.utils.Object;
 import debug.macro.GitCommitMacro;
+import flixel.FlxState;
 
+@:allow(debug.DebugOverlay)
 class DebugInfo extends DebugTextField
 {
+	@:noCompletion extern inline static final PRECISION = 2;
+
+	@:noCompletion var __extraData = new Array<ExtraData>();
 	@:noCompletion var __timeElapsed:String;
 	@:noCompletion var __stateClass:String;
 	@:noCompletion var __prevTime = 0;
@@ -14,7 +18,12 @@ class DebugInfo extends DebugTextField
 	{
 		super(x, y);
 
-		FlxG.signals.preStateCreate.add((s) -> __stateClass = __get__state__class(s));
+		FlxG.signals.preStateCreate.add((s) ->
+		{
+			__stateClass = __get__state__class(s);
+			while (__extraData.length != 0)
+				__extraData.pop();
+		});
 		__timeElapsed = __get__time__elapsed(0);
 	}
 
@@ -35,16 +44,10 @@ class DebugInfo extends DebugTextField
 
 		#if MODS_ALLOWED
 		tmp = "";
-		if (!Mods.currentModDirectory.isNullOrEmpty())
-			tmp += "Current: " + Mods.currentModDirectory;
+		tmp += "\n - Current: " + (Mods.currentModDirectory.length == 0 ? null : Mods.currentModDirectory);
 		if (Mods.getGlobalMods().length != 0)
-		{
-			if (tmp.length != 0)
-				tmp += " | ";
-			tmp += "Global: [" + Mods.getGlobalMods().join(", ") + "]";
-		}
-		if (tmp.length != 0)
-			_text += '\nMods: ($tmp)';
+			tmp += "\n - Global: [" + Mods.getGlobalMods().join(", ") + "]";
+		_text += '\nMods: $tmp';
 		#end
 		_text += "\nDirrectory: " + Paths.currentLevel;
 
@@ -58,7 +61,7 @@ class DebugInfo extends DebugTextField
 			_text += ': $tmp';
 		}
 
-		final charting = _text.contains("ChartingState");
+		/*final charting = _text.contains("ChartingState");
 		final onPlayState = _text.contains("PlayState") || charting;
 		tmp = FlxStringUtil.formatTime(Math.abs(Conductor.songPosition) * 0.001);
 		if (Conductor.songPosition < 0.0)
@@ -75,18 +78,40 @@ class DebugInfo extends DebugTextField
 		tmp += " | BPM: " + Conductor.bpm;
 		if (onPlayState && Conductor.bpm != PlayState.SONG.bpm)
 			tmp += " [" + PlayState.SONG.bpm + "]";
-		_text += '\nConductor: ($tmp)';
+		_text += '\nConductor: ($tmp)';*/
 
-		_text += "\nTweens: " + (FlxTween.globalManager._tweens.length + PauseSubState.tweenManager._tweens.length);
+		_text += "\nTweens: " + (FlxTween.globalManager._tweens.length + substates.PauseSubState.tweenManager._tweens.length);
 		_text += "\nTimers: " + FlxTimer.globalManager._timers.length;
 
-		_text += "\n\nVolume: " + FlxG.sound.volume;
-		if (FlxG.sound.muted)
-			_text += " [muted]";
+		if (__extraData.length != 0)
+		{
+			_text += "\n";
+			var value:Dynamic;
+			// var formatName:String;
+			for (data in __extraData)
+			{
+				// formatName = data.label.toLowerCase();
+				value = (Type.typeof(data.value) == TFunction ? data.value() : data.value);
+				if (value is Float)
+					value = FlxMath.roundDecimal(value, PRECISION);
+				_text += "\n" + data.label + ":";
+				// if (__styleSheet.__styles.exists(formatName))
+				//	_text += '<$formatName>';
+				_text += ' $value';
+				// if (data.format != null)
+				//	_text += '<$formatName>';
+			}
+		}
+
+		_text += "\n";
+		// _text += "\nVolume: " + FlxG.sound.volume;
+		// if (FlxG.sound.muted)
+		//	_text += " [muted]";
 		_text += '\nTime Elapsed: $__timeElapsed';
 		if (DiscordClient.user != null)
 			_text += "\nDiscord User: " + DiscordClient.user;
 		_text += "\nCommit " + GitCommitMacro.number + " (" + GitCommitMacro.hash + ")";
+		_text += "\n" + FlxG.VERSION;
 
 		this.text = _text;
 		__prevTime = currentTime;
@@ -122,4 +147,15 @@ class DebugInfo extends DebugTextField
 		}
 		return __str;
 	}
+}
+
+abstract ExtraData(Array<Dynamic>) from Array<Dynamic>
+{
+	public var label(get, set):String;
+	public var value(get, set):Dynamic;
+
+	@:noCompletion inline function get_label():String	 return this[0];
+	@:noCompletion inline function get_value():Dynamic	 return this[1];
+	@:noCompletion inline function set_label(v):String	 return this[0] = v;
+	@:noCompletion inline function set_value(v):Dynamic	 return this[1] = v;
 }

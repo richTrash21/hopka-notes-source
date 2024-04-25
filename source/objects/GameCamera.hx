@@ -1,13 +1,14 @@
 package objects;
 
-#if (flixel < "6.0.0")
-import flixel.util.FlxDestroyUtil;
 import flixel.math.FlxRect;
-import flixel.FlxObject;
-#end
 
 class GameCamera extends FlxCamera
 {
+	// helper for fixing render on camera with angle applied
+	@:noCompletion static final __angleMatrix = new flixel.math.FlxMatrix();
+	@:noCompletion static final __rotatedBounds = FlxRect.get();
+	@:noCompletion static final __origin = FlxPoint.get();
+
 	/**
 		Default lerpin' zoom. Not to be confused with `FlxCamera.defaultZoom`!
 	**/
@@ -33,60 +34,131 @@ class GameCamera extends FlxCamera
 	**/
 	public var checkForTweens(default, set):Bool = false;
 
-	// okay i actually optimized it???? (kinda)
-	@:noCompletion var __tweenTimer = 0.;
+	/**
+		Makes that camera propertly renders this camera when rotated
+		TODO: fix fill()
+	**/
+	public var renderAngle:Bool;
 
-	public function new(zoom = 0., bgColor = FlxColor.BLACK, updateZoom = false):Void
+	/**
+		Pauses fx and camera movement.
+	**/
+	public var paused:Bool;
+
+	// okay i actually optimized it???? (kinda)
+	@:noCompletion var __tweenTimer = 0.0;
+	@:noCompletion var _angleChanged = false;
+	@:noCompletion var _sinAngle = 0.0;
+	@:noCompletion var _cosAngle = 1.0;
+
+	public function new(zoom = 0.0, bgColor = FlxColor.BLACK, updateZoom = false):Void
 	{
 		super(0, 0, 0, 0, zoom);
 		this.bgColor = bgColor;
 		this.updateZoom = updateZoom;
-		#if (flixel < "6.0.0")
-		followLerp = 1.0;
-		#end
 	}
 
 	@:access(flixel.tweens.FlxTweenManager._tweens)
 	@:access(flixel.tweens.FlxTweenManager.forEachTweensOf)
 	override public function update(elapsed:Float):Void
 	{
-		if (checkForTweens)
+		updateFlashSpritePosition();
+
+		if (!paused)
 		{
-			// once per half of current framerate (hope it won't backfire tho)
-			final delay = 1 / (FlxG.updateFramerate * .5);
-			if ((__tweenTimer += elapsed) > delay)
+			if (checkForTweens)
 			{
-				__tweenTimer -= delay;
-				tweeningZoom = false;
-				// only when necessary
-				if (FlxTween.globalManager._tweens.length != 0)
-					FlxTween.globalManager.forEachTweensOf(this, ["zoom"], (_) -> tweeningZoom = true);
+				// once per half of current framerate (hope it won't backfire tho)
+				final delay = 1 / (FlxG.updateFramerate * 0.5);
+				if ((__tweenTimer += elapsed) > delay)
+				{
+					__tweenTimer -= delay;
+					tweeningZoom = false;
+					// only when necessary
+					if (FlxTween.globalManager._tweens.length != 0)
+						FlxTween.globalManager.forEachTweensOf(this, ["zoom"], (_) -> tweeningZoom = true);
+				}
 			}
+
+			if (updateZoom && !tweeningZoom && zoom != targetZoom)
+				zoom = CoolUtil.lerpElapsed(zoom, targetZoom, 0.055 * zoomDecay, elapsed);
+
+			// follow the target, if there is one
+			if (target != null)
+			{
+				updateFollow();
+				updateLerp(elapsed);
+			}
+
+			updateScroll();
+			updateFlash(elapsed);
+			updateFade(elapsed);
+			updateShake(elapsed);
 		}
-
-		if (updateZoom && !tweeningZoom && zoom != targetZoom)
-			zoom = CoolUtil.lerpElapsed(zoom, targetZoom, 0.055 * zoomDecay, elapsed);
-
-		// implementing flixel's 6.0.0 camera changes early
-		#if (flixel < "6.0.0")
-		// follow the target, if there is one
-		if (target != null)
-		{
-			updateFollow();
-			updateLerp(elapsed);
-		}
-
-		updateScroll();
-		updateFlash(elapsed);
-		updateFade(elapsed);
 
 		flashSprite.filters = filtersEnabled ? filters : null;
 
-		updateFlashSpritePosition();
-		updateShake(elapsed);
-		#else
-		super.update();
-		#end
+		if (FlxG.renderTile && renderAngle)
+		{
+			if (_angleChanged)
+			{
+				final radians = angle * flixel.math.FlxAngle.TO_RAD;
+				_sinAngle = Math.sin(radians);
+				_cosAngle = Math.cos(radians);
+			}
+			__angleMatrix.identity();
+			__angleMatrix.translate(-width * 0.5, -height * 0.5);
+			__angleMatrix.scale(totalScaleX, totalScaleY);
+			__angleMatrix.rotateWithTrig(_cosAngle, _sinAngle);
+			__angleMatrix.translate(width * 0.5, height * 0.5);
+			__angleMatrix.translate(flashSprite.x - _flashOffset.x, flashSprite.y - _flashOffset.y);
+			canvas.transform.matrix = __angleMatrix;
+		}
+	}
+
+	override public function fill(color:FlxColor, blendAlpha = true, fxAlpha = 1.0, ?graphics:openfl.display.Graphics)
+	{
+		if (FlxG.renderBlit)
+		{
+			if (blendAlpha)
+			{
+				_fill.fillRect(_flashRect, color);
+				buffer.copyPixels(_fill, _flashRect, _flashPoint, null, null, blendAlpha);
+			}
+			else
+			{
+				buffer.fillRect(_flashRect, color);
+			}
+		}
+		else // TODO? - find a way to optimise rotated fill
+		{
+			if (fxAlpha == 0)
+				return;
+
+			__get__rotated__bounds();
+			final targetGraphics = graphics == null ? canvas.graphics : graphics;
+			targetGraphics.beginFill(color, fxAlpha);
+			// i'm drawing rect with these parameters to avoid light lines at the top and left of the camera,
+			// which could appear while cameras fading
+			targetGraphics.drawRect(__rotatedBounds.x - 1, __rotatedBounds.y - 1, __rotatedBounds.width + 2, __rotatedBounds.height + 2);
+			targetGraphics.endFill();
+		}
+	}
+
+	override public function containsRect(rect:FlxRect):Bool
+	{
+		return __get__rotated__bounds().overlaps(rect);
+	}
+
+	@:noCompletion extern inline function __get__rotated__bounds():FlxRect
+	{
+		__rotatedBounds.set(viewMarginLeft, viewMarginTop, viewWidth, viewHeight);
+		if (renderAngle)
+		{
+			__origin.set(__rotatedBounds.width * 0.5, __rotatedBounds.height * 0.5);
+			__rotatedBounds.getRotatedBounds(angle, __origin, __rotatedBounds);
+		}
+		return __rotatedBounds;
 	}
 
 	@:noCompletion inline function set_checkForTweens(bool:Bool):Bool
@@ -97,157 +169,11 @@ class GameCamera extends FlxCamera
 		return checkForTweens = bool;
 	}
 
-	// 6.0.0 camera changes
-	#if (flixel < "6.0.0")
-	override function updateFollow()
+	@:noCompletion override function set_angle(angle:Float):Float
 	{
-		// Either follow the object closely,
-		// or double check our deadzone and update accordingly.
-		if (deadzone == null)
-		{
-			target.getMidpoint(_point);
-			_point.addPoint(targetOffset);
-			_scrollTarget.set(_point.x - width * 0.5, _point.y - height * 0.5);
-		}
-		else
-		{
-			final targetX = target.x + targetOffset.x;
-			final targetY = target.y + targetOffset.y;
+		if (this.angle != angle)
+			_angleChanged = true;
 
-			if (style == SCREEN_BY_SCREEN)
-			{
-				if (targetX >= viewRight)
-				{
-					_scrollTarget.x += viewWidth;
-				}
-				else if (targetX + target.width < viewLeft)
-				{
-					_scrollTarget.x -= viewWidth;
-				}
-
-				if (targetY >= viewBottom)
-				{
-					_scrollTarget.y += viewHeight;
-				}
-				else if (targetY + target.height < viewTop)
-				{
-					_scrollTarget.y -= viewHeight;
-				}
-				
-				// without this we see weird behavior when switching to SCREEN_BY_SCREEN at arbitrary scroll positions
-				bindScrollPos(_scrollTarget);
-			}
-			else
-			{
-				var edge = targetX - deadzone.x;
-				if (_scrollTarget.x > edge)
-				{
-					_scrollTarget.x = edge;
-				}
-				edge = targetX + target.width - deadzone.x - deadzone.width;
-				if (_scrollTarget.x < edge)
-				{
-					_scrollTarget.x = edge;
-				}
-
-				edge = targetY - deadzone.y;
-				if (_scrollTarget.y > edge)
-				{
-					_scrollTarget.y = edge;
-				}
-				edge = targetY + target.height - deadzone.y - deadzone.height;
-				if (_scrollTarget.y < edge)
-				{
-					_scrollTarget.y = edge;
-				}
-			}
-
-			if ((target is FlxSprite))
-			{
-				if (_lastTargetPosition == null)
-				{
-					_lastTargetPosition = FlxPoint.get(target.x, target.y); // Creates this point.
-				}
-				_scrollTarget.x += (target.x - _lastTargetPosition.x) * followLead.x;
-				_scrollTarget.y += (target.y - _lastTargetPosition.y) * followLead.y;
-
-				_lastTargetPosition.x = target.x;
-				_lastTargetPosition.y = target.y;
-			}
-		}
+		return super.set_angle(angle);
 	}
-	
-	/**
-	 * Tells this camera object what `FlxObject` to track.
-	 *
-	 * @param   target   The object you want the camera to track. Set to `null` to not follow anything.
-	 * @param   style    Leverage one of the existing "deadzone" presets. Default is `LOCKON`.
-	 *                   If you use a custom deadzone, ignore this parameter and
-	 *                   manually specify the deadzone after calling `follow()`.
-	 * @param   lerp     How much lag the camera should have (can help smooth out the camera movement).
-	 */
-	override public function follow(target:FlxObject, ?style:FlxCameraFollowStyle, ?lerp:Float):Void
-	{
-		this.target = target;
-		followLerp = lerp ?? 1.0;
-		_lastTargetPosition = FlxDestroyUtil.put(_lastTargetPosition);
-		deadzone = FlxDestroyUtil.put(deadzone);
-
-		switch (this.style = style ?? LOCKON)
-		{
-			case LOCKON:
-				var w = 0.0;
-				var h = 0.0;
-				if (target != null)
-				{
-					w = target.width;
-					h = target.height;
-				}
-				deadzone = FlxRect.get((width - w) * 0.5, (height - h) * 0.5 - h * 0.25, w, h);
-
-			case PLATFORMER:
-				final w = (width * 0.125); // / 8
-				final h = (height * 0.3333333333333333); // / 3
-				deadzone = FlxRect.get((width - w) * 0.5, (height - h) * 0.5 - h * 0.25, w, h);
-
-			case TOPDOWN:
-				final helper = Math.max(width, height) * 0.25;
-				deadzone = FlxRect.get((width - helper) * 0.5, (height - helper) * 0.5, helper, helper);
-
-			case TOPDOWN_TIGHT:
-				final helper = Math.max(width, height) * 0.125; // / 8
-				deadzone = FlxRect.get((width - helper) * 0.5, (height - helper) * 0.5, helper, helper);
-
-			case SCREEN_BY_SCREEN:
-				deadzone = FlxRect.get(0, 0, width, height);
-
-			case NO_DEAD_ZONE:
-				deadzone = null;
-		}
-	}
-
-	// small optimisation from my pr (https://github.com/HaxeFlixel/flixel/pull/3106)
-	// UPD: approved?? kinda???? geo tweaked code a bit so that means that it'll merge????????
-	// UPDD: MERGED!!!!!!!!!!! (https://github.com/HaxeFlixel/flixel/commit/1b6d3fd404bfca439ece1ef9a38ec7970564c1c7)
-	extern inline function updateLerp(elapsed:Float)
-	{
-		if (followLerp >= 1.0)
-		{
-			scroll.copyFrom(_scrollTarget); // no easing
-		}
-		else if (followLerp > 0.0)
-		{
-			// Adjust lerp based on the current frame rate so lerp is less framerate dependant
-			final adjustedLerp = 1.0 - Math.pow(1.0 - followLerp, elapsed * 60);
-
-			scroll.x += (_scrollTarget.x - scroll.x) * adjustedLerp;
-			scroll.y += (_scrollTarget.y - scroll.y) * adjustedLerp;
-		}
-	}
-
-	@:noCompletion override inline function set_followLerp(value:Float):Float
-	{
-		return followLerp = value;
-	}
-	#end
 }
