@@ -2598,7 +2598,7 @@ class ChartingState extends MusicBeatUIState
 			updateWaveform();
 	}
 
-	function updateSectionUI():Void
+	inline function updateSectionUI():Void
 	{
 		final sec = _song.notes[curSec];
 		stepperBeats.value = getSectionBeats();
@@ -2611,18 +2611,18 @@ class ChartingState extends MusicBeatUIState
 		updateHeads();
 	}
 
-	function updateHeads():Void
+	inline function updateHeads():Void
 	{
 		var healthIconP1 = loadHealthIconFromCharacter(_song.player2);
 		var healthIconP2 = loadHealthIconFromCharacter(_song.player1);
-		if (_song.notes[curSec].gfSection)
-			healthIconP2 = _song.gfVersion.isNullOrEmpty() ? "gf" : _song.gfVersion;
 		if (_song.notes[curSec].mustHitSection)
 		{
 			final tmp = healthIconP1;
 			healthIconP1 = healthIconP2;
 			healthIconP2 = tmp;
 		}
+		if (_song.notes[curSec].gfSection)
+			healthIconP1 = _song.gfVersion.isNullOrEmpty() ? "gf" : _song.gfVersion;
 
 		leftIcon.changeIcon(healthIconP1);
 		rightIcon.changeIcon(healthIconP2);

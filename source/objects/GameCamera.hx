@@ -1,11 +1,12 @@
 package objects;
 
+import flixel.math.FlxMatrix;
 import flixel.math.FlxRect;
 
 class GameCamera extends FlxCamera
 {
 	// helper for fixing render on camera with angle applied
-	@:noCompletion static final __angleMatrix = new flixel.math.FlxMatrix();
+	@:noCompletion static final __angleMatrix = new FlxMatrix();
 	@:noCompletion static final __rotatedBounds = FlxRect.get();
 	@:noCompletion static final __origin = FlxPoint.get();
 
@@ -32,11 +33,10 @@ class GameCamera extends FlxCamera
 	/**
 		Okay, this should help optimize it a bit ig.
 	**/
-	public var checkForTweens(default, set):Bool = false;
+	public var checkForTweens(default, set):Bool;
 
 	/**
-		Makes that camera propertly renders this camera when rotated
-		TODO: fix fill()
+		Makes that camera propertly renders this camera when rotated.
 	**/
 	public var renderAngle:Bool;
 
@@ -99,21 +99,7 @@ class GameCamera extends FlxCamera
 		flashSprite.filters = filtersEnabled ? filters : null;
 
 		if (FlxG.renderTile && renderAngle)
-		{
-			if (_angleChanged)
-			{
-				final radians = angle * flixel.math.FlxAngle.TO_RAD;
-				_sinAngle = Math.sin(radians);
-				_cosAngle = Math.cos(radians);
-			}
-			__angleMatrix.identity();
-			__angleMatrix.translate(-width * 0.5, -height * 0.5);
-			__angleMatrix.scale(totalScaleX, totalScaleY);
-			__angleMatrix.rotateWithTrig(_cosAngle, _sinAngle);
-			__angleMatrix.translate(width * 0.5, height * 0.5);
-			__angleMatrix.translate(flashSprite.x - _flashOffset.x, flashSprite.y - _flashOffset.y);
-			canvas.transform.matrix = __angleMatrix;
-		}
+			canvas.transform.matrix = __get__rotated__matrix();
 	}
 
 	override public function fill(color:FlxColor, blendAlpha = true, fxAlpha = 1.0, ?graphics:openfl.display.Graphics)
@@ -130,35 +116,90 @@ class GameCamera extends FlxCamera
 				buffer.fillRect(_flashRect, color);
 			}
 		}
-		else // TODO? - find a way to optimise rotated fill
+		else if (fxAlpha != 0.0) // TODO? - find a way to optimise rotated fill
 		{
-			if (fxAlpha == 0)
-				return;
-
-			__get__rotated__bounds();
+			final bounds = __get__bounds();
 			final targetGraphics = graphics == null ? canvas.graphics : graphics;
 			targetGraphics.beginFill(color, fxAlpha);
 			// i'm drawing rect with these parameters to avoid light lines at the top and left of the camera,
 			// which could appear while cameras fading
-			targetGraphics.drawRect(__rotatedBounds.x - 1, __rotatedBounds.y - 1, __rotatedBounds.width + 2, __rotatedBounds.height + 2);
+			targetGraphics.drawRect(bounds.x - 1, bounds.y - 1, bounds.width + 2, bounds.height + 2);
 			targetGraphics.endFill();
 		}
 	}
 
 	override public function containsRect(rect:FlxRect):Bool
 	{
-		return __get__rotated__bounds().overlaps(rect);
+		return __get__bounds().overlaps(rect);
+	}
+
+	@:noCompletion extern inline function __get__bounds():FlxRect
+	{
+		__rotatedBounds.set(viewMarginLeft, viewMarginTop, viewWidth, viewHeight);
+		return (renderAngle ? __get__rotated__bounds() : __rotatedBounds);
 	}
 
 	@:noCompletion extern inline function __get__rotated__bounds():FlxRect
 	{
-		__rotatedBounds.set(viewMarginLeft, viewMarginTop, viewWidth, viewHeight);
-		if (renderAngle)
+		__update__trig();
+		if (!(_sinAngle == 0 && _sinAngle == 1))
 		{
 			__origin.set(__rotatedBounds.width * 0.5, __rotatedBounds.height * 0.5);
-			__rotatedBounds.getRotatedBounds(angle, __origin, __rotatedBounds);
+			final degrees = angle % 360;
+			final left = -__origin.x;
+			final top = -__origin.y;
+			final right = -__origin.x + __rotatedBounds.width;
+			final bottom = -__origin.y + __rotatedBounds.height;
+			if (degrees < 90)
+			{
+				__rotatedBounds.x += __origin.x + _cosAngle * left - _sinAngle * bottom;
+				__rotatedBounds.y += __origin.y + _sinAngle * left + _cosAngle * top;
+			}
+			else if (degrees < 180)
+			{
+				__rotatedBounds.x += __origin.x + _cosAngle * right - _sinAngle * bottom;
+				__rotatedBounds.y += __origin.y + _sinAngle * left  + _cosAngle * bottom;
+			}
+			else if (degrees < 270)
+			{
+				__rotatedBounds.x += __origin.x + _cosAngle * right - _sinAngle * top;
+				__rotatedBounds.y += __origin.y + _sinAngle * right + _cosAngle * bottom;
+			}
+			else
+			{
+				__rotatedBounds.x += __origin.x + _cosAngle * left - _sinAngle * top;
+				__rotatedBounds.y += __origin.y + _sinAngle * right + _cosAngle * top;
+			}
+			// temp var, in case input rect is the output rect
+			final newHeight:Float  = Math.abs(_cosAngle * __rotatedBounds.height) + Math.abs(_sinAngle * __rotatedBounds.width );
+			__rotatedBounds.width  = Math.abs(_cosAngle * __rotatedBounds.width ) + Math.abs(_sinAngle * __rotatedBounds.height);
+			__rotatedBounds.height = newHeight;
 		}
 		return __rotatedBounds;
+	}
+
+	@:noCompletion extern inline function __get__rotated__matrix():FlxMatrix
+	{
+		__update__trig();
+		__angleMatrix.identity();
+		__angleMatrix.translate(-width * 0.5, -height * 0.5);
+		__angleMatrix.scale(scaleX, scaleY);
+		// __angleMatrix.scale(totalScaleX, totalScaleY);
+		__angleMatrix.rotateWithTrig(_cosAngle, _sinAngle);
+		__angleMatrix.translate(width * 0.5, height * 0.5);
+		__angleMatrix.translate(flashSprite.x - _flashOffset.x, flashSprite.y - _flashOffset.y);
+		__angleMatrix.scale(FlxG.scaleMode.scale.x, FlxG.scaleMode.scale.y);
+		return __angleMatrix;
+	}	
+
+	@:noCompletion extern inline function __update__trig()
+	{
+		if (_angleChanged)
+		{
+			final radians = (angle % 360) * flixel.math.FlxAngle.TO_RAD;
+			_sinAngle = Math.sin(radians);
+			_cosAngle = Math.cos(radians);
+		}
 	}
 
 	@:noCompletion inline function set_checkForTweens(bool:Bool):Bool

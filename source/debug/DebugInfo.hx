@@ -61,25 +61,6 @@ class DebugInfo extends DebugTextField
 			_text += ': $tmp';
 		}
 
-		/*final charting = _text.contains("ChartingState");
-		final onPlayState = _text.contains("PlayState") || charting;
-		tmp = FlxStringUtil.formatTime(Math.abs(Conductor.songPosition) * 0.001);
-		if (Conductor.songPosition < 0.0)
-			tmp = '-$tmp';
-		tmp = 'Position: $tmp';
-		if (onPlayState)
-		{
-			var t = "Song: " + (charting ? states.editors.ChartingState._song.song : PlayState.SONG.song.toLowerCase());
-			final d = Difficulty.getString().toLowerCase();
-			if (d != Difficulty.defaultDifficulty.toLowerCase())
-				t += ' [$d]';
-			tmp = '$t | $tmp/' + FlxStringUtil.formatTime(FlxG.sound.music.length * 0.001);
-		}
-		tmp += " | BPM: " + Conductor.bpm;
-		if (onPlayState && Conductor.bpm != PlayState.SONG.bpm)
-			tmp += " [" + PlayState.SONG.bpm + "]";
-		_text += '\nConductor: ($tmp)';*/
-
 		_text += "\nTweens: " + (FlxTween.globalManager._tweens.length + substates.PauseSubState.tweenManager._tweens.length);
 		_text += "\nTimers: " + FlxTimer.globalManager._timers.length;
 
@@ -87,26 +68,16 @@ class DebugInfo extends DebugTextField
 		{
 			_text += "\n";
 			var value:Dynamic;
-			// var formatName:String;
 			for (data in __extraData)
 			{
-				// formatName = data.label.toLowerCase();
 				value = (Type.typeof(data.value) == TFunction ? data.value() : data.value);
 				if (value is Float)
 					value = FlxMath.roundDecimal(value, PRECISION);
-				_text += "\n" + data.label + ":";
-				// if (__styleSheet.__styles.exists(formatName))
-				//	_text += '<$formatName>';
-				_text += ' $value';
-				// if (data.format != null)
-				//	_text += '<$formatName>';
+				_text += "\n" + data.label + ': $value';
 			}
 		}
 
 		_text += "\n";
-		// _text += "\nVolume: " + FlxG.sound.volume;
-		// if (FlxG.sound.muted)
-		//	_text += " [muted]";
 		_text += '\nTime Elapsed: $__timeElapsed';
 		if (DiscordClient.user != null)
 			_text += "\nDiscord User: " + DiscordClient.user;

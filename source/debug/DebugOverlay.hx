@@ -46,6 +46,12 @@ class DebugOverlay extends openfl.display.Sprite
 		addChild(info = new DebugInfo(PADDING_X));
 
 		FlxG.signals.preUpdate.add(flixelUpdate);
+		// scale overlay down if game was sized down
+		FlxG.signals.gameResized.add((_, _) ->
+		{
+			scaleX = Math.min(FlxG.scaleMode.scale.x, 1.0);
+			scaleY = Math.min(FlxG.scaleMode.scale.y, 1.0);
+		});
 		FlxG.stage.addEventListener(openfl.events.KeyboardEvent.KEY_DOWN, (e) ->
 			if (e.keyCode == flixel.input.keyboard.FlxKey.F4)
 			{
@@ -55,7 +61,7 @@ class DebugOverlay extends openfl.display.Sprite
 	}
 
 	@:access(openfl.text.StyleSheet.__styles)
-	public function watch(label:String, value:Dynamic, /*?format:Object,*/ ?field:String)
+	public function watch(label:String, value:Dynamic, ?field:String)
 	{
 		var id = -1;
 		for (i => data in info.__extraData)
@@ -71,12 +77,6 @@ class DebugOverlay extends openfl.display.Sprite
 			info.__extraData.push([label, value]);
 		else
 			info.__extraData[id].value = value;
-
-		// final formatName = label.toLowerCase();
-		// if (format == null && info.__styleSheet.__styles.exists(formatName))
-		//	info.__styleSheet.__styles.remove(formatName);
-		// else
-		//	info.__styleSheet.__styles.set(formatName, format);
 	}
 
 	function flixelUpdate()

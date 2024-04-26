@@ -1,15 +1,5 @@
 package states;
 
-// If you want to add your stage to the game, copy states/stages/Template.hx,
-// and put your stage code there, then, on PlayState, search for
-// "switch (curStage)", and add your stage to that list.
-
-// If you want to code Events, you can either code it on a Stage file or on PlayState, if you're doing the latter, search for:
-// "function eventPushed" - Only called *one time* when the game loads, use it for precaching events that use the same assets, no matter the values
-// "function eventPushedUnique" - Called one time per event, use it for precaching events that uses different assets based on its values
-// "function eventEarlyTrigger" - Used for making your event start a few MILLISECONDS earlier
-// "function triggerEvent" - Called when the song hits your event's timestamp, this is probably what you were looking for
-
 #if ACHIEVEMENTS_ALLOWED
 import backend.Achievements;
 #end
@@ -22,7 +12,6 @@ import backend.StateTransition;
 
 import flixel.FlxBasic;
 import flixel.FlxSubState;
-import flixel.math.FlxPoint;
 import flixel.util.FlxSort;
 import flixel.util.FlxStringUtil;
 import flixel.util.FlxSave;
@@ -55,12 +44,6 @@ import sys.io.File;
 #end
 
 #if VIDEOS_ALLOWED
-//import hxvlc.flixel.FlxVideo as VideoHandler;
-/*#if (hxCodec >= "3.0.0")
-import hxcodec.flixel.FlxVideo as VideoHandler;
-#elseif (hxCodec >= "2.6.1") import hxcodec.VideoHandler;
-#elseif (hxCodec == "2.6.0") import VideoHandler;
-#else import vlc.MP4Handler as VideoHandler; #end*/
 import backend.VideoSprite as VideoHandler;
 #end
 import backend.Subtitles;
@@ -103,18 +86,18 @@ class PlayState extends MusicBeatState
 	];
 
 	// how big to stretch the pixel art assets
-	public static var daPixelZoom:Float = 6.0;
+	public static var daPixelZoom = 6.0;
 
 	public static final SONG = new Song();
-	public static var storyWeek:Int = 0;
-	public static var isStoryMode:Bool = false;
+	public static var storyWeek = 0;
+	public static var isStoryMode = false;
 	public static var storyPlaylist = new Array<String>();
-	public static var storyDifficulty:Int = 1;
+	public static var storyDifficulty = 1;
 
-	public static var noteKillOffset = 350.;
-	public static var curStage:String = "";
 	public static var isPixelStage(get, never):Bool;
-	public static var stageUI:String = "normal";
+	public static var noteKillOffset = 350.0;
+	public static var stageUI = "normal";
+	public static var curStage = "";
 
 	public static var changedDifficulty:Bool = false;
 	public static var chartingMode:Bool = false;
@@ -170,7 +153,7 @@ class PlayState extends MusicBeatState
 
 	@:allow(substates.PauseSubState)
 	static var prevCamFollow:CameraTarget;
-	static final spawnTime = 2000.;
+	static final spawnTime = 2000.0;
 	static final __point = FlxPoint.get(); // helper
 
 	// event variables
@@ -196,7 +179,7 @@ class PlayState extends MusicBeatState
 
 	public var songSpeedTween:FlxTween;
 	public var songSpeed(default, set):Float = 1.0;
-	public var songSpeedType:String = "multiplicative";
+	public var songSpeedType = "multiplicative";
 
 	public var playbackRate(default, set):Float = 1.0;
 
@@ -204,9 +187,9 @@ class PlayState extends MusicBeatState
 	public var dadGroup:FlxTypedSpriteGroup<Character>;
 	public var gfGroup:FlxTypedSpriteGroup<Character>;
 
-	public var introSoundsSuffix:String = "";
-	public var uiPrefix:String = "";
-	public var uiSuffix:String = "";
+	public var introSoundsSuffix = "";
+	public var uiPrefix = "";
+	public var uiSuffix = "";
 
 	public var inst:openfl.media.Sound;
 	public var vocals:FlxSound;
@@ -252,7 +235,7 @@ class PlayState extends MusicBeatState
 	public var startingSong:Bool = false;
 	var updateTime:Bool = true;
 
-	//Gameplay settings
+	// Gameplay settings
 	public var healthGain:Float = 1.0;
 	public var healthLoss:Float = 1.0;
 	public var practiceMode:Bool = false;
@@ -482,9 +465,8 @@ class PlayState extends MusicBeatState
 		add(boyfriendGroup);
 
 		#if LUA_ALLOWED
-		luaDebugGroup = new FlxTypedSpriteGroup<DebugLuaText>(0, Main.fpsVar.visible ? 20 : 0); // for better visibility duhh
+		add(luaDebugGroup = new FlxTypedSpriteGroup<DebugLuaText>(0, Main.fpsVar.visible ? 20 : 0)); // for better visibility duhh
 		luaDebugGroup.camera = camOther;
-		add(luaDebugGroup);
 		#end
 
 		#if (LUA_ALLOWED || HSCRIPT_ALLOWED)
@@ -576,14 +558,9 @@ class PlayState extends MusicBeatState
 				timeTxt.text = FlxStringUtil.formatTime(FlxMath.bound(Math.floor(songCalc * 0.001), 0), false);
 			}
 
-		scoreGroup = new FlxTypedSpriteGroup<PopupSprite>();
-		scoreGroup.ID = 0;
-		strumLineNotes = new FlxTypedGroup<StrumNote>();
-		grpNoteSplashes = new FlxTypedGroup<NoteSplash>();
-		grpNoteSplashes.ID = 0;
-		add(scoreGroup);
-		add(strumLineNotes);
-		add(grpNoteSplashes);
+		add(scoreGroup = new FlxTypedSpriteGroup()).ID = 0;
+		add(strumLineNotes = new FlxTypedGroup());
+		add(grpNoteSplashes = new FlxTypedGroup()).ID = 0;
 
 		final splash = grpNoteSplashes.add(new NoteSplash()).precache();
 		splash.alpha = 0; // cant make it invisible or it won't allow precaching (does he know? - rich)
@@ -741,30 +718,37 @@ class PlayState extends MusicBeatState
 		});
 	}
 
-	public function addTextToDebug(text:Dynamic, ?color:FlxColor, ?pos:haxe.PosInfos)
+	#if !LUA_ALLOWED inline #end public function addTextToDebug(text:Dynamic, ?color:FlxColor, ?pos:haxe.PosInfos)
 	{
 		text = Std.string(text);
 		#if LUA_ALLOWED
-		if (isDead) // ACTUALLY CAN CAUSES MEMORY LEAK!!!
-			return haxe.Log.trace(text, pos);
+		if (!isDead) // ACTUALLY CAN CAUSES HUGE MEMORY LEAK!!!
+		{
+			if (luaDebugGroup == null)
+				return haxe.Log.trace("can't add debug text - 'luaDebugGroup' is null!!!", pos);
 
-		if (luaDebugGroup == null)
-			return haxe.Log.trace("can't add debug text - 'luaDebugGroup' is null!!!", pos);
+			final newText = luaDebugGroup.recycle(DebugLuaText);
+			newText.text = text;
+			newText.color = color ?? FlxColor.WHITE;
+			newText.setPosition(10, 8 - newText.height);
 
-		final newText = luaDebugGroup.recycle(DebugLuaText);
-		newText.text = text;
-		newText.color = color ?? FlxColor.WHITE;
-		newText.setPosition(10, 8 - newText.height);
-
-		luaDebugGroup.forEachAlive((spr) -> spr.y += newText.height + 2);
-		luaDebugGroup.add(newText);
+			luaDebugGroup.forEachAlive((spr) -> spr.y += newText.height + 2);
+			luaDebugGroup.add(newText);
+		}
 		#end
 		haxe.Log.trace(text, pos);
 	}
 
 	inline public function reloadHealthBarColors()
 	{
-		healthBar.setColors(healthBarFlip ? boyfriend.healthColor : dad.healthColor, healthBarFlip ? dad.healthColor : boyfriend.healthColor);
+		var left = dad.healthColor;
+		var right = boyfriend.healthColor;
+		if (healthBarFlip)
+		{
+			left = boyfriend.healthColor;
+			right = dad.healthColor;
+		}
+		healthBar.setColors(left, right);
 	}
 
 	public function addCharacterToList(newCharacter:String, type:Int)
@@ -869,7 +853,7 @@ class PlayState extends MusicBeatState
 		return null;
 	}
 
-	inline function startCharacterPos(char:Character, ?gfCheck = false)
+	extern inline function startCharacterPos(char:Character, ?gfCheck = false)
 	{
 		if (gfCheck && char.curCharacter.startsWith("gf")) // IF DAD IS GIRLFRIEND, HE GOES TO HER POSITION
 		{
@@ -1021,7 +1005,7 @@ class PlayState extends MusicBeatState
 	public var countdownSet:FlxSprite;
 	public var countdownGo:FlxSprite;
 
-	function cacheCountdown()
+	extern inline function cacheCountdown()
 	{
 		// no more useless maps!!!
 		Paths.image(uiPrefix + 'ready$uiSuffix');
@@ -1912,8 +1896,7 @@ class PlayState extends MusicBeatState
 		boyfriend.stunned = true;
 		deathCounter++;
 
-		@:bypassAccessor
-		paused = true;
+		@:bypassAccessor paused = true;
 
 		__stop__song();
 		persistentUpdate = persistentDraw = false;
@@ -1946,12 +1929,10 @@ class PlayState extends MusicBeatState
 		var flValue1 = CoolUtil.nullifyNaN(Std.parseFloat(value1));
 		var flValue2 = CoolUtil.nullifyNaN(Std.parseFloat(value2));
 
-		if (strumTime == null)
+		if (strumTime == null || Math.isNaN(strumTime))
 			strumTime = Conductor.songPosition;
-		if (Math.isNaN(strumTime))
-			strumTime = 0.0;
 
-		switch(eventName)
+		switch (eventName)
 		{
 			case "Hey!":
 				final value = switch (value1.toLowerCase().trim())
@@ -2160,20 +2141,24 @@ class PlayState extends MusicBeatState
 				{
 					addTextToDebug('ERROR ("Set Property" Event) - $e', FlxColor.RED);
 				}
-			
+
 			case "Play Sound":
 				if (flValue2 == null)
 					flValue2 = 1.0;
 				FlxG.sound.play(Paths.sound(value1), flValue2);
 		}
-		
+
 		stagesFunc((stage) -> stage.eventCalled(eventName, value1, value2, flValue1, flValue2, strumTime));
 		callOnScripts("onEvent", [eventName, value1, value2, strumTime]);
-		
-		__lastEvents.unshift('($eventName | $value1 | $value2 | ' + FlxStringUtil.formatTime(strumTime * 0.001, true) + ")");
+
+		final abs = Math.abs(strumTime);
+		var t = FlxStringUtil.formatTime(abs * 0.001, true);
+		if (strumTime != abs)
+			t = '-$t';
+		__lastEvents.unshift('($eventName | $value1 | $value2 | $t)');
 		while (__lastEvents.length > MAX_LAST_EVENTS)
 			__lastEvents.pop();
-		Main.fpsVar.watch("Last Events", [for (e in __lastEvents) '\n  - $e'].join(""));
+		Main.fpsVar.watch("Last Events", "\n  - " + __lastEvents.join("\n  - "));
 	}
 
 	@:allow(backend.BaseStage)
@@ -2359,26 +2344,26 @@ class PlayState extends MusicBeatState
 	public var showComboNum:Bool = true;
 	public var showRating:Bool	 = true;
 
-	function cachePopUpScore()
+	extern inline function cachePopUpScore()
 	{
-		if (!ClientPrefs.data.enableCombo)
-			return;
-
-		for (rat in ratingsData)
-			Paths.image(uiPrefix + rat.image + uiSuffix);
-		for (i in 0...10)
-			Paths.image(uiPrefix + 'num$i' + uiSuffix);
-
-		// https://preview.redd.it/7nskgql0k1w91.png?width=960&crop=smart&auto=webp&s=84099357cf2f7d30075e6c9989b15ef81bda9037
-		inline function __cachePopUp(__factory:()->PopupSprite, __image:String)
+		if (ClientPrefs.data.enableCombo)
 		{
-			scoreGroup.add(__factory()).loadGraphic(Paths.image(uiPrefix + __image + uiSuffix)).precache().kill();
-		}
+			for (rat in ratingsData)
+				Paths.image(uiPrefix + rat.image + uiSuffix);
+			for (i in 0...10)
+				Paths.image(uiPrefix + 'num$i' + uiSuffix);
 
-		__cachePopUp(__ratingFactory, ratingsData[0].image);
-		__cachePopUp(__numScoreFactory, "num0");
-		__cachePopUp(__numScoreFactory, "num1");
-		__cachePopUp(__numScoreFactory, "num2");
+			// https://preview.redd.it/7nskgql0k1w91.png?width=960&crop=smart&auto=webp&s=84099357cf2f7d30075e6c9989b15ef81bda9037
+			inline function __cachePopUp(__factory:()->PopupSprite, __image:String)
+			{
+				scoreGroup.add(__factory()).loadGraphic(Paths.image(uiPrefix + __image + uiSuffix)).precache().kill();
+			}
+
+			__cachePopUp(__ratingFactory, ratingsData[0].image);
+			__cachePopUp(__numScoreFactory, "num0");
+			__cachePopUp(__numScoreFactory, "num1");
+			__cachePopUp(__numScoreFactory, "num2");
+		}
 	}
 
 	// cache factories for later use
@@ -2970,7 +2955,7 @@ class PlayState extends MusicBeatState
 	}
 
 	// new psych input by crowplexus
-	public function playerDance(force = false):Void
+	inline public function playerDance(force = false):Void
 	{
 		if (boyfriend.animation.curAnim != null && boyfriend.holdTimer > boyfriend.__calc__hold__timer() && boyfriend.animation.curAnim.name.startsWith("sing")
 			&& !boyfriend.animation.curAnim.name.endsWith("miss"))
@@ -2992,16 +2977,17 @@ class PlayState extends MusicBeatState
 					camHUD.zoom  += 0.03 * defaultHUDZoom * camZoomingMult;
 			}
 
-			if (SONG.notes[curSection].changeBPM)
+			final sec = SONG.notes[curSection];
+			if (sec.changeBPM && sec.bpm != Conductor.bpm)
 			{
-				Conductor.bpm = SONG.notes[curSection].bpm;
+				Conductor.bpm = sec.bpm;
 				setOnScripts("curBpm", Conductor.bpm);
 				setOnScripts("crochet", Conductor.crochet);
 				setOnScripts("stepCrochet", Conductor.stepCrochet);
 			}
-			setOnScripts("mustHitSection", SONG.notes[curSection].mustHitSection);
-			setOnScripts("altAnim", SONG.notes[curSection].altAnim);
-			setOnScripts("gfSection", SONG.notes[curSection].gfSection);
+			setOnScripts("mustHitSection", sec.mustHitSection);
+			setOnScripts("altAnim", sec.altAnim);
+			setOnScripts("gfSection", sec.gfSection);
 		}
 		super.sectionHit();
 
@@ -3103,15 +3089,12 @@ class PlayState extends MusicBeatState
 	}
 	#end
 
-	public function callOnScripts(funcToCall:String, ?args:Array<Dynamic>, ignoreStops = false, ?exclusions:Array<String>, ?excludeValues:Array<Dynamic>):Dynamic {
-		if (args == null)			args = [];
-		if (exclusions == null)		exclusions = [];
-		if (excludeValues == null)	excludeValues = [psychlua.FunkinLua.Function_Continue];
-
-		var result:Dynamic = callOnLuas(funcToCall, args, ignoreStops, exclusions, excludeValues);
-		if (result == null || excludeValues.contains(result))
-			result = callOnHScript(funcToCall, args, ignoreStops, exclusions, excludeValues);
-		return result;
+	inline public function callOnScripts(funcToCall:String, ?args:Array<Dynamic>, ignoreStops = false, ?exclusions:Array<String>, ?excludeValues:Array<Dynamic>):Dynamic
+	{
+		if (excludeValues == null)
+			excludeValues = [psychlua.FunkinLua.Function_Continue];
+		final result:Dynamic = callOnLuas(funcToCall, args, ignoreStops, exclusions, excludeValues);
+		return (result == null || excludeValues.contains(result)) ? callOnHScript(funcToCall, args, ignoreStops, exclusions, excludeValues) : result;
 	}
 
 	public function callOnLuas(funcToCall:String, ?args:Array<Dynamic>, ignoreStops = false, ?exclusions:Array<String>, ?excludeValues:Array<Dynamic>):Dynamic
@@ -3190,10 +3173,8 @@ class PlayState extends MusicBeatState
 		return returnVal;
 	}
 
-	public function setOnScripts(variable:String, arg:Dynamic, ?exclusions:Array<String>)
+	inline public function setOnScripts(variable:String, arg:Dynamic, ?exclusions:Array<String>)
 	{
-		if (exclusions == null)
-			exclusions = [];
 		setOnLuas(variable, arg, exclusions);
 		setOnHScript(variable, arg, exclusions);
 	}
@@ -3204,11 +3185,8 @@ class PlayState extends MusicBeatState
 		if (exclusions == null)
 			exclusions = [];
 		for (script in luaArray)
-		{
-			if (exclusions.contains(script.scriptName))
-				continue;
-			script.set(variable, arg);
-		}
+			if (!exclusions.contains(script.scriptName))
+				script.set(variable, arg);
 		#end
 	}
 
@@ -3218,11 +3196,8 @@ class PlayState extends MusicBeatState
 		if (exclusions == null)
 			exclusions = [];
 		for (script in hscriptArray)
-		{
-			if (exclusions.contains(script.origin))
-				continue;
-			script.interp.setVar(variable, arg);
-		}
+			if (!exclusions.contains(script.origin))
+				script.interp.setVar(variable, arg);
 		#end
 	}
 
@@ -3439,7 +3414,7 @@ class PlayState extends MusicBeatState
 	@:noCompletion public var opponentCameraOffset(get, set):Array<Float>;
 	@:noCompletion public var girlfriendCameraOffset(get, set):Array<Float>;
 
-	@:noCompletion inline public function set_isCameraOnForcedPos(force:Bool):Bool
+	@:noCompletion inline function set_isCameraOnForcedPos(force:Bool):Bool
 	{
 		isCameraOnForcedPos = force;
 		camGame.target = camFollow;
@@ -3465,7 +3440,7 @@ class PlayState extends MusicBeatState
 		return stageUI == "pixel" || stageUI.endsWith("-pixel");
 	}
 
-	@:noCompletion inline public function get_camFollow():CameraTarget
+	@:noCompletion inline function get_camFollow():CameraTarget
 	{
 		return isCameraOnForcedPos ? _camFollow : camFollow;
 	}
@@ -3570,33 +3545,26 @@ class PlayState extends MusicBeatState
 
 	@:noCompletion inline function set_boyfriendCameraOffset(a:Array<Float>):Array<Float>
 	{
-		if (a != null)
-		{
-			// trigger callback once
-			@:bypassAccessor bfCamOffset.x = a[0];
-			bfCamOffset.y = a[1];
-		}
-		return a;
+		return __point__copy__array(bfCamOffset, a);
 	}
 	@:noCompletion inline function set_opponentCameraOffset(a:Array<Float>):Array<Float>
 	{
-		if (a != null)
-		{
-			// trigger callback once
-			@:bypassAccessor dadCamOffset.x = a[0];
-			dadCamOffset.y = a[1];
-		}
-		return a;
+		return __point__copy__array(dadCamOffset, a);
 	}
 	@:noCompletion inline function set_girlfriendCameraOffset(a:Array<Float>):Array<Float>
 	{
-		if (a != null)
+		return __point__copy__array(gfCamOffset, a);
+	}
+
+	@:noCompletion extern inline function __point__copy__array(__p:FlxBasePoint, __a:Array<Float>):Array<Float>
+	{
+		if (__a != null)
 		{
 			// trigger callback once
-			@:bypassAccessor gfCamOffset.x = a[0];
-			gfCamOffset.y = a[1];
+			@:bypassAccessor __p.x = __a[0];
+			__p.y = __a[1];
 		}
-		return a;
+		return __a;
 	}
 
 	// rich: yes i am a nerd!! 🤓🤓
@@ -3613,18 +3581,6 @@ class PlayState extends MusicBeatState
 
 		setOnLuas("botPlay", value); // setOnScripts
 		return cpuControlled = value;
-	}
-
-	@:noCompletion inline function __resizeNotes(ratio:Float) // funny word huh
-	{
-		if (ratio == -1)
-			return;
-
-		var note:Note;
-		final combined = unspawnNotes.concat(notes.members);
-		while (combined.length != 0)
-			if ((note = combined.pop()) != null)
-				note.resizeByRatio(ratio);
 	}
 
 	@:noCompletion function set_songSpeed(value:Float):Float
@@ -3660,6 +3616,22 @@ class PlayState extends MusicBeatState
 		return value;
 	}
 
+	@:noCompletion extern inline function __resizeNotes(ratio:Float) // funny word huh
+	{
+		if (ratio != -1)
+		{
+			inline function __resize(a:Array<Note>, r:Float)
+			{
+				var n:Note, i = -1;
+				while (++i != a.length)
+					if ((n = a[i]) != null)
+						n.resizeByRatio(r);
+			}
+			__resize(unspawnNotes, ratio);
+			__resize(notes.members, ratio);
+		}
+	}
+
 	@:noCompletion inline function set_paused(bool:Bool):Bool
 	{
 		return paused = camGame.paused = camHUD.paused = bool;
@@ -3676,7 +3648,6 @@ abstract RuntimeShaderData(Array<String>) from Array<String> to Array<String>
 	@:noCompletion inline function get_vert():String  return this[1];
 }
 
-// https://media.discordapp.net/attachments/1041755661630976052/1180970202079436908/image.png?ex=657f5b35&is=656ce635&hm=477b7411d344068f3cf93abbc76f0fc5457eb03123b25d788c663ef2d58ad107&=&format=webp&quality=lossless&width=517&height=631
 abstract RatingData(Array<EitherType<Float, String>>) from Array<EitherType<Float, String>> to Array<EitherType<Float, String>>
 {
 	public var percent(get, never):Float;
