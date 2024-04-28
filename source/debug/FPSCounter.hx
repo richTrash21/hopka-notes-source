@@ -1,8 +1,6 @@
 package debug;
 
-import openfl.utils.Object;
 import flixel.util.FlxStringUtil;
-import flixel.FlxState;
 
 @:allow(debug.DebugOverlay)
 class FPSCounter extends DebugTextField
@@ -16,12 +14,12 @@ class FPSCounter extends DebugTextField
 
 	@:noCompletion var __memPeak = 0;
 	// @:noCompletion var __gpuPeak = 0;
-	@:noCompletion var __fpsStyle:Object;
+	@:noCompletion var __fpsStyle:openfl.utils.Object;
 
 	@:access(openfl.text.StyleSheet.__styles)
-	public function new(x = 0.0, y = 0.0):Void
+	public function new(x = 0.0, y = 0.0, ?followObject:openfl.text.TextField):Void
 	{
-		super(x, y);
+		super(x, y, followObject);
 		__textFormat.size += 1;
 
 		// i hate StyleSheet.setStyle() all my homies hate StyleSheet.setStyle()
@@ -73,6 +71,7 @@ class FPSCounter extends DebugTextField
 			}
 		}*/
 		this.text = _text;
+		super.flixelUpdate();
 	}
 
 	/**

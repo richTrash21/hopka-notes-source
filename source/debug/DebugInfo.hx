@@ -1,7 +1,5 @@
 package debug;
 
-import openfl.utils.Object;
-import debug.macro.GitCommitMacro;
 import flixel.FlxState;
 
 @:allow(debug.DebugOverlay)
@@ -14,9 +12,9 @@ class DebugInfo extends DebugTextField
 	@:noCompletion var __stateClass:String;
 	@:noCompletion var __prevTime = 0;
 
-	public function new(x = 0.0, y = 0.0)
+	public function new(x = 0.0, y = 0.0, ?followObject:openfl.text.TextField)
 	{
-		super(x, y);
+		super(x, y, followObject);
 
 		FlxG.signals.preStateCreate.add((s) ->
 		{
@@ -81,11 +79,10 @@ class DebugInfo extends DebugTextField
 		_text += '\nTime Elapsed: $__timeElapsed';
 		if (DiscordClient.user != null)
 			_text += "\nDiscord User: " + DiscordClient.user;
-		_text += "\nCommit " + GitCommitMacro.number + " (" + GitCommitMacro.hash + ")";
-		_text += "\n" + FlxG.VERSION;
 
 		this.text = _text;
 		__prevTime = currentTime;
+		super.flixelUpdate();
 	}
 
 	@:noCompletion extern inline function __get__time__elapsed(__time:Float):String

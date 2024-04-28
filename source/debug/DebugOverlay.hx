@@ -1,19 +1,20 @@
 package debug;
 
-import openfl.utils.Object;
 import openfl.display.Bitmap;
 
 // kinda like in Codename Engine
 @:allow(debug.DebugInfo)
 @:allow(debug.FPSCounter)
+@:allow(ebug.DebugBuildInfo)
 @:allow(debug.DebugTextField)
 class DebugOverlay extends openfl.display.Sprite
 {
-	extern inline static final INFO_OFFSET = 2.0;
-	extern inline static final PADDING_X = 8.0;
-	extern inline static final PADDING_Y = 5.0;
+	extern public inline static final DEBUG_MODES = 3;
+	extern public inline static final INFO_OFFSET = 2.0;
+	extern public inline static final PADDING_X = 8.0;
+	extern public inline static final PADDING_Y = 5.0;
 
-	static final debugFont = Sys.getEnv("windir") + "\\Fonts\\consolab.ttf";
+	public static final debugFont = Sys.getEnv("windir") + "\\Fonts\\consolab.ttf";
 
 	/**
 		The current frame rate, expressed using frames-per-second
@@ -31,19 +32,25 @@ class DebugOverlay extends openfl.display.Sprite
 	**/
 	// public var memoryMegasGPU(get, never):Int;
 
-	public var debug = #if debug true #else false #end;
+	public var debug = #if debug 2 #else 0 #end;
 
 	var bg:Bitmap;
 	var fps:FPSCounter;
 	var info:DebugInfo;
+	var buildInfo:DebugBuildInfo;
+	var list = new Array<DebugTextField>();
 
 	public function new()
 	{
 		super();
 
-		addChild(bg = new Bitmap(new openfl.display.BitmapData(1, 1, 0x66000000)));
-		addChild(fps = new FPSCounter(PADDING_X, PADDING_Y));
-		addChild(info = new DebugInfo(PADDING_X));
+		if (FlxG.save.data.debugInfo != null)
+			debug = FlxG.save.data.debugInfo;
+
+		addChild(bg = new Bitmap(new openfl.display.BitmapData(1, 1, 0x80000000)));
+		addToList(fps = new FPSCounter(PADDING_X, PADDING_Y));
+		addToList(info = new DebugInfo(fps));
+		addToList(buildInfo = new DebugBuildInfo(info));
 
 		FlxG.signals.preUpdate.add(flixelUpdate);
 		// scale overlay down if game was sized down
@@ -52,10 +59,16 @@ class DebugOverlay extends openfl.display.Sprite
 			scaleX = Math.min(FlxG.scaleMode.scale.x, 1.0);
 			scaleY = Math.min(FlxG.scaleMode.scale.y, 1.0);
 		});
+		
 		FlxG.stage.addEventListener(openfl.events.KeyboardEvent.KEY_DOWN, (e) ->
 			if (e.keyCode == flixel.input.keyboard.FlxKey.F4)
 			{
-				debug = FlxG.save.data.debugInfo = !FlxG.save.data.debugInfo;
+				if (FlxG.save.data.debugInfo == null)
+					FlxG.save.data.debugInfo = debug;
+				else if (FlxG.save.data.debugInfo is Bool)
+					FlxG.save.data.debugInfo = FlxG.save.data.debugInfo ? 1 : 0;
+
+				debug = (FlxG.save.data.debugInfo = ++FlxG.save.data.debugInfo % DEBUG_MODES);
 				FlxG.save.flush();
 			});
 	}
@@ -81,31 +94,32 @@ class DebugOverlay extends openfl.display.Sprite
 
 	function flixelUpdate()
 	{
-		fps.flixelUpdate();
-		info.flixelUpdate();
+		fps.debug = info.visible = debug > 0;
+		buildInfo.visible = debug > 1;
+
+		var bgWidth = 0.0, bgHeight = 0.0;
+		for (item in list)
+		{
+			item.flixelUpdate();
+			if (!item.visible || item.alpha == 0.0)
+				continue;
+
+			bgWidth  = Math.max(bgWidth, item.x + item.width);
+			bgHeight = Math.max(bgHeight, item.y + item.height);
+		}
+
+		bg.scaleX = bgWidth  + PADDING_X;
+		bg.scaleY = bgHeight + PADDING_Y;
 	}
 
-	@:noCompletion override function __enterFrame(dt:Int)
+	inline public function addToList(item:DebugTextField):DebugTextField
 	{
-		fps.debug = info.visible = debug;
-		super.__enterFrame(dt);
-
-		var bgScaleX = PADDING_X * 2.0;
-		var bgScaleY = PADDING_Y * 2.0;
-		if (debug)
+		if (item != null)
 		{
-			final infoY = fps.y + fps.height + INFO_OFFSET;
-			info.y = infoY;
-			bgScaleX += Math.max(fps.width, info.width);
-			bgScaleY += Math.max(fps.height, infoY + info.height);
+			list.push(item);
+			addChild(item);
 		}
-		else
-		{
-			bgScaleX += fps.width;
-			bgScaleY += fps.height;
-		}
-		bg.scaleX = bgScaleX;
-		bg.scaleY = bgScaleY;
+		return item;
 	}
 
 	@:noCompletion inline function get_currentFPS():Int

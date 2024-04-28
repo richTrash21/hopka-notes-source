@@ -1,15 +1,11 @@
 package objects;
 
+import flixel.util.FlxDestroyUtil;
 import flixel.math.FlxMatrix;
 import flixel.math.FlxRect;
 
 class GameCamera extends FlxCamera
 {
-	// helper for fixing render on camera with angle applied
-	@:noCompletion static final __angleMatrix = new FlxMatrix();
-	@:noCompletion static final __rotatedBounds = FlxRect.get();
-	@:noCompletion static final __origin = FlxPoint.get();
-
 	/**
 		Default lerpin' zoom. Not to be confused with `FlxCamera.defaultZoom`!
 	**/
@@ -38,7 +34,7 @@ class GameCamera extends FlxCamera
 	/**
 		Makes that camera propertly renders this camera when rotated.
 	**/
-	public var renderAngle:Bool;
+	public var renderAngle(default, set):Bool;
 
 	/**
 		Pauses fx and camera movement.
@@ -47,9 +43,16 @@ class GameCamera extends FlxCamera
 
 	// okay i actually optimized it???? (kinda)
 	@:noCompletion var __tweenTimer = 0.0;
+
 	@:noCompletion var _angleChanged = false;
 	@:noCompletion var _sinAngle = 0.0;
 	@:noCompletion var _cosAngle = 1.0;
+
+	// helpers for fixing render on camera with angle applied
+	@:noCompletion var _shakeOffset = FlxPoint.get();
+	@:noCompletion var _rotatedBounds = FlxRect.get();
+	@:noCompletion var _rotatedMatrix:FlxMatrix;
+	@:noCompletion var _matrixDirty = false;
 
 	public function new(zoom = 0.0, bgColor = FlxColor.BLACK, updateZoom = false):Void
 	{
@@ -91,15 +94,26 @@ class GameCamera extends FlxCamera
 			}
 
 			updateScroll();
+			updateShake(elapsed);
 			updateFlash(elapsed);
 			updateFade(elapsed);
-			updateShake(elapsed);
 		}
 
 		flashSprite.filters = filtersEnabled ? filters : null;
 
-		if (FlxG.renderTile && renderAngle)
-			canvas.transform.matrix = __get__rotated__matrix();
+		if (FlxG.renderTile)
+		{
+			flashSprite.rotation = renderAngle ? 0.0 : angle;
+			__update__matrix(renderAngle);
+		}
+	}
+
+	override public function destroy()
+	{
+		_rotatedMatrix = null;
+		_rotatedBounds = FlxDestroyUtil.put(_rotatedBounds);
+		_shakeOffset = FlxDestroyUtil.put(_shakeOffset);
+		super.destroy();
 	}
 
 	override public function fill(color:FlxColor, blendAlpha = true, fxAlpha = 1.0, ?graphics:openfl.display.Graphics)
@@ -120,12 +134,19 @@ class GameCamera extends FlxCamera
 		{
 			final bounds = __get__bounds();
 			final targetGraphics = graphics == null ? canvas.graphics : graphics;
+
 			targetGraphics.beginFill(color, fxAlpha);
-			// i'm drawing rect with these parameters to avoid light lines at the top and left of the camera,
+			// drawing rect with these parameters to avoid light lines at the top and left of the camera,
 			// which could appear while cameras fading
 			targetGraphics.drawRect(bounds.x - 1, bounds.y - 1, bounds.width + 2, bounds.height + 2);
 			targetGraphics.endFill();
 		}
+	}
+
+	override public function onResize()
+	{
+		_matrixDirty = true;
+		super.onResize();
 	}
 
 	override public function containsRect(rect:FlxRect):Bool
@@ -133,70 +154,135 @@ class GameCamera extends FlxCamera
 		return __get__bounds().overlaps(rect);
 	}
 
+	override function updateShake(elapsed:Float):Void
+	{
+		if (_fxShakeDuration > 0)
+		{
+			_shakeOffset.set();
+			_matrixDirty = true;
+			_fxShakeDuration -= elapsed;
+			if (_fxShakeDuration <= 0)
+			{
+				if (_fxShakeComplete != null)
+				{
+					_fxShakeComplete();
+				}
+			}
+			else // TODO: fix shake on renderAngle
+			{
+				// if (renderAngle)
+				//	__update__trig();
+
+				var shakePixels:Float;
+				final pixelPerfect = pixelPerfectShake == null ? pixelPerfectRender : pixelPerfectShake;
+				if (_fxShakeAxes.x)
+				{
+					shakePixels = FlxG.random.float(-1, 1) * _fxShakeIntensity * width;
+					if (pixelPerfect)
+						shakePixels = Math.round(shakePixels);
+					// if (renderAngle)
+					//	shakePixels *= _cosAngle;
+					
+					_shakeOffset.x = shakePixels * zoom * FlxG.scaleMode.scale.x;
+					flashSprite.x += _shakeOffset.x;
+				}
+				
+				if (_fxShakeAxes.y)
+				{
+					shakePixels = FlxG.random.float(-1, 1) * _fxShakeIntensity * height;
+					if (pixelPerfect)
+						shakePixels = Math.round(shakePixels);
+					// if (renderAngle)
+					//	shakePixels *= _sinAngle;
+					
+					_shakeOffset.y = shakePixels * zoom * FlxG.scaleMode.scale.y;
+					flashSprite.y += _shakeOffset.y;
+				}
+			}
+		}
+	}
+
 	@:noCompletion extern inline function __get__bounds():FlxRect
 	{
-		__rotatedBounds.set(viewMarginLeft, viewMarginTop, viewWidth, viewHeight);
-		return (renderAngle ? __get__rotated__bounds() : __rotatedBounds);
+		_rotatedBounds.set(viewMarginLeft - _shakeOffset.x, viewMarginTop - _shakeOffset.y, viewWidth, viewHeight);
+		return (renderAngle ? __get__rotated__bounds() : _rotatedBounds);
 	}
 
 	@:noCompletion extern inline function __get__rotated__bounds():FlxRect
 	{
-		__update__trig();
-		if (!(_sinAngle == 0 && _sinAngle == 1))
+		var degrees = angle % 360;
+		if (degrees != 0)
 		{
-			__origin.set(__rotatedBounds.width * 0.5, __rotatedBounds.height * 0.5);
-			final degrees = angle % 360;
-			final left = -__origin.x;
-			final top = -__origin.y;
-			final right = -__origin.x + __rotatedBounds.width;
-			final bottom = -__origin.y + __rotatedBounds.height;
-			if (degrees < 90)
+			__update__trig();
+
+			final centerX = _rotatedBounds.width  * 0.5;
+			final centerY = _rotatedBounds.height * 0.5;
+			final left    = -centerX;
+			final top     = -centerY;
+			final right   = -centerX + _rotatedBounds.width;
+			final bottom  = -centerY + _rotatedBounds.height;
+
+			if (degrees < 0)
+				degrees += 360;
+
+			switch (Math.floor(degrees * 0.0111111111111111)) // / 90
 			{
-				__rotatedBounds.x += __origin.x + _cosAngle * left - _sinAngle * bottom;
-				__rotatedBounds.y += __origin.y + _sinAngle * left + _cosAngle * top;
+				case 0: // < 90
+					_rotatedBounds.x += centerX + _cosAngle * left - _sinAngle * bottom;
+					_rotatedBounds.y += centerY + _sinAngle * left + _cosAngle * top;
+
+				case 1: // < 180
+					_rotatedBounds.x += centerX + _cosAngle * right - _sinAngle * bottom;
+					_rotatedBounds.y += centerY + _sinAngle * left  + _cosAngle * bottom;
+
+				case 2: // < 270
+					_rotatedBounds.x += centerX + _cosAngle * right - _sinAngle * top;
+					_rotatedBounds.y += centerY + _sinAngle * right + _cosAngle * bottom;
+
+				case 3: // < 360
+					_rotatedBounds.x += centerX + _cosAngle * left  - _sinAngle * top;
+					_rotatedBounds.y += centerY + _sinAngle * right + _cosAngle * top;
 			}
-			else if (degrees < 180)
-			{
-				__rotatedBounds.x += __origin.x + _cosAngle * right - _sinAngle * bottom;
-				__rotatedBounds.y += __origin.y + _sinAngle * left  + _cosAngle * bottom;
-			}
-			else if (degrees < 270)
-			{
-				__rotatedBounds.x += __origin.x + _cosAngle * right - _sinAngle * top;
-				__rotatedBounds.y += __origin.y + _sinAngle * right + _cosAngle * bottom;
-			}
-			else
-			{
-				__rotatedBounds.x += __origin.x + _cosAngle * left - _sinAngle * top;
-				__rotatedBounds.y += __origin.y + _sinAngle * right + _cosAngle * top;
-			}
-			// temp var, in case input rect is the output rect
-			final newHeight:Float  = Math.abs(_cosAngle * __rotatedBounds.height) + Math.abs(_sinAngle * __rotatedBounds.width );
-			__rotatedBounds.width  = Math.abs(_cosAngle * __rotatedBounds.width ) + Math.abs(_sinAngle * __rotatedBounds.height);
-			__rotatedBounds.height = newHeight;
+
+			final newHeight       = Math.abs(_cosAngle * _rotatedBounds.height) + Math.abs(_sinAngle * _rotatedBounds.width );
+			_rotatedBounds.width  = Math.abs(_cosAngle * _rotatedBounds.width ) + Math.abs(_sinAngle * _rotatedBounds.height);
+			_rotatedBounds.height = newHeight;
 		}
-		return __rotatedBounds;
+		return _rotatedBounds;
 	}
 
-	@:noCompletion extern inline function __get__rotated__matrix():FlxMatrix
+	@:noCompletion extern inline function __update__matrix(__rotate:Bool)
 	{
-		__update__trig();
-		__angleMatrix.identity();
-		__angleMatrix.translate(-width * 0.5, -height * 0.5);
-		__angleMatrix.scale(scaleX, scaleY);
-		// __angleMatrix.scale(totalScaleX, totalScaleY);
-		__angleMatrix.rotateWithTrig(_cosAngle, _sinAngle);
-		__angleMatrix.translate(width * 0.5, height * 0.5);
-		__angleMatrix.translate(flashSprite.x - _flashOffset.x, flashSprite.y - _flashOffset.y);
-		__angleMatrix.scale(FlxG.scaleMode.scale.x, FlxG.scaleMode.scale.y);
-		return __angleMatrix;
-	}	
+		// maybe try updating matrix less frequently???
+		if (_matrixDirty)
+		{
+			if (_rotatedMatrix == null)
+				_rotatedMatrix = new FlxMatrix();
+
+			// i have no fucking idea what this actually does but it sure does something - rich
+			_rotatedMatrix.identity();
+			_rotatedMatrix.translate(-width * 0.5, -height * 0.5);
+			_rotatedMatrix.scale(scaleX, scaleY);
+			if (__rotate)
+			{
+				__update__trig();
+				_rotatedMatrix.rotateWithTrig(_cosAngle, _sinAngle);
+			}
+			_rotatedMatrix.translate(width * 0.5, height * 0.5);
+			_rotatedMatrix.scale(FlxG.scaleMode.scale.x, FlxG.scaleMode.scale.y);
+			_rotatedMatrix.translate(_shakeOffset.x, _shakeOffset.y);
+
+			canvas.transform.matrix = _rotatedMatrix;
+			_matrixDirty = false;
+		}
+	}
 
 	@:noCompletion extern inline function __update__trig()
 	{
 		if (_angleChanged)
 		{
-			final radians = (angle % 360) * flixel.math.FlxAngle.TO_RAD;
+			final degrees = angle % 360;
+			final radians = (degrees < 0 ? degrees + 360 : degrees) * flixel.math.FlxAngle.TO_RAD;
 			_sinAngle = Math.sin(radians);
 			_cosAngle = Math.cos(radians);
 		}
@@ -210,11 +296,22 @@ class GameCamera extends FlxCamera
 		return checkForTweens = bool;
 	}
 
+	@:noCompletion inline function set_renderAngle(bool:Bool):Bool
+	{
+		if (renderAngle != bool)
+			_matrixDirty = true;
+
+		return renderAngle = bool;
+	}
+
 	@:noCompletion override function set_angle(angle:Float):Float
 	{
 		if (this.angle != angle)
+		{
 			_angleChanged = true;
-
-		return super.set_angle(angle);
+			if (renderAngle)
+				_matrixDirty = true;
+		}
+		return this.angle = angle;
 	}
 }

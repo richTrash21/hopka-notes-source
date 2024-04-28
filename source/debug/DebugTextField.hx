@@ -11,11 +11,14 @@ class DebugTextField extends TextField
 	static var __debugFromat:TextFormat;
 
 	var debug = #if debug true #else false #end;
+	var _follow:TextField;
 	var _text:String;
 
 	@:access(openfl.text.TextField.__defaultTextFormat)
-	public function new(x = 0.0, y = 0.0):Void
+	public function new(x = 0.0, y = 0.0, ?followObject:TextField):Void
 	{
+		_follow = followObject;
+
 		if (__debugFromat == null)
 		{
 			__debugFromat = new TextFormat(DebugOverlay.debugFont, 12, 0xFFFFFF, false, false, false, "", "", openfl.text.TextFormatAlign.LEFT, 0, 0, 0, 0);
@@ -46,5 +49,12 @@ class DebugTextField extends TextField
 		removeEventListener(openfl.events.KeyboardEvent.KEY_DOWN, this_onKeyDown);
 	}
 
-	function flixelUpdate() {}
+	function flixelUpdate()
+	{
+		if (_follow != null)
+		{
+			x = _follow.x;
+			y = _follow.y + _follow.height;
+		}
+	}
 }

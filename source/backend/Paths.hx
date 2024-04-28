@@ -81,7 +81,7 @@ class Paths
 			if (currentTrackedAssets.contains(key) || dumpExclusions.contains(key))
 				continue;
 
-			// localTrackedAssets.remove(key);
+			localTrackedAssets.remove(key);
 			__destroy__graphic(FlxG.bitmap.get(key));
 		}
 

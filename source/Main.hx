@@ -293,7 +293,6 @@ class Main extends flixel.FlxGame
 
 		fpsVar = new DebugOverlay();
 		fpsVar.visible = ClientPrefs.data.showFPS;
-		fpsVar.debug = FlxG.save.data.debugInfo;
 		addChild(transition = new StateTransition());
 		super.create(_);
 		#if !mobile
