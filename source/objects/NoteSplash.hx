@@ -59,9 +59,7 @@ class NoteSplash extends FlxSprite implements ISortable
 	{
 		super(x, y);
 
-		final songSkin = PlayState.SONG.splashSkin;
-		final skin = (songSkin?.length > 0) ? songSkin : defaultNoteSplash + getSplashSkinPostfix();
-		
+		final skin = PlayState.SONG.splashSkin.isNullOrEmpty() ? defaultNoteSplash + getSplashSkinPostfix() : PlayState.SONG.splashSkin;
 		rgbShader = new PixelSplashShaderRef();
 		shader = rgbShader.shader;
 		precacheConfig(skin);
@@ -77,20 +75,18 @@ class NoteSplash extends FlxSprite implements ISortable
 	}
 
 	var maxAnims:Int = 2;
-	public function setupNoteSplash(x:Float, y:Float, direction:Int = 0, ?note:Note)
+	public function setupNoteSplash(x = 0.0, y = 0.0, direction = 0, ?note:Note)
 	{
 		setPosition(x - Note.swagWidth * 0.95, y - Note.swagWidth);
 		aliveTime = 0;
 
 		final songSkin = PlayState.SONG.splashSkin;
-		final texture = if (!note?.noteSplashData.texture.isNullOrEmpty())
+		final texture = if (note != null && !note?.noteSplashData.texture.isNullOrEmpty())
 							note.noteSplashData.texture;
 						else if (!songSkin.isNullOrEmpty())
 							songSkin;
 						else
 							defaultNoteSplash + getSplashSkinPostfix();
-		// rich: i hate how note splashes work
-		// trace('texture to load - "$texture"');
 		
 		final config = _textureLoaded == texture ? precacheConfig(_configLoaded) : loadAnims(texture);
 
@@ -98,7 +94,7 @@ class NoteSplash extends FlxSprite implements ISortable
 		if ((note == null || note.noteSplashData.useRGBShader) && (PlayState.SONG.song == null || !PlayState.SONG.disableNoteRGB))
 		{
 			// If Note RGB is enabled:
-			if (#if (haxe > "4.2.5") !note?.noteSplashData.useGlobalShader #else note != null && !note.noteSplashData.useGlobalShader #end)
+			if (note != null && !note?.noteSplashData.useGlobalShader)
 			{
 				if (note.noteSplashData.r != -1)
 					note.rgbShader.r = note.noteSplashData.r;
@@ -113,13 +109,15 @@ class NoteSplash extends FlxSprite implements ISortable
 				tempShader = Note.globalRgbShaders[direction];
 		}
 
-		alpha = note?.noteSplashData.a ?? ClientPrefs.data.splashAlpha;
+		alpha = note == null ? ClientPrefs.data.splashAlpha : note.noteSplashData.a;
 		rgbShader.copyValues(tempShader);
 
 		if (PlayState.isPixelStage || !ClientPrefs.data.antialiasing)
 			antialiasing = false;
 		else if (note != null)
 			antialiasing = note.noteSplashData.antialiasing;
+		else
+			antialiasing = ClientPrefs.data.antialiasing;
 
 		_textureLoaded = texture;
 		offset.set(10, 10);

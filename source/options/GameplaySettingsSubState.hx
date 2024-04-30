@@ -20,11 +20,11 @@ class GameplaySettingsSubState extends BaseOptionsMenu
 			"bool"
 		));
 
-		addOption(new Option("Opponent Notes",
+		/*addOption(new Option("Opponent Notes",
 			"If unchecked, opponent notes get hidden.",
 			"opponentStrums",
 			"bool"
-		));
+		));*/
 
 		addOption(new Option("Directional Camera",
 			"If checked, moves camera acording to the note pressed.",

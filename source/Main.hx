@@ -270,6 +270,14 @@ class Main extends flixel.FlxGame
 		if (FlxG.save.data.debugInfo == null)
 			FlxG.save.data.debugInfo = false;
 
+		// goes unused from now on
+		if (!FlxG.save.data.opponentStrums)
+			FlxG.save.data.opponentStrums = true;
+		if (FlxG.save.data.hideHud)
+			FlxG.save.data.hideHud = false;
+		if (FlxG.save.data.healthBarAlpha != null)
+			FlxG.save.data.healthBarAlpha = 1.0;
+
 		var framerate:Int;
 		#if (html5 || switch)
 		framerate = 60;

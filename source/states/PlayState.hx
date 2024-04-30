@@ -3526,8 +3526,15 @@ class PlayState extends MusicBeatState
 	@:noCompletion inline function set_inCutscene(bool:Bool):Bool
 	{
 		// stupid fix but should do the trick
-		FlxG.signals.postUpdate.addOnce(()->camGame.paused = inCutscene);
+		if (!FlxG.signals.postUpdate.has(__inCutscene))
+			FlxG.signals.postUpdate.addOnce(__inCutscene);
+
 		return inCutscene = bool;
+	}
+
+	@:noCompletion function __inCutscene()
+	{
+		camGame.paused = inCutscene;
 	}
 
 	@:noCompletion inline function get_boyfriendCameraOffset():Array<Float>
@@ -3637,8 +3644,15 @@ class PlayState extends MusicBeatState
 	@:noCompletion inline function set_paused(bool:Bool):Bool
 	{
 		// stupid fix but should do the trick
-		FlxG.signals.postUpdate.addOnce(()->camGame.paused = camHUD.paused = paused);
+		if (!FlxG.signals.postUpdate.has(__paused))
+			FlxG.signals.postUpdate.addOnce(__paused);
+
 		return paused = bool;
+	}
+
+	@:noCompletion function __paused()
+	{
+		camGame.paused = camHUD.paused = paused;
 	}
 }
 

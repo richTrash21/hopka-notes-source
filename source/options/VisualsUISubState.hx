@@ -1,15 +1,23 @@
 package options;
 
 import flixel.util.FlxDestroyUtil;
-import objects.Note;
+import objects.NoteSplash;
 import objects.StrumNote;
+import objects.Note;
 
 class VisualsUISubState extends BaseOptionsMenu
 {
 	var noteOptionID = -1;
+	var noteAlphaID = -1;
 	var notes:FlxTypedSpriteGroup<StrumNote>; // for note skins
 	var notesY = 90; // note option: 90, other: -200
 	var changedMusic = false;
+	var splash:NoteSplash;
+	var splashOffsetX = 160.0;
+
+	var note:Note;
+	var sustain:Note;
+	var sustainEnd:Note;
 
 	public function new()
 	{
@@ -54,6 +62,9 @@ class VisualsUISubState extends BaseOptionsMenu
 					note.centerOffsets();
 					note.centerOrigin();
 				});
+				note.texture = sustain.texture = sustainEnd.texture = skin;
+				sustain.alpha = sustainEnd.alpha = ClientPrefs.data.susAlpha;
+				__update__notes__pos();
 			}
 			addOption(option);
 			noteOptionID = optionsArray.length - 1;
@@ -63,15 +74,28 @@ class VisualsUISubState extends BaseOptionsMenu
 		if (noteSplashes.length != 0)
 		{
 			if (!noteSplashes.contains(ClientPrefs.data.splashSkin))
-				ClientPrefs.data.splashSkin = ClientPrefs.defaultData.splashSkin; //Reset to default if saved splashskin couldnt be found
+				ClientPrefs.data.splashSkin = ClientPrefs.defaultData.splashSkin; // Reset to default if saved splashskin couldnt be found
 
-			noteSplashes.insert(0, ClientPrefs.defaultData.splashSkin); //Default skin always comes first
-			addOption(new Option("Note Splashes:",
+			splash = new NoteSplash();
+			splash.setupNoteSplash();
+			splash.precache();
+			splash.animation.finish();
+
+			noteSplashes.unshift(ClientPrefs.defaultData.splashSkin); // Default skin always comes first
+			option = new Option("Note Splashes:",
 				"Select your prefered Note Splash variation or turn it off.",
 				"splashSkin",
 				"string",
 				noteSplashes
-			));
+			);
+			option.change = () ->
+			{
+				splashOffsetX = 160;
+				splash.active = true;
+				__play__splash__anim();
+				__update__splash__pos();
+			}
+			addOption(option);
 		}
 
 		option = new Option("Note Splash Opacity",
@@ -83,20 +107,43 @@ class VisualsUISubState extends BaseOptionsMenu
 		option.maxValue = 1;
 		option.changeValue = 0.1;
 		option.decimals = 1;
+		if (splash != null)
+			option.change = () ->
+			{
+				if (!splash.alive)
+				{
+					__play__splash__anim();
+					splash.animation.pause();
+					splash.active = false;
+				}
+				splashOffsetX = 480;
+				splash.alpha = ClientPrefs.data.splashAlpha;
+				__update__splash__pos();
+			}
 		addOption(option);
+
+		final noteData = FlxG.random.int(0, 3);
+		note = new Note(0, noteData);
+		sustain = new Note(0, noteData, note, true);
+		sustainEnd = new Note(0, noteData, sustain, true);
+		sustain.clipRect = FlxDestroyUtil.put(sustain.clipRect);
+		sustainEnd.clipRect = FlxDestroyUtil.put(sustainEnd.clipRect);
+		__update__notes__pos();
 
 		option = new Option("Sustain Note Opacity",
 			"How much transparent should the Sustain Notes be.",
-			"susAlpha", //i want to kms
+			"susAlpha", // i want to kms
 			"percent");
 		option.scrollSpeed = 1.6;
 		option.minValue = 0.0;
 		option.maxValue = 1;
 		option.changeValue = 0.1;
 		option.decimals = 1;
+		option.change = () -> sustain.alpha = sustainEnd.alpha = ClientPrefs.data.susAlpha;
 		addOption(option);
+		noteAlphaID = optionsArray.length - 1;
 		
-		option = new Option("Health Bar Opacity",
+		/*option = new Option("Health Bar Opacity",
 			"How much transparent should the health bar and icons be.",
 			"healthBarAlpha",
 			"percent");
@@ -111,7 +158,7 @@ class VisualsUISubState extends BaseOptionsMenu
 			"If checked, hides most HUD elements.",
 			"hideHud",
 			"bool"
-		));
+		));*/
 		
 		addOption(new Option("Time Bar:",
 			"What should the Time Bar display?",
@@ -184,12 +231,19 @@ class VisualsUISubState extends BaseOptionsMenu
 
 		super();
 		add(notes);
+		add(splash);
+		add(sustain);
+		add(sustainEnd);
+		add(note);
 	}
 
 	override function changeSelection(change:Int = 0)
 	{
 		super.changeSelection(change);
-		notesY = noteOptionID == curSelected ? 90 : -200;
+		notesY = curSelected == noteOptionID ? 90 : -200;
+		note.visible = sustain.visible = sustainEnd.visible = curSelected == noteAlphaID;
+		if (splash != null)
+			splash.kill();
 	}
 
 	override function update(elapsed:Float)
@@ -199,9 +253,40 @@ class VisualsUISubState extends BaseOptionsMenu
 			notes.y = CoolUtil.lerpElapsed(notes.y, notesY, 0.31, elapsed);
 	}
 
+	extern inline function __update__notes__pos()
+	{
+		sustain.scale.y = 2;
+		sustain.updateHitbox();
+		sustainEnd.scale.y = 1;
+		sustainEnd.updateHitbox();
+		note.screenCenter().x += 500;
+		note.y -= 20;
+		sustain.setPosition(note.x + (note.width - sustain.width) * 0.5, note.y - sustain.height + note.height * 0.5);
+		sustainEnd.setPosition(sustain.x, sustain.y - sustainEnd.height + 1);
+	}
+
+	extern inline function __play__splash__anim()
+	{
+		splash.revive();
+		splash.setupNoteSplash(0, 0, FlxG.random.int(0, 3));
+		splash.updateHitbox();
+		splash.antialiasing = ClientPrefs.data.antialiasing;
+	}
+
+	extern inline function __update__splash__pos()
+	{
+		splash.screenCenter().x += splashOffsetX;
+		splash.y -= 20;
+		splash.centerOffsets();
+	}
+
 	override function destroy()
 	{
 		notes = null;
+		splash = null;
+		note = null;
+		sustain = null;
+		sustainEnd = null;
 		if (changedMusic && !OptionsState.onPlayState)
 			FlxG.sound.playMusic(Paths.music("freakyMenu"), 1, true);
 		super.destroy();
