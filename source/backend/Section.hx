@@ -53,7 +53,7 @@ class Section
 				else
 				{
 					if (!ignoreList.contains(field))
-						trace('WARNING!! This section have invalid field "$field"');
+						GameLog.notice('WARNING!! This section have invalid field "$field"');
 					Reflect.deleteField(data, field);
 				}
 			}

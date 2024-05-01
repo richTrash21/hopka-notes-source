@@ -162,7 +162,7 @@ class Mods
 				}
 			}
 			catch(e)
-				trace(e);
+				GameLog.error(e);
 		}
 		#end
 		return null;
@@ -190,7 +190,7 @@ class Mods
 			}
 		}
 		catch(e)
-			trace(e);
+			GameLog.error(e);
 		#end
 		return list;
 	}
@@ -215,7 +215,7 @@ class Mods
 			}
 		}
 		catch(e)
-			trace(e);
+			GameLog.error(e);
 		
 		// Scan for folders that aren't on modsList.txt yet
 		for (folder in getModDirectories())

@@ -82,7 +82,7 @@ class NoteTypesConfig
 				_propCheckArray(obj, split[split.length-1], true, line.value);
 			}
 			catch(e)
-				trace(e);
+				GameLog.error(e);
 		}
 	}
 

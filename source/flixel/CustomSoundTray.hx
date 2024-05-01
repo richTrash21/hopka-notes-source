@@ -1,11 +1,10 @@
-package objects.ui;
+package flixel;
 
 class CustomSoundTray extends flixel.system.ui.FlxSoundTray
 {
 	@:keep public function new()
 	{
 		super();
-
 		// это рофлс
 		#if debug
 		volumeUpSound = "assets/sounds/metal";
@@ -41,8 +40,7 @@ class CustomSoundTray extends flixel.system.ui.FlxSoundTray
 
 				#if FLX_SAVE
 				// Save sound preferences
-				// 😭😭
-				// https://cdn.discordapp.com/attachments/1219255780172107814/1228390649800429619/image.png?ex=662bdef1&is=661969f1&hm=a4e56106582ab2aff9c393d3755b567c5353980082ca2747cce923eb726267a4&
+				// isBound breaks sometimes idk why 😭😭
 				// if (FlxG.save.isBound)
 				// {
 					FlxG.save.data.mute = FlxG.sound.muted;
@@ -90,6 +88,13 @@ class CustomSoundTray extends flixel.system.ui.FlxSoundTray
 		final globalVolume = FlxG.sound.muted ? 0 : Math.round(FlxG.sound.volume * 10);
 		for (i in 0..._bars.length)
 			_bars[i].alpha = i < globalVolume ? 1.0 : 0.5;
+	}
+
+	override public function screenCenter()
+	{
+		scaleX = Math.min(FlxG.scaleMode.scale.x + 1, _defaultScale);
+		scaleY = Math.min(FlxG.scaleMode.scale.y + 1, _defaultScale);
+		x = (0.5 * (FlxG.stage.stageWidth - _width * scaleX) - FlxG.game.x);
 	}
 
 	@:noCompletion extern inline static function __sound__on__complete(__sound:FlxSound)

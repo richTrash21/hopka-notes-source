@@ -64,18 +64,18 @@ class DiscordClient
 		// if (discriminator != "0")
 		//	str += '#$discriminator'; // Old discriminators
 
-		trace(str);
+		GameLog.notice(str);
 		changePresence();
 	}
 
 	inline static function onError(errorCode:Int, message:ConstCharStar):Void
 	{
-		trace('Error [$errorCode]: ' + cast (message, String));
+		GameLog.error('Error [$errorCode]: ' + cast (message, String));
 	}
 
 	inline static function onDisconnected(errorCode:Int, message:ConstCharStar):Void
 	{
-		trace('Disconnected [$errorCode]: ' + cast (message, String));
+		GameLog.warn('Disconnected [$errorCode]: ' + cast (message, String));
 	}
 
 	public static function initialize()
@@ -87,7 +87,7 @@ class DiscordClient
 		Discord.Initialize(clientID, cpp.RawPointer.addressOf(discordHandlers), 1, null);
 
 		if (!isInitialized)
-			trace("Discord Client initialized");
+			GameLog.notice("Discord Client initialized");
 
 		isInitialized = true;
 		if (__thread == null)

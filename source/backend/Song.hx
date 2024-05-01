@@ -212,7 +212,7 @@ class Song
 				}
 				else
 				{
-					trace('WARNING!! This chart have invalid field "$field"');
+					GameLog.notice('WARNING!! This chart have invalid field "$field"');
 					Reflect.deleteField(data, field);
 				}
 			}

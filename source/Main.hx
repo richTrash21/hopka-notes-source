@@ -17,45 +17,6 @@ import sys.FileSystem;
 
 class Main extends flixel.FlxGame
 {
-
-	#if FLX_DEBUG inline #end public static function warn(data:Dynamic, ?pos:haxe.PosInfos)
-	{
-		#if FLX_DEBUG
-		FlxG.log.warn(data);
-		#else
-		final s = Std.string(data);
-		if (!__warns.contains(s))
-		{
-			__warns.push(s);
-			haxe.Log.trace('[WARN] $s', pos);
-		}
-		#end
-	}
-
-	// based on haxe.Log.formatOutput()
-	@:noCompletion extern inline static function formatOutput(v:Dynamic, pos:haxe.PosInfos):String
-	{
-		final t = "<" + Date.now().toString().substr(11) + ">";
-		var s = Std.string(v);
-		if (pos == null)
-			return '$t > $s';
-
-		var p = pos.fileName + ":" + pos.lineNumber;
-		if (pos.methodName != null && pos.methodName.length != 0)
-		{
-			p += " - ";
-			if (pos.className != null && pos.className.length != 0)
-				p += pos.className + ".";
-			p += pos.methodName + "()";
-		}
-
-		if (pos.customParams != null)
-			for (_v in pos.customParams)
-				s += ", " + Std.string(_v);
-
-		return '$t [$p] > $s';
-	}
-
 	// Code was entirely made by sqirra-rng for their fnf engine named "Izzy Engine", big props to them!!!
 	// very cool person for real they don't get enough credit for their work
 	// by sqirra-rng
@@ -93,7 +54,7 @@ class Main extends flixel.FlxGame
 
 		if (!FileSystem.exists("./crash/"))
 			FileSystem.createDirectory("./crash/");
-		sys.io.File.saveContent(path, '$errMsg\n\nFull session log:\n$__log');
+		sys.io.File.saveContent(path, '$errMsg\n\nFull session log:\n' + GameLog.__log);
 
 		final savedIn = "Crash dump saved in " + haxe.io.Path.normalize(path);
 		Sys.println(errMsg);
@@ -115,34 +76,20 @@ class Main extends flixel.FlxGame
 	public static var volumeUpKeys:Array<FlxKey>;
 	public static var muteKeys:Array<FlxKey>;
 
-	#if !FLX_DEBUG
-	@:noCompletion static var __warns = new Array<String>();
-	#end
-	@:noCompletion static var __log = "";
-
 	@:access(flixel.FlxG.cameras)
 	@:access(flixel.system.frontEnds.CameraFrontEnd)
 	public function new()
 	{
+		#if FLX_DEBUG
+		flixel.system.debug.log.LogStyle.WARNING.errorSound = GameLog.WARN_SOUND;
+		flixel.system.debug.log.LogStyle.ERROR.errorSound = GameLog.ERROR_SOUND;
+		#end
 		// cool ass log by me yeah
-		haxe.Log.trace = (v:Dynamic, ?pos:haxe.PosInfos) ->
-		{
-			final str = formatOutput(v, pos);
-			__log += '$str\n';
-			#if js
-			if (js.Syntax.typeof(untyped console) != "undefined" && (untyped console).log != null)
-				(untyped console).log(str);
-			#elseif lua
-			untyped __define_feature__("use._hx_print", _hx_print(str));
-			#elseif sys
-			Sys.println(str);
-			#else
-			throw new haxe.exceptions.NotImplementedException()
-			#end
-		}
+		haxe.Log.trace = debug.GameLog.trace;
+		@:privateAccess FlxG.log._standardTraceFunction = haxe.Log.trace;
 
 		#if (VIDEOS_ALLOWED && hxvlc)
-		hxvlc.util.Handle.initAsync((s) -> trace(s ? "LibVLC initialized successfully!" : "Error on initializing LibVLC!"));
+		hxvlc.util.Handle.initAsync((s) -> s ? GameLog.notice("LibVLC initialized successfully!") : GameLog.error("Error on initializing LibVLC!"));
 		#end
 		#if CRASH_HANDLER
 		Lib.current.loaderInfo.uncaughtErrorEvents.addEventListener(UncaughtErrorEvent.UNCAUGHT_ERROR, onCrash);
@@ -287,7 +234,7 @@ class Main extends flixel.FlxGame
 		#end
 
 		super(Init.new, framerate, framerate, true, FlxG.save.data.fullscreen);
-		_customSoundTray = objects.ui.CustomSoundTray;
+		_customSoundTray = flixel.CustomSoundTray;
 		focusLostFramerate = 60;
 
 		ClientPrefs.loadDefaultKeys();

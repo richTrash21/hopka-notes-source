@@ -1074,7 +1074,7 @@ class FunkinLua
 			{
 				var axis = XY;
 				try { axis = FlxAxes.fromString(pos.trim().toLowerCase()); }
-				catch(e) trace('screenCenter: $e');
+				catch(e) GameLog.error('screenCenter: $e');
 				spr.screenCenter(axis);
 			}
 
@@ -1302,7 +1302,7 @@ class FunkinLua
 		}
 		catch(e)
 		{
-			trace(e);
+			GameLog.error(e);
 			return;
 		}
 		call("onCreate", []);
@@ -1361,7 +1361,7 @@ class FunkinLua
 				stop();
 			return result;
 		}
-		catch (e) trace(e);
+		catch (e) GameLog.error(e);
 		#end
 		return Function_Continue;
 	}

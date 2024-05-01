@@ -725,7 +725,7 @@ class PlayState extends MusicBeatState
 		if (!isDead) // ACTUALLY CAN CAUSES HUGE MEMORY LEAK!!!
 		{
 			if (luaDebugGroup == null)
-				return haxe.Log.trace("can't add debug text - 'luaDebugGroup' is null!!!", pos);
+				return GameLog.error("can't add debug text - 'luaDebugGroup' is null!!!", pos);
 
 			final newText = luaDebugGroup.recycle(DebugLuaText);
 			newText.text = text;
@@ -909,7 +909,7 @@ class PlayState extends MusicBeatState
 
 	@:noCompletion function videoError(msg:String)
 	{
-		trace('startVideo: $msg');
+		GameLog.error('startVideo: $msg');
 		endVideo();
 	}
 	#end
@@ -922,7 +922,7 @@ class PlayState extends MusicBeatState
 		final filepath = Paths.video(name);
 		if (#if sys !FileSystem.exists(filepath) #else !OpenFlAssets.exists(filepath) #end)
 		{
-			FlxG.log.warn('Couldnt find video file: $name');
+			GameLog.warn('Couldnt find video file: $name');
 			startAndEnd();
 			return false;
 		}
@@ -957,7 +957,7 @@ class PlayState extends MusicBeatState
 		videoPlayer.antialiasing = ClientPrefs.data.antialiasing && antialias;
 		return true;
 		#else
-		FlxG.log.warn("Platform not supported!");
+		GameLog.error("Platform not supported!");
 		startAndEnd();
 		return true;
 		#end
@@ -992,7 +992,7 @@ class PlayState extends MusicBeatState
 		}
 		else
 		{
-			FlxG.log.warn("Your dialogue file is badly formatted!");
+			GameLog.error("Your dialogue file is badly formatted!");
 			startAndEnd();
 		}
 	}
@@ -1281,8 +1281,7 @@ class PlayState extends MusicBeatState
 				opponentVocals.play();
 		}
 
-		if (startOnTime > 0)
-			setSongTime(startOnTime - 500);
+		setSongTime(Math.max(0, startOnTime - 500));
 		startOnTime = 0;
 
 		if (paused)
@@ -1612,20 +1611,19 @@ class PlayState extends MusicBeatState
 		#end
 	}
 
-	function resyncVocals():Void
+	inline function resyncVocals():Void
 	{
-		if (finishTimer != null)
-			return;
-
-		FlxG.sound.music.play();
-		Conductor.songPosition = FlxG.sound.music.time;
-		if (SONG.needsVoices)
+		if (finishTimer == null)
 		{
-			if (vocals != null && Conductor.songPosition <= vocals.length)
-				vocals.time = Conductor.songPosition;
+			Conductor.songPosition = FlxG.sound.music.play().time;
+			if (SONG.needsVoices)
+			{
+				if (vocals != null && Conductor.songPosition <= vocals.length)
+					vocals.time = Conductor.songPosition;
 
-			if (opponentVocals != null && Conductor.songPosition <= opponentVocals.length)
-				opponentVocals.time = Conductor.songPosition;
+				if (opponentVocals != null && Conductor.songPosition <= opponentVocals.length)
+					opponentVocals.time = Conductor.songPosition;
+			}
 		}
 	}
 
@@ -1692,7 +1690,19 @@ class PlayState extends MusicBeatState
 		updateIcons();
 		
 		if (startedCountdown && !paused)
+		{
 			Conductor.songPosition += elapsed * 1000;
+			if (!endingSong && Conductor.songPosition >= 0)
+			{
+				final diff = Math.abs(FlxG.sound.music.time - Conductor.songPosition - Conductor.offset);
+				Conductor.songPosition = CoolUtil.lerpElapsed(Conductor.songPosition, FlxG.sound.music.time, 0.042, elapsed);
+				if (diff > 1000 * playbackRate)
+				{
+					Conductor.songPosition = Conductor.songPosition + 1000 * FlxMath.signOf(diff);
+					// resyncVocals();
+				}
+			}
+		}
 
 		if (startingSong)
 		{
@@ -1910,15 +1920,14 @@ class PlayState extends MusicBeatState
 		return isDead = true;
 	}
 
-	public function checkEventNote()
+	inline public function checkEventNote()
 	{
 		while (eventNotes.length != 0)
-		{
-			if (Conductor.songPosition < eventNotes[0].strumTime)
-				return;
-			final event = eventNotes.shift();
-			triggerEvent(event.event, event.value1 ?? "", event.value2 ?? "", event.strumTime);
-		}
+			if (Conductor.songPosition >= eventNotes[0].strumTime)
+			{
+				final event = eventNotes.shift();
+				triggerEvent(event.event, event.value1 ?? "", event.value2 ?? "", event.strumTime);
+			}
 	}
 
 	extern inline static final MAX_LAST_EVENTS = 5;
@@ -2218,13 +2227,14 @@ class PlayState extends MusicBeatState
 	{
 		if (!startingSong) // Should kill you if you tried to cheat
 		{
-			notes.forEach((daNote) ->
-				if (daNote.strumTime < songLength - Conductor.safeZoneOffset)
-					health -= 0.05 * healthLoss
-			);
-			for (daNote in unspawnNotes)
-				if (daNote.strumTime < songLength - Conductor.safeZoneOffset)
+			function killBitch(n:Note)
+			{
+				if (n.strumTime < songLength - Conductor.safeZoneOffset)
 					health -= 0.05 * healthLoss;
+			}
+			notes.forEach(killBitch);
+			for (daNote in unspawnNotes)
+				killBitch(daNote);
 			if (doDeathCheck())
 				return false;
 		}
@@ -2277,6 +2287,7 @@ class PlayState extends MusicBeatState
 				DiscordClient.resetClientID();
 				#end
 
+				__stop__song();
 				cancelMusicFadeTween();
 				FlxG.switchState(StoryMenuState.new);
 
@@ -2295,15 +2306,15 @@ class PlayState extends MusicBeatState
 			{
 				final difficulty:String = Difficulty.getFilePath();
 
-				trace("LOADING NEXT SONG - " + Paths.formatToSongPath(storyPlaylist[0]) + difficulty);
+				GameLog.notice("LOADING NEXT SONG - " + Paths.formatToSongPath(storyPlaylist[0]) + difficulty);
 
 				StateTransition.skipNextTransIn = StateTransition.skipNextTransOut = true;
 				_camFollow.setPosition(camGame.scroll.x + camGame.width * 0.5, camGame.scroll.y + camGame.height * 0.5);
 				prevCamFollow = _camFollow;
 
 				Song.loadFromJson(storyPlaylist[0] + difficulty, storyPlaylist[0], SONG);
-				__stop__song();
 
+				__stop__song();
 				cancelMusicFadeTween();
 				LoadingState.prepareToSong();
 				LoadingState.loadAndSwitchState(PlayState.new);
@@ -2311,12 +2322,13 @@ class PlayState extends MusicBeatState
 		}
 		else
 		{
-			trace("WENT BACK TO FREEPLAY??");
+			// trace("WENT BACK TO FREEPLAY??");
 			Mods.loadTopMod();
 			#if hxdiscord_rpc
 			DiscordClient.resetClientID();
 			#end
 
+			__stop__song();
 			cancelMusicFadeTween();
 			FlxG.switchState(FreeplayState.new);
 			FlxG.sound.playMusic(Paths.music("freakyMenu"));
@@ -2904,14 +2916,14 @@ class PlayState extends MusicBeatState
 
 	override function stepHit()
 	{
-		if (FlxG.sound.music.time >= -ClientPrefs.data.noteOffset)
+		/*if (FlxG.sound.music.time >= -ClientPrefs.data.noteOffset)
 		{
 			final maxDelay = 20 * playbackRate;
 			final realTime = Conductor.songPosition - Conductor.offset;
 			if (__sound__delayed(FlxG.sound.music, realTime, maxDelay)
 				|| (SONG.needsVoices && (__sound__delayed(vocals, realTime, maxDelay) || __sound__delayed(opponentVocals, realTime, maxDelay))))
 				resyncVocals();
-		}
+		}*/
 
 		super.stepHit();
 		if (curStep == lastStep)
@@ -3254,7 +3266,7 @@ class PlayState extends MusicBeatState
 	// i just got annoyed of this function name being uppedcased - rich
 	@:noCompletion inline function RecalculateRating(badHit = false)
 	{
-		Main.warn("DEPRECATED!! Use \"recalculateRating\" instead of this!");
+		GameLog.warn("DEPRECATED!! Use \"recalculateRating\" instead of this!");
 		recalculateRating(badHit);
 	}
 
@@ -3312,7 +3324,7 @@ class PlayState extends MusicBeatState
 
 		if (!runtimeShaders.exists(name) && !initLuaShader(name))
 		{
-			FlxG.log.warn('Shader $name is missing!');
+			GameLog.error('Shader $name is missing!');
 			return new FlxRuntimeShader();
 		}
 
@@ -3327,7 +3339,7 @@ class PlayState extends MusicBeatState
 
 		if (runtimeShaders.exists(name))
 		{
-			FlxG.log.warn('Shader $name was already initialized!');
+			GameLog.warn('Shader $name was already initialized!');
 			return true;
 		}
 
@@ -3356,7 +3368,7 @@ class PlayState extends MusicBeatState
 				}
 			}
 
-		FlxG.log.warn('Missing shader $name .frag AND .vert files!');
+		GameLog.error('Missing shader $name .frag AND .vert files!');
 		return false;
 	}
 	#end

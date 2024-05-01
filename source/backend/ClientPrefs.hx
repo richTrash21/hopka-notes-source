@@ -196,8 +196,8 @@ class ClientPrefs
 		saveControls.data.keyboard = [for (k => v in keyBinds) k => v.copy()];
 		saveControls.data.gamepad = [for (k => v in gamepadBinds) k => v.copy()];
 		saveControls.flush();
-		FlxG.log.add("Settings saved!");
-		// trace("Settings saved!");
+		// FlxG.log.add("Settings saved!");
+		GameLog.notice("Settings saved!");
 	}
 
 	public static function loadPrefs()

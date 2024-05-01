@@ -165,7 +165,7 @@ class Achievements
 		if (Achievements.isUnlocked(name))
 			return null;
 
-		trace('Completed achievement "$name"');
+		GameLog.notice('Completed achievement "$name"');
 		achievementsUnlocked.push(name);
 
 		// earrape prevention
@@ -208,7 +208,7 @@ class Achievements
 				popup.intendedY += 150;
 
 		_popups.push(new AchievementPopup(achieve/*, endFunc*/));
-		// trace('Giving achievement ' + achieve);
+		// GameLog.notice('Giving achievement ' + achieve);
 	}
 
 	// Map sorting cuz haxe is physically incapable of doing that by itself
@@ -266,7 +266,7 @@ class Achievements
 							#if windows
 							lime.app.Application.current.window.alert(errorMsg, errorTitle);
 							#end
-							trace('$errorTitle - $errorMsg');
+							GameLog.error('$errorTitle - $errorMsg');
 							continue;
 						}
 
@@ -278,7 +278,7 @@ class Achievements
 							#if windows
 							lime.app.Application.current.window.alert(errorMsg, errorTitle);
 							#end
-							trace('$errorTitle - $errorMsg');
+							GameLog.error('$errorTitle - $errorMsg');
 							continue;
 						}
 						key = key.trim();
@@ -296,7 +296,7 @@ class Achievements
 				#if windows
 				lime.app.Application.current.window.alert(errorMsg, errorTitle);
 				#end
-				trace('$errorTitle - $errorMsg');
+				GameLog.error('$errorTitle - $errorMsg');
 			}
 		}
 		return retVal;

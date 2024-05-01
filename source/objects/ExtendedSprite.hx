@@ -58,7 +58,7 @@ class ExtendedSprite extends FlxSprite
 	inline public static function autoAnimations<T:FlxSprite>(sprite:T, animIndex = -1):T
 	{
 		if (sprite == null || sprite.frames == null || sprite.frames.numFrames == 0)
-			trace("No animations found, damn... :(");
+			GameLog.notice("No animations found, damn... :(");
 		else
 		{
 			var i = -1;
@@ -147,7 +147,7 @@ class ExtendedSprite extends FlxSprite
 	{
 		// if there is no animation named "name" then just skips the whole shit
 		if (name == null || !animation.exists(name))
-			return Main.warn('No animation called "$name"');
+			return GameLog.warn('No animation called "$name"');
 
 		animation.play(name, forced, reverse, startFrame);
 	}
@@ -158,7 +158,7 @@ class ExtendedSprite extends FlxSprite
 		final indicesEmpty = (indices == null || indices.length == 0);
 		if (prefix == null && indicesEmpty)
 		{
-			Main.warn('Can\'t add anim "$name", no prefix or indices was geven!');
+			GameLog.warn('Can\'t add anim "$name", no prefix or indices was geven!');
 			return null;
 		}
 

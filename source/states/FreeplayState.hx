@@ -81,7 +81,7 @@ class FreeplayState extends MusicBeatState
 		// prevent crash
 		if (songs.length == 0)
 		{
-			Main.warn("WARNING!! No songs loaded, defaulting to \"Test\" to prevent crash!");
+			GameLog.warn("WARNING!! No songs loaded, defaulting to \"Test\" to prevent crash!");
 			addSong("Test", 0, "dad", 0xFF7C7C7C); // "songs": [["Test", "dad", [124, 124, 124]]]
 		}
 
@@ -349,7 +349,7 @@ class FreeplayState extends MusicBeatState
 				PlayState.isStoryMode = false;
 				PlayState.storyDifficulty = curDifficulty;
 
-				trace("CURRENT WEEK: " + WeekData.getWeekFileName());
+				GameLog.notice("CURRENT WEEK: " + WeekData.getWeekFileName());
 				if (colorTween != null)
 					colorTween.cancel();
 				
@@ -399,9 +399,9 @@ class FreeplayState extends MusicBeatState
 			vocals.stop();
 	}
 
-	function exceptionError(e:haxe.Exception)
+	inline function exceptionError(e:haxe.Exception)
 	{
-		trace('ERROR! $e' + e.stack);
+		GameLog.error('ERROR! $e' + e.stack);
 		final errorStr = e.message.startsWith("[file_contents,assets/data/") ? "Missing file: " + e.message.substring(27, e.message.length-1) : e.message;
 		missingText.text = 'ERROR WHILE LOADING CHART:\n$errorStr';
 		missingText.screenCenter(Y);

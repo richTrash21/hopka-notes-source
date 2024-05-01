@@ -1,9 +1,6 @@
 package backend;
 
 import flixel.FlxBasic;
-#if !sys
-import openfl.utils.Assets;
-#end
 import objects.ISortable;
 
 using flixel.util.FlxArrayUtil;
@@ -34,8 +31,8 @@ class CoolUtil
 		if (sys.FileSystem.exists(path))
 			daList = sys.io.File.getContent(path);
 		#else
-		if (Assets.exists(path))
-			daList = Assets.getText(path);
+		if (openfl.utils.Assets.exists(path))
+			daList = openfl.utils.Assets.getText(path);
 		#end
 
 		return daList == null ? [] : listFromString(daList);
@@ -170,7 +167,7 @@ class CoolUtil
 		return basic1.ID > basic2.ID ? -index : basic2.ID > basic1.ID ? index : 0;
 	}
 
-	public static function clear<K:Any, V:Any>(map:Map<K, V>):Map<K, V>
+	inline public static function clear<K:Any, V:Any>(map:Map<K, V>):Map<K, V>
 	{
 		if (map != null)
 			map.clear();
@@ -185,14 +182,6 @@ class CoolUtil
 	{
 		return FlxMath.lerp(b, a, Math.exp(-e * t * 60));
 	}
-
-	/**
-		Lerps values via adjusted `t` with `Math.pow()`
-	**/
-	/* inline public static function plerpElapsed(a:Float, b:Float, t:Float, e:Float):Float
-	{
-		return FlxMath.lerp(b, a, Math.pow(1 - t, e * 60));
-	}*/
 
 	// fixup some shit
 	@:allow(backend.BaseState)

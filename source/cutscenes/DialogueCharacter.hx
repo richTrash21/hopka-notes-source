@@ -116,7 +116,7 @@ class DialogueCharacter extends FlxSprite
 			}
 		} else {
 			offset.set(0, 0);
-			Main.warn('Offsets not found! Dialogue character is badly formatted, anim: $leAnim, ' + (playIdle ? "idle anim" : "loop anim"));
+			GameLog.warn('Offsets not found! Dialogue character is badly formatted, anim: $leAnim, ' + (playIdle ? "idle anim" : "loop anim"));
 		}
 	}
 

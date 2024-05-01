@@ -443,7 +443,7 @@ class CharacterEditorState extends backend.MusicBeatUIState
 		animationDropDown = new DropDownAdvanced(15, animationInputText.y - 55, FlxUIDropDownMenu.makeStrIdLabelArray([""], true), (pressed:String) ->
 		{
 			if (character.animationsArray.length == 0)
-				return Main.warn("Trying to switch to null animation!");
+				return GameLog.warn("Trying to switch to null animation!");
 
 			final anim:AnimArray = character.animationsArray[Std.parseInt(pressed)];
 			animationInputText.text = anim.anim;
@@ -517,7 +517,7 @@ class CharacterEditorState extends backend.MusicBeatUIState
 		var removeButton = new FlxButton(180, animationIndicesInputText.y + 60, "Remove", () ->
 		{
 			if (character.animationsArray.length == 0)
-				return Main.warn("No animation to remove!");
+				return GameLog.warn("No animation to remove!");
 
 			for (anim in character.animationsArray)
 				if (animationInputText.text == anim.anim)

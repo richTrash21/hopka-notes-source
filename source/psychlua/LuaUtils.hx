@@ -421,7 +421,7 @@ class LuaUtils
 			default:				 (type <= Lua.LUA_TNIL ? "nil" : "unknown");
 		}
 		#else
-		trace("lua isn't allowed, returning \"null\"!");
+		GameLog.error("lua isn't allowed, returning \"null\"!");
 		return null;
 		#end
 	}

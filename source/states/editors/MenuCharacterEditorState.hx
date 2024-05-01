@@ -346,7 +346,7 @@ class MenuCharacterEditorState extends MusicBeatUIState
 		}
 		_file = null;
 		#else
-		trace("File couldn't be loaded! You aren't on Desktop, are you?");
+		GameLog.error("File couldn't be loaded! You aren't on Desktop, are you?");
 		#end
 	}
 
@@ -359,7 +359,7 @@ class MenuCharacterEditorState extends MusicBeatUIState
 		_file.removeEventListener(Event.CANCEL, onLoadCancel);
 		_file.removeEventListener(IOErrorEvent.IO_ERROR, onLoadError);
 		_file = null;
-		trace("Cancelled file loading.");
+		GameLog.notice("Cancelled file loading.");
 	}
 
 	/**
@@ -371,7 +371,7 @@ class MenuCharacterEditorState extends MusicBeatUIState
 		_file.removeEventListener(Event.CANCEL, onLoadCancel);
 		_file.removeEventListener(IOErrorEvent.IO_ERROR, onLoadError);
 		_file = null;
-		trace("Problem loading file");
+		GameLog.notice("Problem loading file");
 	}
 
 	function saveCharacter() {
@@ -395,7 +395,7 @@ class MenuCharacterEditorState extends MusicBeatUIState
 		_file.removeEventListener(Event.CANCEL, onSaveCancel);
 		_file.removeEventListener(IOErrorEvent.IO_ERROR, onSaveError);
 		_file = null;
-		FlxG.log.notice("Successfully saved file.");
+		GameLog.notice("Successfully saved file.");
 	}
 
 	/**
@@ -418,7 +418,7 @@ class MenuCharacterEditorState extends MusicBeatUIState
 		_file.removeEventListener(Event.CANCEL, onSaveCancel);
 		_file.removeEventListener(IOErrorEvent.IO_ERROR, onSaveError);
 		_file = null;
-		FlxG.log.error("Problem saving file");
+		GameLog.error("Problem saving file");
 	}
 }
 #end

@@ -75,7 +75,12 @@ class LoadingState extends FlxState
 	static function checkLoaded():Bool
 	{
 		for (key => bitmap in requestedBitmaps)
-			trace((Paths.cacheBitmap(key, bitmap) == null ? "failed to cache" : "finished preloading") + ' image $key');
+		{
+			if (Paths.cacheBitmap(key, bitmap) == null)
+				GameLog.error('failed to cache image $key');
+			else
+				GameLog.notice('finished preloading image $key');
+		}
 
 		requestedBitmaps.clear();
 		return (loaded == loadMax);
@@ -89,7 +94,7 @@ class LoadingState extends FlxState
 
 		StageData.forceNextDirectory = null;
 		Paths.currentLevel = directory;
-		trace('Setting asset folder to $directory');
+		GameLog.notice('Setting asset folder to $directory');
 
 		clearInvalids();
 		if (intrusive)
@@ -143,7 +148,7 @@ class LoadingState extends FlxState
 				prepare(ClientPrefs.data.lowQuality ? json.images_low : json.images, json.sounds, json.music);
 		}
 		catch(e)
-			trace('$folder/preload.json error! $e');
+			GameLog.error('$folder/preload.json error! $e');
 
 		if (PlayState.SONG.stage.isNullOrEmpty())
 			PlayState.SONG.stage = StageData.vanillaSongStage(folder);
@@ -276,7 +281,7 @@ class LoadingState extends FlxState
 				loaded++;
 
 				if (bitmap == null)
-					trace('Image with key "$image" could not be found!');
+					GameLog.error('Image with key "$image" could not be found!');
 				else
 					requestedBitmaps.set(file, bitmap);
 			});
@@ -291,12 +296,15 @@ class LoadingState extends FlxState
 			{
 				var ret:Dynamic = func();
 				mutex.release();
-				trace((ret == null ? "ERROR! fail on" : "finished") + ' preloading $traceData');
+				if (ret == null)
+					GameLog.error('ERROR! fail on preloading $traceData');
+				else
+					GameLog.notice('finished preloading $traceData');
 			}
 			catch(e)
 			{
 				mutex.release();
-				trace('ERROR! fail on preloading $traceData\n$e');
+				GameLog.error('ERROR! fail on preloading $traceData\n$e');
 			}
 			loaded++;
 		});
@@ -320,7 +328,7 @@ class LoadingState extends FlxState
 		}
 		catch(e)
 		{
-			trace(e);
+			GameLog.error(e);
 		}
 	}
 	

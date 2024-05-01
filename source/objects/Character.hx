@@ -305,7 +305,7 @@ class Character extends objects.ExtendedSprite
 			holdTimer = 0.0;
 
 		if (animName == null || !animation.exists(animName))
-			return Main.warn('No animation called "$animName", for character "$curCharacter"');
+			return GameLog.warn('No animation called "$animName", for character "$curCharacter"');
 
 		animation.play(animName, force, reversed, frame);
 		if (curCharacter.startsWith("gf") || (danceIdle && maxDance == -1)) // idk

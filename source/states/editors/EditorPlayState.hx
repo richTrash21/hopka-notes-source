@@ -89,7 +89,7 @@ class EditorPlayState extends MusicBeatSubstate
 			add(editorImage);
 		}
 		catch(e)
-			trace('oh damn... $e...');*/
+			GameLog.error('oh damn... $e...');*/
 
 		/* setting up Editor PlayState stuff */
 		final bg = new FlxSprite(Paths.image("menuDesat"));

@@ -261,7 +261,7 @@ class StoryMenuState extends MusicBeatState
 			}
 			catch(e)
 			{
-				trace('ERROR! $e');
+				GameLog.error('ERROR! $e');
 				return;
 			}
 			

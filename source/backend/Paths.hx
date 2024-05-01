@@ -271,7 +271,7 @@ class Paths
 			var t = 'Image with key "$key" could not be found';
 			if (library != null)
 				t += ' in the library "$library"';
-			Main.warn('$t!', pos);
+			GameLog.error('$t!', pos);
 		}
 		else
 		{
@@ -311,7 +311,7 @@ class Paths
 	{
 		inline function warn(k:String, p:PosInfos)
 		{
-			Main.warn('Counld not find "$k"!', p);
+			GameLog.error('Counld not find "$k"!', p);
 		}
 
 		if (absolute)
@@ -408,7 +408,7 @@ class Paths
 		}
 		catch(e)
 		{
-			Main.warn('[getSparrowAtlas] - ERROR WHILE LOADING "$key" xml: $e.', pos);
+			GameLog.error('[getSparrowAtlas] - ERROR WHILE LOADING "$key" xml: $e.', pos);
 			lime.app.Application.current.window.alert('$e\n\ntl;dr; no spritesheet lmao.\nbtw, this message won\'t crash the game! :D', "XML ERROR!!");
 			return null;
 		}
@@ -482,7 +482,7 @@ class Paths
 		}
 		catch(e) // FUCKING OPENFL - richTrash21
 		{
-			Main.warn('$e (fucking openfl...)', pos);
+			GameLog.error('$e (fucking openfl...)', pos);
 			return null;
 		}
 	}

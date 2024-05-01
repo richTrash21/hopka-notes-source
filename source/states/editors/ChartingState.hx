@@ -3038,7 +3038,7 @@ class ChartingState extends MusicBeatUIState
 		}
 		catch (e)
 		{
-			trace('ERROR! $e');
+			GameLog.error('ERROR! $e');
 
 			var errorStr:String = e.toString();
 			if (errorStr.startsWith("[file_contents,assets/data/"))
@@ -3134,7 +3134,7 @@ class ChartingState extends MusicBeatUIState
 		_file.removeEventListener(Event.CANCEL, onSaveCancel);
 		_file.removeEventListener(IOErrorEvent.IO_ERROR, onSaveError);
 		_file = null;
-		FlxG.log.notice("Successfully saved LEVEL DATA.");
+		GameLog.notice("Successfully saved LEVEL DATA.");
 	}
 
 	/**
@@ -3157,7 +3157,7 @@ class ChartingState extends MusicBeatUIState
 		_file.removeEventListener(Event.CANCEL, onSaveCancel);
 		_file.removeEventListener(IOErrorEvent.IO_ERROR, onSaveError);
 		_file = null;
-		FlxG.log.error("Problem saving Level data");
+		GameLog.notice("Problem saving Level data");
 	}
 
 	@:noCompletion inline function updateBeat():Void

@@ -8,6 +8,8 @@ import backend.DiscordClient;
 import backend.Achievements;
 #end
 
+import debug.GameLog;
+
 // Psych
 import backend.Paths;
 import backend.Controls;
