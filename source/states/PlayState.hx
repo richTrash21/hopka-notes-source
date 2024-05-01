@@ -1923,11 +1923,12 @@ class PlayState extends MusicBeatState
 	inline public function checkEventNote()
 	{
 		while (eventNotes.length != 0)
-			if (Conductor.songPosition >= eventNotes[0].strumTime)
-			{
-				final event = eventNotes.shift();
-				triggerEvent(event.event, event.value1 ?? "", event.value2 ?? "", event.strumTime);
-			}
+		{
+			if (Conductor.songPosition < eventNotes[0].strumTime)
+				break;
+			final event = eventNotes.shift();
+			triggerEvent(event.event, event.value1 ?? "", event.value2 ?? "", event.strumTime);
+		}
 	}
 
 	extern inline static final MAX_LAST_EVENTS = 5;
