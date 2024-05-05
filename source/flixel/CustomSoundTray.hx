@@ -31,7 +31,7 @@ class CustomSoundTray extends flixel.system.ui.FlxSoundTray
 		}
 		else if (y > -height)
 		{
-			y -= elapsed * height * 10;
+			y -= elapsed * height * 5;
 
 			if (y <= -height)
 			{
@@ -50,6 +50,7 @@ class CustomSoundTray extends flixel.system.ui.FlxSoundTray
 				#end
 			}
 		}
+		alpha = y == 0.0 ? 1.0 : 1.0 - (y / -(height * 0.7));
 	}
 
 	/**

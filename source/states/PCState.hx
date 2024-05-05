@@ -1,5 +1,7 @@
 package states;
 
+import flixel.FlxBasic;
+import flixel.util.FlxSpriteUtil;
 import haxe.extern.EitherType;
 import flixel.system.FlxAssets.FlxGraphicAsset;
 import flixel.graphics.frames.FlxFramesCollection;
@@ -13,9 +15,9 @@ import flixel.util.FlxDestroyUtil;
 
 class FlxSpriteMouse extends FlxSprite
 {
+	extern inline static final _overlapAnimPrefix = "_overlaped";
 	public var pressed(default, set):Bool;
 	public var selected(default, set):Bool;
-	extern inline static final _overlapAnimPrefix = "_overlaped";
 
 	public function new(x = 0., y = 0.)
 	{
@@ -24,9 +26,9 @@ class FlxSpriteMouse extends FlxSprite
 		antialiasing = ClientPrefs.data.antialiasing;
 		frames = Paths.getSparrowAtlas("mainMenuPC/cursor");
 		animation.addByPrefix("idle",							"cursor0000", 0, true);
-		animation.addByPrefix("idle" + _overlapAnimPrefix,		"cursor0001", 0, true);
+		animation.addByPrefix('idle$_overlapAnimPrefix',		"cursor0001", 0, true);
 		animation.addByPrefix("selected",						"cursor0002", 0, true);
-		animation.addByPrefix("selected" + _overlapAnimPrefix,	"cursor0003", 0, true);
+		animation.addByPrefix('selected$_overlapAnimPrefix',	"cursor0003", 0, true);
 		animation.play("idle");
 		offset.x += 6;
 		offset.y += 0.1;
@@ -35,34 +37,40 @@ class FlxSpriteMouse extends FlxSprite
 
 	public override function update(elapsed:Float)
 	{
-		if (FlxG.mouse.justPressed)			pressed = true;
-		else if (FlxG.mouse.justReleased)	pressed = false;
+		if (FlxG.mouse.justPressed)
+			pressed = true;
+		else if (FlxG.mouse.justReleased)
+			pressed = false;
 
 		setPosition(FlxG.mouse.x, FlxG.mouse.y);
 		super.update(elapsed);
 	}
 
-	inline function set_selected(e)
+	inline function set_selected(bool:Bool):Bool
 	{
-		if (e != selected){
-			selected = e;
+		if (bool != selected)
+		{
+			selected = bool;
 			updateAnim();
 		}
-		return e;
+		return bool;
 	}
 
-	inline function set_pressed(e)
+	inline function set_pressed(bool:Bool):Bool
 	{
-		if (e != pressed){
-			pressed = e;
+		if (bool != pressed)
+		{
+			pressed = bool;
 			updateAnim();
 		}
-		return e;
+		return bool;
 	}
 
-	extern inline function updateAnim() {
+	extern inline function updateAnim()
+	{
 		var anim = selected ? "selected" : "idle";
-		if (pressed) anim += _overlapAnimPrefix;
+		if (pressed)
+			anim += _overlapAnimPrefix;
 		animation.play(anim);
 	}
 }
@@ -71,7 +79,6 @@ class FlxSpriteMouse extends FlxSprite
 class PCState extends MusicBeatState
 {
 	public static var stupidInstance:PCState;
-	static final _cashePoint:FlxPoint = new FlxPoint();
 	static final defaultZoom:Float = 1.05;
 	static final scaleView:Float = 1.5;
 	static var midSizes = -1.;
@@ -110,7 +117,6 @@ class PCState extends MusicBeatState
 	public var desc:FlxSprite;
 	public var screenStuff:FlxSpriteGroup;
 	public var taskBarStuff:FlxSpriteGroup;
-	public var mainCamera:FlxCamera;
 	public var subStates = new Map<String, PCSubState>();
 	public var zoomMult = 1.;
 
@@ -128,11 +134,7 @@ class PCState extends MusicBeatState
 		subStates.set("desktop", new DesktopSubState());
 
 		FlxG.sound.music.fadeOut(1, 0, (_) -> FlxG.sound.music.pause());
-
-		// _cashePoint = FlxPoint.get();
 		FlxG.camera.bgColor = 0xff212229;
-
-		mainCamera = FlxG.camera;
 
 		add(desc = createSprite(60, 510.25, FlxPoint.weak(0.8, 0.7), Paths.image("mainMenuPC/desc")));
 		desc.scale.x = FlxG.width * 1.3;
@@ -205,20 +207,21 @@ class PCState extends MusicBeatState
 
 		super.update(elapsed);
 
-		if (mainCamera.target == null)
+		if (FlxG.camera.target == null)
 		{
-			_cashePoint.set(FlxMath.bound(FlxG.mouse.screenX, 0, FlxG.width), FlxMath.bound(FlxG.mouse.screenY, 0, FlxG.height));
-			var lerpFactor = Math.exp(-elapsed * 15);
-			mainCamera.scroll.set(
-				FlxMath.lerp((_cashePoint.x * mainCamera.zoom) * 0.034482758620689655, mainCamera.scroll.x, lerpFactor), // / 29
-				FlxMath.lerp((_cashePoint.y * mainCamera.zoom) * 0.05, mainCamera.scroll.y, lerpFactor) // / 20
+			final pointX = FlxMath.bound(FlxG.mouse.screenX, 0, FlxG.width);
+			final pointY = FlxMath.bound(FlxG.mouse.screenY, 0, FlxG.height);
+			final lerpFactor = Math.exp(-elapsed * 15);
+			FlxG.camera.scroll.set(
+				FlxMath.lerp((pointX * FlxG.camera.zoom) * 0.034482758620689655, FlxG.camera.scroll.x, lerpFactor), // / 29
+				FlxMath.lerp((pointY * FlxG.camera.zoom) * 0.05, FlxG.camera.scroll.y, lerpFactor) // / 20
 			);
-			mainCamera.zoom = defaultZoom - (Math.pow(Math.abs(FlxMath.remapToRange(_cashePoint.x - monitor.x, 0, monitor.width, -0.25, 0.25)), 2)
-									+ Math.pow(Math.abs(FlxMath.remapToRange(_cashePoint.y - monitor.y, 0, 626.75, -0.2, 0.2)), 2)) * 0.5 * zoomMult;
+			FlxG.camera.zoom = defaultZoom - (Math.pow(Math.abs(FlxMath.remapToRange(pointX - monitor.x, 0, monitor.width, -0.25, 0.25)), 2)
+									+ Math.pow(Math.abs(FlxMath.remapToRange(pointY - monitor.y, 0, 626.75, -0.2, 0.2)), 2)) * 0.5 * zoomMult;
 		}
 	}
 
-	public override function destroy()
+	override public function destroy()
 	{
 		for (_ => i in subStates)
 			i.destroy();
@@ -226,7 +229,6 @@ class PCState extends MusicBeatState
 		subStates.clear();
 		subStates = null;
 
-		// _cashePoint = FlxDestroyUtil.put(_cashePoint);
 		FlxG.mouse.visible = true;
 		FlxG.sound.music.fadeIn(2, FlxG.sound.music.volume);
 		super.destroy();
@@ -235,6 +237,7 @@ class PCState extends MusicBeatState
 
 class PCSubState extends FlxSubState
 {
+	var renderer:FlxCameraSprite;
 	function new()
 	{
 		super(0);
@@ -246,44 +249,140 @@ class PCSubState extends FlxSubState
 		super.create();
 	}
 
+	function createRenderer(x = 0.0, y = 0.0, w = 1280, h = 720)
+	{
+		final leCamera = new FlxCamera(0, 0, w, h);
+		FlxG.cameras.add(leCamera, false);
+		leCamera.x = 1000000; // I HAVE NO IDEA HOW TO HIDE IT WITHOUT DISABLING RENDERING
+		renderer = new FlxCameraSprite(x, y, leCamera);
+		renderer.antialiasing = ClientPrefs.data.antialiasing;
+		addToScreen(renderer);
+	}
+	
+	override public function draw()
+	{
+		// Draw background
+		if (FlxG.renderBlit)
+		{
+			for (camera in getCamerasLegacy())
+			{
+				camera.fill(bgColor);
+			}
+		}
+		else
+		{
+			_bgSprite.draw();
+		}
+
+		// Now draw all children
+		if (persistentDraw || subState == null)
+		{
+			final newCameras = [renderer.thisCamera];
+			var oldCameras:Array<FlxCamera>;
+			for (basic in members)
+			{
+				if (basic != null && basic.exists && basic.visible)
+				{
+					oldCameras = basic._cameras;
+					basic._cameras = newCameras;
+					basic.draw();
+					basic._cameras = oldCameras;
+				}
+			}
+		}
+
+		if (subState != null)
+			subState.draw();
+	}
+
 	/*inline function createSprite(x = 0., y = 0., ?scrollFactor:FlxPoint, ?data:EitherType<FlxGraphicAsset, FlxFramesCollection>, ?autoAddAnims = true)
 	{
 		return PCState.createSprite(x, y, scrollFactor, data, autoAddAnims);
 	}*/
 
-	inline function addToScreen(e)						 return PCState.stupidInstance.screenStuff.add(e);
-	inline function removeToScreen(e, spl:Bool = false)	 return PCState.stupidInstance.screenStuff.remove(e, spl);
-	inline function insertToScreen(index, e)			 return PCState.stupidInstance.screenStuff.insert(index, e);
+	inline function addToScreen(e)					return PCState.stupidInstance.screenStuff.add(e);
+	inline function removeToScreen(e, spl = false)	return PCState.stupidInstance.screenStuff.remove(e, spl);
+	inline function insertToScreen(index, e)		return PCState.stupidInstance.screenStuff.insert(index, e);
 }
 
 class DesktopSubState extends PCSubState
 {
-	var wall:FlxSprite;
+	static var iconPos:FlxPoint;
+	var tgLookalike:FlxSprite;
+	var moveIcon = false;
 	override function create()
-	{
-		addToScreen(PCState.createSprite(Paths.image("mainMenuPC/bilss")));
-		
-		var funnyCam = new FlxCamera(0, 0, 930, 572);
-		FlxG.cameras.add(funnyCam, false);
-		funnyCam.x = 1000000; // I DON'T HAVE IDEA HOW TO HIDE, BUT ALLOW RENDERING
-		var cameraSprite = new FlxCameraSprite(35, 40, funnyCam);
-		cameraSprite.antialiasing = ClientPrefs.data.antialiasing;
-		addToScreen(cameraSprite);
-		
-		// FlxTween.num(0, 2000, 100, null, (i) -> funnyCam.scroll.x = i);
+	{		
+		// FlxTween.num(0, 2000, 100, null, (i) -> renderCamera.scroll.x = i);
+		createRenderer(35, 40, 930, 572);
+
+		final bg = PCState.createSprite(Paths.image("mainMenuPC/bilss"));
+		add(bg.cameraCenter(renderer.thisCamera));
+
+		final logo = PCState.createSprite(Paths.image("mainMenuPC/logo"));
+		logo.cameraCenter(renderer.thisCamera).y -= 160;
+		add(logo);
+
+		tgLookalike = PCState.createSprite(Paths.getSparrowAtlas("mainMenuPC/fnfgram_icon", false));
+		tgLookalike.animation.curAnim.looped = false;
+		tgLookalike.animation.curAnim.frameRate = 0;
+		add(tgLookalike);
+
+		FlxMouseEvent.add(tgLookalike,
+			(s) -> // мышка нажатие
+			{
+				s.animation.curAnim.curFrame = 2;
+				moveIcon = true;
+			},
+			(s) -> // мышка отжатие
+			{
+				s.animation.curAnim.curFrame = 1;
+				moveIcon = false;
+			},
+			(s) -> // мышка наведение
+			{
+				s.animation.curAnim.curFrame = 1;
+				moveIcon = false;
+			}, 
+			(s) -> // мышка убирание
+			{
+				s.animation.curAnim.curFrame = 0;
+				moveIcon = false;
+			},
+			false, true, false);
+		// мышка дабл клик
+		FlxMouseEvent.setMouseDoubleClickCallback(tgLookalike, (s) ->
+		{
+			trace('fnfgram opened event [TBA] $s');
+			FlxG.sound.play(Paths.sound("tinky_winky_scream"));
+		});
+		// мышка передвижение
+		FlxMouseEvent.setMouseMoveCallback(tgLookalike, (s) ->
+			if (moveIcon)
+			{
+				s.x += FlxG.mouse.deltaScreenX;
+				s.y += FlxG.mouse.deltaScreenY;
+				FlxSpriteUtil.cameraBound(s);
+				iconPos.set(s.x, s.y);
+			});
+
+		if (iconPos == null)
+		{
+			tgLookalike.cameraCenter(renderer.thisCamera);
+			iconPos = FlxPoint.get(tgLookalike.x, tgLookalike.y);
+		}
+		else // use last icon position
+			tgLookalike.setPosition(iconPos.x, iconPos.y);
 
 		var video:VideoSprite;
 		Thread.create(()->
 		{
 			video = new VideoSprite();
 			video.autoScale = false;
-			video.camera = funnyCam;
 			video.bitmap.onFormatSetup.add(() ->
 			{
-				// video.loadGraphic(video.bitmap.bitmapData);
-				video.setGraphicSize(0, 572);
+				video.setGraphicSize(0, renderer.thisCamera.height * 0.3);
 				video.updateHitbox();
-				video.x = (funnyCam.width - video.width) * 0.5;
+				video.setPosition(renderer.thisCamera.width - video.width - 35, renderer.thisCamera.height - video.height - 70);
 			});
 			video.bitmap.onEndReached.add(Thread.create.bind(() ->
 			{
@@ -293,6 +392,7 @@ class DesktopSubState extends PCSubState
 			}));
 			video.load(FlxG.random.getObject(TestVideoState.videos));
 			video.play();
+			video.volume = 0.5;
 			add(video);
 		});
 		

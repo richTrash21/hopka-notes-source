@@ -77,6 +77,22 @@ class ExtendedSprite extends FlxSprite
 		return sprite;
 	}
 
+	inline public static function cameraCenter<T:FlxSprite>(sprite:T, axes:flixel.util.FlxAxes = XY, ?camera:FlxCamera):T
+	{
+		if (sprite != null)
+		{
+			if (camera == null)
+				camera = sprite.camera;
+
+			if (axes.x)
+				sprite.x = 0.5 * (camera.width - sprite.width);
+
+			if (axes.y)
+				sprite.y = 0.5 * (camera.height - sprite.height);
+		}
+		return sprite;
+	}
+
 	public var onGraphicLoaded:()->Void;
 	public var animOffsets:Map<String, FlxPoint> = new Map();
 

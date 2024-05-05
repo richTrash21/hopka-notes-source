@@ -1697,10 +1697,7 @@ class PlayState extends MusicBeatState
 				final diff = Math.abs(FlxG.sound.music.time - Conductor.songPosition - Conductor.offset);
 				Conductor.songPosition = CoolUtil.lerpElapsed(Conductor.songPosition, FlxG.sound.music.time, 0.042, elapsed);
 				if (diff > 1000 * playbackRate)
-				{
 					Conductor.songPosition = Conductor.songPosition + 1000 * FlxMath.signOf(diff);
-					// resyncVocals();
-				}
 			}
 		}
 
@@ -2506,11 +2503,10 @@ class PlayState extends MusicBeatState
 		// obtain notes that the player can hit
 		final plrInputNotes = notes.members.filter((n) ->
 		{
-			return	if (n == null)
-						false;
-					else
-						(!strumsBlocked[n.noteData] && n.canBeHit && n.mustPress && !n.tooLate && !n.wasGoodHit && !n.blockHit)
-						&& !n.isSustainNote && n.noteData == key;
+			if (n == null)
+				false;
+			else
+				!strumsBlocked[n.noteData] && n.canBeHit && n.mustPress && !n.tooLate && !n.wasGoodHit && !n.blockHit && !n.isSustainNote && n.noteData == key;
 		});
 		plrInputNotes.sort(sortHitNotes);
 
@@ -2836,6 +2832,7 @@ class PlayState extends MusicBeatState
 		grpNoteSplashes.sort(CoolUtil.sortByOrder);
 	}
 
+	/** Lemme clear ur mem a bit **/
 	override function destroy()
 	{
 		FlxG.stage.removeEventListener(KeyboardEvent.KEY_DOWN, onKeyPress);
@@ -2864,6 +2861,7 @@ class PlayState extends MusicBeatState
 				luaScript.stop();
 			}
 		}
+		luaArray = null;
 		FunkinLua.customFunctions.clear();
 		#end
 
@@ -2877,6 +2875,7 @@ class PlayState extends MusicBeatState
 				hscript.destroy();
 			}
 		}
+		hscriptArray = null;
 		#end
 
 		BF_POS = FlxDestroyUtil.put(BF_POS);
@@ -2902,17 +2901,91 @@ class PlayState extends MusicBeatState
 		bfCamOffset = FlxDestroyUtil.destroy(bfCamOffset);
 		dadCamOffset = FlxDestroyUtil.destroy(dadCamOffset);
 		gfCamOffset = FlxDestroyUtil.destroy(gfCamOffset);
-
 		instance = null;
+
+		inline function __stop(s:FlxSound):FlxSound
+		{
+			if (s != null)
+				s.stop();
+			return null;
+		}
+
+		inst = null;
 		if (SONG.needsVoices)
 		{
-			if (vocals != null)
-				vocals.stop();
-			vocals = null;
-			if (opponentVocals != null)
-				opponentVocals.stop();
-			opponentVocals = null;
+			vocals = __stop(vocals);
+			opponentVocals = __stop(opponentVocals);
 		}
+
+		inline function __clearArray<T>(a:Array<T>):Array<T>
+		{
+			if (a != null)
+				while (a.length != 0)
+					a.pop();
+			return null;
+		}
+
+		inline function __cancelTween(t:FlxTween):FlxTween
+		{
+			if (t != null)
+				t.cancel();
+			return null;
+		}
+
+		inline function __cancelTimer(t:FlxTimer):FlxTimer
+		{
+			if (t != null)
+				t.cancel();
+			return null;
+		}
+
+		songSpeedTween = __cancelTween(songSpeedTween);
+		boyfriendGroup = null;
+		dadGroup = null;
+		gfGroup = null;
+		dad = null;
+		gf = null;
+		boyfriend = null;
+		notes = null;
+		unspawnNotes = __clearArray(unspawnNotes);
+		eventNotes = __clearArray(eventNotes);
+		_camFollow = null;
+		strumLineNotes = null;
+		opponentStrums = null;
+		playerStrums = null;
+		grpNoteSplashes = null;
+		scoreGroup = null;
+		healthBar = null;
+		timeBar = null;
+		ratingsData = __clearArray(ratingsData);
+		botplayTxt = null;
+		iconP1 = null;
+		iconP2 = null;
+		camHUD = null;
+		camGame = null;
+		camOther = null;
+		camPause = null;
+		scoreTxt = null;
+		timeTxt = null;
+		scoreTxtTween = __cancelTween(scoreTxtTween);
+		#if ACHIEVEMENTS_ALLOWED
+		keysPressed = __clearArray(keysPressed);
+		#end
+		luaDebugGroup = null;
+		startCallback = null;
+		endCallback = null;
+		#if VIDEOS_ALLOWED
+		videoPlayer = null;
+		subtitles = null;
+		#end
+		psychDialogue = null;
+		startTimer = __cancelTimer(startTimer);
+		finishTimer = __cancelTimer(finishTimer);
+		charList = __clearArray(charList);
+		noteTypes = __clearArray(noteTypes);
+		eventsPushed = __clearArray(eventsPushed);
+		__lastEvents = __clearArray(__lastEvents);
+		strumsBlocked = __clearArray(strumsBlocked);
 	}
 
 	override function stepHit()
@@ -2927,7 +3000,7 @@ class PlayState extends MusicBeatState
 		}*/
 
 		super.stepHit();
-		if (curStep == lastStep)
+		if (curStep < lastStep)
 			return;
 
 		#if debug
@@ -2939,7 +3012,7 @@ class PlayState extends MusicBeatState
 
 	override function beatHit()
 	{
-		if (lastBeat >= curBeat)
+		if (curBeat < lastBeat)
 			return;
 
 		if (generatedMusic)

@@ -99,10 +99,11 @@ class MainMenuState extends MusicBeatState
 			menuItem.animation.play("idle");
 			menuItem.ID = i;
 			menuItems.add(menuItem).screenCenter(X);
+			menuItem.centerOffsets();
 			menuItem.scrollFactor.set(0, itemScrollY);
 		}
 
-		final versionText = new FlxText(12, FlxG.height - 38, 0, "Commit #" + FlxG.stage.application.meta.get("build") + "\nNOTE: Press F1 for the funny!", 16);
+		final versionText = new FlxText(12, FlxG.height - 22, 0, "NOTE: Press F1 for the funny!", 16);
 		versionText.font = Paths.font("vcr.ttf");
 		versionText.scrollFactor.set();
 		versionText.active = false;
@@ -144,6 +145,9 @@ class MainMenuState extends MusicBeatState
 	@:access(flixel.tweens.FlxTween.finish)
 	override function update(elapsed:Float)
 	{
+		if (FlxG.keys.justPressed.F12)
+			throw "ERROR OMG PIZDEC KUDA TI ZHMAL BLYAT";
+
 		if (FlxG.sound.music.volume < 0.8)
 		{
 			FlxG.sound.music.volume += 0.5 * elapsed;

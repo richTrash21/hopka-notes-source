@@ -1,5 +1,6 @@
 package;
 
+import debug.macro.BuildInfoMacro;
 import flixel.input.keyboard.FlxKey;
 import lime.app.Application;
 import openfl.Lib;
@@ -54,13 +55,22 @@ class Main extends flixel.FlxGame
 
 		if (!FileSystem.exists("./crash/"))
 			FileSystem.createDirectory("./crash/");
-		sys.io.File.saveContent(path, '$errMsg\n\nFull session log:\n' + GameLog.__log);
+
+		var file = errMsg;
+		file += "\n\nBulid Info:";
+		file += "\n - " + BuildInfoMacro.buildDate;
+		file += "\n - " + BuildInfoMacro.commit;
+		file += "\n - " + FlxG.VERSION;
+		file += "\n - " + BuildInfoMacro.openflVersion;
+		file += "\n - " + BuildInfoMacro.limeVersion;
+		file += "\n\nFull session log:\n" + GameLog.__log;
+		sys.io.File.saveContent(path, file);
 
 		final savedIn = "Crash dump saved in " + haxe.io.Path.normalize(path);
 		Sys.println(errMsg);
 		Sys.println(savedIn);
 
-		Application.current.window.alert('$errMsg\n$savedIn', "Critical Error!");
+		Application.current.window.alert('$errMsg\n$savedIn', FlxG.random.bool(0.2) ? "Sandwich!" : "Critical Uncaught Error, this program will terminate!");
 		#if hxdiscord_rpc
 		DiscordClient.shutdown();
 		#end

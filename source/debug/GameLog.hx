@@ -1,6 +1,8 @@
 package debug;
 
+#if !FLX_DEBUG
 import flixel.system.FlxAssets;
+#end
 import haxe.PosInfos;
 
 @:allow(Main)
@@ -9,8 +11,9 @@ class GameLog
 	extern inline static final WARN_SOUND = "assets/sounds/pikmin";
 	extern inline static final ERROR_SOUND = "assets/sounds/metal";
 	public static var silent = #if FLX_DEBUG false #else true #end;
+	public static var logTime = true;
 
-	static var __log:String;
+	static var __log = "";
 	static var __warns = new Array<String>();
 	static var __errors = new Array<String>();
 
@@ -88,9 +91,11 @@ class GameLog
 	}
 
 	// based on haxe.Log.formatOutput()
-	@:noCompletion extern inline static function formatOutput(s:String, l:LogType, pos:PosInfos):String
+	@:noCompletion extern inline static function formatOutput(s:String, lt:LogType, pos:PosInfos):String
 	{
-		final t = "<" + Date.now().toString().substr(11) + "> " + l.toString();
+		var t = '$lt';
+		if (logTime)
+			t = "<" + Date.now().toString().substr(11) + '> $t';
 		if (pos == null)
 			return '$t > $s';
 
@@ -99,13 +104,19 @@ class GameLog
 		{
 			p += " - ";
 			if (!pos.className.isNullOrEmpty())
-				p += pos.className + ".";
+			{
+				var c = pos.className;
+				final i = c.indexOf(".");
+				if (i != -1)
+					c = c.substr(i+1);
+				p += '$c.';
+			}
 			p += pos.methodName; // + "()"
 		}
 
 		if (pos.customParams != null)
 			for (v in pos.customParams)
-				s += ", " + Std.string(v);
+				s += ', $v';
 
 		return '$t [$p] > $s';
 	}
@@ -145,10 +156,10 @@ enum abstract LogType(Int) from Int to Int
 	{
 		return switch (this)
 		{
-			case WARN:    "[WARNING]";
-			case ERROR:   "[ERROR]";
-			case NOTICE:  "[NOTICE]";
-			default:      "[TRACE]";
+			case WARN:   "[WARNING]";
+			case ERROR:  "[ERROR]";
+			case NOTICE: "[NOTICE]";
+			default:     "[TRACE]";
 		}
 	}
 }

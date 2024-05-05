@@ -47,7 +47,7 @@ class DebugOverlay extends openfl.display.Sprite
 		if (FlxG.save.data.debugInfo != null)
 			debug = FlxG.save.data.debugInfo;
 
-		addChild(bg = new Bitmap(new openfl.display.BitmapData(1, 1, 0x80000000)));
+		addChild(bg = new Bitmap(new openfl.display.BitmapData(1, 1, 0x66000000)));
 		addToList(fps = new FPSCounter(PADDING_X, PADDING_Y));
 		addToList(info = new DebugInfo(fps));
 		addToList(buildInfo = new DebugBuildInfo(info));

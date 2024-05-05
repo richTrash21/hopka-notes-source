@@ -198,7 +198,7 @@ class VisualsUISubState extends BaseOptionsMenu
 			"What song do you prefer for the Pause Screen?",
 			"pauseMusic",
 			"string",
-			["None", "Noodles", "Breakfast", "Tea Time"]);
+			["None", "Noodles", "Snack Time"]);
 		option.change = () ->
 		{
 			changedMusic = true;
@@ -255,10 +255,13 @@ class VisualsUISubState extends BaseOptionsMenu
 
 	extern inline function __update__notes__pos()
 	{
-		sustain.scale.y = 2;
-		sustain.updateHitbox();
-		sustainEnd.scale.y = 1;
-		sustainEnd.updateHitbox();
+		inline function __scale(s:FlxSprite, v:Float)
+		{
+			s.scale.y = PlayState.isPixelStage ? v * PlayState.daPixelZoom : v;
+			s.updateHitbox();
+		}
+		__scale(sustain, 2);
+		__scale(sustainEnd, 1);
 		note.screenCenter().x += 500;
 		note.y -= 20;
 		sustain.setPosition(note.x + (note.width - sustain.width) * 0.5, note.y - sustain.height + note.height * 0.5);

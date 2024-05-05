@@ -8,15 +8,16 @@ import sys.io.Process;
 class BuildInfoMacro
 {
 	// from codename engine (https://github.com/FNF-CNE-Devs/CodenameEngine/blob/main/source/funkin/backend/system/macros/GitCommitMacro.hx)
-	public static var commitNumber(get, never):Int;
+	public static var commitNumber(get, never):String;
 	public static var commitHash(get, never):String;
+	public static var commit(get, never):String;
 
 	// mine - rich
 	public static var buildDate(get, never):String;
 	public static var limeVersion(get, never):String;
 	public static var openflVersion(get, never):String;
 
-	@:noCompletion static inline function get_commitNumber():Int
+	@:noCompletion static inline function get_commitNumber():String
 	{
 		return __getCommitNumber();
 	}
@@ -24,6 +25,11 @@ class BuildInfoMacro
 	@:noCompletion static inline function get_commitHash():String
 	{
 		return __getCommitHash();
+	}
+
+	@:noCompletion static inline function get_commit():String
+	{
+		return 'Commit $commitNumber ($commitHash)';
 	}
 
 	@:noCompletion static inline function get_buildDate():String
@@ -49,7 +55,7 @@ class BuildInfoMacro
 		{
 			final proc = new Process("git", ["rev-parse", "--short", "HEAD"], false);
 			proc.exitCode(true);
-			return macro $v{proc.stdout.readLine()};
+			return macro $v{"@" + proc.stdout.readLine()};
 		}
 		catch(e) {}
 		#end
@@ -63,26 +69,26 @@ class BuildInfoMacro
 		{
 			final proc = new Process("git", ["rev-list", "HEAD", "--count"], false);
 			proc.exitCode(true);
-			return macro $v{Std.parseInt(proc.stdout.readLine())};
+			return macro $v{proc.stdout.readLine()};
 		}
 		catch(e) {}
 		#end
-		return macro $v{0}
+		return macro $v{"0"}
 	}
 
 	private static macro function __getBuildDate()
 	{
 		#if display
-		return macro $v{"<unknown build date>"}
+		return macro $v{"Build Date <unknown build date>"}
 		#else
-		return macro $v{Date.now().toString()};
+		return macro $v{"Build Date " + Date.now().toString()};
 		#end
 	}
 
 	private static macro function __getLimeVersion()
 	{
 		#if display
-		return macro $v{"<unknown lime version>"}
+		return macro $v{"Lime <unknown lime version>"}
 		#else
 		return macro $v{"Lime " + Context.definedValue("lime")};
 		#end
@@ -91,7 +97,7 @@ class BuildInfoMacro
 	private static macro function __getOpenflVersion()
 	{
 		#if display
-		return macro $v{"<unknown openfl version>"}
+		return macro $v{"OpenFL <unknown openfl version>"}
 		#else
 		return macro $v{"OpenFL " + Context.definedValue("openfl")};
 		#end

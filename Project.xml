@@ -94,7 +94,8 @@
 
 	<!-- _______________________________ Libraries ______________________________ -->
 
-	<haxelib name="flixel" />
+	<!-- Using my fork for some camera shit -->
+	<haxelib name="flixel" version="git-rich" />
 	<haxelib name="flixel-ui" />
 	<haxelib name="flixel-addons" />
 
