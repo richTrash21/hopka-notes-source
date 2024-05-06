@@ -248,51 +248,30 @@ class PCSubState extends FlxSubState
 		_parentState.persistentUpdate = true;
 		super.create();
 	}
+	override function update(elapsed:Float)
+	{
+		if (renderer != null)
+		@:bypassAccessor
+		{
+			renderer.thisCamera.x = (renderer.x - renderer.offset.x - FlxG.camera.scroll.x) * renderer.scrollFactor.x;
+			renderer.thisCamera.y = (renderer.y - renderer.offset.y - FlxG.camera.scroll.y) * renderer.scrollFactor.y;
+		}
+		super.update(elapsed);
+	}
+
 
 	function createRenderer(x = 0.0, y = 0.0, w = 1280, h = 720)
 	{
-		final leCamera = new FlxCamera(0, 0, w, h);
-		FlxG.cameras.add(leCamera, false);
-		leCamera.x = 1000000; // I HAVE NO IDEA HOW TO HIDE IT WITHOUT DISABLING RENDERING
-		renderer = new FlxCameraSprite(x, y, leCamera);
-		renderer.antialiasing = ClientPrefs.data.antialiasing;
-		addToScreen(renderer);
-	}
-	
-	override public function draw()
-	{
-		// Draw background
-		if (FlxG.renderBlit)
+		if (renderer == null)
 		{
-			for (camera in getCamerasLegacy())
-			{
-				camera.fill(bgColor);
-			}
+			final leCamera = new FlxInvisibleCamera(0, 0, w, h);
+			FlxG.cameras.add(leCamera, false);
+			cameras = [leCamera];
+			renderer = new FlxCameraSprite(x, y, leCamera);
+			renderer.antialiasing = ClientPrefs.data.antialiasing;
+			addToScreen(renderer);
 		}
-		else
-		{
-			_bgSprite.draw();
-		}
-
-		// Now draw all children
-		if (persistentDraw || subState == null)
-		{
-			final newCameras = [renderer.thisCamera];
-			var oldCameras:Array<FlxCamera>;
-			for (basic in members)
-			{
-				if (basic != null && basic.exists && basic.visible)
-				{
-					oldCameras = basic._cameras;
-					basic._cameras = newCameras;
-					basic.draw();
-					basic._cameras = oldCameras;
-				}
-			}
-		}
-
-		if (subState != null)
-			subState.draw();
+		return renderer;
 	}
 
 	/*inline function createSprite(x = 0., y = 0., ?scrollFactor:FlxPoint, ?data:EitherType<FlxGraphicAsset, FlxFramesCollection>, ?autoAddAnims = true)

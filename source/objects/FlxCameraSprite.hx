@@ -154,3 +154,16 @@ class FlxCameraSprite extends flixel.FlxSprite
 		return camera;
 	}
 }
+
+// Well, not really. -Redar
+class FlxInvisibleCamera extends FlxCamera
+{
+	override function updateFlashSpritePosition():Void
+	{
+		if (flashSprite != null)
+		{
+			flashSprite.x = FlxG.width * FlxG.scaleMode.scale.x * 4;
+			flashSprite.y = FlxG.height * FlxG.scaleMode.scale.y * 4;
+		}
+	}
+}
