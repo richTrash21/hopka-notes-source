@@ -659,7 +659,7 @@ class DialogueCharacterEditorState extends MusicBeatUIState
 
 			if(FlxG.keys.justPressed.ESCAPE) {
 				FlxG.switchState(states.editors.MasterEditorMenu.new);
-				FlxG.sound.playMusic(Paths.music('freakyMenu'), 1);
+				CoolUtil.playMenuMusic(); // FlxG.sound.playMusic(Paths.music('freakyMenu'), 1);
 				transitioning = true;
 			}
 

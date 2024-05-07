@@ -266,7 +266,7 @@ class PauseSubState extends MusicBeatSubstate
 					Mods.loadTopMod();
 					FlxG.switchState(PlayState.isStoryMode ? states.StoryMenuState.new : states.FreeplayState.new);
 					PlayState.cancelMusicFadeTween();
-					FlxG.sound.playMusic(Paths.music("freakyMenu"));
+					CoolUtil.playMenuMusic(); // FlxG.sound.playMusic(Paths.music("freakyMenu"));
 					FlxG.camera.pixelPerfectRender = false;
 					PlayState.changedDifficulty = false;
 					PlayState.chartingMode = false;

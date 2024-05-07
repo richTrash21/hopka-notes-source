@@ -1860,7 +1860,7 @@ class ChartingState extends MusicBeatUIState
 				autosaveSong();
 				PlayState.chartingMode = false;
 				FlxG.switchState(states.editors.MasterEditorMenu.new);
-				FlxG.sound.playMusic(Paths.music('freakyMenu'));
+				CoolUtil.playMenuMusic(); // FlxG.sound.playMusic(Paths.music('freakyMenu'));
 				// FlxG.mouse.visible = false;
 				return;
 			}

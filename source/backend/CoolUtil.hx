@@ -10,6 +10,16 @@ class CoolUtil
 	static final countByColor = new Map<Int, Int>();
 	static final hideChars = ~/[\t\n\r\s]+/g;
 
+	inline public static function playMenuMusic(volume = 1.0, fromStart = false)
+	{
+		Conductor.bpm = 107;
+		FlxG.sound.playMusic(Paths.music("mainMenu"), volume);
+		FlxG.sound.music.loopTime = Conductor.crochet * 32; // 17943.92 ms
+		if (!fromStart)
+			FlxG.sound.music.time = FlxG.sound.music.loopTime;
+		FlxG.sound.music.endTime = Conductor.crochet * 200; // 112149.53 ms
+	}
+
 	// changed so this actually works lol
 	inline public static function quantize(f:Float, snap:Float):Float
 	{

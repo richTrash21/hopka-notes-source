@@ -140,7 +140,7 @@ class NoteSplashDebugState extends MusicBeatUIState
 		if(controls.BACK && notTyping)
 		{
 			FlxG.switchState(MasterEditorMenu.new);
-			FlxG.sound.playMusic(Paths.music('freakyMenu'));
+			CoolUtil.playMenuMusic(); // FlxG.sound.playMusic(Paths.music('freakyMenu'));
 			// FlxG.mouse.visible = false;
 		}
 		super.update(elapsed);

@@ -34,7 +34,8 @@ class Paths
 	public static var currentLevel(default, set):String = "default";
 
 	public static var dumpExclusions = [
-		'assets/music/freakyMenu.$SOUND_EXT',
+		// 'assets/music/freakyMenu.$SOUND_EXT',
+		'assets/music/mainMenu.$SOUND_EXT',
 		'assets/music/breakfast.$SOUND_EXT',
 		'assets/music/tea-time.$SOUND_EXT',
 		"assets/images/alphabet.png"

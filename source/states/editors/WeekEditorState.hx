@@ -435,7 +435,7 @@ class WeekEditorState extends MusicBeatUIState
 			if(FlxG.keys.justPressed.ESCAPE) {
 				persistentUpdate = false;
 				FlxG.switchState(MasterEditorMenu.new);
-				FlxG.sound.playMusic(Paths.music('freakyMenu'));
+				CoolUtil.playMenuMusic(); // FlxG.sound.playMusic(Paths.music('freakyMenu'));
 			}
 		}
 
@@ -774,7 +774,7 @@ class WeekEditorFreeplayState extends backend.MusicBeatUIState
 			{
 				persistentUpdate = true;
 				FlxG.switchState(MasterEditorMenu.new);
-				FlxG.sound.playMusic(Paths.music('freakyMenu'));
+				CoolUtil.playMenuMusic(); // FlxG.sound.playMusic(Paths.music('freakyMenu'));
 			}
 			if (controls.UI_UP_P) changeSelection(-1);
 			if (controls.UI_DOWN_P) changeSelection(1);

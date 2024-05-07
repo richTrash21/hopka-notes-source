@@ -148,8 +148,7 @@ class DoiseRoomLMAO extends backend.BaseState
 					FlxG.save.flush();
 
 					FlxG.camera.fade(FlxColor.BLACK, 0);
-					FlxG.sound.playMusic(Paths.music("freakyMenu"));
-					Conductor.bpm = 102;
+					CoolUtil.playMenuMusic(); // FlxG.sound.playMusic(Paths.music("freakyMenu"));
 					backend.StateTransition.skipNextTransIn = true;
 					FlxG.switchState(MainMenuState.new);
 					trace("ok nvmd out of that nightmare lmao");

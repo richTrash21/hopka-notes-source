@@ -47,7 +47,7 @@ class MainMenuState extends MusicBeatState
 		}
 
 		if (FlxG.sound.music == null || !FlxG.sound.music.playing)
-			FlxG.sound.playMusic(Paths.music("freakyMenu"), 0);
+			CoolUtil.playMenuMusic(0); // FlxG.sound.playMusic(Paths.music("freakyMenu"), 0);
 
 		#if MODS_ALLOWED
 		Mods.pushGlobalMods();
@@ -263,9 +263,8 @@ class MainMenuState extends MusicBeatState
 		{
 			if (pizzaTime)
 			{
-				FlxG.sound.playMusic(Paths.music("freakyMenu"));
+				CoolUtil.playMenuMusic(); // FlxG.sound.playMusic(Paths.music("freakyMenu"));
 				FlxG.camera.zoom = 1;
-				Conductor.bpm = 102;
 			}
 			else
 			{
@@ -273,12 +272,14 @@ class MainMenuState extends MusicBeatState
 				{
 					// this is a hell of a name, good job on the song tho
 					FlxG.sound.playMusic(Paths.music("World_Wide_Noise_v6_yo_how_many_times_am_i_just_gonna_keep_changing_the_guitar_slightly_at_the_end"));
-					FlxG.sound.music.endTime = (60 / (Conductor.bpm = 167) * 4000) * 96;
+					Conductor.bpm = 167;
+					FlxG.sound.music.endTime = Conductor.crochet * 384;
 				}
 				else // ITS PIZZA TIME!!
 				{
 					FlxG.sound.playMusic(Paths.music("mu_pizzatime"));
-					final barMS = 60 / (Conductor.bpm = 180) * 4000;
+					Conductor.bpm = 180;
+					final barMS = Conductor.crochet * 4;
 					FlxG.sound.music.loopTime = barMS * 36;
 					FlxG.sound.music.endTime = barMS * 120;
 				}

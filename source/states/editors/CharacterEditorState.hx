@@ -1058,7 +1058,7 @@ class CharacterEditorState extends backend.MusicBeatUIState
 				else
 				{
 					FlxG.switchState(states.editors.MasterEditorMenu.new);
-					FlxG.sound.playMusic(Paths.music("freakyMenu"));
+					CoolUtil.playMenuMusic(); // FlxG.sound.playMusic(Paths.music("freakyMenu"));
 				}
 			}
 		}

@@ -2280,7 +2280,7 @@ class PlayState extends MusicBeatState
 			if (storyPlaylist.length == 0)
 			{
 				Mods.loadTopMod();
-				FlxG.sound.playMusic(Paths.music("freakyMenu"));
+				CoolUtil.playMenuMusic(); // FlxG.sound.playMusic(Paths.music("freakyMenu"));
 				#if hxdiscord_rpc
 				DiscordClient.resetClientID();
 				#end
@@ -2329,7 +2329,7 @@ class PlayState extends MusicBeatState
 			__stop__song();
 			cancelMusicFadeTween();
 			FlxG.switchState(FreeplayState.new);
-			FlxG.sound.playMusic(Paths.music("freakyMenu"));
+			CoolUtil.playMenuMusic(); // FlxG.sound.playMusic(Paths.music("freakyMenu"));
 			changedDifficulty = false;
 		}
 		return transitioning = true;

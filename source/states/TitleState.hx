@@ -112,7 +112,7 @@ class TitleState extends MusicBeatState
 			ngSpr.precache();
 			ngSpr.visible = ngSpr.active = false;
 
-			FlxG.sound.playMusic(Paths.music("freakyMenu"), 0);
+			CoolUtil.playMenuMusic(0, true); // FlxG.sound.playMusic(Paths.music("freakyMenu"), 0);
 			FlxG.sound.music.fadeIn(4, 0, 0.7);
 		}
 		else

@@ -711,7 +711,7 @@ class FunkinLua
 			DiscordClient.resetClientID();
 			#end
 
-			FlxG.sound.playMusic(Paths.music("freakyMenu"));
+			CoolUtil.playMenuMusic(); // FlxG.sound.playMusic(Paths.music("freakyMenu"));
 			PlayState.changedDifficulty = false;
 			PlayState.chartingMode = false;
 			game.transitioning = true;

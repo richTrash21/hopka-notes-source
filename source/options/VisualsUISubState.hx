@@ -291,7 +291,7 @@ class VisualsUISubState extends BaseOptionsMenu
 		sustain = null;
 		sustainEnd = null;
 		if (changedMusic && !OptionsState.onPlayState)
-			FlxG.sound.playMusic(Paths.music("freakyMenu"), 1, true);
+			CoolUtil.playMenuMusic(); // FlxG.sound.playMusic(Paths.music("freakyMenu"), 1, true);
 		super.destroy();
 	}
 }
