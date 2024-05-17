@@ -7,7 +7,7 @@ import flixel.math.FlxRect;
 /**
 	An extended FlxSprite with a bunch of helper functions and other stuff
 **/
-class ExtendedSprite extends FlxSprite
+class ExtendedSprite extends backend.flixel.FlxSkewedSprite
 {
 	/**
 		Checks if object is in the rectangles bounds.

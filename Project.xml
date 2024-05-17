@@ -127,6 +127,12 @@
 		<!--Enable libVLC logging on hxVLC-->
 		<haxedef name="HXVLC_LOGGING" if="debug" />
 	</section>
+
+	<!-- OFFICIAL FNF SHIT -->
+	<!-- Run a script before and after building. -->
+	<!-- <prebuild haxe="source/building/Prebuild.hx"/> -->
+	<!-- <postbuild haxe="source/building/Postbuild.hx"/> -->
+	<!-- <haxedef name="HXCPP_TIMES" /> -->
 	
 	<!-- ______________________________ Haxedefines _____________________________ -->
 

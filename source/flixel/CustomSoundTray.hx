@@ -50,7 +50,7 @@ class CustomSoundTray extends flixel.system.ui.FlxSoundTray
 				#end
 			}
 		}
-		alpha = y == 0.0 ? 1.0 : 1.0 - (y / -(height * 0.7));
+		alpha = y == 0.0 ? 1.0 : 1.0 - (y / -(height * 0.6));
 	}
 
 	/**
@@ -87,8 +87,8 @@ class CustomSoundTray extends flixel.system.ui.FlxSoundTray
 		_timer = 1.0;
 
 		final globalVolume = FlxG.sound.muted ? 0 : Math.round(FlxG.sound.volume * 10);
-		for (i in 0..._bars.length)
-			_bars[i].alpha = i < globalVolume ? 1.0 : 0.5;
+		for (i => bar in _bars)
+			bar.alpha = i < globalVolume ? 1.0 : 0.5;
 	}
 
 	override public function screenCenter()

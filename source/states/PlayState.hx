@@ -253,7 +253,6 @@ class PlayState extends MusicBeatState
 	public var camHUD:GameCamera;
 	public var camGame:GameCamera;
 	public var camOther:GameCamera;
-	var camPause:GameCamera; // dont judge me! - rich
 	public var cameraSpeed(default, set):Float;
 
 	public var songScore:Int = 0;
@@ -274,7 +273,6 @@ class PlayState extends MusicBeatState
 	var songPercent(default, null):Float = 0.0;
 
 	// i have no fucking idea why i made this - richTrash21
-	// and btw why are they so janky????
 	public var bfCamOffset:FlxPoint;
 	public var dadCamOffset:FlxPoint;
 	public var gfCamOffset:FlxPoint;
@@ -373,9 +371,7 @@ class PlayState extends MusicBeatState
 		camGame = cast FlxG.camera;
 		FlxG.cameras.add(camHUD = new GameCamera(0, 0), false);
 		FlxG.cameras.add(camOther = new GameCamera(0, 0), false);
-		FlxG.cameras.add(camPause = new GameCamera(0, 0), false);
 
-		camPause.kill(); // optimization
 		camGame.checkForTweens = camHUD.checkForTweens = true;
 		persistentUpdate = true;
 
@@ -1270,9 +1266,17 @@ class PlayState extends MusicBeatState
 	{
 		startingSong = false;
 
-		FlxG.sound.playMusic(inst, 1, false);
-		#if FLX_PITCH FlxG.sound.music.pitch = playbackRate; #end
+		FlxG.sound.music.loadEmbedded(inst, false);
+		#if FLX_PITCH
+		FlxG.sound.music.pitch = playbackRate;
+		#end
+		FlxG.sound.music.volume = 1.0;
 		FlxG.sound.music.onComplete = finishSong.bind(false);
+
+		setSongTime(Math.max(0, startOnTime - 500));
+		startOnTime = 0;
+
+		FlxG.sound.music.play();
 		if (SONG.needsVoices)
 		{
 			if (vocals != null)
@@ -1280,9 +1284,6 @@ class PlayState extends MusicBeatState
 			if (opponentVocals != null)
 				opponentVocals.play();
 		}
-
-		setSongTime(Math.max(0, startOnTime - 500));
-		startOnTime = 0;
 
 		if (paused)
 		{
@@ -1850,7 +1851,7 @@ class PlayState extends MusicBeatState
 					note.resetAnim = 0;
 				}
 
-		openSubState(new PauseSubState(camPause));
+		openSubState(new PauseSubState());
 
 		#if hxdiscord_rpc
 		DiscordClient.changePresence(detailsPausedText, __get_RPC_state(), iconP2.char, songName);
@@ -2964,7 +2965,6 @@ class PlayState extends MusicBeatState
 		camHUD = null;
 		camGame = null;
 		camOther = null;
-		camPause = null;
 		scoreTxt = null;
 		timeTxt = null;
 		scoreTxtTween = __cancelTween(scoreTxtTween);
