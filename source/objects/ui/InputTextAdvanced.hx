@@ -40,19 +40,23 @@ class InputTextAdvanced extends FlxInputText
 		// Set focus and caretIndex as a response to mouse press
 		if (FlxG.mouse.justPressed)
 		{
-			var hadFocus:Bool = hasFocus;
-			if (FlxG.mouse.overlaps(this, camera))
+			var hadFocus:Bool;
+			for (camera in getCameras())
 			{
-				caretIndex = getCaretIndex();
-				hasFocus = true;
-				if (!hadFocus && focusGained != null)
-					focusGained();
-			}
-			else
-			{
-				hasFocus = false;
-				if (hadFocus && focusLost != null)
-					focusLost();
+				hadFocus = hasFocus;
+				if (FlxG.mouse.overlaps(this, camera))
+				{
+					caretIndex = getCaretIndex();
+					hasFocus = true;
+					if (!hadFocus && focusGained != null)
+						focusGained();
+				}
+				else
+				{
+					hasFocus = false;
+					if (hadFocus && focusLost != null)
+						focusLost();
+				}
 			}
 		}
 		#end

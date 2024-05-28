@@ -280,7 +280,7 @@ class StoryMenuState extends MusicBeatState
 			new FlxTimer().start(1, function(tmr:FlxTimer)
 			{
 				LoadingState.prepareToSong();
-				LoadingState.loadAndSwitchState(new PlayState(), true);
+				LoadingState.loadAndSwitchState(PlayState.new, true);
 				MainMenuState.pizzaTime = false;
 				FreeplayState.stopVocals();
 			});

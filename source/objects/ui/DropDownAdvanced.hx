@@ -78,8 +78,9 @@ class DropDownAdvanced extends FlxUIDropDownMenu
 					currentScroll++; // Go down
 			}
 
-			if (FlxG.mouse.justPressed && !FlxG.mouse.overlaps(this, camera))
-				showList(false);
+			for (camera in getCameras())
+				if (FlxG.mouse.justPressed && !FlxG.mouse.overlaps(this, camera))
+					showList(false);
 		}
 		#end
 	}

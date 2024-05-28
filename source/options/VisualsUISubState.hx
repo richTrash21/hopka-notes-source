@@ -264,8 +264,18 @@ class VisualsUISubState extends BaseOptionsMenu
 		__scale(sustainEnd, 1);
 		note.screenCenter().x += 500;
 		note.y -= 20;
-		sustain.setPosition(note.x + (note.width - sustain.width) * 0.5, note.y - sustain.height + note.height * 0.5);
-		sustainEnd.setPosition(sustain.x, sustain.y - sustainEnd.height + 1);
+
+		sustainEnd.x = sustain.x = note.x + (note.width - sustain.width) * 0.5;
+		if (ClientPrefs.data.downScroll)
+		{
+			sustain.y = note.y - sustain.height + note.height * 0.5;
+			sustainEnd.y = sustain.y - sustainEnd.height + 1;
+		}
+		else
+		{
+			sustain.y = note.y + note.height * 0.5;
+			sustainEnd.y = sustain.y + sustain.height - 1;
+		}
 	}
 
 	extern inline function __play__splash__anim()

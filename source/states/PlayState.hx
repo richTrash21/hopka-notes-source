@@ -2825,12 +2825,15 @@ class PlayState extends MusicBeatState
 		note.destroy();
 	}
 
-	public function spawnNoteSplash(x:Float, y:Float, data:Int, ?note:Note)
+	inline public function spawnNoteSplash(x:Float, y:Float, data:Int, ?note:Note)
 	{
-		final splash = grpNoteSplashes.recycle(NoteSplash);
-		splash.setupNoteSplash(x, y, data, note);
-		splash.order = grpNoteSplashes.ID++;
-		grpNoteSplashes.sort(CoolUtil.sortByOrder);
+		if (ClientPrefs.data.splashAlpha > 0.0)
+		{
+			final splash = grpNoteSplashes.recycle(NoteSplash);
+			splash.setupNoteSplash(x, y, data, note);
+			splash.order = grpNoteSplashes.ID++;
+			grpNoteSplashes.sort(CoolUtil.sortByOrder);
+		}
 	}
 
 	/** Lemme clear ur mem a bit **/

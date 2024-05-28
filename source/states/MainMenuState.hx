@@ -226,6 +226,11 @@ class MainMenuState extends MusicBeatState
 				selectedSomethin = true;
 				FlxG.switchState(TestVideoState.new);
 			}
+			else if (FlxG.keys.justPressed.FIVE) // lerp lol
+			{
+				selectedSomethin = true;
+				FlxG.switchState(LerpTestState.new);
+			}
 			#end
 			else if (controls.justPressed("reset")) // garbage begone!!!
 			{
