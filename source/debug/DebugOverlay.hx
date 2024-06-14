@@ -14,7 +14,8 @@ class DebugOverlay extends openfl.display.Sprite
 	extern public inline static final PADDING_X = 8.0;
 	extern public inline static final PADDING_Y = 5.0;
 
-	public static final debugFont = Sys.getEnv("windir") + "\\Fonts\\consolab.ttf";
+	#if !windows inline #end public static final debugFont = #if windows Sys.getEnv("windir") + "\\Fonts\\consolab.ttf" #else "assets/fonts/monospace-neon.otf" #end;
+	inline public static final debugFontSize = #if windows 12 #else 11 #end;
 
 	/**
 		The current frame rate, expressed using frames-per-second
@@ -33,6 +34,7 @@ class DebugOverlay extends openfl.display.Sprite
 	// public var memoryMegasGPU(get, never):Int;
 
 	public var debug = #if debug 2 #else 0 #end;
+	public var baseScale(default, set) = 1.0;
 
 	var bg:Bitmap;
 	var fps:FPSCounter;
@@ -54,11 +56,8 @@ class DebugOverlay extends openfl.display.Sprite
 
 		FlxG.signals.preUpdate.add(flixelUpdate);
 		// scale overlay down if game was sized down
-		FlxG.signals.gameResized.add((_, _) ->
-		{
-			scaleX = Math.min(FlxG.scaleMode.scale.x, 1.0);
-			scaleY = Math.min(FlxG.scaleMode.scale.y, 1.0);
-		});
+		FlxG.signals.gameResized.add(onResize);
+		set_baseScale(baseScale);
 		
 		FlxG.stage.addEventListener(openfl.events.KeyboardEvent.KEY_DOWN, (e) ->
 			if (e.keyCode == flixel.input.keyboard.FlxKey.F4)
@@ -122,6 +121,15 @@ class DebugOverlay extends openfl.display.Sprite
 		return item;
 	}
 
+	function onResize(w = 0.0, h = 0.0)
+	{
+		if (parent == FlxG.game)
+		{
+			scaleX = Math.min(FlxG.scaleMode.scale.x, baseScale);
+			scaleY = Math.min(FlxG.scaleMode.scale.y, baseScale);
+		}
+	}
+
 	@:noCompletion inline function get_currentFPS():Int
 	{
 		return fps.currentFPS;
@@ -136,4 +144,11 @@ class DebugOverlay extends openfl.display.Sprite
 	{
 		return fps.memoryMegasGPU;
 	}*/
+
+	@:noCompletion inline function set_baseScale(scale:Float):Float
+	{
+		baseScale = scaleX = scaleY = scale;
+		onResize();
+		return scale;
+	}
 }

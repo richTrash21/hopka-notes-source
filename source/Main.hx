@@ -256,12 +256,14 @@ class Main extends flixel.FlxGame
 		if (stage == null)
 			return;
 
+		#if !mobile
 		fpsVar = new DebugOverlay();
 		fpsVar.visible = ClientPrefs.data.showFPS;
+		#end
 		addChild(transition = new StateTransition());
 		super.create(_);
 		#if !mobile
-		addChild(fpsVar);
+		stage.addChild(fpsVar);
 		#end
 
 		Paths.dumpExclusions.push(FlxG.bitmap.findKeyForBitmap(FlxG.bitmap.whitePixel.parent.bitmap));

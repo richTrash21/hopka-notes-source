@@ -2118,7 +2118,9 @@ class ChartingState extends MusicBeatUIState
 				dot = s.length;
 				s += ".";
 			}
-			while (s.substr(dot+1, 2).length < 2)
+			// ГОЙДАААААА
+			var z = s.substr(dot+1, 2).length-1;
+			while (++z < 2)
 				s += "0";
 			return s;
 		}

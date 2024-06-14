@@ -123,6 +123,9 @@ class VideoHandler extends vlc.bitmap.VlcBitmap
 }
 #else
 import openfl.display.BitmapData;
+import lime.utils.Log;
+import haxe.io.Bytes;
+import openfl.Lib;
 
 class VideoHandler extends hxvlc.openfl.Video
 {
@@ -131,7 +134,7 @@ class VideoHandler extends hxvlc.openfl.Video
 		super(ClientPrefs.data.antialiasing && smoothing);
 	}
 
-	@:noCompletion override function this_onEnterFrame(_):Void
+	@:noCompletion override function update(_):Void
 	{
 		if (!events.contains(true))
 			return;
@@ -177,7 +180,10 @@ class VideoHandler extends hxvlc.openfl.Video
 
 			final errmsg:String = cast(hxvlc.externs.LibVLC.errmsg(), String);
 
-			onEncounteredError.dispatch(errmsg != null && errmsg.length > 0 ? errmsg : 'Could not specify the error');
+			if (errmsg != null && errmsg.length > 0)
+				onEncounteredError.dispatch(errmsg);
+			else
+				onEncounteredError.dispatch('Unknown error');
 		}
 
 		if (events[6])
@@ -191,16 +197,63 @@ class VideoHandler extends hxvlc.openfl.Video
 		{
 			events[7] = false;
 
+			onCorked.dispatch();
+		}
+
+		if (events[8])
+		{
+			events[8] = false;
+
+			onUncorked.dispatch();
+		}
+
+		if (events[9])
+		{
+			events[9] = false;
+
+			onTimeChanged.dispatch(time);
+		}
+
+		if (events[10])
+		{
+			events[10] = false;
+
+			onPositionChanged.dispatch(position);
+		}
+
+		if (events[11])
+		{
+			events[11] = false;
+
+			onLengthChanged.dispatch(length);
+		}
+
+		if (events[12])
+		{
+			events[12] = false;
+
+			onChapterChanged.dispatch(chapter);
+		}
+
+		if (events[13])
+		{
+			events[13] = false;
+
 			var mustRecreate:Bool = false;
 
 			if (bitmapData != null)
 			{
-				if (bitmapData.width != formatWidth && bitmapData.height != formatHeight)
+				@:privateAccess
+				if ((bitmapData.width != formatWidth && bitmapData.height != formatHeight)
+					|| ((!ClientPrefs.data.cacheOnGPU && bitmapData.__texture != null) || (ClientPrefs.data.cacheOnGPU && bitmapData.image != null)))
 				{
 					bitmapData.dispose();
 
 					if (texture != null)
+					{
 						texture.dispose();
+						texture = null;
+					}
 
 					mustRecreate = true;
 				}
@@ -212,39 +265,48 @@ class VideoHandler extends hxvlc.openfl.Video
 			{
 				try
 				{
-					if (ClientPrefs.data.cacheOnGPU)
-						texture = FlxG.stage.context3D.createTexture(formatWidth, formatHeight, BGRA, true);
-					else // 1gb cache guaranteed!
+					if (ClientPrefs.data.cacheOnGPU && Lib.current.stage != null && Lib.current.stage.context3D != null)
 					{
-						// lime.utils.Log.warn('Failed to use texture, resorting to CPU based image');
+						texture = Lib.current.stage.context3D.createRectangleTexture(formatWidth, formatHeight, BGRA, true);
+
+						bitmapData = BitmapData.fromTexture(texture);
+					}
+					else
+					{
+						if (ClientPrefs.data.cacheOnGPU)
+							Log.warn('Unable to utilize GPU texture, resorting to CPU-based image rendering.');
 
 						bitmapData = new BitmapData(formatWidth, formatHeight, true, 0);
 					}
 				}
 				catch (e:haxe.Exception)
-					lime.utils.Log.error('Failed to create video\'s texture');
-
-				if (texture != null)
-					bitmapData = BitmapData.fromTexture(texture);
+					Log.error('Failed to create video\'s texture: ${e.message}');
 
 				onFormatSetup.dispatch();
 			}
 		}
 
-		if (events[8])
+		if (events[14])
 		{
-			events[8] = false;
+			events[14] = false;
 
 			if (__renderable && planes != null)
 			{
-				final planesData:haxe.io.BytesData = cpp.Pointer.fromRaw(planes).toUnmanagedArray(formatWidth * formatHeight * 4);
+				try
+				{
+					final planesBytes:Bytes = Bytes.ofData(cpp.Pointer.fromRaw(planes).toUnmanagedArray(formatWidth * formatHeight * 4));
 
-				if (texture != null)
-					texture.uploadFromByteArray(planesData, 0);
-				else if (bitmapData != null && bitmapData.image != null)
-					bitmapData.setPixels(bitmapData.rect, planesData);
+					if (texture != null)
+					{
+						texture.uploadFromTypedArray(lime.utils.UInt8Array.fromBytes(planesBytes));
 
-				__setRenderDirty();
+						__setRenderDirty();
+					}
+					else if (bitmapData != null && bitmapData.image != null)
+						bitmapData.setPixels(bitmapData.rect, planesBytes);
+				}
+				catch (e:haxe.Exception)
+					Log.error('An error occurred while attempting to render the video: ${e.message}');
 			}
 
 			onDisplay.dispatch();

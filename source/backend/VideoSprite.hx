@@ -97,6 +97,7 @@ class VideoSprite extends flixel.FlxSprite
 }
 #else
 import sys.FileSystem;
+import hxvlc.openfl.Location;
 
 class VideoSprite extends flixel.FlxSprite
 {
@@ -149,7 +150,7 @@ class VideoSprite extends flixel.FlxSprite
 	 *
 	 * @return `true` if the video loaded successfully or `false` if there's an error.
 	 */
-	public function load(location:hxvlc.util.OneOfThree<String, Int, haxe.io.Bytes>, ?options:Array<String>):Bool
+	public function load(location:Location, ?options:Array<String>):Bool
 	{
 		if (bitmap == null)
 			return false;
@@ -163,11 +164,23 @@ class VideoSprite extends flixel.FlxSprite
 				FlxG.signals.focusLost.add(pause);
 		}
 
-		if (location is String)
+		if (location != null && !(location is Int) && !(location is haxe.io.Bytes) && (location is String))
 		{
-			final absolute = FileSystem.absolutePath(location);
-			if (FileSystem.exists(absolute))
-				return bitmap.load(absolute, options);
+			final location:String = cast(location, String);
+
+			if (!location.contains('://'))
+			{
+				final absolutePath:String = FileSystem.absolutePath(location);
+
+				if (FileSystem.exists(absolutePath))
+					return bitmap.load(absolutePath, options);
+				else
+				{
+					FlxG.log.warn('Unable to find the video file at location "$absolutePath".');
+
+					return false;
+				}
+			}
 		}
 
 		return bitmap.load(location, options);

@@ -21,7 +21,8 @@ class DebugTextField extends TextField
 
 		if (__debugFromat == null)
 		{
-			__debugFromat = new TextFormat(DebugOverlay.debugFont, 12, 0xFFFFFF, false, false, false, "", "", openfl.text.TextFormatAlign.LEFT, 0, 0, 0, 0);
+			__debugFromat = new TextFormat(DebugOverlay.debugFont, DebugOverlay.debugFontSize, 0xFFFFFF, false, false, false, "", "",
+				openfl.text.TextFormatAlign.LEFT, 0, 0, 0, 0);
 			__debugFromat.letterSpacing = __debugFromat.blockIndent = 0;
 			__debugFromat.kerning = __debugFromat.bullet = false;
 		}
